@@ -176,7 +176,7 @@ process barcoding {
 }
 
 /*
- * STEP 2 - MinionQC
+ * STEP 3 - MinionQC
  */
 process minionQC {
     publishDir "${params.outdir}/${runName}/minionQC", mode: 'copy'
@@ -194,7 +194,7 @@ process minionQC {
 }
 
 /*
- * STEP 2 - MultiQC
+ * STEP 4 - MultiQC
  */
 process multiqc {
     publishDir "${params.outdir}/${runName}/MultiQC", mode: 'copy'
@@ -216,7 +216,7 @@ process multiqc {
 
 
 /*
- * STEP 3 - Output Description HTML
+ * STEP 5 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
