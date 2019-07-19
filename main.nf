@@ -19,19 +19,15 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/nanodemux --reads '*_R{1,2}.fastq.gz' -profile docker
+    nextflow run nf-core/nanodemux --run_dir '/camp/stp/sequencing/inputs/instruments/ont_devices/RUNDIR/' -profile crick
 
     Mandatory arguments:
-      --reads                       Path to input data (must be surrounded with quotes)
+      --run_dir                     Path to input data (must be surrounded with quotes)
       -profile                      Configuration profile to use. Can use multiple (comma separated)
                                     Available: conda, docker, singularity, awsbatch, test and more.
 
     Options:
       --genome                      Name of iGenomes reference
-      --singleEnd                   Specifies that the input is single end reads
-
-    References                      If not specified in the configuration file or you wish to overwrite any of the references.
-      --fasta                       Path to Fasta reference
 
     Other options:
       --outdir                      The output directory where the results will be saved
@@ -60,20 +56,11 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
     exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
 }
 
-// TODO nf-core: Add any reference files that are needed
-// Configurable reference genomes
-fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
-if ( params.fasta ){
-    fasta = file(params.fasta)
-    if( !fasta.exists() ) exit 1, "Fasta file not found: ${params.fasta}"
+// check file path exists
+if ( params.run_dir ){
+    nanopore_run_dir = file(params.run_dir)
+    if( !nanopore_run_dir.exists() ) exit 1, "Nanopore fast5 directory not found: ${params.run_dir}"
 }
-//
-// NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
-// If you want to use the above in a process, define the following:
-//   input:
-//   file fasta from fasta
-//
-
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
@@ -96,30 +83,6 @@ if( workflow.profile == 'awsbatch') {
 // Stage config files
 ch_multiqc_config = Channel.fromPath(params.multiqc_config)
 ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
-
-/*
- * Create a channel for input read files
- */
-if(params.readPaths){
-    if(params.singleEnd){
-        Channel
-            .from(params.readPaths)
-            .map { row -> [ row[0], [file(row[1][0])]] }
-            .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
-            .into { read_files_fastqc; read_files_trimming }
-    } else {
-        Channel
-            .from(params.readPaths)
-            .map { row -> [ row[0], [file(row[1][0]), file(row[1][1])]] }
-            .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
-            .into { read_files_fastqc; read_files_trimming }
-    }
-} else {
-    Channel
-        .fromFilePairs( params.reads, size: params.singleEnd ? 1 : 2 )
-        .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --singleEnd on the command line." }
-        .into { read_files_fastqc; read_files_trimming }
-}
 
 
 // Header log info
@@ -175,66 +138,73 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 
 
 /*
- * Parse software version numbers
+ * STEP 1 - Basecalling
  */
-process get_software_versions {
-    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-    saveAs: {filename ->
-        if (filename.indexOf(".csv") > 0) filename
-        else null
-    }
+process basecalling {
+  tag "${runName}"
+  module "guppy/3.1.5"
+  publishDir path: "${params.outdir}/${runName}/basecall_files", mode: 'copy'
 
-    output:
-    file 'software_versions_mqc.yaml' into software_versions_yaml
-    file "software_versions.csv"
+  input:
+  file dir from nanopore_run_dir
 
-    script:
-    // TODO nf-core: Get all tools to print their version number here
-    """
-    echo $workflow.manifest.version > v_pipeline.txt
-    echo $workflow.nextflow.version > v_nextflow.txt
-    fastqc --version > v_fastqc.txt
-    multiqc --version > v_multiqc.txt
-    scrape_software_versions.py &> software_versions_mqc.yaml
-    """
+  output:
+  file("*") into basecalled_files
+
+  script:
+  """
+  guppy_basecaller --flowcell ${params.flowcell} --kit ${params.kit} --save_path .  --input_path ${runName_dir} 
+  """
+
 }
-
-
 
 /*
- * STEP 1 - FastQC
+ * STEP 2 - Barcoding
  */
-process fastqc {
-    tag "$name"
-    publishDir "${params.outdir}/fastqc", mode: 'copy',
-        saveAs: {filename -> filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"}
+process barcoding {
+  tag "${runName}"
+  module "guppy/3.1.5"
+  publishDir path: "${params.outdir}/${runName}/fastq/${projectName}", mode: 'copy'
+
+  input:
+  file basecalls from basecalled_files.collect()
+
+  output:
+  file "*.{fastq.gz,fastq}" into nanopore_fastq
+  file "sequencing_summary.txt" into seq_summary
+
+  script:
+  """
+  guppy_barcoder --input_path basecalls --save_path . --config configuration.cfg
+  """
+}
+
+/*
+ * STEP 2 - MinionQC
+ */
+process minionQC {
+    publishDir "${params.outdir}/${runName}/minionQC", mode: 'copy'
 
     input:
-    set val(name), file(reads) from read_files_fastqc
+    file summary from seq_summary
 
     output:
-    file "*_fastqc.{zip,html}" into fastqc_results
+    file "summary.yaml" into summary_yaml
 
     script:
     """
-    fastqc -q $reads
+    Rscript MinIONQC.R -i path/to/sequencing_summary.txt
     """
 }
-
-
 
 /*
  * STEP 2 - MultiQC
  */
 process multiqc {
-    publishDir "${params.outdir}/MultiQC", mode: 'copy'
+    publishDir "${params.outdir}/${runName}/MultiQC", mode: 'copy'
 
     input:
-    file multiqc_config from ch_multiqc_config
-    // TODO nf-core: Add in log files from your new processes for MultiQC to find!
-    file ('fastqc/*') from fastqc_results.collect().ifEmpty([])
-    file ('software_versions/*') from software_versions_yaml.collect()
-    file workflow_summary from create_workflow_summary(summary)
+    file summary from minion_summary
 
     output:
     file "*multiqc_report.html" into multiqc_report
@@ -242,11 +212,8 @@ process multiqc {
     file "multiqc_plots"
 
     script:
-    rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
-    rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
-    // TODO nf-core: Specify which MultiQC modules to use with -m for a faster run time
     """
-    multiqc -f $rtitle $rfilename --config $multiqc_config .
+    multiqc $summary --config $multiqc_config .
     """
 }
 
