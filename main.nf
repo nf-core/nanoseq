@@ -184,6 +184,7 @@ def (flowcell, kit, barcode_kit) = get_nanopore_info(params.samplesheet)
 /*
  * STEP 2 - Basecalling and barcoding
  */
+seq_summary = Channel.create()
 process basecalling {
   tag "${runName}"
   publishDir path: "${params.outdir}/${runName}/fastq", mode: 'copy'
@@ -214,7 +215,7 @@ process minionQC {
     publishDir "${params.outdir}/${runName}/minionQC", mode: 'copy'
 
     input:
-    file summary from seq_summary
+    file summary from seq_summary.ifEmpty { true }
     file result from fastq_result2
 
     output:
@@ -222,11 +223,17 @@ process minionQC {
 
     script:
     if (result.name =~ /^true.*/){
-
+      def summary_file = "sequencing_summary.txt"
+      File seq_sum_file = new File(runName_dir, summary_file)
+      """
+      Rscript MinIONQC.R -i $seq_sum_file
+      """
     }
-    """
-    Rscript MinIONQC.R -i $summary
-    """
+    else {
+      """
+      Rscript MinIONQC.R -i $summary
+      """
+    }
 }
 
 /*
