@@ -5,7 +5,6 @@ results/
 .DS_Store
 tests/test_data
 *.pyc
-conf/crick.config
 *.log
 *demultiplex_trace.txt
 pipeline_info/

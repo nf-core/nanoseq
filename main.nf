@@ -22,7 +22,7 @@ def helpMessage() {
     nextflow run nf-core/nanodemux --samplesheet '/camp/stp/sequencing/inputs/instruments/ont_devices/RUNDIR/samplesheet.csv' -profile crick
 
     Mandatory arguments:
-      --samplesheet                     Path to input data (must be surrounded with quotes)
+      --samplesheet                 Path to input data (must be surrounded with quotes)
       -profile                      Configuration profile to use. Can use multiple (comma separated)
                                     Available: conda, docker, singularity, awsbatch, test and more.
 
@@ -56,10 +56,14 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
     exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
 }
 
-// check file path exists
-if ( params.run_dir ){
-    nanopore_run_dir = file(params.run_dir)
-    if( !nanopore_run_dir.exists() ) exit 1, "Nanopore fast5 directory not found: ${params.run_dir}"
+if ( params.samplesheet ){
+    ss_sheet = file(params.samplesheet)
+    if( !ss_sheet.exists() ) exit 1, "Sample sheet not found: ${params.samplesheet}"
+}
+
+if (params.samplesheet){
+    lastPath = params.samplesheet.lastIndexOf(File.separator)
+    runName_dir =  params.samplesheet.substring(0,lastPath+1)
 }
 
 // Has the run name been specified by the user?
@@ -133,15 +137,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
    return yaml_file
 }
 
-if ( params.samplesheet ){
-    ss_sheet = file(params.samplesheet)
-    if( !ss_sheet.exists() ) exit 1, "Sample sheet not found: ${params.samplesheet}"
-}
 
-if (params.samplesheet){
-    lastPath = params.samplesheet.lastIndexOf(File.separator)
-    runName_dir =  params.samplesheet.substring(0,lastPath+1)
-}
 
 /*
  * STEP 1 - Check sample sheet
