@@ -5,3 +5,9 @@ results/
 .DS_Store
 tests/test_data
 *.pyc
+conf/crick.config
+*.log
+*demultiplex_trace.txt
+pipeline_info/
+bin/.Rhistory
+bin/test_functions.nf
