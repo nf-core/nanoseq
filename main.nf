@@ -25,7 +25,6 @@ def helpMessage() {
       --samplesheet                 Path to input data (must be surrounded with quotes)
       -profile                      Configuration profile to use. Can use multiple (comma separated)
                                     Available: conda, docker, singularity, awsbatch, test and more.
-
     Options:
       --genome                      Name of iGenomes reference
 
