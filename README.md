@@ -38,4 +38,12 @@ This pipeline
     * [`MultiQC`](https://multiqc.info/docs/) arrange the output produced in the previous step of MinIONQC in a more readable and consolidated format. 
 
 ## Credits
-nf-core/nanodemux was originally written by Chelsea Sawyer.
+nf-core/nanodemux was originally written by Chelsea Sawyer from The Bioinformatics & Biostatistics Group for use at The Francis Crick Institute, London.
+
+Many thanks to others who have helped out along the way too, including (but not limited to): [`@drpatelh`](https://github.com/drpatelh), [`@crickbabs`](https://github.com/crickbabs)
+
+## Citation
+
+R Lanfear, M Schalamun, D Kainer, W Wang, B Schwessinger (2018). MinIONQC: fast and simple quality control for MinION sequencing data, Bioinformatics, [bty654](https://doi.org/10.1093/bioinformatics/bty654)
+
+Ewels PA, Peltzer A, Fillinger S, Alneberg JA, Patel H, Wilm A, Garcia MU, Di Tommaso P, Nahnsen S. **nf-core: Community curated bioinformatics pipelines**. *bioRxiv*. 2019. p. 610741. [doi: 10.1101/610741](https://www.biorxiv.org/content/10.1101/610741v1).
