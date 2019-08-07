@@ -28,14 +28,14 @@ The nf-core/nanodemux pipeline comes with documentation about the pipeline, foun
 ## Pipeline Summary
 This pipeline 
 1. Checking the sample sheet
-    * Searches for [Data] tag and find the column Fastq_path. If this is empty it will send the run directory to the demultiplexing process and if not it bypasses to the QC step
+    * Searches for [Data] tag and finds the column Fastq_path. If this column is empty it will send the run directory to the demultiplexing process and if not it bypasses to the QC step
 2. Basecalling and Barcoding (CONDITIONAL)
     * If fastq files are not provided, this process performs demultiplexing by basecalling and barcoding.
     * Must have access to the Nanopore software Guppy and have the kit and barcode kit used on the sample sheet in the format of the example sample sheet provided
 3. MinIONQC for quality checking the data
     * [MinIONQC](https://github.com/roblanf/minion_qc) outputs diagnostic plots and data for quality control of sequencing data from Oxford Nanopore's MinION
 4. MultiQC
-    * [`MultiQC`](https://multiqc.info/docs/) arrange the output produced in the previous step of MinIONQC in a more readable and consolidated format. 
+    * [MultiQC](https://multiqc.info/docs/) arrange the output produced in the previous step of MinIONQC in a more readable and consolidated format. 
 
 ## Credits
 nf-core/nanodemux was originally written by Chelsea Sawyer from The Bioinformatics & Biostatistics Group for use at The Francis Crick Institute, London.
@@ -44,6 +44,6 @@ Many thanks to others who have helped out along the way too, including (but not 
 
 ## Citation
 
-R Lanfear, M Schalamun, D Kainer, W Wang, B Schwessinger (2018). MinIONQC: fast and simple quality control for MinION sequencing data, Bioinformatics, [bty654](https://doi.org/10.1093/bioinformatics/bty654)
+R Lanfear, M Schalamun, D Kainer, W Wang, B Schwessinger (2018). **MinIONQC: fast and simple quality control for MinION sequencing data**, Bioinformatics, [bty654](https://doi.org/10.1093/bioinformatics/bty654)
 
 Ewels PA, Peltzer A, Fillinger S, Alneberg JA, Patel H, Wilm A, Garcia MU, Di Tommaso P, Nahnsen S. **nf-core: Community curated bioinformatics pipelines**. *bioRxiv*. 2019. p. 610741. [doi: 10.1101/610741](https://www.biorxiv.org/content/10.1101/610741v1).

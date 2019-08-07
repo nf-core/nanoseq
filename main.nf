@@ -205,6 +205,7 @@ process basecalling {
   """
 }
 
+samplesheet_fastq_ch = Channel.from(params.samplesheet).splitCsv(header: true, skip: 6).map { row -> [ row.Barcode_name, row.Fastq_path ] }
 
 /*
  * STEP 2 - MinionQC
@@ -246,8 +247,6 @@ process multiqc {
     multiqc $summary --config $multiqc_config .
     """
 }
-
-
 
 /*
  * STEP 4 - Output Description HTML
