@@ -222,11 +222,9 @@ process minionQC {
     file "summary.yaml" into summary_yaml
 
     script:
-    if (result.name =~ /^true.*/){
-      def summary_file = "sequencing_summary.txt"
-      File seq_sum_file = new File(runName_dir, summary_file)
+    if (result.name =~ /^false.*/){
       """
-      Rscript MinIONQC.R -i $seq_sum_file
+      Rscript MinIONQC.R -i ${runName_dir}/sequencing_summary.txt
       """
     }
     else {
