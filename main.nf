@@ -19,7 +19,7 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/nanodemux --samplesheet '/camp/stp/sequencing/inputs/instruments/ont_devices/RUNDIR/samplesheet.csv' -profile crick
+    nextflow run nf-core/nanodemux --samplesheet '/sequencing/inputs/RUNDIR/samplesheet.csv' -profile crick
 
     Mandatory arguments:
       --samplesheet                 Path to input data (must be surrounded with quotes)

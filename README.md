@@ -25,6 +25,17 @@ The nf-core/nanodemux pipeline comes with documentation about the pipeline, foun
 5. [Troubleshooting](https://nf-co.re/usage/troubleshooting)
 
 <!-- TODO nf-core: Add a brief overview of what the pipeline does and how it works -->
+## Pipeline Summary
+This pipeline 
+1. Checking the sample sheet
+    * Searches for [Data] tag and find the column Fastq_path. If this is empty it will send the run directory to the demultiplexing process and if not it bypasses to the QC step
+2. Basecalling and Barcoding (CONDITIONAL)
+    * If fastq files are not provided, this process performs demultiplexing by basecalling and barcoding.
+    * Must have access to the Nanopore software Guppy and have the kit and barcode kit used on the sample sheet in the format of the example sample sheet provided
+3. MinIONQC for quality checking the data
+    * [MinIONQC](https://github.com/roblanf/minion_qc) outputs diagnostic plots and data for quality control of sequencing data from Oxford Nanopore's MinION
+4. MultiQC
+    * [`MultiQC`](https://multiqc.info/docs/) arrange the output produced in the previous step of MinIONQC in a more readable and consolidated format. 
 
 ## Credits
 nf-core/nanodemux was originally written by Chelsea Sawyer.
