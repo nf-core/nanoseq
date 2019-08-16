@@ -197,7 +197,7 @@ process basecalling {
   result.name =~ /^true.*/
 
   output:
-  file "barcode*/*.{fastq.gz,fastq}" into nanopore_fastq
+  file "*.{fastq.gz,fastq}" into nanopore_fastq
   file "sequencing_summary.txt" into seq_summary
 
   script:
@@ -206,7 +206,7 @@ process basecalling {
   """
 }
 
-samplesheet_fastq_ch = Channel.from(params.samplesheet).splitCsv(header: true, skip: 6).map { row -> [ row.Barcode_name, row.Fastq_path ] }
+// samplesheet_fastq_ch = Channel.from(params.samplesheet).splitCsv(header: true, skip: 6).map { row -> [ row.Barcode_name, row.Fastq_path ] }
 
 /*
  * STEP 2 - MinionQC
