@@ -19,14 +19,18 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/nanodemux --samplesheet '/sequencing/inputs/RUNDIR/samplesheet.csv' -profile crick
+    nextflow run nf-core/nanodemux --design 'design.csv' -profile test,docker
 
     Mandatory arguments:
-      --samplesheet                 Path to input data (must be surrounded with quotes)
+      --design                      Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
       -profile                      Configuration profile to use. Can use multiple (comma separated)
                                     Available: conda, docker, singularity, awsbatch, test and more.
-    Options:
-      --genome                      Name of iGenomes reference
+
+    Demultiplexing
+      --run_dir
+      --flowcell
+      --kit
+      --barcode_kit
 
     Other options:
       --outdir                      The output directory where the results will be saved
@@ -44,26 +48,20 @@ def helpMessage() {
  * SET UP CONFIGURATION VARIABLES
  */
 
-// Show help emssage
+// Show help message
 if (params.help){
     helpMessage()
     exit 0
 }
 
-// Check if genome exists in the config file
-if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
-    exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
-}
+// // Check if genome exists in the config file
+// if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
+//     exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
+// }
 
-if ( params.samplesheet ){
-    ss_sheet = file(params.samplesheet)
-    if( !ss_sheet.exists() ) exit 1, "Sample sheet not found: ${params.samplesheet}"
-}
-
-if (params.samplesheet){
-    lastPath = params.samplesheet.lastIndexOf(File.separator)
-    runName_dir =  params.samplesheet.substring(0,lastPath+1)
-}
+if (params.design)    { ch_design = file(params.design, checkIfExists: true) } else { exit 1, "Samples design file not specified!" }
+if (params.run_dir)   { ch_run_dir = file(params.run_dir, checkIfExists: true) }
+// MAKE SURE params.flowcell, params.kit and params.barcode_kit are set when params.run_dir is specified
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
@@ -136,252 +134,271 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
    return yaml_file
 }
 
-
-
-/*
- * STEP 1 - Check sample sheet
- */
-process check_input {
-  tag "${runName}"
-  module "Python/3.6.6-foss-2018b"
-
-  input:
-  file sheet from samplesheet
-
-  output:
-  file "*.txt" into fastq_result, fastq_result2
-  file sheet into checked_samplesheet
-
-  script:
-  """
-  check_samplesheet.py --samplesheet $sheet
-  """
-
-}
-
-def get_nanopore_info(csv){
-  def start = 0
-  def end = 3
-  csv.eachLine(start) { line, lineNo ->
-    if (lineNo <= end) {
-          def parts = line.split(",")
-      if (parts[0] == "Flowcell") {
-        flowcell = parts[1];
-      }
-      else if(parts[0] == "Kit") {
-        kit = parts[1];
-      }
-      else if(parts[0] == "Barcode_kit") {
-        barcode_kit = parts[1];
-      }
-      }
-  }
-  return [flowcell, kit, barcode_kit]
-}
-
-def (flowcell, kit, barcode_kit) = get_nanopore_info(params.samplesheet)
+// /*
+//  * PREPROCESSING - CHECK DESIGN FILE
+//  */
+// process checkDesign {
+//     tag "$design"
+//     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
+//
+//     container = params.multiqc_container
+//
+//     input:
+//     file design from ch_design
+//
+//     //output:
+//     //file "design_checked.csv" into ch_design_csv
+//
+//     script:  // This script is bundled with the pipeline, in nf-core/nanodemux/bin/
+//     """
+//     check_design.py $design
+//     """
+// }
 
 /*
- * STEP 2 - Basecalling and barcoding
+ * STEP 2 - Basecalling and demultipexing using Guppy
  */
-seq_summary = Channel.create()
-process basecalling {
-  tag "${runName}"
-  publishDir path: "${params.outdir}/${runName}/fastq", mode: 'copy'
+if (params.run_dir) {
+    process guppy {
+      tag "$run_dir"
+      publishDir path: "${params.outdir}/guppy", mode: 'copy'
+      container = params.guppy_container
 
-  input:
-  file dir from nanopore_run_dir
-  file result from fastq_result
+      input:
+      file run_dir from ch_run_dir
 
-  when:
-  result.name =~ /^true.*/
+      output:
+      file "barcode_*/*.fastq" into ch_guppy_fastq
+      file "unclassified" into ch_guppy_unclassifed
+      file "*.txt" into ch_guppy_summary
+      file "*.log" into ch_guppy_log
 
-  output:
-  file "*.{fastq.gz,fastq}" into nanopore_fastq
-  file "sequencing_summary.txt" into seq_summary
-
-  script:
-  """
-  guppy_basecaller --input_path ${runName_dir} --save_path . --flowcell $flowcell --kit $kit --barcode_kits $barcode_kit
-  """
-}
-
-// samplesheet_fastq_ch = Channel.from(params.samplesheet).splitCsv(header: true, skip: 6).map { row -> [ row.Barcode_name, row.Fastq_path ] }
-
-/*
- * STEP 2 - MinionQC
- */
-process minionQC {
-    publishDir "${params.outdir}/${runName}/minionQC", mode: 'copy'
-
-    input:
-    file summary from seq_summary.ifEmpty { true }
-    file result from fastq_result2
-
-    output:
-    file "summary.yaml" into summary_yaml
-
-    script:
-    if (result.name =~ /^false.*/){
+      script:
       """
-      Rscript MinIONQC.R -i ${runName_dir}/sequencing_summary.txt
-      """
-    }
-    else {
-      """
-      Rscript MinIONQC.R -i $summary
+      guppy_basecaller --input_path $run_dir --save_path . --flowcell $params.flowcell --kit $params.kit --barcode_kits $params.barcode_kit
       """
     }
 }
 
-/*
- * STEP 3 - MultiQC
- */
-process multiqc {
-    publishDir "${params.outdir}/${runName}/MultiQC", mode: 'copy'
-
-    input:
-    file summary from minion_summary
-
-    output:
-    file "*multiqc_report.html" into multiqc_report
-    file "*_data"
-
-    script:
-    """
-    multiqc $summary --config $multiqc_config .
-    """
-}
-
-/*
- * STEP 4 - Output Description HTML
- */
-process output_documentation {
-    publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-
-    input:
-    file output_docs from ch_output_docs
-
-    output:
-    file "results_description.html"
-
-    script:
-    """
-    markdown_to_html.r $output_docs results_description.html
-    """
-}
+// /*
+//  * STEP 2 - MinionQC
+//  */
+// if (params.run_dir) {
+//     process MinIONQC {
+//         publishDir "${params.outdir}/MinIONQC", mode: 'copy'
+//
+//         container = params.minionqc_container
+//
+//         input:
+//         file summary from ch_guppy_summary
+//
+//         output:
+//         file "*.png" into ch_minionqc_png
+//         file "*.yaml" into ch_minionqc_yaml
+//
+//         script:
+//         """
+//         Rscript MinIONQC.R -i $summary
+//         """
+//     }
+// }
 
 
 
-/*
- * Completion e-mail notification
- */
-workflow.onComplete {
+// GRAPHMAP INDEX GENOME
+// ./graphmap align -I -r escherichia_coli.fa
 
-    // Set up the e-mail variables
-    def subject = "[nf-core/nanodemux] Successful: $workflow.runName"
-    if(!workflow.success){
-      subject = "[nf-core/nanodemux] FAILED: $workflow.runName"
-    }
-    def email_fields = [:]
-    email_fields['version'] = workflow.manifest.version
-    email_fields['runName'] = custom_runName ?: workflow.runName
-    email_fields['success'] = workflow.success
-    email_fields['dateComplete'] = workflow.complete
-    email_fields['duration'] = workflow.duration
-    email_fields['exitStatus'] = workflow.exitStatus
-    email_fields['errorMessage'] = (workflow.errorMessage ?: 'None')
-    email_fields['errorReport'] = (workflow.errorReport ?: 'None')
-    email_fields['commandLine'] = workflow.commandLine
-    email_fields['projectDir'] = workflow.projectDir
-    email_fields['summary'] = summary
-    email_fields['summary']['Date Started'] = workflow.start
-    email_fields['summary']['Date Completed'] = workflow.complete
-    email_fields['summary']['Pipeline script file path'] = workflow.scriptFile
-    email_fields['summary']['Pipeline script hash ID'] = workflow.scriptId
-    if(workflow.repository) email_fields['summary']['Pipeline repository Git URL'] = workflow.repository
-    if(workflow.commitId) email_fields['summary']['Pipeline repository Git Commit'] = workflow.commitId
-    if(workflow.revision) email_fields['summary']['Pipeline Git branch/tag'] = workflow.revision
-    if(workflow.container) email_fields['summary']['Docker image'] = workflow.container
-    email_fields['summary']['Nextflow Version'] = workflow.nextflow.version
-    email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
-    email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
+// GRAPHMAP ALIGN READS
+// GraphMapCommand = 'graphmap align -t %s -r %s -d %s -o %s --extcigar' % (NumThreads,GenomeFasta,FastQFile,SAMFile)
 
-    // TODO nf-core: If not using MultiQC, strip out this code (including params.maxMultiqcEmailFileSize)
-    // On success try attach the multiqc report
-    def mqc_report = null
-    try {
-        if (workflow.success) {
-            mqc_report = multiqc_report.getVal()
-            if (mqc_report.getClass() == ArrayList){
-                log.warn "[nf-core/nanodemux] Found multiple reports from process 'multiqc', will use only one"
-                mqc_report = mqc_report[0]
-            }
-        }
-    } catch (all) {
-        log.warn "[nf-core/nanodemux] Could not attach MultiQC report to summary email"
-    }
+// /*
+//  * STEP 3.2 - Convert .bam to coordinate sorted .bam
+//  */
+// process sortBAM {
+//     tag "$name"
+//     //label 'process_medium'
+//     if (params.saveAlignedIntermediates) {
+//         publishDir path: "${params.outdir}/graphmap", mode: 'copy',
+//             saveAs: { filename ->
+//                     if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
+//                     else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
+//                     else if (filename.endsWith(".stats")) "samtools_stats/$filename"
+//                     else filename }
+//     }
+//
+//     container = params.samtools_container
+//
+//     input:
+//     set val(name), file(sam) from ch_graphmap_bam
+//
+//     output:
+//     set val(name), file("*.sorted.{bam,bam.bai}") into ch_sort_bam_merge
+//     file "*.{flagstat,idxstats,stats}" into ch_sort_bam_flagstat_mqc
+//
+//     script:
+//     prefix="${name}"
+//     """
+//     samtools view -b -h -O BAM -@ $task.cpus -o ${prefix}.bam $sam
+//     samtools sort -@ $task.cpus -o ${prefix}.sorted.bam -T $name ${prefix}.bam
+//     samtools index ${prefix}.sorted.bam
+//     samtools flagstat ${prefix}.sorted.bam > ${prefix}.sorted.bam.flagstat
+//     samtools idxstats ${prefix}.sorted.bam > ${prefix}.sorted.bam.idxstats
+//     samtools stats ${prefix}.sorted.bam > ${prefix}.sorted.bam.stats
+//     """
+// }
 
-    // Render the TXT template
-    def engine = new groovy.text.GStringTemplateEngine()
-    def tf = new File("$baseDir/assets/email_template.txt")
-    def txt_template = engine.createTemplate(tf).make(email_fields)
-    def email_txt = txt_template.toString()
+// /*
+//  * STEP 3 - MultiQC
+//  */
+// process multiqc {
+//     publishDir "${params.outdir}/${runName}/MultiQC", mode: 'copy'
+//
+//     container = params.multiqc_container
+//
+//     input:
+//     file summary from minion_summary
+//
+//     output:
+//     file "*multiqc_report.html" into multiqc_report
+//     file "*_data"
+//
+//     script:
+//     """
+//     multiqc $summary --config $multiqc_config .
+//     """
+// }
 
-    // Render the HTML template
-    def hf = new File("$baseDir/assets/email_template.html")
-    def html_template = engine.createTemplate(hf).make(email_fields)
-    def email_html = html_template.toString()
+// /*
+//  * STEP 4 - Output Description HTML
+//  */
+// process output_documentation {
+//     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
+//
+//     container = params.rmarkdown_container
+//
+//     input:
+//     file output_docs from ch_output_docs
+//
+//     output:
+//     file "results_description.html"
+//
+//     script:
+//     """
+//     markdown_to_html.r $output_docs results_description.html
+//     """
+// }
 
-    // Render the sendmail template
-    def smail_fields = [ email: params.email, subject: subject, email_txt: email_txt, email_html: email_html, baseDir: "$baseDir", mqcFile: mqc_report, mqcMaxSize: params.maxMultiqcEmailFileSize.toBytes() ]
-    def sf = new File("$baseDir/assets/sendmail_template.txt")
-    def sendmail_template = engine.createTemplate(sf).make(smail_fields)
-    def sendmail_html = sendmail_template.toString()
 
-    // Send the HTML e-mail
-    if (params.email) {
-        try {
-          if( params.plaintext_email ){ throw GroovyException('Send plaintext e-mail, not HTML') }
-          // Try to send HTML e-mail using sendmail
-          [ 'sendmail', '-t' ].execute() << sendmail_html
-          log.info "[nf-core/nanodemux] Sent summary e-mail to $params.email (sendmail)"
-        } catch (all) {
-          // Catch failures and try with plaintext
-          [ 'mail', '-s', subject, params.email ].execute() << email_txt
-          log.info "[nf-core/nanodemux] Sent summary e-mail to $params.email (mail)"
-        }
-    }
 
-    // Write summary e-mail HTML to a file
-    def output_d = new File( "${params.outdir}/pipeline_info/" )
-    if( !output_d.exists() ) {
-      output_d.mkdirs()
-    }
-    def output_hf = new File( output_d, "pipeline_report.html" )
-    output_hf.withWriter { w -> w << email_html }
-    def output_tf = new File( output_d, "pipeline_report.txt" )
-    output_tf.withWriter { w -> w << email_txt }
-
-    c_reset = params.monochrome_logs ? '' : "\033[0m";
-    c_purple = params.monochrome_logs ? '' : "\033[0;35m";
-    c_green = params.monochrome_logs ? '' : "\033[0;32m";
-    c_red = params.monochrome_logs ? '' : "\033[0;31m";
-
-    if (workflow.stats.ignoredCountFmt > 0 && workflow.success) {
-      log.info "${c_purple}Warning, pipeline completed, but with errored process(es) ${c_reset}"
-      log.info "${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCountFmt} ${c_reset}"
-      log.info "${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCountFmt} ${c_reset}"
-    }
-
-    if(workflow.success){
-        log.info "${c_purple}[nf-core/nanodemux]${c_green} Pipeline completed successfully${c_reset}"
-    } else {
-        checkHostname()
-        log.info "${c_purple}[nf-core/nanodemux]${c_red} Pipeline completed with errors${c_reset}"
-    }
-
-}
+// /*
+//  * Completion e-mail notification
+//  */
+// workflow.onComplete {
+//
+//     // Set up the e-mail variables
+//     def subject = "[nf-core/nanodemux] Successful: $workflow.runName"
+//     if(!workflow.success){
+//       subject = "[nf-core/nanodemux] FAILED: $workflow.runName"
+//     }
+//     def email_fields = [:]
+//     email_fields['version'] = workflow.manifest.version
+//     email_fields['runName'] = custom_runName ?: workflow.runName
+//     email_fields['success'] = workflow.success
+//     email_fields['dateComplete'] = workflow.complete
+//     email_fields['duration'] = workflow.duration
+//     email_fields['exitStatus'] = workflow.exitStatus
+//     email_fields['errorMessage'] = (workflow.errorMessage ?: 'None')
+//     email_fields['errorReport'] = (workflow.errorReport ?: 'None')
+//     email_fields['commandLine'] = workflow.commandLine
+//     email_fields['projectDir'] = workflow.projectDir
+//     email_fields['summary'] = summary
+//     email_fields['summary']['Date Started'] = workflow.start
+//     email_fields['summary']['Date Completed'] = workflow.complete
+//     email_fields['summary']['Pipeline script file path'] = workflow.scriptFile
+//     email_fields['summary']['Pipeline script hash ID'] = workflow.scriptId
+//     if(workflow.repository) email_fields['summary']['Pipeline repository Git URL'] = workflow.repository
+//     if(workflow.commitId) email_fields['summary']['Pipeline repository Git Commit'] = workflow.commitId
+//     if(workflow.revision) email_fields['summary']['Pipeline Git branch/tag'] = workflow.revision
+//     if(workflow.container) email_fields['summary']['Docker image'] = workflow.container
+//     email_fields['summary']['Nextflow Version'] = workflow.nextflow.version
+//     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
+//     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
+//
+//     // TODO nf-core: If not using MultiQC, strip out this code (including params.maxMultiqcEmailFileSize)
+//     // On success try attach the multiqc report
+//     def mqc_report = null
+//     try {
+//         if (workflow.success) {
+//             mqc_report = multiqc_report.getVal()
+//             if (mqc_report.getClass() == ArrayList){
+//                 log.warn "[nf-core/nanodemux] Found multiple reports from process 'multiqc', will use only one"
+//                 mqc_report = mqc_report[0]
+//             }
+//         }
+//     } catch (all) {
+//         log.warn "[nf-core/nanodemux] Could not attach MultiQC report to summary email"
+//     }
+//
+//     // Render the TXT template
+//     def engine = new groovy.text.GStringTemplateEngine()
+//     def tf = new File("$baseDir/assets/email_template.txt")
+//     def txt_template = engine.createTemplate(tf).make(email_fields)
+//     def email_txt = txt_template.toString()
+//
+//     // Render the HTML template
+//     def hf = new File("$baseDir/assets/email_template.html")
+//     def html_template = engine.createTemplate(hf).make(email_fields)
+//     def email_html = html_template.toString()
+//
+//     // Render the sendmail template
+//     def smail_fields = [ email: params.email, subject: subject, email_txt: email_txt, email_html: email_html, baseDir: "$baseDir", mqcFile: mqc_report, mqcMaxSize: params.maxMultiqcEmailFileSize.toBytes() ]
+//     def sf = new File("$baseDir/assets/sendmail_template.txt")
+//     def sendmail_template = engine.createTemplate(sf).make(smail_fields)
+//     def sendmail_html = sendmail_template.toString()
+//
+//     // Send the HTML e-mail
+//     if (params.email) {
+//         try {
+//           if( params.plaintext_email ){ throw GroovyException('Send plaintext e-mail, not HTML') }
+//           // Try to send HTML e-mail using sendmail
+//           [ 'sendmail', '-t' ].execute() << sendmail_html
+//           log.info "[nf-core/nanodemux] Sent summary e-mail to $params.email (sendmail)"
+//         } catch (all) {
+//           // Catch failures and try with plaintext
+//           [ 'mail', '-s', subject, params.email ].execute() << email_txt
+//           log.info "[nf-core/nanodemux] Sent summary e-mail to $params.email (mail)"
+//         }
+//     }
+//
+//     // Write summary e-mail HTML to a file
+//     def output_d = new File( "${params.outdir}/pipeline_info/" )
+//     if( !output_d.exists() ) {
+//       output_d.mkdirs()
+//     }
+//     def output_hf = new File( output_d, "pipeline_report.html" )
+//     output_hf.withWriter { w -> w << email_html }
+//     def output_tf = new File( output_d, "pipeline_report.txt" )
+//     output_tf.withWriter { w -> w << email_txt }
+//
+//     c_reset = params.monochrome_logs ? '' : "\033[0m";
+//     c_purple = params.monochrome_logs ? '' : "\033[0;35m";
+//     c_green = params.monochrome_logs ? '' : "\033[0;32m";
+//     c_red = params.monochrome_logs ? '' : "\033[0;31m";
+//
+//     if (workflow.stats.ignoredCountFmt > 0 && workflow.success) {
+//       log.info "${c_purple}Warning, pipeline completed, but with errored process(es) ${c_reset}"
+//       log.info "${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCountFmt} ${c_reset}"
+//       log.info "${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCountFmt} ${c_reset}"
+//     }
+//
+//     if(workflow.success){
+//         log.info "${c_purple}[nf-core/nanodemux]${c_green} Pipeline completed successfully${c_reset}"
+//     } else {
+//         checkHostname()
+//         log.info "${c_purple}[nf-core/nanodemux]${c_red} Pipeline completed with errors${c_reset}"
+//     }
+//
+// }
 
 
 def nfcoreHeader(){
@@ -427,3 +444,25 @@ def checkHostname(){
         }
     }
 }
+
+// def get_nanopore_info(csv){
+//   def start = 0
+//   def end = 3
+//   csv.eachLine(start) { line, lineNo ->
+//     if (lineNo <= end) {
+//           def parts = line.split(",")
+//       if (parts[0] == "Flowcell") {
+//         flowcell = parts[1];
+//       }
+//       else if(parts[0] == "Kit") {
+//         kit = parts[1];
+//       }
+//       else if(parts[0] == "Barcode_kit") {
+//         barcode_kit = parts[1];
+//       }
+//       }
+//   }
+//   return [flowcell, kit, barcode_kit]
+// }
+//
+// def (flowcell, kit, barcode_kit) = get_nanopore_info(params.samplesheet)
