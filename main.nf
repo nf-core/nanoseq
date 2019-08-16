@@ -226,6 +226,8 @@ if (params.run_dir) {
 //                     else filename }
 //     }
 //
+//     container = params.samtools_container
+//
 //     input:
 //     set val(name), file(sam) from ch_graphmap_bam
 //
@@ -245,33 +247,13 @@ if (params.run_dir) {
 //     """
 // }
 
-// def get_nanopore_info(csv){
-//   def start = 0
-//   def end = 3
-//   csv.eachLine(start) { line, lineNo ->
-//     if (lineNo <= end) {
-//           def parts = line.split(",")
-//       if (parts[0] == "Flowcell") {
-//         flowcell = parts[1];
-//       }
-//       else if(parts[0] == "Kit") {
-//         kit = parts[1];
-//       }
-//       else if(parts[0] == "Barcode_kit") {
-//         barcode_kit = parts[1];
-//       }
-//       }
-//   }
-//   return [flowcell, kit, barcode_kit]
-// }
-//
-// def (flowcell, kit, barcode_kit) = get_nanopore_info(params.samplesheet)
-
 // /*
 //  * STEP 3 - MultiQC
 //  */
 // process multiqc {
 //     publishDir "${params.outdir}/${runName}/MultiQC", mode: 'copy'
+//
+//     container = params.multiqc_container
 //
 //     input:
 //     file summary from minion_summary
@@ -291,6 +273,8 @@ if (params.run_dir) {
 //  */
 // process output_documentation {
 //     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
+//
+//     container = params.rmarkdown_container
 //
 //     input:
 //     file output_docs from ch_output_docs
@@ -460,3 +444,25 @@ def checkHostname(){
         }
     }
 }
+
+// def get_nanopore_info(csv){
+//   def start = 0
+//   def end = 3
+//   csv.eachLine(start) { line, lineNo ->
+//     if (lineNo <= end) {
+//           def parts = line.split(",")
+//       if (parts[0] == "Flowcell") {
+//         flowcell = parts[1];
+//       }
+//       else if(parts[0] == "Kit") {
+//         kit = parts[1];
+//       }
+//       else if(parts[0] == "Barcode_kit") {
+//         barcode_kit = parts[1];
+//       }
+//       }
+//   }
+//   return [flowcell, kit, barcode_kit]
+// }
+//
+// def (flowcell, kit, barcode_kit) = get_nanopore_info(params.samplesheet)
