@@ -5,9 +5,8 @@ import argparse
 import csv
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument('--samplesheet', type=str)
+argparser.add_argument('--design', type=str)
 ARGS = argparser.parse_args()
-samplesheet = ARGS.samplesheet
 
 # get idx of Data tag
 data_tag_search = '[Data]'
@@ -18,7 +17,7 @@ with open(samplesheet, 'r') as f:
         if data_tag_search in row:
             data_index = idx
 
-sample_df = pd.read_csv(samplesheet, skiprows=range(0, data_index + 1))
+sample_df = pd.read_csv(ARGS.design, skiprows=range(0, data_index + 1))
 
 result = sample_df[sample_df["Fastq_path"].isnull()]
 
