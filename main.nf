@@ -24,7 +24,7 @@ def helpMessage() {
     Mandatory arguments:
       --design                      Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
       -profile                      Configuration profile to use. Can use multiple (comma separated)
-                                    Available: conda, docker, singularity, awsbatch, test and more.
+                                    Available: docker, singularity, awsbatch, test and more.
 
     Demultiplexing
       --run_dir
@@ -178,14 +178,28 @@ if (params.run_dir) {
       file run_dir from ch_run_dir
 
       output:
-      file "barcode*/*.fastq" into ch_guppy_fastq
+      file "fastq_merged/*.fastq" into ch_guppy_merged_fastq
+      file "barcode*" into ch_guppy_raw_fastq
       file "unclassified" into ch_guppy_unclassifed
       file "*.txt" into ch_guppy_summary
       file "*.{log,js}" into ch_guppy_log
 
       script:
       """
-      guppy_basecaller --input_path $run_dir --save_path . --flowcell $params.flowcell --kit $params.kit --barcode_kits $params.barcode_kit
+      guppy_basecaller \\
+          --input_path $run_dir\\
+          --save_path . \\
+          --flowcell $params.flowcell \\
+          --kit $params.kit \\
+          --barcode_kits $params.barcode_kit
+
+      ## Concatenate fastq files for each barcode
+      mkdir fastq_merged
+      for dir in barcode*/
+      do
+          dir=\${dir%*/}
+          cat \$dir/*.fastq > fastq_merged/\$dir.fastq
+      done
       """
     }
 }
@@ -193,7 +207,7 @@ if (params.run_dir) {
 // /*
 //  * STEP 2 - MinionQC
 //  */
-// // Failing due to Error: Unknown TZ UTC. Will need to be added upstream in Bioconda/Docker recipe
+// // Failing due to container Error: Unknown TZ UTC. Will need to be added upstream in Bioconda/Docker recipe
 // if (params.run_dir) {
 //     process MinIONQC {
 //         publishDir "${params.outdir}/MinIONQC", mode: 'copy'
