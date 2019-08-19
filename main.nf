@@ -214,14 +214,14 @@ if (params.run_dir) {
         container = 'quay.io/biocontainers/pycoqc:2.2.4--py_0'
 
         input:
-        file summary from ch_guppy_summary
+        file summary_txt from ch_guppy_summary
 
         output:
         file "*.html" into ch_minionqc_png
 
         script:
         """
-        pycoQC -f $summary -o pycoQC_output.html
+        pycoQC -f $summary_txt -o pycoQC_output.html
         """
     }
 }
