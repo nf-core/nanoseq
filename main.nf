@@ -211,7 +211,7 @@ if (params.run_dir) {
     process pycoQC {
         publishDir "${params.outdir}/pycoQC", mode: 'copy'
 
-        container = params.pycoqc_container
+        container = 'quay.io/biocontainers/pycoqc:2.2.4--py_0'
 
         input:
         file summary from ch_guppy_summary
