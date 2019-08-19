@@ -10,3 +10,4 @@ tests/test_data
 pipeline_info/
 bin/.Rhistory
 bin/test_functions.nf
+design.csv
