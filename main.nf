@@ -178,10 +178,10 @@ if (params.run_dir) {
       file run_dir from ch_run_dir
 
       output:
-      file "barcode_*/*.fastq" into ch_guppy_fastq
+      file "barcode*/*.fastq" into ch_guppy_fastq
       file "unclassified" into ch_guppy_unclassifed
       file "*.txt" into ch_guppy_summary
-      file "*.log" into ch_guppy_log
+      file "*.{log,js}" into ch_guppy_log
 
       script:
       """
