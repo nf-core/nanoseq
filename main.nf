@@ -27,10 +27,10 @@ def helpMessage() {
                                     Available: docker, singularity, awsbatch, test and more.
 
     Demultiplexing
-      --run_dir
-      --flowcell
-      --kit
-      --barcode_kit
+      --run_dir                     
+      --flowcell                    Which flowcell was used that the sequencing was performed with (i.e FLO-MIN106)
+      --kit                         The sequencing kit used (i.e. SQK-LSK109)
+      --barcode_kit                 The barcoding kit used (i.e. SQK-PBK004)
 
     Other options:
       --outdir                      The output directory where the results will be saved
@@ -226,9 +226,30 @@ if (params.run_dir) {
     }
 }
 
+// /*
+//  * STEP 3.2 - Convert .bam to coordinate sorted .bam
+//  */
 
 
+ch_fqname_fqfile_guppy = ch_guppy_merged_fastq.map { fqFile -> [fqFile.getName(), fqFile ] }
+process graphMap {
+    tag "$name"
+    //label 'process_medium'
+    publishDir path: "${params.outdir}/graphmap", mode: 'copy'
 
+    container = 'quay.io/biocontainers/graphmap:0.5.2--he941832_2'
+
+    input:
+    set vale(name), file(fastqs) from ch_fqname_fqfile_guppy
+
+    output:
+    set val(name), file("*.{sam}") into ch_graphmap_bam
+
+    script:
+    """
+    graphmap align -t NumThreads -r ref.fa -d $fastq -o out.sam --extcigar
+    """
+}
 
 // GRAPHMAP INDEX GENOME
 // ./graphmap align -I -r escherichia_coli.fa
