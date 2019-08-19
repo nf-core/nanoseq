@@ -24,7 +24,7 @@ def helpMessage() {
     Mandatory arguments:
       --design                      Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
       -profile                      Configuration profile to use. Can use multiple (comma separated)
-                                    Available: conda, docker, singularity, awsbatch, test and more.
+                                    Available: docker, singularity, awsbatch, test and more.
 
     Demultiplexing
       --run_dir
@@ -134,6 +134,15 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
    return yaml_file
 }
 
+// // Container paths
+// minionqc_container = 'quay.io/biocontainers/r-minionqc:1.4.1--r351_1'
+// porechop_container = 'quay.io/biocontainers/porechop:0.2.3_seqan2.1.1--py36h2'
+// pycoqc_container = 'quay.io/biocontainers/pycoqc:2.2.4--py_0'
+// nanoplot_container = 'quay.io/biocontainers/nanoplot:1.26.3--py_0'
+// nanofilt_container = 'quay.io/biocontainers/nanofilt:2.5.0--py_0'
+// pysam = 'quay.io/biocontainers/pysam:0.15.3--py36hda2845c_1'
+// graphmap_container = 'quay.io/biocontainers/graphmap:0.5.2--he941832_2'
+
 // /*
 //  * PREPROCESSING - CHECK DESIGN FILE
 //  */
@@ -161,21 +170,36 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 if (params.run_dir) {
     process guppy {
       tag "$run_dir"
+      label 'process_high'
       publishDir path: "${params.outdir}/guppy", mode: 'copy'
-      container = params.guppy_container
+      container = 'genomicpariscentre/guppy:3.2.2'
 
       input:
       file run_dir from ch_run_dir
 
       output:
-      file "barcode_*/*.fastq" into ch_guppy_fastq
+      file "fastq_merged/*.fastq" into ch_guppy_merged_fastq
+      file "barcode*" into ch_guppy_raw_fastq
       file "unclassified" into ch_guppy_unclassifed
       file "*.txt" into ch_guppy_summary
-      file "*.log" into ch_guppy_log
+      file "*.{log,js}" into ch_guppy_log
 
       script:
       """
-      guppy_basecaller --input_path $run_dir --save_path . --flowcell $params.flowcell --kit $params.kit --barcode_kits $params.barcode_kit
+      guppy_basecaller \\
+          --input_path $run_dir\\
+          --save_path . \\
+          --flowcell $params.flowcell \\
+          --kit $params.kit \\
+          --barcode_kits $params.barcode_kit
+
+      ## Concatenate fastq files for each barcode
+      mkdir fastq_merged
+      for dir in barcode*/
+      do
+          dir=\${dir%*/}
+          cat \$dir/*.fastq > fastq_merged/\$dir.fastq
+      done
       """
     }
 }
@@ -183,14 +207,15 @@ if (params.run_dir) {
 // /*
 //  * STEP 2 - MinionQC
 //  */
+// // Failing due to container Error: Unknown TZ UTC. Will need to be added upstream in Bioconda/Docker recipe
 // if (params.run_dir) {
 //     process MinIONQC {
 //         publishDir "${params.outdir}/MinIONQC", mode: 'copy'
 //
-//         container = params.minionqc_container
+//         container = 'quay.io/biocontainers/r-minionqc:1.4.1--r351_1'
 //
 //         input:
-//         file summary from ch_guppy_summary
+//         file txt from ch_guppy_summary
 //
 //         output:
 //         file "*.png" into ch_minionqc_png
@@ -198,7 +223,10 @@ if (params.run_dir) {
 //
 //         script:
 //         """
-//         Rscript MinIONQC.R -i $summary
+//         MINIONQC=`which MinIONQC.R`
+//         #export TZ="Europe/Berlin"
+//         Rscript -e "Sys.setenv(TZ="Europe/Berlin")" \$MINIONQC -i $txt
+//         #Rscript \$MINIONQC -i $txt
 //         """
 //     }
 // }
@@ -226,7 +254,7 @@ if (params.run_dir) {
 //                     else filename }
 //     }
 //
-//     container = params.samtools_container
+//     container = 'quay.io/biocontainers/samtools:1.9--h8571acd_11'
 //
 //     input:
 //     set val(name), file(sam) from ch_graphmap_bam
@@ -248,12 +276,37 @@ if (params.run_dir) {
 // }
 
 // /*
+//  * Parse software version numbers
+//  */
+// process get_software_versions {
+//     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+//     saveAs: {filename ->
+//         if (filename.indexOf(".csv") > 0) filename
+//         else null
+//     }
+//     container = ''
+//
+//     output:
+//     file 'software_versions_mqc.yaml' into software_versions_yaml
+//     file "software_versions.csv"
+//
+//     script:
+//     // TODO nf-core: Get all tools to print their version number here
+//     """
+//     echo $workflow.manifest.version > v_pipeline.txt
+//     echo $workflow.nextflow.version > v_nextflow.txt
+//     multiqc --version > v_multiqc.txt
+//     scrape_software_versions.py &> software_versions_mqc.yaml
+//     """
+// }
+
+// /*
 //  * STEP 3 - MultiQC
 //  */
 // process multiqc {
 //     publishDir "${params.outdir}/${runName}/MultiQC", mode: 'copy'
 //
-//     container = params.multiqc_container
+//     container = 'quay.io/biocontainers/multiqc:1.7--py_3'
 //
 //     input:
 //     file summary from minion_summary
@@ -274,7 +327,7 @@ if (params.run_dir) {
 // process output_documentation {
 //     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 //
-//     container = params.rmarkdown_container
+//     container = 'quay.io/biocontainers/r-rmarkdown:0.9.5--r3.3.2_0'
 //
 //     input:
 //     file output_docs from ch_output_docs
