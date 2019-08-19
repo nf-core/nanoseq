@@ -227,7 +227,7 @@ if (params.run_dir) {
 }
 
 // /*
-//  * STEP 3.1 - Align fastqs to reference genome
+//  * STEP 3.1 - Align fastqs to reference genome provided in sample sheet
 //  */
 
 
