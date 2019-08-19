@@ -231,25 +231,25 @@ if (params.run_dir) {
 //  */
 
 
-ch_fqname_fqfile_guppy = ch_guppy_merged_fastq.map { fqFile -> [fqFile.getName(), fqFile ] }
-process graphMap {
-    tag "$name"
-    //label 'process_medium'
-    publishDir path: "${params.outdir}/graphmap", mode: 'copy'
+// ch_fqname_fqfile_guppy = ch_guppy_merged_fastq.map { fqFile -> [fqFile.getName(), fqFile ] }
+// process graphMap {
+//     tag "$name"
+//     //label 'process_medium'
+//     publishDir path: "${params.outdir}/graphmap", mode: 'copy'
 
-    container = 'quay.io/biocontainers/graphmap:0.5.2--he941832_2'
+//     container = 'quay.io/biocontainers/graphmap:0.5.2--he941832_2'
 
-    input:
-    set vale(name), file(fastqs) from ch_fqname_fqfile_guppy
+//     input:
+//     set vale(name), file(fastqs) from ch_fqname_fqfile_guppy
 
-    output:
-    set val(name), file("*.{sam}") into ch_graphmap_bam
+//     output:
+//     set val(name), file("*.{sam}") into ch_graphmap_bam
 
-    script:
-    """
-    graphmap align -t NumThreads -r ref.fa -d $fastq -o out.sam --extcigar
-    """
-}
+//     script:
+//     """
+//     graphmap align -t NumThreads -r ref.fa -d $fastq -o out.sam --extcigar
+//     """
+// }
 
 // GRAPHMAP INDEX GENOME
 // ./graphmap align -I -r escherichia_coli.fa
