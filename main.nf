@@ -190,28 +190,28 @@ if (params.run_dir) {
     }
 }
 
-// /*
-//  * STEP 2 - MinionQC
-//  */
-// if (params.run_dir) {
-//     process MinIONQC {
-//         publishDir "${params.outdir}/MinIONQC", mode: 'copy'
-//
-//         container = 'quay.io/biocontainers/r-minionqc:1.4.1--r351_1'
-//
-//         input:
-//         file summary from ch_guppy_summary
-//
-//         output:
-//         file "*.png" into ch_minionqc_png
-//         file "*.yaml" into ch_minionqc_yaml
-//
-//         script:
-//         """
-//         Rscript MinIONQC.R -i $summary
-//         """
-//     }
-// }
+/*
+ * STEP 2 - MinionQC
+ */
+if (params.run_dir) {
+    process MinIONQC {
+        publishDir "${params.outdir}/MinIONQC", mode: 'copy'
+
+        container = 'quay.io/biocontainers/r-minionqc:1.4.1--r351_1'
+
+        input:
+        file summary from ch_guppy_summary
+
+        output:
+        file "*.png" into ch_minionqc_png
+        file "*.yaml" into ch_minionqc_yaml
+
+        script:
+        """
+        Rscript MinIONQC.R -i $summary
+        """
+    }
+}
 
 
 
