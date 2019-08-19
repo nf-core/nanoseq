@@ -205,7 +205,7 @@ if (params.run_dir) {
 }
 
 /*
- * STEP 2 - pycoQC
+ * STEP 2 - pycoQC - quality control 
  */
 if (params.run_dir) {
     process pycoQC {
@@ -227,7 +227,7 @@ if (params.run_dir) {
 }
 
 // /*
-//  * STEP 3.2 - Convert .bam to coordinate sorted .bam
+//  * STEP 3.1 - Align fastqs to reference genome
 //  */
 
 
