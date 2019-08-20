@@ -1,6 +1,6 @@
 # nf-core/nanodemux
 
-**A pipeline to demultiplex ONT Nanopore data and quality control**.
+**A pipeline to demultiplex ONT Nanopore data, quality control and simple alignment**.
 
 [![Build Status](https://travis-ci.com/nf-core/nanodemux.svg?branch=master)](https://travis-ci.com/nf-core/nanodemux)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A50.32.0-brightgreen.svg)](https://www.nextflow.io/)
@@ -32,15 +32,19 @@ This pipeline
 2. Basecalling and Barcoding (CONDITIONAL)
     * If fastq files are not provided, this process performs demultiplexing by basecalling and barcoding.
     * Must have access to the Nanopore software Guppy and have the kit and barcode kit used on the sample sheet in the format of the example sample sheet provided
-3. MinIONQC for quality checking the data
-    * [MinIONQC](https://github.com/roblanf/minion_qc) outputs diagnostic plots and data for quality control of sequencing data from Oxford Nanopore's MinION
-4. MultiQC
-    * [MultiQC](https://multiqc.info/docs/) arrange the output produced in the previous step of MinIONQC in a more readable and consolidated format. 
+3. pycoQC for quality checking the data
+    * [MinIONQC](https://github.com/roblanf/minion_qc) outputs diagnostic plots and data for quality control of sequencing data from Oxford Nanopore's MinION in an HTML format.
+4. GraphMap
+	* [GraphMap](https://github.com/isovic/graphmap) is a highly sensitive and accurate mapper for long, error-prone reads
+5. Sorting BAM files 
+	* Converting .bam files to coordinate sorted .bam
+6. MultiQC
+    * [MultiQC](https://multiqc.info/docs/)  
 
 ## Credits
-nf-core/nanodemux was originally written by Chelsea Sawyer from The Bioinformatics & Biostatistics Group for use at The Francis Crick Institute, London.
+nf-core/nanodemux was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from The Bioinformatics & Biostatistics Group for use at The Francis Crick Institute, London.
 
-Many thanks to others who have helped out along the way too, including (but not limited to): [`@drpatelh`](https://github.com/drpatelh), [`@crickbabs`](https://github.com/crickbabs)
+Many thanks to others who have helped out along the way too, including (but not limited to):  [`@crickbabs`](https://github.com/crickbabs)
 
 ## Citation
 
