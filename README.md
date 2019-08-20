@@ -33,7 +33,7 @@ This pipeline
     * If fastq files are not provided, this process performs demultiplexing by basecalling and barcoding.
     * Must have access to the Nanopore software Guppy and have the kit and barcode kit used on the sample sheet in the format of the example sample sheet provided
 3. pycoQC for quality checking the data
-    * [MinIONQC](https://github.com/roblanf/minion_qc) outputs diagnostic plots and data for quality control of sequencing data from Oxford Nanopore's MinION in an HTML format.
+    * [PycoQC](https://github.com/a-slide/pycoQC) outputs diagnostic plots and data for quality control of sequencing data from Oxford Nanopore's MinION in an HTML format.
 4. GraphMap
 	* [GraphMap](https://github.com/isovic/graphmap) is a highly sensitive and accurate mapper for long, error-prone reads
 5. Sorting BAM files 
