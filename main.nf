@@ -34,10 +34,6 @@ def helpMessage() {
       --skipDemultiplexing          Skip demultiplexing step with guppy
 
     References                      If not specified in the configuration file or you wish to overwrite any of the references.
-      --genome                      Name of iGenomes reference
-      --fasta                       Path to fasta reference file. Not mandatory when using reference in iGenomes config via --genome
-      --gtf                         Path to GTF file. Not mandatory when using reference in iGenomes config via --genome
-      --gff                         Path to GFF3 file
       --saveReference               Save the generated reference files to the results directory
 
     Trimming
@@ -79,29 +75,14 @@ if (params.help){
     exit 0
 }
 
-// Check if genome exists in the config file
-if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
-    exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
-}
-
-// Reference index path configuration
-params.fasta = params.genomes[params.genome]?.fasta
-params.gtf = params.genomes[params.genome]?.gtf
-params.gff = params.genomes[params.genome]?.gff
-
-if (params.samplesheet)    { ch_samplesheet = file(params.samplesheet, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
-if (params.fasta)          { ch_fasta = file(params.fasta, checkIfExists: true) }
-if (params.gtf)            { ch_gtf = file(params.gtf, checkIfExists: true) }
-if (params.gff)            { ch_gff = file(params.gtf, checkIfExists: true) }
-
+if (params.samplesheet)         { ch_samplesheet = file(params.samplesheet, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 if (!params.skipDemultiplexing) {
-    if (params.run_dir)      { ch_run_dir = file(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
-    if (!params.flowcell)    { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
-    if (!params.kit)         { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
-    if (!params.barcode_kit) { exit 1, "Please specify a valid barcode kit for demultiplexing!" }
+    if (params.run_dir)         { ch_run_dir = file(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
+    if (!params.flowcell)       { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
+    if (!params.kit)            { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
+    if (!params.barcode_kit)    { exit 1, "Please specify a valid barcode kit for demultiplexing!" }
 }
-
-if (!params.skipAlignment) {
+if (!params.skipAlignment)      {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap'){
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
     }
@@ -179,88 +160,97 @@ process checkSampleSheet {
     """
 }
 
+// Function to see if genome exists in iGenomes
+def get_fasta(genome, genomeMap) {
+    def fasta = genome
+    if (genome) {
+        if (genomeMap.containsKey(genome)) {
+            fasta = file(genomeMap[genome].fasta, checkIfExists: true)
+        } else {
+            fasta = file(genome, checkIfExists: true)
+        }
+    }
+    return fasta
+}
+
 /*
  * Create channels for inputs
  */
-// WRITE FUNCTION TO CHECK GENOME EXISTS IN IGENOMES OR IF VALID FASTA PATH
 if (!params.skipDemultiplexing) {
     ch_samplesheet_reformat.splitCsv(header:true, sep:',')
-                       .map { row -> [ row.sample, row.barcode, row.genome ] }
+                       .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
                        .set { ch_sample_info }
 } else {
     ch_samplesheet_reformat.splitCsv(header:true, sep:',')
-                       .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), row.genome ] ] }
+                       .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
                        .set { ch_sample_info }
 }
 
-ch_sample_info.println()
+/*
+ * STEP 2 - Basecalling, demultipexing using Guppy, and QC with pycoQC and NanoPlot
+ */
+if (!params.skipDemultiplexing){
+    process guppy {
+        tag "$run_dir"
+        label 'process_high'
+        publishDir path: "${params.outdir}/guppy", mode: 'copy'
 
+        input:
+        file run_dir from ch_run_dir
 
-// /*
-//  * STEP 2 - Basecalling, demultipexing using Guppy, and QC with pycoQC and NanoPlot
-//  */
-// if (!params.skipDemultiplexing){
-//     process guppy {
-//         tag "$run_dir"
-//         label 'process_high'
-//         publishDir path: "${params.outdir}/guppy", mode: 'copy'
-//
-//         input:
-//         file run_dir from ch_run_dir
-//
-//         output:
-//         file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
-//                                             ch_guppy_graphmap_fastq
-//         file "*.txt" into ch_guppy_pycoqc_summary,
-//                           ch_guppy_nanoplot_summary
-//         file "*.version" into ch_guppy_version
-//         file "barcode*"
-//         file "unclassified"
-//         file "*.{log,js}"
-//
-//         script:
-//         """
-//         guppy_basecaller \\
-//             --input_path $run_dir \\
-//             --save_path . \\
-//             --flowcell $params.flowcell \\
-//             --kit $params.kit \\
-//             --barcode_kits $params.barcode_kit
-//
-//         ## Concatenate fastq files for each barcode
-//         mkdir fastq_merged
-//         for dir in barcode*/
-//         do
-//             dir=\${dir%*/}
-//             cat \$dir/*.fastq > fastq_merged/\$dir.fastq
-//         done
-//         gzip fastq_merged/*.fastq
-//
-//         guppy_basecaller --version &> guppy.version
-//         """
-//     }
-//
-//     process pycoQC {
-//         tag "$summary_txt"
-//         publishDir "${params.outdir}/pycoQC", mode: 'copy'
-//
-//         when:
-//         !params.skipQC && !params.skipPycoQC
-//
-//         input:
-//         file summary_txt from ch_guppy_pycoqc_summary
-//
-//         output:
-//         file "*.html"
-//         file "*.version" into ch_pycoqc_version
-//
-//         script:
-//         """
-//         pycoQC -f $summary_txt -o pycoQC_output.html
-//         pycoQC --version &> pycoqc.version
-//         """
-//     }
-// }
+        output:
+        file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
+                                            ch_guppy_graphmap_fastq
+        file "*.txt" into ch_guppy_pycoqc_summary,
+                          ch_guppy_nanoplot_summary
+        file "*.version" into ch_guppy_version
+        file "barcode*"
+        file "unclassified"
+        file "*.{log,js}"
+
+        script:
+        """
+        guppy_basecaller \\
+            --input_path $run_dir \\
+            --save_path . \\
+            --flowcell $params.flowcell \\
+            --kit $params.kit \\
+            --barcode_kits $params.barcode_kit
+
+        ## Concatenate fastq files for each barcode
+        mkdir fastq_merged
+        for dir in barcode*/
+        do
+            dir=\${dir%*/}
+            cat \$dir/*.fastq > fastq_merged/\$dir.fastq
+        done
+        gzip fastq_merged/*.fastq
+
+        guppy_basecaller --version &> guppy.version
+        """
+    }
+
+    process pycoQC {
+        tag "$summary_txt"
+        publishDir "${params.outdir}/pycoQC", mode: 'copy'
+
+        when:
+        !params.skipQC && !params.skipPycoQC
+
+        input:
+        file summary_txt from ch_guppy_pycoqc_summary
+
+        output:
+        file "*.html"
+        file "*.version" into ch_pycoqc_version
+
+        script:
+        """
+        pycoQC -f $summary_txt -o pycoQC_output.html
+        pycoQC --version &> pycoqc.version
+        """
+    }
+}
 
 // /*
 //  * STEP 3 - NanoPlot - nanopore read QC
