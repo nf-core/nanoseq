@@ -187,73 +187,69 @@ checkHostname()
 // }
 
 /*
- * STEP 2 - Basecalling and demultipexing using Guppy
+ * STEP 2 - Basecalling, demultipexing using Guppy, and QC with pycoQC and NanoPlot
  */
-process guppy {
-    tag "$run_dir"
-    label 'process_high'
-    publishDir path: "${params.outdir}/guppy", mode: 'copy'
+if (!params.skipDemultiplexing){
+    process guppy {
+        tag "$run_dir"
+        label 'process_high'
+        publishDir path: "${params.outdir}/guppy", mode: 'copy'
 
-    when:
-    !params.skipDemultiplexing
+        input:
+        file run_dir from ch_run_dir
 
-    input:
-    file run_dir from ch_run_dir
+        output:
+        file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
+                                            ch_guppy_graphmap_fastq
+        file "*.txt" into ch_guppy_pycoqc_summary,
+                          ch_guppy_nanoplot_summary
+        file "*.version" into ch_guppy_version
+        file "barcode*"
+        file "unclassified"
+        file "*.{log,js}"
 
-    output:
-    file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
-                                        ch_guppy_graphmap_fastq
-    file "*.txt" into ch_guppy_pycoqc_summary,
-                      ch_guppy_nanoplot_summary
-    file "*.version" into ch_guppy_version
-    file "barcode*"
-    file "unclassified"
-    file "*.{log,js}"
+        script:
+        """
+        guppy_basecaller \\
+            --input_path $run_dir \\
+            --save_path . \\
+            --flowcell $params.flowcell \\
+            --kit $params.kit \\
+            --barcode_kits $params.barcode_kit
 
-    script:
-    """
-    guppy_basecaller \\
-        --input_path $run_dir \\
-        --save_path . \\
-        --flowcell $params.flowcell \\
-        --kit $params.kit \\
-        --barcode_kits $params.barcode_kit
+        ## Concatenate fastq files for each barcode
+        mkdir fastq_merged
+        for dir in barcode*/
+        do
+            dir=\${dir%*/}
+            cat \$dir/*.fastq > fastq_merged/\$dir.fastq
+        done
+        gzip fastq_merged/*.fastq
 
-    ## Concatenate fastq files for each barcode
-    mkdir fastq_merged
-    for dir in barcode*/
-    do
-        dir=\${dir%*/}
-        cat \$dir/*.fastq > fastq_merged/\$dir.fastq
-    done
-    gzip fastq_merged/*.fastq
+        guppy_basecaller --version &> guppy.version
+        """
+    }
 
-    guppy_basecaller --version &> guppy.version
-    """
-}
+    process pycoQC {
+        tag "$summary_txt"
+        publishDir "${params.outdir}/pycoQC", mode: 'copy'
 
-/*
- * STEP 2 - pycoQC - nanopore read QC
- */
-process pycoQC {
-    tag "$summary_txt"
-    publishDir "${params.outdir}/pycoQC", mode: 'copy'
+        when:
+        !params.skipQC && !params.skipPycoQC
 
-    when:
-    !params.skipDemultiplexing && !params.skipQC && !params.skipPycoQC
+        input:
+        file summary_txt from ch_guppy_pycoqc_summary
 
-    input:
-    file summary_txt from ch_guppy_pycoqc_summary
+        output:
+        file "*.html"
+        file "*.version" into ch_pycoqc_version
 
-    output:
-    file "*.html"
-    file "*.version" into ch_pycoqc_version
-
-    script:
-    """
-    pycoQC -f $summary_txt -o pycoQC_output.html
-    pycoQC --version &> pycoqc.version
-    """
+        script:
+        """
+        pycoQC -f $summary_txt -o pycoQC_output.html
+        pycoQC --version &> pycoqc.version
+        """
+    }
 }
 
 // /*
@@ -407,9 +403,14 @@ process pycoQC {
 //     }
 //
 //     input:
-//     //file imctools from ch_imctools_version.first()
-//     //file cellprofiler from ch_cellprofiler_version.first()
-//     //file ilastik from ch_ilastik_version.first()
+//     file guppy from ch_guppy_version.collect().ifEmpty([])
+//     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
+//     file nanoplot from ch_nanoplot_version.first()
+//     file align from ch_align_version.first()
+//     file samtools from ch_samtools_version.first()
+//     file pysam from ch_pysam_version.first()
+//     file multiqc from ch_multiqc_version.collect().ifEmpty([])
+//     file rmarkdown from ch_rmarkdown_version.collect().ifEmpty([])
 //
 //     output:
 //     file 'software_versions_mqc.yaml' into software_versions_yaml
