@@ -128,14 +128,6 @@ if( workflow.profile == 'awsbatch') {
 ch_multiqc_config = Channel.fromPath(params.multiqc_config)
 ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
 
-// summary['Fasta File']           = params.fasta
-// summary['GTF File']             = params.gtf
-// if (params.skipTrimming){
-//     summary['Trimming Step']    = 'Skipped'
-// }
-// if (params.saveAlignedIntermediates) summary['Save Intermeds'] =  'Yes'
-// if (params.skipMultiQC)         summary['Skip MultiQC'] = 'Yes'
-
 // Header log info
 log.info nfcoreHeader()
 def summary = [:]
@@ -167,90 +159,108 @@ log.info "\033[2m----------------------------------------------------\033[0m"
 // Check the hostnames against configured profiles
 checkHostname()
 
-// /*
-//  * PREPROCESSING - CHECK SAMPLESHEET
-//  */
-// process checkSampleSheet {
-//     tag "$samplesheet"
-//     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-//
-//     input:
-//     file samplesheet from ch_samplesheet
-//
-//     //output:
-//     //file "samplesheet_checked.csv" into ch_samplesheet_csv
-//
-//     script:  // This script is bundled with the pipeline, in nf-core/nanodemux/bin/
-//     """
-//     check_samplesheet.py $samplesheet
-//     """
-// }
+/*
+ * PREPROCESSING - CHECK SAMPLESHEET
+ */
+process checkSampleSheet {
+    tag "$samplesheet"
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy'
+
+    input:
+    file samplesheet from ch_samplesheet
+
+    output:
+    file "*.csv" into ch_samplesheet_reformat
+
+    script:  // This script is bundled with the pipeline, in nf-core/nanodemux/bin/
+    demultipex = params.skipDemultiplexing ? "" : "--demultiplex"
+    """
+    check_samplesheet.py $samplesheet samplesheet_reformat.csv $demultipex
+    """
+}
 
 /*
- * STEP 2 - Basecalling, demultipexing using Guppy, and QC with pycoQC and NanoPlot
+ * Create channels for inputs
  */
-if (!params.skipDemultiplexing){
-    process guppy {
-        tag "$run_dir"
-        label 'process_high'
-        publishDir path: "${params.outdir}/guppy", mode: 'copy'
-
-        input:
-        file run_dir from ch_run_dir
-
-        output:
-        file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
-                                            ch_guppy_graphmap_fastq
-        file "*.txt" into ch_guppy_pycoqc_summary,
-                          ch_guppy_nanoplot_summary
-        file "*.version" into ch_guppy_version
-        file "barcode*"
-        file "unclassified"
-        file "*.{log,js}"
-
-        script:
-        """
-        guppy_basecaller \\
-            --input_path $run_dir \\
-            --save_path . \\
-            --flowcell $params.flowcell \\
-            --kit $params.kit \\
-            --barcode_kits $params.barcode_kit
-
-        ## Concatenate fastq files for each barcode
-        mkdir fastq_merged
-        for dir in barcode*/
-        do
-            dir=\${dir%*/}
-            cat \$dir/*.fastq > fastq_merged/\$dir.fastq
-        done
-        gzip fastq_merged/*.fastq
-
-        guppy_basecaller --version &> guppy.version
-        """
-    }
-
-    process pycoQC {
-        tag "$summary_txt"
-        publishDir "${params.outdir}/pycoQC", mode: 'copy'
-
-        when:
-        !params.skipQC && !params.skipPycoQC
-
-        input:
-        file summary_txt from ch_guppy_pycoqc_summary
-
-        output:
-        file "*.html"
-        file "*.version" into ch_pycoqc_version
-
-        script:
-        """
-        pycoQC -f $summary_txt -o pycoQC_output.html
-        pycoQC --version &> pycoqc.version
-        """
-    }
+// WRITE FUNCTION TO CHECK GENOME EXISTS IN IGENOMES OR IF VALID FASTA PATH
+if (!params.skipDemultiplexing) {
+    ch_samplesheet_reformat.splitCsv(header:true, sep:',')
+                       .map { row -> [ row.sample, row.barcode, row.genome ] }
+                       .set { ch_sample_info }
+} else {
+    ch_samplesheet_reformat.splitCsv(header:true, sep:',')
+                       .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), row.genome ] ] }
+                       .set { ch_sample_info }
 }
+
+ch_sample_info.println()
+
+
+// /*
+//  * STEP 2 - Basecalling, demultipexing using Guppy, and QC with pycoQC and NanoPlot
+//  */
+// if (!params.skipDemultiplexing){
+//     process guppy {
+//         tag "$run_dir"
+//         label 'process_high'
+//         publishDir path: "${params.outdir}/guppy", mode: 'copy'
+//
+//         input:
+//         file run_dir from ch_run_dir
+//
+//         output:
+//         file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
+//                                             ch_guppy_graphmap_fastq
+//         file "*.txt" into ch_guppy_pycoqc_summary,
+//                           ch_guppy_nanoplot_summary
+//         file "*.version" into ch_guppy_version
+//         file "barcode*"
+//         file "unclassified"
+//         file "*.{log,js}"
+//
+//         script:
+//         """
+//         guppy_basecaller \\
+//             --input_path $run_dir \\
+//             --save_path . \\
+//             --flowcell $params.flowcell \\
+//             --kit $params.kit \\
+//             --barcode_kits $params.barcode_kit
+//
+//         ## Concatenate fastq files for each barcode
+//         mkdir fastq_merged
+//         for dir in barcode*/
+//         do
+//             dir=\${dir%*/}
+//             cat \$dir/*.fastq > fastq_merged/\$dir.fastq
+//         done
+//         gzip fastq_merged/*.fastq
+//
+//         guppy_basecaller --version &> guppy.version
+//         """
+//     }
+//
+//     process pycoQC {
+//         tag "$summary_txt"
+//         publishDir "${params.outdir}/pycoQC", mode: 'copy'
+//
+//         when:
+//         !params.skipQC && !params.skipPycoQC
+//
+//         input:
+//         file summary_txt from ch_guppy_pycoqc_summary
+//
+//         output:
+//         file "*.html"
+//         file "*.version" into ch_pycoqc_version
+//
+//         script:
+//         """
+//         pycoQC -f $summary_txt -o pycoQC_output.html
+//         pycoQC --version &> pycoqc.version
+//         """
+//     }
+// }
 
 // /*
 //  * STEP 3 - NanoPlot - nanopore read QC

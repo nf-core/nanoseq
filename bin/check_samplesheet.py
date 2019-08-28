@@ -59,9 +59,13 @@ while True:
             print "{}: Invalid number of columns (minimum of 2)!\nLine: '{}'".format(ERROR_STR,line.strip())
             sys.exit(1)
 
-        ## CHECK SAMPLE ID HAS NO SPACES
-        if sample.find(' ') != -1:
-            print "{}: Sample ID contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip())
+        if sample:
+            ## CHECK SAMPLE ID HAS NO SPACES
+            if sample.find(' ') != -1:
+                print "{}: Sample ID contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip())
+                sys.exit(1)
+        else:
+            print "{}: Sample ID not specified!\nLine: '{}'".format(ERROR_STR,line.strip())
             sys.exit(1)
 
         if args.DEMULTIPLEX:
