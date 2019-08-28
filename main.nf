@@ -27,10 +27,11 @@ def helpMessage() {
                                     Available: docker, singularity, awsbatch, test and more.
 
     Demultiplexing
-      --run_dir
+      --run_dir                     Path to Nanopore run directory (e.g. fastq_pass/)
       --flowcell                    Which flowcell was used that the sequencing was performed with (i.e FLO-MIN106)
       --kit                         The sequencing kit used (i.e. SQK-LSK109)
       --barcode_kit                 The barcoding kit used (i.e. SQK-PBK004)
+      --skipDemultiplexing          Skip demultiplexing step with guppy
 
     References                      If not specified in the configuration file or you wish to overwrite any of the references.
       --genome                      Name of iGenomes reference
@@ -84,23 +85,27 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 }
 
 // Reference index path configuration
-// Define these here - after the profiles are loaded with the iGenomes paths
-params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
-params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
-params.gff = params.genome ? params.genomes[ params.genome ].gff ?: false : false
-
-if (params.aligner != 'minimap2' && params.aligner != 'graphmap'){
-    exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
-}
+params.fasta = params.genomes[params.genome]?.fasta
+params.gtf = params.genomes[params.genome]?.gtf
+params.gff = params.genomes[params.genome]?.gff
 
 if (params.samplesheet)    { ch_samplesheet = file(params.samplesheet, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
-if (params.run_dir)        { ch_run_dir = file(params.run_dir, checkIfExists: true) }
 if (params.fasta)          { ch_fasta = file(params.fasta, checkIfExists: true) }
 if (params.gtf)            { ch_gtf = file(params.gtf, checkIfExists: true) }
 if (params.gff)            { ch_gff = file(params.gtf, checkIfExists: true) }
 
+if (!params.skipDemultiplexing) {
+    if (params.run_dir)      { ch_run_dir = file(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
+    if (!params.flowcell)    { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
+    if (!params.kit)         { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
+    if (!params.barcode_kit) { exit 1, "Please specify a valid barcode kit for demultiplexing!" }
+}
 
-// MAKE SURE params.flowcell, params.kit and params.barcode_kit are set when params.run_dir is specified
+if (!params.skipAlignment) {
+    if (params.aligner != 'minimap2' && params.aligner != 'graphmap'){
+        exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
+    }
+}
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
@@ -108,7 +113,6 @@ custom_runName = params.name
 if( !(workflow.runName ==~ /[a-z]+_[a-z]+/) ){
   custom_runName = workflow.runName
 }
-
 
 if( workflow.profile == 'awsbatch') {
   // AWSBatch sanity checking
@@ -164,39 +168,11 @@ log.info "\033[2m----------------------------------------------------\033[0m"
 checkHostname()
 
 // /*
-//  * PREPROCESSING - Convert GFF3 to GTF
-//  */
-// if(params.gff){
-//     process convertGFFtoGTF {
-//         tag "$gff"
-//
-//         input:
-//         file gff from gffFile
-//
-//         output:
-//         file "${gff.baseName}.gtf" into gtf_makeSTARindex, gtf_makeHisatSplicesites, gtf_makeHISATindex, gtf_makeSalmonIndex, gtf_makeBED12,
-//                                         gtf_star, gtf_dupradar, gtf_featureCounts, gtf_stringtieFPKM, gtf_salmon, gtf_salmon_merge, gtf_qualimap
-//
-//         script:
-//         """
-//         gffread $gff -T -o ${gff.baseName}.gtf
-//         """
-//     }
-// }
-
-// // Container paths
-// minionqc_container = 'quay.io/biocontainers/r-minionqc:1.4.1--r351_1'
-// porechop_container = 'quay.io/biocontainers/porechop:0.2.3_seqan2.1.1--py36h2'
-// nanofilt_container = 'quay.io/biocontainers/nanofilt:2.5.0--py_0'
-
-// /*
 //  * PREPROCESSING - CHECK SAMPLESHEET
 //  */
 // process checkSampleSheet {
 //     tag "$samplesheet"
 //     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-//
-//     container = params.multiqc_container
 //
 //     input:
 //     file samplesheet from ch_samplesheet
@@ -213,77 +189,82 @@ checkHostname()
 /*
  * STEP 2 - Basecalling and demultipexing using Guppy
  */
-if (params.run_dir) {
-    process guppy {
-      tag "$run_dir"
-      label 'process_high'
-      publishDir path: "${params.outdir}/guppy", mode: 'copy'
-      container = 'genomicpariscentre/guppy:3.2.2'
+process guppy {
+    tag "$run_dir"
+    label 'process_high'
+    publishDir path: "${params.outdir}/guppy", mode: 'copy'
 
-      input:
-      file run_dir from ch_run_dir
+    when:
+    !params.skipDemultiplexing
 
-      output:
-      file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
-                                          ch_guppy_graphmap_fastq
-      file "*.txt" into ch_guppy_pycoqc_summary,
-                        ch_guppy_nanoplot_summary
-      file "barcode*"
-      file "unclassified"
-      file "*.{log,js}"
+    input:
+    file run_dir from ch_run_dir
 
-      script:
-      """
-      guppy_basecaller \\
-          --input_path $run_dir \\
-          --save_path . \\
-          --flowcell $params.flowcell \\
-          --kit $params.kit \\
-          --barcode_kits $params.barcode_kit
+    output:
+    file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
+                                        ch_guppy_graphmap_fastq
+    file "*.txt" into ch_guppy_pycoqc_summary,
+                      ch_guppy_nanoplot_summary
+    file "*.version" into ch_guppy_version
+    file "barcode*"
+    file "unclassified"
+    file "*.{log,js}"
 
-      ## Concatenate fastq files for each barcode
-      mkdir fastq_merged
-      for dir in barcode*/
-      do
-          dir=\${dir%*/}
-          cat \$dir/*.fastq > fastq_merged/\$dir.fastq
-      done
-      gzip fastq_merged/*.fastq
-      """
-    }
+    script:
+    """
+    guppy_basecaller \\
+        --input_path $run_dir \\
+        --save_path . \\
+        --flowcell $params.flowcell \\
+        --kit $params.kit \\
+        --barcode_kits $params.barcode_kit
+
+    ## Concatenate fastq files for each barcode
+    mkdir fastq_merged
+    for dir in barcode*/
+    do
+        dir=\${dir%*/}
+        cat \$dir/*.fastq > fastq_merged/\$dir.fastq
+    done
+    gzip fastq_merged/*.fastq
+
+    guppy_basecaller --version &> guppy.version
+    """
 }
 
 /*
  * STEP 2 - pycoQC - nanopore read QC
  */
-if (params.run_dir) {
-    process pycoQC {
-        tag "$summary_txt"
-        publishDir "${params.outdir}/pycoQC", mode: 'copy'
-        container = 'quay.io/biocontainers/pycoqc:2.2.4--py_0'
+process pycoQC {
+    tag "$summary_txt"
+    publishDir "${params.outdir}/pycoQC", mode: 'copy'
 
-        input:
-        file summary_txt from ch_guppy_pycoqc_summary
+    when:
+    !params.skipDemultiplexing && !params.skipQC && !params.skipPycoQC
 
-        output:
-        file "*.html"
+    input:
+    file summary_txt from ch_guppy_pycoqc_summary
 
-        script:
-        """
-        pycoQC -f $summary_txt -o pycoQC_output.html
-        """
-    }
+    output:
+    file "*.html"
+    file "*.version" into ch_pycoqc_version
+
+    script:
+    """
+    pycoQC -f $summary_txt -o pycoQC_output.html
+    pycoQC --version &> pycoQC.version
+    """
 }
 
-//ch_guppy_graphmap_fastq.println()
-
 // /*
-//  * STEP 3 - nanoplot - nanopore read QC
+//  * STEP 3 - NanoPlot - nanopore read QC
 //  */
 // process NanoPlot {
 //     tag "${fastq.baseName}"
 //     publishDir "${params.outdir}/nanoplot", mode: 'copy'
-//     container = 'quay.io/biocontainers/nanoplot:1.26.3--py_0'
+//
+//     when:
+//     !params.skipDemultiplexing && !params.skipQC && !params.skipNanoPlot
 //
 //     input:
 //     file fastq from ch_guppy_nanoplot_fastq
@@ -293,6 +274,7 @@ if (params.run_dir) {
 //     file '*.png'
 //     file '*.html'
 //     file '*.txt'
+//     file "*.version" into ch_nanoplot_version
 //
 //     script:
 //     """
@@ -304,6 +286,7 @@ if (params.run_dir) {
 //         --title ${fastq.baseName} \\
 //         --fastq $fastq \\
 //         --summary file $summary_txt
+//     NanoPlot --version &> NanoPlot.version
 //     """
 // }
 //#NanoPlot -t ${task.cpus} --prefix-p ${type}_  --title ${id}_${type} -c darkblue --fastq ${lr}
@@ -312,31 +295,34 @@ if (params.run_dir) {
 //  * STEP 4 - Align with GraphMap
 //  */
 // // ch_fqname_fqfile_guppy = ch_guppy_merged_fastq.map { fqFile -> [fqFile.getName(), fqFile ] }
+// // GRAPHMAP INDEX GENOME
+// // ./graphmap align -I -r escherichia_coli.fa
+// // GRAPHMAP ALIGN READS
+// // GraphMapCommand = 'graphmap align -t %s -r %s -d %s -o %s --extcigar' % (NumThreads,GenomeFasta,FastQFile,SAMFile)
 // process GraphMap {
 //     tag "${fastq.baseName}"
 //     label 'process_medium'
 //     publishDir path: "${params.outdir}/graphmap", mode: 'copy'
-//     container = 'quay.io/biocontainers/graphmap:0.5.2--he941832_2'
+//
+//     when:
+//     !params.skipAlignment && params.aligner == 'graphmap'
 //
 //     input:
 //     file fastq from ch_guppy_graphmap_fastq
 //
 //     output:
 //     file "*.sam" into ch_graphmap_sam
+//     file "*.version" into ch_graphmap_version
 //
 //     script:
 //     """
 //     graphmap align -t ${task.cpus} -r ref.fa -d $fastq -o ${fastq.baseName}.sam --extcigar
 //     """
 // }
-// GRAPHMAP INDEX GENOME
-// ./graphmap align -I -r escherichia_coli.fa
-// GRAPHMAP ALIGN READS
-// GraphMapCommand = 'graphmap align -t %s -r %s -d %s -o %s --extcigar' % (NumThreads,GenomeFasta,FastQFile,SAMFile)
-
-/*
- * STEP 5 - Convert .sam to coordinate sorted .bam
- */
+//
+// /*
+//  * STEP 5 - Convert .sam to coordinate sorted .bam
+//  */
 // process sortBAM {
 //     tag "$prefix"
 //     label 'process_medium'
@@ -348,7 +334,9 @@ if (params.run_dir) {
 //                     else if (filename.endsWith(".stats")) "samtools_stats/$filename"
 //                     else filename }
 //     }
-//     container = 'quay.io/biocontainers/samtools:1.9--h8571acd_11'
+//
+//     when:
+//     !params.skipAlignment
 //
 //     input:
 //     file sam from ch_graphmap_sam
@@ -356,6 +344,7 @@ if (params.run_dir) {
 //     output:
 //     file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
 //     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats
+//     file "*.version" into ch_samtools_version
 //
 //     script:
 //     prefix="${sam.baseName}"
@@ -366,23 +355,27 @@ if (params.run_dir) {
 //     samtools flagstat ${prefix}.sorted.bam > ${prefix}.sorted.bam.flagstat
 //     samtools idxstats ${prefix}.sorted.bam > ${prefix}.sorted.bam.idxstats
 //     samtools stats ${prefix}.sorted.bam > ${prefix}.sorted.bam.stats
+//     samtools --version &> samtools.version
 //     """
 // }
 
 // /*
-//  * STEP 5 - Convert .sam to coordinate sorted .bam
+//  * STEP 5 - Call Indels
 //  */
 // process callIndels {
 //     tag "$prefix"
 //     label 'process_low'
 //     publishDir path: "${params.outdir}/indels", mode: 'copy'
-//     container = 'quay.io/biocontainers/pysam:0.15.3--py36hda2845c_1'
+//
+//     when:
+//     !params.skipAlignment && !params.skipIndels
 //
 //     input:
 //     file bam from ch_sortbam_bam
 //
 //     //output:
 //     //set file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
+//     //file "*.version" into ch_pysam_version
 //
 //     script:  // This script is bundled with the pipeline, in nf-core/nanodemux/bin/
 //     prefix="${bam.baseName}"
@@ -390,7 +383,6 @@ if (params.run_dir) {
 //     getIndelsBAM.py $bam $fasta ${prefix}.indels.bed 0
 //     """
 // }
-
 
 // /*
 //  * Parse software version numbers
@@ -401,7 +393,11 @@ if (params.run_dir) {
 //         if (filename.indexOf(".csv") > 0) filename
 //         else null
 //     }
-//     container = ''
+//
+//     input:
+//     //file imctools from ch_imctools_version.first()
+//     //file cellprofiler from ch_cellprofiler_version.first()
+//     //file ilastik from ch_ilastik_version.first()
 //
 //     output:
 //     file 'software_versions_mqc.yaml' into software_versions_yaml
@@ -412,7 +408,6 @@ if (params.run_dir) {
 //     """
 //     echo $workflow.manifest.version > v_pipeline.txt
 //     echo $workflow.nextflow.version > v_nextflow.txt
-//     multiqc --version > v_multiqc.txt
 //     scrape_software_versions.py &> software_versions_mqc.yaml
 //     """
 // }
@@ -440,7 +435,8 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 // process multiqc {
 //     publishDir "${params.outdir}/${runName}/MultiQC", mode: 'copy'
 //
-//     container = 'quay.io/biocontainers/multiqc:1.7--py_3'
+//     when:
+//     !params.skipMultiQC
 //
 //     input:
 //     file summary from minion_summary
@@ -448,10 +444,12 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 //     output:
 //     file "*multiqc_report.html" into multiqc_report
 //     file "*_data"
+//     //file "*.version" into ch_multiqc_version
 //
 //     script:
 //     """
 //     multiqc $summary --config $multiqc_config .
+//     multiqc --version &> multiqc.version
 //     """
 // }
 
@@ -461,21 +459,19 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 // process output_documentation {
 //     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 //
-//     container = 'quay.io/biocontainers/r-rmarkdown:0.9.5--r3.3.2_0'
-//
 //     input:
 //     file output_docs from ch_output_docs
 //
 //     output:
 //     file "results_description.html"
+//     //file "*.version" into ch_rmarkdown_version
 //
 //     script:
 //     """
 //     markdown_to_html.r $output_docs results_description.html
+//     Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='markdown.version')"
 //     """
 // }
-
-
 
 // /*
 //  * Completion e-mail notification
