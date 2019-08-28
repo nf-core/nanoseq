@@ -19,15 +19,15 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/nanodemux --design 'design.csv' -profile test,docker
+    nextflow run nf-core/nanodemux --samplesheet 'samplesheet.csv' -profile test,docker
 
     Mandatory arguments:
-      --design                      Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
+      --samplesheet                 Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
       -profile                      Configuration profile to use. Can use multiple (comma separated)
                                     Available: docker, singularity, awsbatch, test and more.
 
     Demultiplexing
-      --run_dir                     
+      --run_dir
       --flowcell                    Which flowcell was used that the sequencing was performed with (i.e FLO-MIN106)
       --kit                         The sequencing kit used (i.e. SQK-LSK109)
       --barcode_kit                 The barcoding kit used (i.e. SQK-PBK004)
@@ -59,8 +59,11 @@ if (params.help){
 //     exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
 // }
 
-if (params.design)    { ch_design = file(params.design, checkIfExists: true) } else { exit 1, "Samples design file not specified!" }
-if (params.run_dir)   { ch_run_dir = file(params.run_dir, checkIfExists: true) }
+// ADD IN --aligner option, with --indels, etc
+
+
+if (params.samplesheet)    { ch_samplesheet = file(params.samplesheet, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
+if (params.run_dir)        { ch_run_dir = file(params.run_dir, checkIfExists: true) }
 // MAKE SURE params.flowcell, params.kit and params.barcode_kit are set when params.run_dir is specified
 
 // Has the run name been specified by the user?
@@ -117,50 +120,29 @@ log.info "\033[2m----------------------------------------------------\033[0m"
 // Check the hostnames against configured profiles
 checkHostname()
 
-def create_workflow_summary(summary) {
-    def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
-    yaml_file.text  = """
-    id: 'nf-core-nanodemux-summary'
-    description: " - this information is collected when the pipeline is started."
-    section_name: 'nf-core/nanodemux Workflow Summary'
-    section_href: 'https://github.com/nf-core/nanodemux'
-    plot_type: 'html'
-    data: |
-        <dl class=\"dl-horizontal\">
-${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }.join("\n")}
-        </dl>
-    """.stripIndent()
-
-   return yaml_file
-}
-
 // // Container paths
 // minionqc_container = 'quay.io/biocontainers/r-minionqc:1.4.1--r351_1'
 // porechop_container = 'quay.io/biocontainers/porechop:0.2.3_seqan2.1.1--py36h2'
-// pycoqc_container = 'quay.io/biocontainers/pycoqc:2.2.4--py_0'
-// nanoplot_container = 'quay.io/biocontainers/nanoplot:1.26.3--py_0'
 // nanofilt_container = 'quay.io/biocontainers/nanofilt:2.5.0--py_0'
-// pysam = 'quay.io/biocontainers/pysam:0.15.3--py36hda2845c_1'
-// graphmap_container = 'quay.io/biocontainers/graphmap:0.5.2--he941832_2'
 
 // /*
-//  * PREPROCESSING - CHECK DESIGN FILE
+//  * PREPROCESSING - CHECK SAMPLESHEET
 //  */
-// process checkDesign {
-//     tag "$design"
+// process checkSampleSheet {
+//     tag "$samplesheet"
 //     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 //
 //     container = params.multiqc_container
 //
 //     input:
-//     file design from ch_design
+//     file samplesheet from ch_samplesheet
 //
 //     //output:
-//     //file "design_checked.csv" into ch_design_csv
+//     //file "samplesheet_checked.csv" into ch_samplesheet_csv
 //
 //     script:  // This script is bundled with the pipeline, in nf-core/nanodemux/bin/
 //     """
-//     check_design.py $design
+//     check_samplesheet.py $samplesheet
 //     """
 // }
 
@@ -178,16 +160,18 @@ if (params.run_dir) {
       file run_dir from ch_run_dir
 
       output:
-      file "fastq_merged/*.fastq" into ch_guppy_merged_fastq
-      file "barcode*" into ch_guppy_raw_fastq
-      file "unclassified" into ch_guppy_unclassifed
-      file "*.txt" into ch_guppy_summary
-      file "*.{log,js}" into ch_guppy_log
+      file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
+                                          ch_guppy_graphmap_fastq
+      file "*.txt" into ch_guppy_pycoqc_summary,
+                        ch_guppy_nanoplot_summary
+      file "barcode*"
+      file "unclassified"
+      file "*.{log,js}"
 
       script:
       """
       guppy_basecaller \\
-          --input_path $run_dir\\
+          --input_path $run_dir \\
           --save_path . \\
           --flowcell $params.flowcell \\
           --kit $params.kit \\
@@ -200,24 +184,25 @@ if (params.run_dir) {
           dir=\${dir%*/}
           cat \$dir/*.fastq > fastq_merged/\$dir.fastq
       done
+      gzip fastq_merged/*.fastq
       """
     }
 }
 
 /*
- * STEP 2 - pycoQC - quality control 
+ * STEP 2 - pycoQC - nanopore read QC
  */
 if (params.run_dir) {
     process pycoQC {
+        tag "$summary_txt"
         publishDir "${params.outdir}/pycoQC", mode: 'copy'
-
         container = 'quay.io/biocontainers/pycoqc:2.2.4--py_0'
 
         input:
-        file summary_txt from ch_guppy_summary
+        file summary_txt from ch_guppy_pycoqc_summary
 
         output:
-        file "*.html" into ch_minionqc_png
+        file "*.html"
 
         script:
         """
@@ -226,43 +211,71 @@ if (params.run_dir) {
     }
 }
 
+//ch_guppy_graphmap_fastq.println()
+
 // /*
-//  * STEP 3.1 - Align fastqs to reference genome provided in sample sheet
+//  * STEP 3 - nanoplot - nanopore read QC
 //  */
-
-
-// ch_fqname_fqfile_guppy = ch_guppy_merged_fastq.map { fqFile -> [fqFile.getName(), fqFile ] }
-// process graphMap {
-//     tag "$name"
-//     //label 'process_medium'
-//     publishDir path: "${params.outdir}/graphmap", mode: 'copy'
-
-//     container = 'quay.io/biocontainers/graphmap:0.5.2--he941832_2'
-
+// process NanoPlot {
+//     tag "${fastq.baseName}"
+//     publishDir "${params.outdir}/nanoplot", mode: 'copy'
+//     container = 'quay.io/biocontainers/nanoplot:1.26.3--py_0'
+//
 //     input:
-//     set vale(name), file(fastqs) from ch_fqname_fqfile_guppy
-
+//     file fastq from ch_guppy_nanoplot_fastq
+//     file summary_txt from ch_guppy_nanoplot_summary
+//
 //     output:
-//     set val(name), file("*.{sam}") into ch_graphmap_bam
-
+//     file '*.png'
+//     file '*.html'
+//     file '*.txt'
+//
 //     script:
 //     """
-//     graphmap align -t NumThreads -r ref.fa -d $fastq -o out.sam --extcigar
+//     NanoPlot \\
+//         -t ${task.cpus} \\
+//         --prefix ${fastq.baseName} \\
+//         --readtype 1D \\
+//         --barcoded \\
+//         --title ${fastq.baseName} \\
+//         --fastq $fastq \\
+//         --summary file $summary_txt
 //     """
 // }
+//#NanoPlot -t ${task.cpus} --prefix-p ${type}_  --title ${id}_${type} -c darkblue --fastq ${lr}
 
+// /*
+//  * STEP 4 - Align with GraphMap
+//  */
+// // ch_fqname_fqfile_guppy = ch_guppy_merged_fastq.map { fqFile -> [fqFile.getName(), fqFile ] }
+// process GraphMap {
+//     tag "${fastq.baseName}"
+//     label 'process_medium'
+//     publishDir path: "${params.outdir}/graphmap", mode: 'copy'
+//     container = 'quay.io/biocontainers/graphmap:0.5.2--he941832_2'
+//
+//     input:
+//     file fastq from ch_guppy_graphmap_fastq
+//
+//     output:
+//     file "*.sam" into ch_graphmap_sam
+//
+//     script:
+//     """
+//     graphmap align -t ${task.cpus} -r ref.fa -d $fastq -o ${fastq.baseName}.sam --extcigar
+//     """
+// }
 // GRAPHMAP INDEX GENOME
 // ./graphmap align -I -r escherichia_coli.fa
-
 // GRAPHMAP ALIGN READS
 // GraphMapCommand = 'graphmap align -t %s -r %s -d %s -o %s --extcigar' % (NumThreads,GenomeFasta,FastQFile,SAMFile)
 
-// /*
-//  * STEP 3.2 - Convert .bam to coordinate sorted .bam
-//  */
+/*
+ * STEP 5 - Convert .sam to coordinate sorted .bam
+ */
 // process sortBAM {
-//     tag "$name"
-//     //label 'process_medium'
+//     tag "$prefix"
+//     label 'process_medium'
 //     if (params.saveAlignedIntermediates) {
 //         publishDir path: "${params.outdir}/graphmap", mode: 'copy',
 //             saveAs: { filename ->
@@ -271,18 +284,17 @@ if (params.run_dir) {
 //                     else if (filename.endsWith(".stats")) "samtools_stats/$filename"
 //                     else filename }
 //     }
-//
 //     container = 'quay.io/biocontainers/samtools:1.9--h8571acd_11'
 //
 //     input:
-//     set val(name), file(sam) from ch_graphmap_bam
+//     file sam from ch_graphmap_sam
 //
 //     output:
-//     set val(name), file("*.sorted.{bam,bam.bai}") into ch_sort_bam_merge
-//     file "*.{flagstat,idxstats,stats}" into ch_sort_bam_flagstat_mqc
+//     file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
+//     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats
 //
 //     script:
-//     prefix="${name}"
+//     prefix="${sam.baseName}"
 //     """
 //     samtools view -b -h -O BAM -@ $task.cpus -o ${prefix}.bam $sam
 //     samtools sort -@ $task.cpus -o ${prefix}.sorted.bam -T $name ${prefix}.bam
@@ -292,6 +304,29 @@ if (params.run_dir) {
 //     samtools stats ${prefix}.sorted.bam > ${prefix}.sorted.bam.stats
 //     """
 // }
+
+// /*
+//  * STEP 5 - Convert .sam to coordinate sorted .bam
+//  */
+// process callIndels {
+//     tag "$prefix"
+//     label 'process_low'
+//     publishDir path: "${params.outdir}/indels", mode: 'copy'
+//     container = 'quay.io/biocontainers/pysam:0.15.3--py36hda2845c_1'
+//
+//     input:
+//     file bam from ch_sortbam_bam
+//
+//     //output:
+//     //set file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
+//
+//     script:  // This script is bundled with the pipeline, in nf-core/nanodemux/bin/
+//     prefix="${bam.baseName}"
+//     """
+//     getIndelsBAM.py $bam $fasta ${prefix}.indels.bed 0
+//     """
+// }
+
 
 // /*
 //  * Parse software version numbers
@@ -317,6 +352,23 @@ if (params.run_dir) {
 //     scrape_software_versions.py &> software_versions_mqc.yaml
 //     """
 // }
+
+def create_workflow_summary(summary) {
+    def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
+    yaml_file.text  = """
+    id: 'nf-core-nanodemux-summary'
+    description: " - this information is collected when the pipeline is started."
+    section_name: 'nf-core/nanodemux Workflow Summary'
+    section_href: 'https://github.com/nf-core/nanodemux'
+    plot_type: 'html'
+    data: |
+        <dl class=\"dl-horizontal\">
+${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }.join("\n")}
+        </dl>
+    """.stripIndent()
+
+   return yaml_file
+}
 
 // /*
 //  * STEP 3 - MultiQC
