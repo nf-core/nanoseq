@@ -252,7 +252,7 @@ process pycoQC {
     script:
     """
     pycoQC -f $summary_txt -o pycoQC_output.html
-    pycoQC --version &> pycoQC.version
+    pycoQC --version &> pycoqc.version
     """
 }
 
@@ -267,7 +267,7 @@ process pycoQC {
 //     !params.skipDemultiplexing && !params.skipQC && !params.skipNanoPlot
 //
 //     input:
-//     file fastq from ch_guppy_nanoplot_fastq
+//     file fastq from ch_guppy_align_fastq
 //     file summary_txt from ch_guppy_nanoplot_summary
 //
 //     output:
@@ -286,77 +286,89 @@ process pycoQC {
 //         --title ${fastq.baseName} \\
 //         --fastq $fastq \\
 //         --summary file $summary_txt
-//     NanoPlot --version &> NanoPlot.version
+//     NanoPlot --version &> nanoplot.version
 //     """
 // }
 //#NanoPlot -t ${task.cpus} --prefix-p ${type}_  --title ${id}_${type} -c darkblue --fastq ${lr}
 
 // /*
-//  * STEP 4 - Align with GraphMap
+//  * STEP 4 - Align fastq files and coordinate sort BAM
 //  */
-// // ch_fqname_fqfile_guppy = ch_guppy_merged_fastq.map { fqFile -> [fqFile.getName(), fqFile ] }
-// // GRAPHMAP INDEX GENOME
-// // ./graphmap align -I -r escherichia_coli.fa
-// // GRAPHMAP ALIGN READS
-// // GraphMapCommand = 'graphmap align -t %s -r %s -d %s -o %s --extcigar' % (NumThreads,GenomeFasta,FastQFile,SAMFile)
-// process GraphMap {
-//     tag "${fastq.baseName}"
-//     label 'process_medium'
-//     publishDir path: "${params.outdir}/graphmap", mode: 'copy'
+// if (!params.skipAlignment){
+//     if(params.aligner == 'graphmap'){
+//         process GraphMap {
+//             tag "${fastq.baseName}"
+//             label 'process_medium'
+//             publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy'
 //
-//     when:
-//     !params.skipAlignment && params.aligner == 'graphmap'
+//             input:
+//             file fastq from ch_guppy_align_fastq
 //
-//     input:
-//     file fastq from ch_guppy_graphmap_fastq
+//             output:
+//             file "*.sam" into ch_align_sam
+//             file "*.version" into ch_align_version
 //
-//     output:
-//     file "*.sam" into ch_graphmap_sam
-//     file "*.version" into ch_graphmap_version
-//
-//     script:
-//     """
-//     graphmap align -t ${task.cpus} -r ref.fa -d $fastq -o ${fastq.baseName}.sam --extcigar
-//     """
-// }
-//
-// /*
-//  * STEP 5 - Convert .sam to coordinate sorted .bam
-//  */
-// process sortBAM {
-//     tag "$prefix"
-//     label 'process_medium'
-//     if (params.saveAlignedIntermediates) {
-//         publishDir path: "${params.outdir}/graphmap", mode: 'copy',
-//             saveAs: { filename ->
-//                     if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
-//                     else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
-//                     else if (filename.endsWith(".stats")) "samtools_stats/$filename"
-//                     else filename }
+//             script:
+//             """
+//             graphmap align -t ${task.cpus} -r ref.fa -d $fastq -o ${fastq.baseName}.sam --extcigar
+//             graphmap &> graphmap.version
+//             """
+//         }
 //     }
 //
-//     when:
-//     !params.skipAlignment
+//     if(params.aligner == 'minimap2'){
+//         process minimap2 {
+//             tag "${fastq.baseName}"
+//             label 'process_medium'
+//             publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy'
 //
-//     input:
-//     file sam from ch_graphmap_sam
+//             input:
+//             file fastq from ch_guppy_align_fastq
 //
-//     output:
-//     file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
-//     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats
-//     file "*.version" into ch_samtools_version
+//             output:
+//             file "*.sam" into ch_align_sam
+//             file "*.version" into ch_align_version
 //
-//     script:
-//     prefix="${sam.baseName}"
-//     """
-//     samtools view -b -h -O BAM -@ $task.cpus -o ${prefix}.bam $sam
-//     samtools sort -@ $task.cpus -o ${prefix}.sorted.bam -T $name ${prefix}.bam
-//     samtools index ${prefix}.sorted.bam
-//     samtools flagstat ${prefix}.sorted.bam > ${prefix}.sorted.bam.flagstat
-//     samtools idxstats ${prefix}.sorted.bam > ${prefix}.sorted.bam.idxstats
-//     samtools stats ${prefix}.sorted.bam > ${prefix}.sorted.bam.stats
-//     samtools --version &> samtools.version
-//     """
+//             script:
+//             """
+//             minimap2 -ax map-ont $fasta $fastq > ${fastq.baseName}.sam
+//             minimap2 --version &> minimap.version
+//             """
+//         }
+//     }
+//
+//     process sortBAM {
+//         tag "$prefix"
+//         label 'process_medium'
+//         if (params.saveAlignedIntermediates) {
+//             publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+//                 saveAs: { filename ->
+//                         if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
+//                         else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
+//                         else if (filename.endsWith(".stats")) "samtools_stats/$filename"
+//                         else filename }
+//         }
+//
+//         input:
+//         file sam from ch_align_sam
+//
+//         output:
+//         file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
+//         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats
+//         file "*.version" into ch_samtools_version
+//
+//         script:
+//         prefix="${sam.baseName}"
+//         """
+//         samtools view -b -h -O BAM -@ $task.cpus -o ${prefix}.bam $sam
+//         samtools sort -@ $task.cpus -o ${prefix}.sorted.bam -T $name ${prefix}.bam
+//         samtools index ${prefix}.sorted.bam
+//         samtools flagstat ${prefix}.sorted.bam > ${prefix}.sorted.bam.flagstat
+//         samtools idxstats ${prefix}.sorted.bam > ${prefix}.sorted.bam.idxstats
+//         samtools stats ${prefix}.sorted.bam > ${prefix}.sorted.bam.stats
+//         samtools --version &> samtools.version
+//         """
+//     }
 // }
 
 // /*
