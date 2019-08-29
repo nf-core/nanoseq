@@ -240,9 +240,12 @@ if (!params.skipDemultiplexing){
 
         script:
         """
-        NanoPlot -t ${task.cpus} --summary $summary_txt
+        NanoPlot -t $task.cpus --summary $summary_txt
         """
     }
+} else {
+    ch_guppy_version = []
+    ch_pycoqc_version = []
 }
 
 // Function to see if genome exists in iGenomes
@@ -300,7 +303,7 @@ process NanoPlot_fastq {
 
     script:
     """
-    NanoPlot -t ${task.cpus} --fastq $fastq
+    NanoPlot -t $task.cpus --fastq $fastq
     NanoPlot --version &> nanoplot.version
     """
 }
@@ -311,80 +314,88 @@ process NanoPlot_fastq {
 if (!params.skipAlignment){
     if(params.aligner == 'graphmap'){
         process GraphMap {
-            tag "${fastq.baseName}"
+            tag "$sample"
             label 'process_medium'
-            publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy'
+            if (params.saveAlignedIntermediates) {
+                publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+                    saveAs: { filename -> if (filename.endsWith(".sam")) filename }
+            }
 
             input:
             set val(sample), file(genome), file(fastq) from ch_fastq_align
 
             output:
-            file "*.sam" into ch_align_sam
+            set val(sample), file("*.sam") into ch_align_sam
             file "*.version" into ch_align_version
 
             script:
             """
-            graphmap align -t ${task.cpus} -r $genome -d $fastq -o ${sample}.sam --extcigar
-            graphmap &> graphmap.version
+            graphmap align -t $task.cpus -r $genome -d $fastq -o ${sample}.sam --extcigar
+            echo \$(graphmap 2>&1) > graphmap.version
             """
         }
     }
+
+    if(params.aligner == 'minimap2'){
+        process minimap2 {
+            tag "$sample"
+            label 'process_medium'
+            if (params.saveAlignedIntermediates) {
+                publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+                    saveAs: { filename -> if (filename.endsWith(".sam")) filename }
+            }
+
+            input:
+            set val(sample), file(genome), file(fastq) from ch_fastq_align
+
+            output:
+            set val(sample), file("*.sam") into ch_align_sam
+            file "*.version" into ch_align_version
+
+            script:
+            """
+            minimap2 -ax map-ont -t $task.cpus $genome $fastq > ${sample}.sam
+            minimap2 --version &> minimap.version
+            """
+        }
+    }
+
+    process sortBAM {
+        tag "$sample"
+        label 'process_medium'
+        publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+            saveAs: { filename ->
+                if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
+                else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
+                else if (filename.endsWith(".stats")) "samtools_stats/$filename"
+                else if (filename.endsWith(".sorted.bam")) filename
+                else if (filename.endsWith(".sorted.bam.bai")) filename
+                else null
+            }
+
+        input:
+        set val(sample), file(sam) from ch_align_sam
+
+        output:
+        set val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
+        file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats
+        file "*.version" into ch_samtools_version
+
+        script:
+        """
+        samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
+        samtools sort -@ $task.cpus -o ${sample}.sorted.bam -T $sample ${sample}.bam
+        samtools index ${sample}.sorted.bam
+        samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
+        samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
+        samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
+        samtools --version &> samtools.version
+        """
+    }
+} else {
+    ch_align_version = []
+    ch_samtools_version = []
 }
-//
-//     if(params.aligner == 'minimap2'){
-//         process minimap2 {
-//             tag "${fastq.baseName}"
-//             label 'process_medium'
-//             publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy'
-//
-//             input:
-//             file fastq from ch_guppy_align_fastq
-//
-//             output:
-//             file "*.sam" into ch_align_sam
-//             file "*.version" into ch_align_version
-//
-//             script:
-//             """
-//             minimap2 -ax map-ont $fasta $fastq > ${fastq.baseName}.sam
-//             minimap2 --version &> minimap.version
-//             """
-//         }
-//     }
-//
-//     process sortBAM {
-//         tag "$prefix"
-//         label 'process_medium'
-//         if (params.saveAlignedIntermediates) {
-//             publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-//                 saveAs: { filename ->
-//                         if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
-//                         else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
-//                         else if (filename.endsWith(".stats")) "samtools_stats/$filename"
-//                         else filename }
-//         }
-//
-//         input:
-//         file sam from ch_align_sam
-//
-//         output:
-//         file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
-//         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats
-//         file "*.version" into ch_samtools_version
-//
-//         script:
-//         prefix="${sam.baseName}"
-//         """
-//         samtools view -b -h -O BAM -@ $task.cpus -o ${prefix}.bam $sam
-//         samtools sort -@ $task.cpus -o ${prefix}.sorted.bam -T $name ${prefix}.bam
-//         samtools index ${prefix}.sorted.bam
-//         samtools flagstat ${prefix}.sorted.bam > ${prefix}.sorted.bam.flagstat
-//         samtools idxstats ${prefix}.sorted.bam > ${prefix}.sorted.bam.idxstats
-//         samtools stats ${prefix}.sorted.bam > ${prefix}.sorted.bam.stats
-//         samtools --version &> samtools.version
-//         """
-//     }
-// }
 
 // /*
 //  * STEP 5 - Call Indels
@@ -425,9 +436,9 @@ if (!params.skipAlignment){
 //     file guppy from ch_guppy_version.collect().ifEmpty([])
 //     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
 //     file nanoplot from ch_nanoplot_version.first()
-//     file align from ch_align_version.first()
-//     file samtools from ch_samtools_version.first()
-//     file pysam from ch_pysam_version.first()
+//     file align from ch_align_version.collect().first().ifEmpty([])
+//     file samtools from ch_samtools_version.collect().first().ifEmpty([])
+//     file pysam from ch_pysam_version.collect().first().ifEmpty([])
 //     file multiqc from ch_multiqc_version.collect().ifEmpty([])
 //     file rmarkdown from ch_rmarkdown_version.collect().ifEmpty([])
 //
