@@ -200,7 +200,7 @@ if (!params.skipDemultiplexing){
 
         output:
         file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
-                                            ch_guppy_graphmap_fastq
+                                            ch_guppy_align_fastq
         file "*.txt" into ch_guppy_pycoqc_summary,
                           ch_guppy_nanoplot_summary
         file "*.version" into ch_guppy_version
@@ -231,6 +231,7 @@ if (!params.skipDemultiplexing){
 
     process pycoQC {
         tag "$summary_txt"
+        label 'process_low'
         publishDir "${params.outdir}/pycoQC", mode: 'copy'
 
         when:
@@ -249,42 +250,51 @@ if (!params.skipDemultiplexing){
         pycoQC --version &> pycoqc.version
         """
     }
+
+    process NanoPlot_summary {
+        tag "$summary_txt"
+        label 'process_low'
+        publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
+
+        when:
+        !params.skipQC && !params.skipNanoPlot
+
+        input:
+        file summary_txt from ch_guppy_nanoplot_summary
+
+        output:
+        file "*.{png,html,txt,log}"
+
+        script:
+        """
+        NanoPlot -t ${task.cpus} --summary $summary_txt
+        """
+    }
 }
 
-// /*
-//  * STEP 3 - NanoPlot - nanopore read QC
-//  */
-// process NanoPlot {
-//     tag "${fastq.baseName}"
-//     publishDir "${params.outdir}/nanoplot", mode: 'copy'
-//
-//     when:
-//     !params.skipDemultiplexing && !params.skipQC && !params.skipNanoPlot
-//
-//     input:
-//     file fastq from ch_guppy_align_fastq
-//     file summary_txt from ch_guppy_nanoplot_summary
-//
-//     output:
-//     file '*.png'
-//     file '*.html'
-//     file '*.txt'
-//     file "*.version" into ch_nanoplot_version
-//
-//     script:
-//     """
-//     NanoPlot \\
-//         -t ${task.cpus} \\
-//         --prefix ${fastq.baseName} \\
-//         --readtype 1D \\
-//         --barcoded \\
-//         --title ${fastq.baseName} \\
-//         --fastq $fastq \\
-//         --summary file $summary_txt
-//     NanoPlot --version &> nanoplot.version
-//     """
-// }
-//#NanoPlot -t ${task.cpus} --prefix-p ${type}_  --title ${id}_${type} -c darkblue --fastq ${lr}
+// NEED TO CHANGE ch_guppy_nanoplot_fastq IF INPUT IS FROM FASTQ FILES
+
+process NanoPlot_fastq {
+    //tag "$summary_txt"
+    label 'process_low'
+    publishDir "${params.outdir}/nanoplot/fastq", mode: 'copy'
+
+    when:
+    !params.skipQC && !params.skipNanoPlot
+
+    input:
+    file fastq from ch_guppy_nanoplot_fastq
+
+    output:
+    file "*.{png,html,txt,log}"
+    file "*.version" into ch_nanoplot_version
+
+    script:
+    """
+    NanoPlot -t ${task.cpus} --fastq $fastq
+    NanoPlot --version &> nanoplot.version
+    """
+}
 
 // /*
 //  * STEP 4 - Align fastq files and coordinate sort BAM
