@@ -160,32 +160,6 @@ process checkSampleSheet {
     """
 }
 
-// Function to see if genome exists in iGenomes
-def get_fasta(genome, genomeMap) {
-    def fasta = genome
-    if (genome) {
-        if (genomeMap.containsKey(genome)) {
-            fasta = file(genomeMap[genome].fasta, checkIfExists: true)
-        } else {
-            fasta = file(genome, checkIfExists: true)
-        }
-    }
-    return fasta
-}
-
-/*
- * Create channels for inputs
- */
-if (!params.skipDemultiplexing) {
-    ch_samplesheet_reformat.splitCsv(header:true, sep:',')
-                       .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
-                       .set { ch_sample_info }
-} else {
-    ch_samplesheet_reformat.splitCsv(header:true, sep:',')
-                       .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
-                       .set { ch_sample_info }
-}
-
 /*
  * STEP 2 - Basecalling, demultipexing using Guppy, and QC with pycoQC and NanoPlot
  */
@@ -199,8 +173,7 @@ if (!params.skipDemultiplexing){
         file run_dir from ch_run_dir
 
         output:
-        file "fastq_merged/*.fastq.gz" into ch_guppy_nanoplot_fastq,
-                                            ch_guppy_align_fastq
+        file "fastq_merged/*.fastq.gz" into ch_guppy_fastq
         file "*.txt" into ch_guppy_pycoqc_summary,
                           ch_guppy_nanoplot_summary
         file "*.version" into ch_guppy_version
@@ -272,18 +245,54 @@ if (!params.skipDemultiplexing){
     }
 }
 
-// NEED TO CHANGE ch_guppy_nanoplot_fastq IF INPUT IS FROM FASTQ FILES
+// Function to see if genome exists in iGenomes
+def get_fasta(genome, genomeMap) {
+    def fasta = null
+    if (genome) {
+        if (genomeMap.containsKey(genome)) {
+            fasta = file(genomeMap[genome].fasta, checkIfExists: true)
+        } else {
+            fasta = file(genome, checkIfExists: true)
+        }
+    }
+    return fasta
+}
+
+/*
+ * Create channels = [sample, genome, fastq]
+ */
+if (!params.skipDemultiplexing) {
+    ch_samplesheet_reformat.splitCsv(header:true, sep:',')
+                           .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
+                           .set { ch_sample_info }
+
+    ch_guppy_fastq.flatten()
+                  .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
+                  .join( ch_sample_info, by: 1)
+                  .map { it -> [ it[2], it[3], it[1] ] }      // [sample, genome, fastq]
+                  .into { ch_fastq_nanoplot;
+                          ch_fastq_align }
+
+    // Dont map samples if reference genome hasnt been provided
+    ch_fastq_align.filter{ it[1] != null }
+                  .set { ch_fastq_align }
+
+} else {
+    ch_samplesheet_reformat.splitCsv(header:true, sep:',')
+                           .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
+                           .set { ch_sample_info }
+}
 
 process NanoPlot_fastq {
-    //tag "$summary_txt"
+    tag "$sample"
     label 'process_low'
-    publishDir "${params.outdir}/nanoplot/fastq", mode: 'copy'
+    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy'
 
     when:
     !params.skipQC && !params.skipNanoPlot
 
     input:
-    file fastq from ch_guppy_nanoplot_fastq
+    set val(sample), file(genome), file(fastq) from ch_fastq_nanoplot
 
     output:
     file "*.{png,html,txt,log}"
@@ -296,30 +305,31 @@ process NanoPlot_fastq {
     """
 }
 
-// /*
-//  * STEP 4 - Align fastq files and coordinate sort BAM
-//  */
-// if (!params.skipAlignment){
-//     if(params.aligner == 'graphmap'){
-//         process GraphMap {
-//             tag "${fastq.baseName}"
-//             label 'process_medium'
-//             publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy'
-//
-//             input:
-//             file fastq from ch_guppy_align_fastq
-//
-//             output:
-//             file "*.sam" into ch_align_sam
-//             file "*.version" into ch_align_version
-//
-//             script:
-//             """
-//             graphmap align -t ${task.cpus} -r ref.fa -d $fastq -o ${fastq.baseName}.sam --extcigar
-//             graphmap &> graphmap.version
-//             """
-//         }
-//     }
+/*
+ * STEP 4 - Align fastq files and coordinate sort BAM
+ */
+if (!params.skipAlignment){
+    if(params.aligner == 'graphmap'){
+        process GraphMap {
+            tag "${fastq.baseName}"
+            label 'process_medium'
+            publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy'
+
+            input:
+            set val(sample), file(genome), file(fastq) from ch_fastq_align
+
+            output:
+            file "*.sam" into ch_align_sam
+            file "*.version" into ch_align_version
+
+            script:
+            """
+            graphmap align -t ${task.cpus} -r $genome -d $fastq -o ${sample}.sam --extcigar
+            graphmap &> graphmap.version
+            """
+        }
+    }
+}
 //
 //     if(params.aligner == 'minimap2'){
 //         process minimap2 {
