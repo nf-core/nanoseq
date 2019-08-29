@@ -496,25 +496,25 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 //     """
 // }
 
-// /*
-//  * STEP 4 - Output Description HTML
-//  */
-// process output_documentation {
-//     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-//
-//     input:
-//     file output_docs from ch_output_docs
-//
-//     output:
-//     file "results_description.html"
-//     //file "*.version" into ch_rmarkdown_version
-//
-//     script:
-//     """
-//     markdown_to_html.r $output_docs results_description.html
-//     Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='markdown.version')"
-//     """
-// }
+/*
+ * STEP 4 - Output Description HTML
+ */
+process output_documentation {
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy'
+
+    input:
+    file output_docs from ch_output_docs
+
+    output:
+    file "results_description.html"
+    //file "*.version" into ch_rmarkdown_version
+
+    script:
+    """
+    markdown_to_html.r $output_docs results_description.html
+    Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='markdown.version')"
+    """
+}
 
 // /*
 //  * Completion e-mail notification
