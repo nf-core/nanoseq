@@ -38,9 +38,6 @@ def helpMessage() {
       --saveAlignedIntermediates    Save the BAM files from the aligment step - not done by default
       --skipAlignment               Skip alignment and subsequent process
 
-    Downstream analysis
-      --skipIndels                  Skip indel calling process
-
     QC
       --skipQC                      Skip all QC steps apart from MultiQC
       --skipPycoQC                  Skip pycoQC
@@ -59,16 +56,15 @@ def helpMessage() {
     """.stripIndent()
 }
 
-/*
- * SET UP CONFIGURATION VARIABLES
- */
-
 // Show help message
 if (params.help){
     helpMessage()
     exit 0
 }
 
+/*
+ * SET UP CONFIGURATION VARIABLES
+ */
 if (params.samplesheet)         { ch_samplesheet = file(params.samplesheet, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 if (!params.skipDemultiplexing) {
     if (params.run_dir)         { ch_run_dir = file(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
@@ -82,6 +78,10 @@ if (!params.skipAlignment)      {
     }
 }
 
+// Stage config files
+ch_multiqc_config = Channel.fromPath(params.multiqc_config)
+ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
+
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
 custom_runName = params.name
@@ -89,6 +89,7 @@ if( !(workflow.runName ==~ /[a-z]+_[a-z]+/) ){
   custom_runName = workflow.runName
 }
 
+// AWS batch settings
 if( workflow.profile == 'awsbatch') {
   // AWSBatch sanity checking
   if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
@@ -98,10 +99,6 @@ if( workflow.profile == 'awsbatch') {
   // Prevent trace files to be stored on S3 since S3 does not support rolling files.
   if (workflow.tracedir.startsWith('s3:')) exit 1, "Specify a local tracedir or run without trace! S3 cannot be used for tracefiles."
 }
-
-// Stage config files
-ch_multiqc_config = Channel.fromPath(params.multiqc_config)
-ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
 
 // Header log info
 log.info nfcoreHeader()
@@ -404,7 +401,7 @@ if (!params.skipAlignment){
 
         output:
         set val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
-        file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats
+        file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
         file "*.version" into ch_samtools_version
 
         script:
@@ -418,30 +415,6 @@ if (!params.skipAlignment){
         samtools --version &> samtools.version
         """
     }
-
-    // /*
-    //  * STEP 7 - Call Indels
-    //  */
-    // process callIndels {
-    //     tag "$prefix"
-    //     label 'process_low'
-    //     publishDir path: "${params.outdir}/indels", mode: 'copy'
-    //
-    //     when:
-    //     !params.skipIndels
-    //
-    //     input:
-    //     set val(sample), file(bam) from ch_sortbam_bam
-    //
-    //     //output:
-    //     //set file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
-    //     //file "*.version" into ch_pysam_version
-    //
-    //     script:  // This script is bundled with the pipeline, in nf-core/nanodemux/bin/
-    //     """
-    //     getIndelsBAM.py $bam $fasta ${sample}.indels.bed 0
-    //     """
-    // }
 } else {
     ch_align_version = []
     ch_samtools_version = []
