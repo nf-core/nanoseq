@@ -216,6 +216,7 @@ if (!params.skipDemultiplexing){
             --flowcell $params.flowcell \\
             --kit $params.kit \\
             --barcode_kits $params.barcode_kit
+        guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files for each barcode
         mkdir fastq_merged
@@ -225,8 +226,6 @@ if (!params.skipDemultiplexing){
             cat \$dir/*.fastq > fastq_merged/\$dir.fastq
         done
         gzip fastq_merged/*.fastq
-
-        guppy_basecaller --version &> guppy.version
         """
     }
 
