@@ -33,12 +33,6 @@ def helpMessage() {
       --barcode_kit                 The barcoding kit used (i.e. SQK-PBK004)
       --skipDemultiplexing          Skip demultiplexing step with guppy
 
-    References                      If not specified in the configuration file or you wish to overwrite any of the references.
-      --saveReference               Save the generated reference files to the results directory
-
-    Trimming
-      --skipTrimming                Skip the adapter trimming step
-
     Alignment
       --aligner                     Specifies the aligner to use (available are: 'graphmap', 'minimap2')
       --saveAlignedIntermediates    Save the BAM files from the aligment step - not done by default
@@ -113,28 +107,44 @@ ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
 log.info nfcoreHeader()
 def summary = [:]
 if(workflow.revision) summary['Pipeline Release'] = workflow.revision
-summary['Run Name']         = custom_runName ?: workflow.runName
-// TODO nf-core: Report custom parameters here
-summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
+summary['Run Name']            = custom_runName ?: workflow.runName
+summary['Samplesheet']         = params.samplesheet
+summary['Skip Demultiplexing'] = params.skipDemultiplexing ? 'Yes' : 'No'
+if (!params.skipDemultiplexing){
+    summary['Run Dir']         = params.run_dir
+    summary['Flowcell ID']     = params.flowcell
+    summary['Kit ID']          = params.kit
+    summary['Barcode Kit ID']  = params.barcode_kit
+}
+summary['Skip Alignment']      = params.skipAlignment ? 'Yes' : 'No'
+if (!params.skipAlignment){
+    summary['Aligner']         = params.aligner
+    summary['Save Intermeds']  = params.saveAlignedIntermediates ? 'Yes' : 'No'
+}
+summary['Skip QC']             = params.skipQC ? 'Yes' : 'No'
+summary['Skip pycoQC']         = params.skipPycoQC ? 'Yes' : 'No'
+summary['Skip NanoPlot']       = params.skipNanoPlot ? 'Yes' : 'No'
+summary['Skip MultiQC']        = params.skipMultiQC ? 'Yes' : 'No'
+summary['Max Resources']       = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
-summary['Output dir']       = params.outdir
-summary['Launch dir']       = workflow.launchDir
-summary['Working dir']      = workflow.workDir
-summary['Script dir']       = workflow.projectDir
-summary['User']             = workflow.userName
+summary['Output dir']          = params.outdir
+summary['Launch dir']          = workflow.launchDir
+summary['Working dir']         = workflow.workDir
+summary['Script dir']          = workflow.projectDir
+summary['User']                = workflow.userName
 if(workflow.profile == 'awsbatch'){
-   summary['AWS Region']    = params.awsregion
-   summary['AWS Queue']     = params.awsqueue
+   summary['AWS Region']       = params.awsregion
+   summary['AWS Queue']        = params.awsqueue
 }
 summary['Config Profile'] = workflow.profile
 if(params.config_profile_description) summary['Config Description'] = params.config_profile_description
 if(params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
 if(params.config_profile_url)         summary['Config URL']         = params.config_profile_url
 if(params.email) {
-  summary['E-mail Address']  = params.email
-  summary['MultiQC maxsize'] = params.maxMultiqcEmailFileSize
+  summary['E-mail Address']    = params.email
+  summary['MultiQC maxsize']   = params.maxMultiqcEmailFileSize
 }
-log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
+log.info summary.collect { k,v -> "${k.padRight(19)}: $v" }.join("\n")
 log.info "\033[2m----------------------------------------------------\033[0m"
 
 // Check the hostnames against configured profiles
