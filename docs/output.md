@@ -21,7 +21,7 @@ and processes data using the following steps:
 *Documentation*: 
 [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
-**Output directory: `results/guppy`**
+**Output directory: `guppy/`**
 
 ## Quality Control 
 *Documentation*:
@@ -29,14 +29,14 @@ and processes data using the following steps:
 [NanoPlot](https://github.com/wdecoster/NanoPlot)
 
 *Description*:
-
+PycoQC and NanoPlot give general quality metrics about your reads. It provides information about the quality score distribution across your reads, read lengths 
 
 *Output directories*: 
-* `results/pycoQC`
+* `pycoQC`
 An .html file output is produced that includes a run summary and graphical representation of distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time, output over experiment time, read quality over experiment time, readlength over experiment time, and percentage of reads per barcode.
-* `results/nanoplot/summary`
+* `nanoplot/summary`
 An output of a .png file of a statistical summary and an html summary file.
-* `results/nanoplot/fastq`
+* `nanoplot/fastq`
 An output of a .png plot of fastq QC.
 
 ## Alignment 
@@ -47,8 +47,11 @@ This pipeline allows the choice to do an alignment against a reference genome wi
 [MiniMap2](https://github.com/lh3/minimap2)
 [SortBam](http://www.htslib.org/doc/samtools.html)
 
+*Description*:
+The FastQ reads are mapped to the given reference assembly provided using either GraphMap or Minimap2 and then sorted and indexed using SAMtools or these processes can be bypassed using the `--skipAlignment` parameter.
+
 *Output directories*:
- * `results/graphmap`
+ * `graphmap/`
  If the `--aligner graphmap` parameter is used the results will be output here. 
  * `results/minimap2`
  If the `--aligner minimap2` parameter is used the results will be output here.
@@ -62,7 +65,7 @@ This pipeline allows the choice to do an alignment against a reference genome wi
 
 The pipeline has special steps which allow the software versions used to be reported in the MultiQC output for future traceability.
 
-**Output directory: `results/multiqc`**
+**Output directory: `multiqc/`**
 
 * `Project_multiqc_report.html`
   * MultiQC report - a standalone HTML file that can be viewed in your web browser
