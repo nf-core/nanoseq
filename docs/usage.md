@@ -18,15 +18,15 @@
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
   * [`--skipDemultiplexing`](#--skipdemultiplexing)
-* [Alignments](#alignments)
-  * [`--aligner`](#--aligner)
-  * [`--saveAlignedIntermediates`](#--savealignedintermedites)
-  * [`--skipAlignment`](#--skipalignment)
 * [QC](#qc)
   * [`--skipQC`](#--skipqc)
   * [`--skipPycoQC`](#--skippycoqc)
   * [`--skipNanoPlot`](#--skipnanoplot)
   * [`--skipMultiQC`](#--skipmultiqc)
+* [Alignments](#alignments)
+  * [`--aligner`](#--aligner)
+  * [`--saveAlignedIntermediates`](#--savealignedintermedites)
+  * [`--skipAlignment`](#--skipalignment)
 * [Job resources](#job-resources)
   * [Automatic resubmission](#automatic-resubmission)
   * [Custom resource requests](#custom-resource-requests)
@@ -125,11 +125,6 @@ You will need to create a sample sheet csv file with information about the sampl
 --samplesheet '[path to sample sheet]'
 ```
 
-Please note the following requirements:
-
-1. The path must be enclosed in quotes
-2. The path must have at least one `*` wildcard character
-
 ### Demultiplexing 
 By default, the pipeline expects data to be demultiplexed into fastq files. If you have fastq files already, you need to specify `--skipDemultiplexing` on the command line when you launch the pipeline to bypass this step. 
 
@@ -167,7 +162,6 @@ Save the BAM files from the aligment step - not done by default
 
 ### `--skipAlignment`               
 Skip alignment and subsequent process
-
 
 
 ## Skipping QC steps

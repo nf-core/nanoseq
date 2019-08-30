@@ -35,11 +35,12 @@ and processes data using the following steps:
 * `results/pycoQC`
 An .html file output is produced that includes a run summary and graphical representation of distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time, output over experiment time, read quality over experiment time, readlength over experiment time, and percentage of reads per barcode.
 * `results/nanoplot/summary`
+An output of a .png file of a statistical summary and an html summary file.
 * `results/nanoplot/fastq`
-An output of a .png file
+An output of a .png plot of fastq QC.
 
 ## Alignment 
-This pipeline allows the choice to do an alignment against a reference genome with either GraphMap or MiniMap2 or skip the alignment process. 
+This pipeline allows the choice to do an alignment against a reference genome with either GraphMap or MiniMap2 and then sorting with SAMtools or skip the alignment processes altogether. 
 
 *Documentation*:
 [GraphMap](https://github.com/isovic/graphmap)
@@ -48,7 +49,10 @@ This pipeline allows the choice to do an alignment against a reference genome wi
 
 *Output directories*:
  * `results/graphmap`
+ If the `--aligner graphmap` parameter is used the results will be output here. 
  * `results/minimap2`
+ If the `--aligner minimap2` parameter is used the results will be output here.
+
  The files resulting from the alignment with graphmap or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--saveAlignedIntermediates` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
  * `samtools_stats/`
  SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
