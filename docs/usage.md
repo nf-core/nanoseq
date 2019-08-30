@@ -65,7 +65,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/nanodemux --reads '*_R{1,2}.fastq.gz' -profile docker
+nextflow run nf-core/nanodemux --samplesheet 'samplesheet.csv' -profile test,docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -118,78 +118,70 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
 
 <!-- TODO nf-core: Document required command line parameters -->
 
-### `--reads`
-Use this to specify the location of your input FastQ files. For example:
+### `--samplesheet`
+You will need to create a sample sheet csv file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
 
 ```bash
---reads 'path/to/data/sample_*_{1,2}.fastq'
+--samplesheet '[path to sample sheet]'
 ```
 
 Please note the following requirements:
 
 1. The path must be enclosed in quotes
 2. The path must have at least one `*` wildcard character
-3. When using the pipeline with paired end data, the path must use `{1,2}` notation to specify read pairs.
 
-If left unspecified, a default pattern is used: `data/*{1,2}.fastq.gz`
-
-### `--singleEnd`
-By default, the pipeline expects paired-end data. If you have single-end data, you need to specify `--singleEnd` on the command line when you launch the pipeline. A normal glob pattern, enclosed in quotation marks, can then be used for `--reads`. For example:
+### Demultiplexing 
+By default, the pipeline expects data to be demultiplexed into fastq files. If you have fastq files already, you need to specify `--skipDemultiplexing` on the command line when you launch the pipeline to bypass this step. 
 
 ```bash
---singleEnd --reads '*.fastq'
+sample_id,fastq_file,genome_fasta
+Sample1,,mm10
+Sample2,,mm10
+Sample3,,mm10
+Sample4,,mm10
 ```
 
-It is not possible to run a mixture of single-end and paired-end files in one run.
-
-
-## Reference genomes
-
-The pipeline config files come bundled with paths to the illumina iGenomes reference index files. If running with docker or AWS, the configuration is set up to use the [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) resource.
-
-### `--genome` (using iGenomes)
-There are 31 different species supported in the iGenomes references. To run the pipeline, you must specify which to use with the `--genome` flag.
-
-You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
-
-* Human
-  * `--genome GRCh37`
-* Mouse
-  * `--genome GRCm38`
-* _Drosophila_
-  * `--genome BDGP6`
-* _S. cerevisiae_
-  * `--genome 'R64-1-1'`
-
-> There are numerous others - check the config file for more.
-
-Note that you can use the same configuration setup to save sets of reference files for your own use, even if they are not part of the iGenomes resource. See the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for instructions on where to save such a file.
-
-The syntax for this reference configuration is as follows:
-
-<!-- TODO nf-core: Update reference genome example according to what is needed -->
-
-```nextflow
-params {
-  genomes {
-    'GRCh37' {
-      fasta   = '<path to the genome fasta file>' // Used if no star index given
-    }
-    // Any number of additional genomes, key is used with --genome
-  }
-}
-```
-
-<!-- TODO nf-core: Describe reference path flags -->
-### `--fasta`
-If you prefer, you can specify the full path to your reference genome when you run the pipeline:
-
+### Skipping Demultiplexing 
 ```bash
---fasta '[path to Fasta reference]'
+sample_id,fastq_file,genome_fasta
+Sample1,SAM101A1_S1_L001_R1_001.fastq.gz,mm10
+Sample2,SAM101A2_S2_L002_R1_001.fastq.gz,mm10
+Sample3,SAM101A3_S3_L003_R1_001.fastq.gz,mm10
+Sample4,SAM101A4_S4_L004_R1_001.fastq.gz,mm10
 ```
 
-### `--igenomesIgnore`
-Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`.
+| Column        | Description                                                                                     |
+|---------------|-------------------------------------------------------------------------------------------------|
+| `sample_id`   | Identifier for sample                                                                           |
+| `fastq_file`  | Full path to FastQ file. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz".  |
+| `genome_fasta`| Specify the reference genome                                                                    |
+
+
+## Alignment
+
+### `--aligner`                     
+Specifies the aligner to use (available are: 'graphmap', 'minimap2')
+
+### `--saveAlignedIntermediates`    
+Save the BAM files from the aligment step - not done by default
+
+### `--skipAlignment`               
+Skip alignment and subsequent process
+
+
+
+## Skipping QC steps
+
+The pipeline contains a number of quality control steps. Sometimes, it may not be desirable to run all of them if time and compute resources are limited.
+The following options make this easy:
+
+| Step                    | Description                          |
+|-------------------------|--------------------------------------|
+| `--skipQC`              | Skip all QC steps apart from MultiQC |
+| `--skipPycoQC`          | Skip PycoQC                          |
+| `--skipNanoPlot`        | Skip NanoPlot                        |
+| `--skipMultiQC`         | Skip MultiQC                         |
+
 
 ## Job resources
 ### Automatic resubmission
