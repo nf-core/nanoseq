@@ -16,16 +16,18 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 ## Pipeline Summary
 This pipeline
 1. Checking the sample sheet
-    * Searches for [Data] tag and finds the column Fastq_path. If this column is empty it will send the run directory to the demultiplexing process and if not it bypasses to the QC step
+    * Checks to see if the sample sheet is formatted correctly.
 2. Basecalling and Barcoding (CONDITIONAL)
-    * If fastq files are not provided, this process performs demultiplexing by basecalling and barcoding.
+    * [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis) if fastq files are not provided, this process performs demultiplexing by basecalling and barcoding.
     * Must have access to the Nanopore software Guppy and have the kit and barcode kit used on the sample sheet in the format of the example sample sheet provided
-3. PycoQC for quality checking the data
+3. PycoQC and NanoPlot for quality checking the data
     * [PycoQC](https://github.com/a-slide/pycoQC) outputs diagnostic plots and data for quality control of sequencing data from Oxford Nanopore's MinION in an HTML format.
-4. GraphMap
-	* [GraphMap](https://github.com/isovic/graphmap) is a highly sensitive and accurate mapper for long, error-prone reads
+    * [NanoPlot](https://github.com/wdecoster/NanoPlot) plotting tool for long read sequencing data and alignments.
+4. Alignment (choice of either using Graphmap or Minimap2)
+	* [GraphMap](https://github.com/isovic/graphmap) is a highly sensitive and accurate mapper for long, error-prone reads.
+    * [Minimap2](https://github.com/lh3/minimap2) a versatile pairwise aligner for genomic and spliced nucleotide sequences.
 5. Sorting BAM files
-	* Converting .bam files to coordinate sorted .bam
+	* [SAMtools](http://www.htslib.org/doc/samtools.html) Converting .bam files to coordinate sorted and indexed .bam.
 6. MultiQC
     * [MultiQC](https://multiqc.info/docs/)  
 
