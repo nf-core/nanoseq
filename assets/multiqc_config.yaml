@@ -7,3 +7,6 @@ report_section_order:
         order: -1000
 
 export_plots: true
+
+fn_clean_exts:
+    - 'sorted.bam'
