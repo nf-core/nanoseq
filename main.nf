@@ -258,8 +258,8 @@ if (!params.skipDemultiplexing){
         """
     }
 } else {
-    ch_guppy_version = []
-    ch_pycoqc_version = []
+    ch_guppy_version = Channel.empty()
+    ch_pycoqc_version = Channel.empty()
 }
 
 // Function to see if genome exists in iGenomes
@@ -276,7 +276,7 @@ def get_fasta(genome, genomeMap) {
 }
 
 /*
- * Create channels = [sample, genome, fastq]
+ * Create channels = [sample, fastq, genome]
  */
 if (!params.skipDemultiplexing) {
     ch_samplesheet_reformat.splitCsv(header:true, sep:',')
@@ -286,12 +286,12 @@ if (!params.skipDemultiplexing) {
     ch_guppy_fastq.flatten()
                   .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
                   .join( ch_sample_info, by: 1)
-                  .map { it -> [ it[2], it[3], it[1] ] }      // [sample, genome, fastq]
+                  .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
                   .into { ch_fastq_nanoplot;
                           ch_fastq_align }
 
     // Dont map samples if reference genome hasnt been provided
-    ch_fastq_align.filter{ it[1] != null }
+    ch_fastq_align.filter{ it[2] != null }
                   .set { ch_fastq_align }
 
 } else {
@@ -312,7 +312,7 @@ process NanoPlot_fastq {
     !params.skipQC && !params.skipNanoPlot
 
     input:
-    set val(sample), file(genome), file(fastq) from ch_fastq_nanoplot
+    set val(sample), file(fastq), file(genome) from ch_fastq_nanoplot
 
     output:
     file "*.{png,html,txt,log}"
@@ -339,11 +339,11 @@ if (!params.skipAlignment){
             }
 
             input:
-            set val(sample), file(genome), file(fastq) from ch_fastq_align
+            set val(sample), file(fastq), file(genome) from ch_fastq_align
 
             output:
             set val(sample), file("*.sam") into ch_align_sam
-            file "*.version" into ch_align_version
+            file "*.version" into ch_graphmap_version
 
             script:
             """
@@ -351,6 +351,7 @@ if (!params.skipAlignment){
             echo \$(graphmap 2>&1) > graphmap.version
             """
         }
+        ch_minimap2_version = Channel.empty()
     }
 
     /*
@@ -366,18 +367,19 @@ if (!params.skipAlignment){
             }
 
             input:
-            set val(sample), file(genome), file(fastq) from ch_fastq_align
+            set val(sample), file(fastq), file(genome) from ch_fastq_align
 
             output:
             set val(sample), file("*.sam") into ch_align_sam
-            file "*.version" into ch_align_version
+            file "*.version" into ch_minimap2_version
 
             script:
             """
             minimap2 -ax map-ont -t $task.cpus $genome $fastq > ${sample}.sam
-            minimap2 --version &> minimap.version
+            minimap2 --version &> minimap2.version
             """
         }
+        ch_graphmap_version = Channel.empty()
     }
 
     /*
@@ -416,42 +418,63 @@ if (!params.skipAlignment){
         """
     }
 } else {
-    ch_align_version = []
-    ch_samtools_version = []
+    ch_graphmap_version = Channel.empty()
+    ch_minimap2_version = Channel.empty()
+    ch_samtools_version = Channel.empty()
+    ch_sortbam_stats_mqc = Channel.empty()
 }
 
-// /*
-//  * Parse software version numbers
-//  */
-// process get_software_versions {
-//     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-//     saveAs: {filename ->
-//         if (filename.indexOf(".csv") > 0) filename
-//         else null
-//     }
-//
-//     input:
-//     file guppy from ch_guppy_version.collect().ifEmpty([])
-//     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-//     file nanoplot from ch_nanoplot_version.first()
-//     file align from ch_align_version.collect().first().ifEmpty([])
-//     file samtools from ch_samtools_version.collect().first().ifEmpty([])
-//     file pysam from ch_pysam_version.collect().first().ifEmpty([])
-//     file multiqc from ch_multiqc_version.collect().ifEmpty([])
-//     file rmarkdown from ch_rmarkdown_version.collect().ifEmpty([])
-//
-//     output:
-//     file 'software_versions_mqc.yaml' into software_versions_yaml
-//     file "software_versions.csv"
-//
-//     script:
-//     // TODO nf-core: Get all tools to print their version number here
-//     """
-//     echo $workflow.manifest.version > v_pipeline.txt
-//     echo $workflow.nextflow.version > v_nextflow.txt
-//     scrape_software_versions.py &> software_versions_mqc.yaml
-//     """
-// }
+/*
+ * STEP 7 - Output Description HTML
+ */
+process output_documentation {
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy'
+
+    input:
+    file output_docs from ch_output_docs
+
+    output:
+    file "results_description.html"
+    file "*.version" into ch_rmarkdown_version
+
+    script:
+    """
+    markdown_to_html.r $output_docs results_description.html
+    Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='rmarkdown.version')"
+    """
+}
+
+/*
+ * Parse software version numbers
+ */
+process get_software_versions {
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+    saveAs: {filename ->
+        if (filename.indexOf(".csv") > 0) filename
+        else null
+    }
+
+    input:
+    file guppy from ch_guppy_version.collect().ifEmpty([])
+    file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
+    file nanoplot from ch_nanoplot_version.first()
+    file graphmap from ch_graphmap_version.first().ifEmpty([])
+    file minimap2 from ch_minimap2_version.first().ifEmpty([])
+    file samtools from ch_samtools_version.first().ifEmpty([])
+    file rmarkdown from ch_rmarkdown_version.collect()
+    //file multiqc from ch_multiqc_version.collect().ifEmpty([])
+
+    output:
+    file 'software_versions_mqc.yaml' into software_versions_yaml
+    file "software_versions.csv"
+
+    script:
+    """
+    echo $workflow.manifest.version > pipeline.version
+    echo $workflow.nextflow.version > nextflow.version
+    scrape_software_versions.py &> software_versions_mqc.yaml
+    """
+}
 
 def create_workflow_summary(summary) {
     def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
@@ -470,47 +493,30 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
    return yaml_file
 }
 
-// /*
-//  * STEP 3 - MultiQC
-//  */
-// process multiqc {
-//     publishDir "${params.outdir}/${runName}/MultiQC", mode: 'copy'
-//
-//     when:
-//     !params.skipMultiQC
-//
-//     input:
-//     file summary from minion_summary
-//
-//     output:
-//     file "*multiqc_report.html" into multiqc_report
-//     file "*_data"
-//     //file "*.version" into ch_multiqc_version
-//
-//     script:
-//     """
-//     multiqc $summary --config $multiqc_config .
-//     multiqc --version &> multiqc.version
-//     """
-// }
-
 /*
- * STEP 4 - Output Description HTML
+ * STEP 8 - MultiQC
  */
-process output_documentation {
-    publishDir "${params.outdir}/pipeline_info", mode: 'copy'
+process multiqc {
+    publishDir "${params.outdir}/multiqc", mode: 'copy'
+
+    when:
+    !params.skipMultiQC
 
     input:
-    file output_docs from ch_output_docs
+    file multiqc_config from ch_multiqc_config
+    file ('samtools/*')  from ch_sortbam_stats_mqc.collect().ifEmpty([])
 
     output:
-    file "results_description.html"
-    file "*.version" into ch_rmarkdown_version
+    file "*multiqc_report.html" into multiqc_report
+    file "*_data"
+    file "*.version" into ch_multiqc_version
 
     script:
+    rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
+    rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     """
-    markdown_to_html.r $output_docs results_description.html
-    Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='markdown.version')"
+    multiqc . -f $rtitle $rfilename --config $multiqc_config -m samtools
+    multiqc --version &> multiqc.version
     """
 }
 
