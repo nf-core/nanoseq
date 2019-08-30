@@ -8,23 +8,43 @@ This document describes the output produced by the pipeline. Most of the plots a
 The pipeline is built using [Nextflow](https://www.nextflow.io/)
 and processes data using the following steps:
 
-* [FastQC](#fastqc) - read quality control
+* [Guppy](#guppy) - demultiplexing of Nanopore data
+* [PycoQC](#pycoqc) - read quality control
+* [NanoPlot](#nanoplot) - read quality control
+* [GraphMap](#graphmap) - mapping for long reads
+* [MiniMap2](#minimap2) - mapping for long reads
+* [SortBam](#sortbam) - coordinate sort BAM files using SAMtools
 * [MultiQC](#multiqc) - aggregate report, describing results of the whole pipeline
 
-## FastQC
-[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) gives general quality metrics about your reads. It provides information about the quality score distribution across your reads, the per base sequence content (%T/A/G/C). You get information about adapter contamination and other overrepresented sequences.
 
-For further reading and documentation see the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/).
+## Demultiplexing
+*Documentation*: 
+[Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
-> **NB:** The FastQC plots displayed in the MultiQC report shows _untrimmed_ reads. They may contain adapter sequence and potentially regions with low quality. To see how your reads look after trimming, look at the FastQC reports in the `trim_galore` directory.
+**Output directory: `results/guppy`**
 
-**Output directory: `results/fastqc`**
+## Quality Control 
+*Documentation*:
+[PycoQC](https://github.com/a-slide/pycoQC)
+[NanoPlot](https://github.com/wdecoster/NanoPlot)
 
-* `sample_fastqc.html`
-  * FastQC report, containing quality metrics for your untrimmed raw fastq files
-* `zips/sample_fastqc.zip`
-  * zip file containing the FastQC report, tab-delimited data file and plot images
+*Description*:
 
+
+*Output directories*: 
+* `results/pycoQC`
+pycoQC_output.html
+* `results/nanoplot/fastq`
+
+## Alignment 
+*Documentation*:
+[GraphMap](https://github.com/isovic/graphmap)
+[MiniMap2](https://github.com/lh3/minimap2)
+[SortBam](http://www.htslib.org/doc/samtools.html)
+
+*Output directories*:
+ * `results/graphmap`
+ * `results/minimap2`
 
 ## MultiQC
 [MultiQC](http://multiqc.info) is a visualisation tool that generates a single HTML report summarising all samples in your project. Most of the pipeline QC results are visualised in the report and further statistics are available in within the report data directory.
