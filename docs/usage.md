@@ -59,8 +59,6 @@ It is recommended to limit the Nextflow Java virtual machines memory. We recomme
 NXF_OPTS='-Xms1g -Xmx4g'
 ```
 
-<!-- TODO nf-core: Document required command line parameters to run the pipeline-->
-
 ## Running the pipeline
 The typical command for running the pipeline is as follows:
 
@@ -116,8 +114,6 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
   * A profile with a complete configuration for automated testing
   * Includes links to test data so needs no other parameters
 
-<!-- TODO nf-core: Document required command line parameters -->
-
 ### `--samplesheet`
 You will need to create a sample sheet csv file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
 
@@ -126,7 +122,7 @@ You will need to create a sample sheet csv file with information about the sampl
 ```
 
 ### Demultiplexing 
-By default, the pipeline expects data to be demultiplexed into fastq files. If you have fastq files already, you need to specify `--skipDemultiplexing` on the command line when you launch the pipeline to bypass this step. 
+By default, the pipeline expects to demultiplex data into fastq files using the program Guppy. If you have fastq files already, you need to specify `--skipDemultiplexing` on the command line when launching the pipeline to bypass this step. 
 
 ```bash
 sample_id,fastq_file,genome_fasta
@@ -145,11 +141,11 @@ Sample3,SAM101A3_S3_L003_R1_001.fastq.gz,mm10
 Sample4,SAM101A4_S4_L004_R1_001.fastq.gz,mm10
 ```
 
-| Column        | Description                                                                                     |
-|---------------|-------------------------------------------------------------------------------------------------|
-| `sample_id`   | Identifier for sample                                                                           |
-| `fastq_file`  | Full path to FastQ file. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz".  |
-| `genome_fasta`| Specify the reference genome                                                                    |
+| Column        | Description                                                                                                                 |
+|---------------|-----------------------------------------------------------------------------------------------------------------------------|
+| `sample_id`   | Identifier for sample                                                                                                       |
+| `fastq_file`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz".  |
+| `genome_fasta`| Specify the reference genome                                                                                                |
 
 
 ## Alignment

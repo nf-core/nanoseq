@@ -21,6 +21,9 @@ and processes data using the following steps:
 *Documentation*: 
 [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
+*Description*:
+Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skipDemultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified.
+
 **Output directories:** 
 * `guppy/barcode*/`
 FastQ files output for each barcode 
@@ -36,7 +39,7 @@ FastQ files output that are unclassified
 [NanoPlot](https://github.com/wdecoster/NanoPlot)
 
 *Description*:
-PycoQC and NanoPlot give general quality metrics about your reads. It provides information about the quality score distribution across your reads, read lengths. 
+PycoQC and NanoPlot give general quality metrics about your reads. It provides information about the quality score distribution across your reads, read lengths and other general stats. 
 
 **Output directories**: 
 * `pycoQC/`
@@ -65,7 +68,7 @@ The FastQ reads are mapped to the given reference assembly provided using either
 
  The files resulting from the alignment with graphmap or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--saveAlignedIntermediates` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
  * `samtools_stats/`
- SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
+ `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files using SAMtools.
 
 ## MultiQC
 [MultiQC](http://multiqc.info) is a visualisation tool that generates a single HTML report summarising all samples in your project. Most of the pipeline QC results are visualised in the report and further statistics are available in within the report data directory.
