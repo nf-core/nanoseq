@@ -126,6 +126,8 @@ Sample4,,4,/path/to/local/reference/genome.fa
 
 #### Without demultiplexing
 
+> You will also have to specify the `--skipDemultiplexing` parameter if you wish to bypass the demultiplexing step.
+
 ```bash
 sample,fastq,barcode,genome
 Sample1,SAM101A1.fastq.gz,,mm10
@@ -134,14 +136,12 @@ Sample3,SAM101A3.fastq.gz,,hg19
 Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
 ```
 
-> You will have to specify the `--skipDemultiplexing` parameter to bypass the demultiplexing step.
-
 | Column   | Description                                                                                                                |
 |----------|----------------------------------------------------------------------------------------------------------------------------|
-| `sample` | Sample name without spaces                                                                                                 |
+| `sample` | Sample name without spaces.                                                                                                |
 | `fastq`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
 | `barcode`| Barcode identifier attributed to that sample when multiplexing samples in integer format.                                  |
-| `genome` | Genome fasta for alignment. This can either be a local path, or the appropriate key for a genome available on [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) (see [iGenomes config file](../conf/igenomes.config)). If empty then the alignment step will be skipped for that sample |
+| `genome` | Genome fasta for alignment. This can either be a local path, or the appropriate key for a genome available on [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) (see [iGenomes config file](../conf/igenomes.config)). If unspecified then the alignment step will be skipped for that sample. |
 
 ## Demultiplexing
 
