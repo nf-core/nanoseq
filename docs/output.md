@@ -48,9 +48,7 @@ An output of a .png file of a statistical summary and an html summary file.
 * `nanoplot/fastq/`
 An output of a .png plot of fastq QC.
 
-## Alignment 
-This pipeline allows the choice to do an alignment against a reference genome with either GraphMap or MiniMap2 and then sorting with SAMtools or skip the alignment processes altogether. 
-
+## Alignment  
 *Documentation*:
 [GraphMap](https://github.com/isovic/graphmap)
 [MiniMap2](https://github.com/lh3/minimap2)
