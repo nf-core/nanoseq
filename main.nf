@@ -28,14 +28,14 @@ def helpMessage() {
 
     Demultiplexing
       --run_dir                     Path to Nanopore run directory (e.g. fastq_pass/)
-      --flowcell                    Which flowcell was used that the sequencing was performed with (i.e FLO-MIN106)
-      --kit                         The sequencing kit used (i.e. SQK-LSK109)
-      --barcode_kit                 The barcoding kit used (i.e. SQK-PBK004)
-      --skipDemultiplexing          Skip demultiplexing step with guppy
+      --flowcell                    Flowcell used to perform the sequencing e.g. FLO-MIN106
+      --kit                         Kit used to perform the sequencing e.g. SQK-LSK109
+      --barcode_kit                 Barcode kit used to perform the sequencing e.g. SQK-PBK004
+      --skipDemultiplexing          Skip basecalling and demultiplexing step with Guppy
 
     Alignment
-      --aligner                     Specifies the aligner to use (available are: 'graphmap', 'minimap2')
-      --saveAlignedIntermediates    Save the BAM files from the aligment step - not done by default
+      --aligner                     Specifies the aligner to use (available are: graphmap or minimap2)
+      --saveAlignedIntermediates    Save the .sam files from the alignment step - not done by default
       --skipAlignment               Skip alignment and subsequent process
 
     QC
@@ -147,6 +147,19 @@ log.info "\033[2m----------------------------------------------------\033[0m"
 // Check the hostnames against configured profiles
 checkHostname()
 
+// Function to see if genome exists in iGenomes
+def get_fasta(genome, genomeMap) {
+    def fasta = null
+    if (genome) {
+        if (genomeMap.containsKey(genome)) {
+            fasta = file(genomeMap[genome].fasta, checkIfExists: true)
+        } else {
+            fasta = file(genome, checkIfExists: true)
+        }
+    }
+    return fasta
+}
+
 /*
  * PREPROCESSING - CHECK SAMPLESHEET
  */
@@ -172,10 +185,13 @@ if (!params.skipDemultiplexing){
     /*
      * STEP 1 - Basecalling and demultipexing using Guppy
      */
-    process guppy {
+    process Guppy {
         tag "$run_dir"
         label 'process_high'
-        publishDir path: "${params.outdir}/guppy", mode: 'copy'
+        publishDir path: "${params.outdir}/guppy", mode: 'copy',
+            saveAs: { filename ->
+                if (!filename.endsWith(".version")) filename
+            }
 
         input:
         file run_dir from ch_run_dir
@@ -196,7 +212,11 @@ if (!params.skipDemultiplexing){
             --save_path . \\
             --flowcell $params.flowcell \\
             --kit $params.kit \\
-            --barcode_kits $params.barcode_kit
+            --barcode_kits $params.barcode_kit \\
+            --cpu_threads_per_caller 1 \\
+            --num_callers $task.cpus \\
+            --records_per_fastq 0 \\
+            --compress_fastq
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files for each barcode
@@ -204,9 +224,8 @@ if (!params.skipDemultiplexing){
         for dir in barcode*/
         do
             dir=\${dir%*/}
-            cat \$dir/*.fastq > fastq_merged/\$dir.fastq
+            cat \$dir/*.fastq.gz > fastq_merged/\$dir.fastq.gz
         done
-        gzip fastq_merged/*.fastq
         """
     }
 
@@ -216,7 +235,10 @@ if (!params.skipDemultiplexing){
     process pycoQC {
         tag "$summary_txt"
         label 'process_low'
-        publishDir "${params.outdir}/pycoQC", mode: 'copy'
+        publishDir "${params.outdir}/pycoqc", mode: 'copy',
+            saveAs: { filename ->
+                if (!filename.endsWith(".version")) filename
+            }
 
         when:
         !params.skipQC && !params.skipPycoQC
@@ -257,28 +279,10 @@ if (!params.skipDemultiplexing){
         NanoPlot -t $task.cpus --summary $summary_txt
         """
     }
-} else {
-    ch_guppy_version = Channel.empty()
-    ch_pycoqc_version = Channel.empty()
-}
 
-// Function to see if genome exists in iGenomes
-def get_fasta(genome, genomeMap) {
-    def fasta = null
-    if (genome) {
-        if (genomeMap.containsKey(genome)) {
-            fasta = file(genomeMap[genome].fasta, checkIfExists: true)
-        } else {
-            fasta = file(genome, checkIfExists: true)
-        }
-    }
-    return fasta
-}
-
-/*
- * Create channels = [sample, fastq, genome]
- */
-if (!params.skipDemultiplexing) {
+    /*
+     * Create channels = [sample, fastq, genome]
+     */
     ch_samplesheet_reformat.splitCsv(header:true, sep:',')
                            .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
                            .set { ch_sample_info }
@@ -289,15 +293,17 @@ if (!params.skipDemultiplexing) {
                   .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
                   .into { ch_fastq_nanoplot;
                           ch_fastq_align }
-
-    // Dont map samples if reference genome hasnt been provided
-    ch_fastq_align.filter{ it[2] != null }
-                  .set { ch_fastq_align }
-
 } else {
+    ch_guppy_version = Channel.empty()
+    ch_pycoqc_version = Channel.empty()
+
+    /*
+     * Create channels = [sample, fastq, genome]
+     */
     ch_samplesheet_reformat.splitCsv(header:true, sep:',')
                            .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
-                           .set { ch_sample_info }
+                           .into {  ch_fastq_nanoplot;
+                                    ch_fastq_align }
 }
 
 /*
@@ -306,7 +312,10 @@ if (!params.skipDemultiplexing) {
 process NanoPlot_fastq {
     tag "$sample"
     label 'process_low'
-    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy'
+    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
+        saveAs: { filename ->
+            if (!filename.endsWith(".version")) filename
+        }
 
     when:
     !params.skipQC && !params.skipNanoPlot
@@ -326,6 +335,11 @@ process NanoPlot_fastq {
 }
 
 if (!params.skipAlignment){
+
+    // Dont map samples if reference genome hasnt been provided
+    ch_fastq_align.filter{ it[2] != null }
+                 .set { ch_fastq_align }
+
     /*
      * STEP 5 - Align fastq files with GraphMap
      */
@@ -335,7 +349,9 @@ if (!params.skipAlignment){
             label 'process_medium'
             if (params.saveAlignedIntermediates) {
                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-                    saveAs: { filename -> if (filename.endsWith(".sam")) filename }
+                    saveAs: { filename ->
+                        if (filename.endsWith(".sam")) filename
+                    }
             }
 
             input:
@@ -363,7 +379,9 @@ if (!params.skipAlignment){
             label 'process_medium'
             if (params.saveAlignedIntermediates) {
                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-                    saveAs: { filename -> if (filename.endsWith(".sam")) filename }
+                    saveAs: { filename ->
+                        if (filename.endsWith(".sam")) filename
+                    }
             }
 
             input:
@@ -428,7 +446,10 @@ if (!params.skipAlignment){
  * STEP 7 - Output Description HTML
  */
 process output_documentation {
-    publishDir "${params.outdir}/pipeline_info", mode: 'copy'
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+        saveAs: { filename ->
+            if (!filename.endsWith(".version")) filename
+        }
 
     input:
     file output_docs from ch_output_docs
@@ -449,10 +470,10 @@ process output_documentation {
  */
 process get_software_versions {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-    saveAs: {filename ->
-        if (filename.indexOf(".csv") > 0) filename
-        else null
-    }
+        saveAs: {filename ->
+            if (filename.indexOf(".csv") > 0) filename
+            else null
+        }
 
     input:
     file guppy from ch_guppy_version.collect().ifEmpty([])
@@ -505,17 +526,20 @@ process multiqc {
     input:
     file multiqc_config from ch_multiqc_config
     file ('samtools/*')  from ch_sortbam_stats_mqc.collect().ifEmpty([])
+    file ('software_versions/*') from software_versions_yaml.collect()
+    file ('workflow_summary/*') from create_workflow_summary(summary)
 
     output:
     file "*multiqc_report.html" into multiqc_report
     file "*_data"
+    file "multiqc_plots"
     file "*.version" into ch_multiqc_version
 
     script:
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     """
-    multiqc . -f $rtitle $rfilename --config $multiqc_config -m samtools
+    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content -m samtools
     multiqc --version &> multiqc.version
     """
 }
