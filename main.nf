@@ -28,10 +28,10 @@ def helpMessage() {
 
     Demultiplexing
       --run_dir                     Path to Nanopore run directory (e.g. fastq_pass/)
-      --flowcell                    Which flowcell was used that the sequencing was performed with (i.e FLO-MIN106)
-      --kit                         The sequencing kit used (i.e. SQK-LSK109)
-      --barcode_kit                 The barcoding kit used (i.e. SQK-PBK004)
-      --skipDemultiplexing          Skip demultiplexing step with Guppy
+      --flowcell                    Flowcell used to perform the sequencing e.g. FLO-MIN106
+      --kit                         Kit used to perform the sequencing e.g. SQK-LSK109
+      --barcode_kit                 Barcode kit used to perform the sequencing e.g. SQK-PBK004
+      --skipDemultiplexing          Skip basecalling and demultiplexing step with Guppy
 
     Alignment
       --aligner                     Specifies the aligner to use (available are: 'graphmap', 'minimap2')
