@@ -114,17 +114,6 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
 ### `--samplesheet`
 You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 4 columns, and a header row. As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without demultiplexing.
 
-```bash
---samplesheet '[path to sample sheet]'
-```
-
-| Column   | Description                                                                                                                |
-|----------|----------------------------------------------------------------------------------------------------------------------------|
-| `sample` | Sample name without spaces                                                                                                 |
-| `fastq`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
-| `barcode`| Barcode identifier attributed to that sample when multiplexing samples in integer format.                                  |
-| `genome` | Genome fasta for alignment. This can either be a local path, or the appropriate key for a genome available on [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) (see [iGenomes config file](../conf/igenomes.config)). If empty then the alignment step will be skipped for that sample |
-
 #### With demultiplexing
 
 ```bash
@@ -147,6 +136,13 @@ Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
 
 > You will have to specify the `--skipDemultiplexing` parameter to bypass the demultiplexing step.
 
+| Column   | Description                                                                                                                |
+|----------|----------------------------------------------------------------------------------------------------------------------------|
+| `sample` | Sample name without spaces                                                                                                 |
+| `fastq`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
+| `barcode`| Barcode identifier attributed to that sample when multiplexing samples in integer format.                                  |
+| `genome` | Genome fasta for alignment. This can either be a local path, or the appropriate key for a genome available on [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) (see [iGenomes config file](../conf/igenomes.config)). If empty then the alignment step will be skipped for that sample |
+
 ## Demultiplexing
 
 ### `--run_dir`
@@ -167,10 +163,10 @@ Skip basecalling and demultiplexing step with Guppy
 ## Alignment
 
 ### `--aligner`                     
-Specifies the aligner to use (available are: 'graphmap', 'minimap2')
+Specifies the aligner to use (available are: `graphmap` or `minimap2`)
 
 ### `--saveAlignedIntermediates`    
-Save the BAM files from the aligment step - not done by default
+Save the `.sam` files from the alignment step - not done by default
 
 ### `--skipAlignment`               
 Skip alignment and subsequent process

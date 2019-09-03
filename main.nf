@@ -34,8 +34,8 @@ def helpMessage() {
       --skipDemultiplexing          Skip basecalling and demultiplexing step with Guppy
 
     Alignment
-      --aligner                     Specifies the aligner to use (available are: 'graphmap', 'minimap2')
-      --saveAlignedIntermediates    Save the BAM files from the aligment step - not done by default
+      --aligner                     Specifies the aligner to use (available are: graphmap or minimap2)
+      --saveAlignedIntermediates    Save the .sam files from the alignment step - not done by default
       --skipAlignment               Skip alignment and subsequent process
 
     QC
