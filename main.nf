@@ -505,17 +505,20 @@ process multiqc {
     input:
     file multiqc_config from ch_multiqc_config
     file ('samtools/*')  from ch_sortbam_stats_mqc.collect().ifEmpty([])
+    file ('software_versions/*') from software_versions_yaml.collect()
+    file ('workflow_summary/*') from create_workflow_summary(summary)
 
     output:
     file "*multiqc_report.html" into multiqc_report
     file "*_data"
+    file "multiqc_plots"
     file "*.version" into ch_multiqc_version
 
     script:
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     """
-    multiqc . -f $rtitle $rfilename --config $multiqc_config -m samtools
+    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content -m samtools
     multiqc --version &> multiqc.version
     """
 }
