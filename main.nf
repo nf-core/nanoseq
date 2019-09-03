@@ -31,7 +31,7 @@ def helpMessage() {
       --flowcell                    Which flowcell was used that the sequencing was performed with (i.e FLO-MIN106)
       --kit                         The sequencing kit used (i.e. SQK-LSK109)
       --barcode_kit                 The barcoding kit used (i.e. SQK-PBK004)
-      --skipDemultiplexing          Skip demultiplexing step with guppy
+      --skipDemultiplexing          Skip demultiplexing step with Guppy
 
     Alignment
       --aligner                     Specifies the aligner to use (available are: 'graphmap', 'minimap2')
@@ -185,7 +185,7 @@ if (!params.skipDemultiplexing){
     /*
      * STEP 1 - Basecalling and demultipexing using Guppy
      */
-    process guppy {
+    process Guppy {
         tag "$run_dir"
         label 'process_high'
         publishDir path: "${params.outdir}/guppy", mode: 'copy',
@@ -235,7 +235,7 @@ if (!params.skipDemultiplexing){
     process pycoQC {
         tag "$summary_txt"
         label 'process_low'
-        publishDir "${params.outdir}/pycoQC", mode: 'copy',
+        publishDir "${params.outdir}/pycoqc", mode: 'copy',
             saveAs: { filename ->
                 if (!filename.endsWith(".version")) filename
             }
