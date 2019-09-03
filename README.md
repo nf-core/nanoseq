@@ -14,29 +14,16 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 <!-- TODO nf-core: Add a brief overview of what the pipeline does and how it works -->
 ## Pipeline Summary
-This pipeline
-1. Checking the sample sheet
-    * Checks to see if the sample sheet is formatted correctly.
-2. Basecalling and Barcoding 
-    * [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis) if fastq files are not provided, this process performs demultiplexing by basecalling and barcoding.
-    * Must have access to the Nanopore software Guppy and have the kit and barcode kit used on the sample sheet in the format of the example sample sheet provided.
-    * Can be bypassed using the `--skipDemultiplexing` parameter and the inclusion of fastq file links in the sample sheet.
-3. PycoQC and NanoPlot for quality checking the data
-    * [PycoQC](https://github.com/a-slide/pycoQC) outputs diagnostic plots and data for quality control of sequencing data from Oxford Nanopore's MinION in an HTML format.
-    * [NanoPlot](https://github.com/wdecoster/NanoPlot) plotting tool for long read sequencing data and alignments.
-    * Can be bypassed using the `--skipPycoQC`, `--skipNanoPlot` or `--skipQC` (for both PycoQC and NanoPlot) parameter.
-4. Alignment (choice of either using Graphmap or Minimap2)
-    * Choose the aligner with the parameter `--aligner`.
-	* [GraphMap](https://github.com/isovic/graphmap) is a highly sensitive and accurate mapper for long, error-prone reads.
-    * [Minimap2](https://github.com/lh3/minimap2) a versatile pairwise aligner for genomic and spliced nucleotide sequences.
-    * Can be bypassed using the `--skipAlignment` parameter.
-5. Sorting BAM files
-	* [SAMtools](http://www.htslib.org/doc/samtools.html) Converting .bam files to coordinate sorted and indexed .bam.
-6. MultiQC
-    * [MultiQC](https://multiqc.info/docs/)  
 
+1. Basecalling, barcoding and adapter trimming ([`Guppy`](https://nanoporetech.com/nanopore-sequencing-data-analysis); *optional*)
+    * Sequencing QC ([`pycoQC`](https://github.com/a-slide/pycoQC), [`NanoPlot`](https://github.com/wdecoster/NanoPlot))
+2. FastQ QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot))
+3. Alignment ([`GraphMap`](https://github.com/isovic/graphmap) or [`minimap2`](https://github.com/lh3/minimap2))
+    * Convert `.sam` to co-ordinate sorted `.bam` and obtain mapping metrics ([`SAMtools`](http://www.htslib.org/doc/samtools.html))
+4. Present QC for alignment results ([`MultiQC`](https://multiqc.info/docs/))
 
 ## Documentation
+
 The nf-core/nanodemux pipeline comes with documentation about the pipeline, found in the `docs/` directory:
 
 1. [Installation](https://nf-co.re/usage/installation)
