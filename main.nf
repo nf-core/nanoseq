@@ -519,9 +519,6 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
  */
 process multiqc {
     publishDir "${params.outdir}/multiqc", mode: 'copy'
-//        saveAs: { filename ->
-//            if (!filename.endsWith(".version")) filename
-//        }
 
     when:
     !params.skipMultiQC
