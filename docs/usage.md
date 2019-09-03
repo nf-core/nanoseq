@@ -125,29 +125,30 @@ You will need to create a sample sheet csv file with information about the sampl
 By default, the pipeline expects to demultiplex data into fastq files using the program Guppy. If you have fastq files already, you need to specify `--skipDemultiplexing` on the command line when launching the pipeline to bypass this step. 
 
 ```bash
-sample_id,fastq_file,genome_fasta
-Sample1,,mm10
-Sample2,,mm10
-Sample3,,mm10
-Sample4,,mm10
+sample,fastq,barcode,genome
+Sample1,,1,mm10
+Sample2,,2,mm10
+Sample3,,3,mm10
+Sample4,,4,mm10
 ```
 
 ### Skipping Demultiplexing 
 ```bash
-sample_id,fastq_file,genome_fasta
-Sample1,SAM101A1_S1_L001_R1_001.fastq.gz,mm10
-Sample2,SAM101A2_S2_L002_R1_001.fastq.gz,mm10
-Sample3,SAM101A3_S3_L003_R1_001.fastq.gz,mm10
-Sample4,SAM101A4_S4_L004_R1_001.fastq.gz,mm10
+sample,fastq,barcode,genome
+Sample1,SAM101A1_S1_L001_R1_001.fastq.gz,1,mm10
+Sample2,SAM101A2_S2_L002_R1_001.fastq.gz,2,mm10
+Sample3,SAM101A3_S3_L003_R1_001.fastq.gz,3,mm10
+Sample4,SAM101A4_S4_L004_R1_001.fastq.gz,4,mm10
 ```
 
 | Column        | Description                                                                                                                 |
 |---------------|-----------------------------------------------------------------------------------------------------------------------------|
-| `sample_id`   | Identifier for sample                                                                                                       |
-| `fastq_file`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz".  |
-| `genome_fasta`| Specify the reference genome                                                                                                |
+| `sample`      | Identifier for sample                                                                                                       |
+| `fastq`       | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz".  |
+| `barcode`     | The barcode used for sample (ie 1, 2, etc)                                                                                  |
+| `genome`      | Specify the reference genome, can be one of the keys in the iGenomes config or a '.fasta' or 'fa' file path                 |
 
-
+sample,fastq,barcode,genome
 ## Alignment
 
 ### `--aligner`                     

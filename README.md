@@ -12,7 +12,6 @@
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It comes with docker containers making installation trivial and results highly reproducible.
 
-<!-- TODO nf-core: Add a brief overview of what the pipeline does and how it works -->
 ## Pipeline Summary
 This pipeline
 1. Checking the sample sheet
@@ -22,7 +21,7 @@ This pipeline
     * Must have access to the Nanopore software Guppy and have the kit and barcode kit used on the sample sheet in the format of the example sample sheet provided.
     * Can be bypassed using the `--skipDemultiplexing` parameter and the inclusion of fastq file links in the sample sheet.
 3. PycoQC and NanoPlot for quality checking the data
-    * [PycoQC](https://github.com/a-slide/pycoQC) outputs diagnostic plots and data for quality control of sequencing data from Oxford Nanopore's MinION in an HTML format.
+    * [PycoQC](https://github.com/a-slide/pycoQC) outputs diagnostic plots and data for quality control of sequencing data from [Oxford Nanopore Technology](https://nanoporetech.com/) in an HTML format.
     * [NanoPlot](https://github.com/wdecoster/NanoPlot) plotting tool for long read sequencing data and alignments.
     * Can be bypassed using the `--skipPycoQC`, `--skipNanoPlot` or `--skipQC` (for both PycoQC and NanoPlot) parameter.
 4. Alignment (choice of either using Graphmap or Minimap2)
@@ -33,7 +32,7 @@ This pipeline
 5. Sorting BAM files
 	* [SAMtools](http://www.htslib.org/doc/samtools.html) Converting .bam files to coordinate sorted and indexed .bam.
 6. MultiQC
-    * [MultiQC](https://multiqc.info/docs/)  
+    * [MultiQC](https://multiqc.info/docs/) Presenting the QC for the output from SAMtools: Percent mapped, Alignment metrics, Samtools flagstat, and Mapped reads per contig.  
 
 
 ## Documentation

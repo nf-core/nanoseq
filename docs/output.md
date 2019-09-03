@@ -14,7 +14,7 @@ and processes data using the following steps:
 * [GraphMap](#graphmap) - mapping for long reads
 * [MiniMap2](#minimap2) - mapping for long reads
 * [SortBam](#sortbam) - coordinate sort BAM files using SAMtools
-* [MultiQC](#multiqc) - aggregate report, describing results of the whole pipeline
+* [MultiQC](#multiqc) - aggregate report, describing results of the alignment
 
 
 ## Demultiplexing
@@ -30,7 +30,6 @@ FastQ files output for each barcode
 * `guppy/unclassified/`
 FastQ files output that are unclassified
 * `guppy/sequencing_summary.txt` 
-
 
 
 ## Quality Control 
