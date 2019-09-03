@@ -10,23 +10,23 @@
   * [Updating the pipeline](#updating-the-pipeline)
   * [Reproducibility](#reproducibility)
 * [Main arguments](#main-arguments)
-  * [`--samplesheet`](#--samplesheet)
   * [`-profile`](#-profile)
+  * [`--samplesheet`](#--samplesheet)
 * [Demultiplexing](#demultiplexing)
   * [`--run_dir`](#--run_dir)
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
   * [`--skipDemultiplexing`](#--skipdemultiplexing)
-* [QC](#qc)
-  * [`--skipQC`](#--skipqc)
-  * [`--skipPycoQC`](#--skippycoqc)
-  * [`--skipNanoPlot`](#--skipnanoplot)
-  * [`--skipMultiQC`](#--skipmultiqc)
 * [Alignments](#alignments)
   * [`--aligner`](#--aligner)
   * [`--saveAlignedIntermediates`](#--savealignedintermedites)
   * [`--skipAlignment`](#--skipalignment)
+* [Skipping QC steps](#skipping-qc-steps)
+  * [`--skipQC`](#--skipqc)
+  * [`--skipPycoQC`](#--skippycoqc)
+  * [`--skipNanoPlot`](#--skipnanoplot)
+  * [`--skipMultiQC`](#--skipmultiqc)
 * [Job resources](#job-resources)
   * [Automatic resubmission](#automatic-resubmission)
   * [Custom resource requests](#custom-resource-requests)
@@ -101,9 +101,6 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
 
 * `awsbatch`
   * A generic configuration profile to be used with AWS Batch.
-* `conda`
-  * A generic configuration profile to be used with [conda](https://conda.io/docs/)
-  * Pulls most software from [Bioconda](https://bioconda.github.io/)
 * `docker`
   * A generic configuration profile to be used with [Docker](http://docker.com/)
   * Pulls software from dockerhub: [`nfcore/nanodemux`](http://hub.docker.com/r/nfcore/nanodemux/)
@@ -115,50 +112,64 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
   * Includes links to test data so needs no other parameters
 
 ### `--samplesheet`
-You will need to create a sample sheet csv file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 4 columns, and a header row. As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without demultiplexing.
+
+#### With demultiplexing
 
 ```bash
---samplesheet '[path to sample sheet]'
+sample,fastq,barcode,genome
+Sample1,,1,mm10
+Sample2,,2,mm10
+Sample3,,3,hg19
+Sample4,,4,/path/to/local/reference/genome.fa
 ```
 
-### Demultiplexing 
-By default, the pipeline expects to demultiplex data into fastq files using the program Guppy. If you have fastq files already, you need to specify `--skipDemultiplexing` on the command line when launching the pipeline to bypass this step. 
+#### Without demultiplexing
+
+> You will also have to specify the `--skipDemultiplexing` parameter if you wish to bypass the demultiplexing step.
 
 ```bash
-sample_id,fastq_file,genome_fasta
-Sample1,,mm10
-Sample2,,mm10
-Sample3,,mm10
-Sample4,,mm10
+sample,fastq,barcode,genome
+Sample1,SAM101A1.fastq.gz,,mm10
+Sample2,SAM101A2.fastq.gz,,mm10
+Sample3,SAM101A3.fastq.gz,,hg19
+Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
 ```
 
-### Skipping Demultiplexing 
-```bash
-sample_id,fastq_file,genome_fasta
-Sample1,SAM101A1_S1_L001_R1_001.fastq.gz,mm10
-Sample2,SAM101A2_S2_L002_R1_001.fastq.gz,mm10
-Sample3,SAM101A3_S3_L003_R1_001.fastq.gz,mm10
-Sample4,SAM101A4_S4_L004_R1_001.fastq.gz,mm10
-```
+| Column   | Description                                                                                                                |
+|----------|----------------------------------------------------------------------------------------------------------------------------|
+| `sample` | Sample name without spaces.                                                                                                |
+| `fastq`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
+| `barcode`| Barcode identifier attributed to that sample when multiplexing samples in integer format.                                  |
+| `genome` | Genome fasta for alignment. This can either be a local path, or the appropriate key for a genome available on [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) (see [iGenomes config file](../conf/igenomes.config)). If unspecified then the alignment step will be skipped for that sample. |
 
-| Column        | Description                                                                                                                 |
-|---------------|-----------------------------------------------------------------------------------------------------------------------------|
-| `sample_id`   | Identifier for sample                                                                                                       |
-| `fastq_file`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz".  |
-| `genome_fasta`| Specify the reference genome                                                                                                |
+## Demultiplexing
 
+### `--run_dir`
+Path to Nanopore run directory e.g. `fastq_pass/`
+
+### `--flowcell`
+Flowcell used to perform the sequencing e.g. `FLO-MIN106`
+
+### `--kit`
+Kit used to perform the sequencing e.g. `SQK-LSK109`
+
+### `--barcode_kit`
+Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
+
+### `--skipDemultiplexing`
+Skip basecalling and demultiplexing step with Guppy
 
 ## Alignment
 
 ### `--aligner`                     
-Specifies the aligner to use (available are: 'graphmap', 'minimap2')
+Specifies the aligner to use (available are: `graphmap` or `minimap2`)
 
 ### `--saveAlignedIntermediates`    
-Save the BAM files from the aligment step - not done by default
+Save the `.sam` files from the alignment step - not done by default
 
 ### `--skipAlignment`               
 Skip alignment and subsequent process
-
 
 ## Skipping QC steps
 
@@ -168,7 +179,7 @@ The following options make this easy:
 | Step                    | Description                          |
 |-------------------------|--------------------------------------|
 | `--skipQC`              | Skip all QC steps apart from MultiQC |
-| `--skipPycoQC`          | Skip PycoQC                          |
+| `--skipPycoQC`          | Skip pycoQC                          |
 | `--skipNanoPlot`        | Skip NanoPlot                        |
 | `--skipMultiQC`         | Skip MultiQC                         |
 
