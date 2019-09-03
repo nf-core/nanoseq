@@ -188,7 +188,10 @@ if (!params.skipDemultiplexing){
     process guppy {
         tag "$run_dir"
         label 'process_high'
-        publishDir path: "${params.outdir}/guppy", mode: 'copy'
+        publishDir path: "${params.outdir}/guppy", mode: 'copy',
+            saveAs: { filename ->
+                if (!filename.endsWith(".version")) filename
+            }
 
         input:
         file run_dir from ch_run_dir
@@ -209,7 +212,11 @@ if (!params.skipDemultiplexing){
             --save_path . \\
             --flowcell $params.flowcell \\
             --kit $params.kit \\
-            --barcode_kits $params.barcode_kit
+            --barcode_kits $params.barcode_kit \\
+            --cpu_threads_per_caller 1 \\
+            --num_callers $task.cpus \\
+            --records_per_fastq 0 \\
+            --compress_fastq
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files for each barcode
@@ -217,9 +224,8 @@ if (!params.skipDemultiplexing){
         for dir in barcode*/
         do
             dir=\${dir%*/}
-            cat \$dir/*.fastq > fastq_merged/\$dir.fastq
+            cat \$dir/*.fastq.gz > fastq_merged/\$dir.fastq.gz
         done
-        gzip fastq_merged/*.fastq
         """
     }
 
@@ -229,7 +235,10 @@ if (!params.skipDemultiplexing){
     process pycoQC {
         tag "$summary_txt"
         label 'process_low'
-        publishDir "${params.outdir}/pycoQC", mode: 'copy'
+        publishDir "${params.outdir}/pycoQC", mode: 'copy',
+            saveAs: { filename ->
+                if (!filename.endsWith(".version")) filename
+            }
 
         when:
         !params.skipQC && !params.skipPycoQC
@@ -303,7 +312,10 @@ if (!params.skipDemultiplexing){
 process NanoPlot_fastq {
     tag "$sample"
     label 'process_low'
-    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy'
+    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
+        saveAs: { filename ->
+            if (!filename.endsWith(".version")) filename
+        }
 
     when:
     !params.skipQC && !params.skipNanoPlot
@@ -337,7 +349,9 @@ if (!params.skipAlignment){
             label 'process_medium'
             if (params.saveAlignedIntermediates) {
                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-                    saveAs: { filename -> if (filename.endsWith(".sam")) filename }
+                    saveAs: { filename ->
+                        if (filename.endsWith(".sam")) filename
+                    }
             }
 
             input:
@@ -365,7 +379,9 @@ if (!params.skipAlignment){
             label 'process_medium'
             if (params.saveAlignedIntermediates) {
                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-                    saveAs: { filename -> if (filename.endsWith(".sam")) filename }
+                    saveAs: { filename ->
+                        if (filename.endsWith(".sam")) filename
+                    }
             }
 
             input:
@@ -430,7 +446,10 @@ if (!params.skipAlignment){
  * STEP 7 - Output Description HTML
  */
 process output_documentation {
-    publishDir "${params.outdir}/pipeline_info", mode: 'copy'
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+        saveAs: { filename ->
+            if (!filename.endsWith(".version")) filename
+        }
 
     input:
     file output_docs from ch_output_docs
@@ -451,10 +470,10 @@ process output_documentation {
  */
 process get_software_versions {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-    saveAs: {filename ->
-        if (filename.indexOf(".csv") > 0) filename
-        else null
-    }
+        saveAs: {filename ->
+            if (filename.indexOf(".csv") > 0) filename
+            else null
+        }
 
     input:
     file guppy from ch_guppy_version.collect().ifEmpty([])
@@ -500,6 +519,9 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
  */
 process multiqc {
     publishDir "${params.outdir}/multiqc", mode: 'copy'
+//        saveAs: { filename ->
+//            if (!filename.endsWith(".version")) filename
+//        }
 
     when:
     !params.skipMultiQC
