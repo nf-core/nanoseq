@@ -147,6 +147,19 @@ log.info "\033[2m----------------------------------------------------\033[0m"
 // Check the hostnames against configured profiles
 checkHostname()
 
+// Function to see if genome exists in iGenomes
+def get_fasta(genome, genomeMap) {
+    def fasta = null
+    if (genome) {
+        if (genomeMap.containsKey(genome)) {
+            fasta = file(genomeMap[genome].fasta, checkIfExists: true)
+        } else {
+            fasta = file(genome, checkIfExists: true)
+        }
+    }
+    return fasta
+}
+
 /*
  * PREPROCESSING - CHECK SAMPLESHEET
  */
@@ -257,28 +270,10 @@ if (!params.skipDemultiplexing){
         NanoPlot -t $task.cpus --summary $summary_txt
         """
     }
-} else {
-    ch_guppy_version = Channel.empty()
-    ch_pycoqc_version = Channel.empty()
-}
 
-// Function to see if genome exists in iGenomes
-def get_fasta(genome, genomeMap) {
-    def fasta = null
-    if (genome) {
-        if (genomeMap.containsKey(genome)) {
-            fasta = file(genomeMap[genome].fasta, checkIfExists: true)
-        } else {
-            fasta = file(genome, checkIfExists: true)
-        }
-    }
-    return fasta
-}
-
-/*
- * Create channels = [sample, fastq, genome]
- */
-if (!params.skipDemultiplexing) {
+    /*
+     * Create channels = [sample, fastq, genome]
+     */
     ch_samplesheet_reformat.splitCsv(header:true, sep:',')
                            .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
                            .set { ch_sample_info }
@@ -289,15 +284,17 @@ if (!params.skipDemultiplexing) {
                   .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
                   .into { ch_fastq_nanoplot;
                           ch_fastq_align }
-
-    // Dont map samples if reference genome hasnt been provided
-    ch_fastq_align.filter{ it[2] != null }
-                  .set { ch_fastq_align }
-
 } else {
+    ch_guppy_version = Channel.empty()
+    ch_pycoqc_version = Channel.empty()
+
+    /*
+     * Create channels = [sample, fastq, genome]
+     */
     ch_samplesheet_reformat.splitCsv(header:true, sep:',')
                            .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
-                           .set { ch_sample_info }
+                           .into {  ch_fastq_nanoplot;
+                                    ch_fastq_align }
 }
 
 /*
@@ -326,6 +323,11 @@ process NanoPlot_fastq {
 }
 
 if (!params.skipAlignment){
+
+    // Dont map samples if reference genome hasnt been provided
+    ch_fastq_align.filter{ it[2] != null }
+                 .set { ch_fastq_align }
+
     /*
      * STEP 5 - Align fastq files with GraphMap
      */
