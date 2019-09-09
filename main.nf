@@ -67,7 +67,7 @@ if (params.help){
  */
 if (params.samplesheet)         { ch_samplesheet = file(params.samplesheet, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 if (!params.skipDemultiplexing) {
-    if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, type: 'dir') } else { exit 1, "Please specify a valid run directory!" }
+    if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
     if (!params.flowcell)       { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
     if (!params.kit)            { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
     if (!params.barcode_kit)    { exit 1, "Please specify a valid barcode kit for demultiplexing!" }
