@@ -79,8 +79,8 @@ if (!params.skipAlignment)      {
 }
 
 // Stage config files
-ch_multiqc_config = Channel.fromPath(params.multiqc_config, checkIfExists: true)
-ch_output_docs = Channel.fromPath("$baseDir/docs/output.md", checkIfExists: true)
+ch_multiqc_config = file(params.multiqc_config, checkIfExists: true)
+ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
