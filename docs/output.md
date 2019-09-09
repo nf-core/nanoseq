@@ -24,23 +24,23 @@ and processes data using the following steps:
 *Description*:
 Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skipDemultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified.
 
-*Output directories*: 
+*Output directories*:
 * `guppy/barcode*/`
-FastQ files output for each barcode 
+FastQ files output for each barcode
 * `guppy/unclassified/`
 FastQ files output that are unclassified
-* `guppy/sequencing_summary.txt` 
+* `guppy/sequencing_summary.txt`
 
 
-## Quality Control 
+## Quality Control
 *Documentation*:
 [PycoQC](https://github.com/a-slide/pycoQC)
 [NanoPlot](https://github.com/wdecoster/NanoPlot)
 
 *Description*:
-PycoQC and NanoPlot give general quality metrics about your reads. It provides information about the quality score distribution across your reads, read lengths and other general stats. 
+PycoQC and NanoPlot give general quality metrics about your reads. It provides information about the quality score distribution across your reads, read lengths and other general stats.
 
-*Output directories*: 
+*Output directories*:
 * `pycoQC/`
 An .html file output is produced that includes a run summary and graphical representation of distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time, output over experiment time, read quality over experiment time, readlength over experiment time, and percentage of reads per barcode.
 * `nanoplot/summary/`
@@ -59,7 +59,7 @@ The FastQ reads are mapped to the given reference assembly provided using either
 
 *Output directories*:
  * `graphmap/`
- If the `--aligner graphmap` parameter is used, the results will be output here. 
+ If the `--aligner graphmap` parameter is used, the results will be output here.
  * `results/minimap2`
  If the `--aligner minimap2` parameter is used, the results will be output here.
 
