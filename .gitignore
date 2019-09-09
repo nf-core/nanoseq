@@ -5,9 +5,3 @@ results/
 .DS_Store
 tests/test_data
 *.pyc
-*.log
-*demultiplex_trace.txt
-pipeline_info/
-bin/.Rhistory
-bin/test_functions.nf
-design.csv
