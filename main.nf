@@ -32,7 +32,7 @@ def helpMessage() {
       --kit                         Kit used to perform the sequencing e.g. SQK-LSK109
       --barcode_kit                 Barcode kit used to perform the sequencing e.g. SQK-PBK004
       --guppyGPU                    Whether to demultiplex with Guppy in GPU mode
-      --gpu_cluster_options         Cluster options required to use GPU resources
+      --gpu_cluster_options         Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
       --skipDemultiplexing          Skip basecalling and demultiplexing step with Guppy
 
     Alignment
@@ -211,10 +211,9 @@ if (!params.skipDemultiplexing){
         file "*.{log,js}"
 
         script:
-        def proc_options = params.guppyGPU ? "--num_callers $task.cpus --cpu_threads_per_caller 1 --gpu_runners_per_device 6" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        def proc_options = params.guppyGPU ? "-x auto --num_callers $task.cpus --cpu_threads_per_caller 1 --gpu_runners_per_device 6" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         """
         guppy_basecaller \\
-            -x auto \\
             --input_path $run_dir \\
             --save_path . \\
             --flowcell $params.flowcell \\
