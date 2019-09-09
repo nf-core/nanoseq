@@ -160,6 +160,7 @@ Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
 ### `--skipDemultiplexing`
 Skip basecalling and demultiplexing step with Guppy
 
+sample,fastq,barcode,genome
 ## Alignment
 
 ### `--aligner`                     

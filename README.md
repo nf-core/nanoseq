@@ -12,7 +12,6 @@
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It comes with docker containers making installation trivial and results highly reproducible.
 
-<!-- TODO nf-core: Add a brief overview of what the pipeline does and how it works -->
 ## Pipeline Summary
 
 1. Basecalling, barcoding and adapter trimming ([`Guppy`](https://nanoporetech.com/nanopore-sequencing-data-analysis); *optional*)
