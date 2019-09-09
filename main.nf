@@ -220,9 +220,9 @@ if (!params.skipDemultiplexing){
             --flowcell $params.flowcell \\
             --kit $params.kit \\
             --barcode_kits $params.barcode_kit \\
-            $proc_options \\
             --records_per_fastq 0 \\
-            --compress_fastq
+            --compress_fastq \\
+            $proc_options
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files for each barcode
