@@ -17,6 +17,9 @@
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
+  * [`--guppyGPU`](#--guppygpu)
+  * [`--gpu_device`](#--gpu_device)
+  * [`--gpu_cluster_options`](#--gpu_cluster_options)
   * [`--skipDemultiplexing`](#--skipdemultiplexing)
 * [Alignments](#alignments)
   * [`--aligner`](#--aligner)
@@ -156,6 +159,15 @@ Kit used to perform the sequencing e.g. `SQK-LSK109`
 
 ### `--barcode_kit`
 Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
+
+### `--guppyGPU`
+Whether to demultiplex with Guppy in GPU mode
+
+### `--gpu_device`
+Basecalling device specified to Guppy in GPU mode using '--device' (default: 'auto')
+
+### `--gpu_cluster_options`
+Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
 
 ### `--skipDemultiplexing`
 Skip basecalling and demultiplexing step with Guppy
