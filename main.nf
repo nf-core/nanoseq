@@ -67,7 +67,7 @@ if (params.help){
  */
 if (params.samplesheet)         { ch_samplesheet = file(params.samplesheet, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 if (!params.skipDemultiplexing) {
-    if (params.run_dir)         { ch_run_dir = file(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
+    if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, type: 'dir') } else { exit 1, "Please specify a valid run directory!" }
     if (!params.flowcell)       { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
     if (!params.kit)            { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
     if (!params.barcode_kit)    { exit 1, "Please specify a valid barcode kit for demultiplexing!" }
@@ -79,8 +79,8 @@ if (!params.skipAlignment)      {
 }
 
 // Stage config files
-ch_multiqc_config = Channel.fromPath(params.multiqc_config)
-ch_output_docs = Channel.fromPath("$baseDir/docs/output.md")
+ch_multiqc_config = Channel.fromPath(params.multiqc_config, checkIfExists: true)
+ch_output_docs = Channel.fromPath("$baseDir/docs/output.md", checkIfExists: true)
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
