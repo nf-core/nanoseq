@@ -31,6 +31,8 @@ def helpMessage() {
       --flowcell                    Flowcell used to perform the sequencing e.g. FLO-MIN106
       --kit                         Kit used to perform the sequencing e.g. SQK-LSK109
       --barcode_kit                 Barcode kit used to perform the sequencing e.g. SQK-PBK004
+      --guppyGPU                    Whether to demultiplex with Guppy in GPU mode
+      --gpu_cluster_options         Cluster options required to use GPU resources
       --skipDemultiplexing          Skip basecalling and demultiplexing step with Guppy
 
     Alignment
@@ -104,42 +106,44 @@ if( workflow.profile == 'awsbatch') {
 log.info nfcoreHeader()
 def summary = [:]
 if(workflow.revision) summary['Pipeline Release'] = workflow.revision
-summary['Run Name']            = custom_runName ?: workflow.runName
-summary['Samplesheet']         = params.samplesheet
-summary['Skip Demultiplexing'] = params.skipDemultiplexing ? 'Yes' : 'No'
+summary['Run Name']               = custom_runName ?: workflow.runName
+summary['Samplesheet']            = params.samplesheet
+summary['Skip Demultiplexing']    = params.skipDemultiplexing ? 'Yes' : 'No'
 if (!params.skipDemultiplexing){
-    summary['Run Dir']         = params.run_dir
-    summary['Flowcell ID']     = params.flowcell
-    summary['Kit ID']          = params.kit
-    summary['Barcode Kit ID']  = params.barcode_kit
+    summary['Run Dir']            = params.run_dir
+    summary['Flowcell ID']        = params.flowcell
+    summary['Kit ID']             = params.kit
+    summary['Barcode Kit ID']     = params.barcode_kit
+    summary['Guppy GPU Mode']     = params.guppyGPU ? 'Yes' : 'No'
+    summary['Guppy GPU Options']  = params.gpu_cluster_options
 }
-summary['Skip Alignment']      = params.skipAlignment ? 'Yes' : 'No'
+summary['Skip Alignment']         = params.skipAlignment ? 'Yes' : 'No'
 if (!params.skipAlignment){
-    summary['Aligner']         = params.aligner
-    summary['Save Intermeds']  = params.saveAlignedIntermediates ? 'Yes' : 'No'
+    summary['Aligner']            = params.aligner
+    summary['Save Intermeds']     = params.saveAlignedIntermediates ? 'Yes' : 'No'
 }
-summary['Skip QC']             = params.skipQC ? 'Yes' : 'No'
-summary['Skip pycoQC']         = params.skipPycoQC ? 'Yes' : 'No'
-summary['Skip NanoPlot']       = params.skipNanoPlot ? 'Yes' : 'No'
-summary['Skip MultiQC']        = params.skipMultiQC ? 'Yes' : 'No'
-summary['Max Resources']       = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
+summary['Skip QC']                = params.skipQC ? 'Yes' : 'No'
+summary['Skip pycoQC']            = params.skipPycoQC ? 'Yes' : 'No'
+summary['Skip NanoPlot']          = params.skipNanoPlot ? 'Yes' : 'No'
+summary['Skip MultiQC']           = params.skipMultiQC ? 'Yes' : 'No'
+summary['Max Resources']          = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if(workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
-summary['Output dir']          = params.outdir
-summary['Launch dir']          = workflow.launchDir
-summary['Working dir']         = workflow.workDir
-summary['Script dir']          = workflow.projectDir
-summary['User']                = workflow.userName
+summary['Output dir']             = params.outdir
+summary['Launch dir']             = workflow.launchDir
+summary['Working dir']            = workflow.workDir
+summary['Script dir']             = workflow.projectDir
+summary['User']                   = workflow.userName
 if(workflow.profile == 'awsbatch'){
-   summary['AWS Region']       = params.awsregion
-   summary['AWS Queue']        = params.awsqueue
+   summary['AWS Region']          = params.awsregion
+   summary['AWS Queue']           = params.awsqueue
 }
 summary['Config Profile'] = workflow.profile
 if(params.config_profile_description) summary['Config Description'] = params.config_profile_description
 if(params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
 if(params.config_profile_url)         summary['Config URL']         = params.config_profile_url
 if(params.email) {
-  summary['E-mail Address']    = params.email
-  summary['MultiQC maxsize']   = params.maxMultiqcEmailFileSize
+  summary['E-mail Address']       = params.email
+  summary['MultiQC maxsize']      = params.maxMultiqcEmailFileSize
 }
 log.info summary.collect { k,v -> "${k.padRight(19)}: $v" }.join("\n")
 log.info "\033[2m----------------------------------------------------\033[0m"
@@ -188,6 +192,7 @@ if (!params.skipDemultiplexing){
     process Guppy {
         tag "$run_dir"
         label 'process_high'
+        clusterOptions = params.gpu_cluster_options
         publishDir path: "${params.outdir}/guppy", mode: 'copy',
             saveAs: { filename ->
                 if (!filename.endsWith(".version")) filename
@@ -206,15 +211,16 @@ if (!params.skipDemultiplexing){
         file "*.{log,js}"
 
         script:
+        def proc_options = params.guppyGPU ? "--num_callers $task.cpus --cpu_threads_per_caller 1 --gpu_runners_per_device 6" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         """
         guppy_basecaller \\
+            -x auto \\
             --input_path $run_dir \\
             --save_path . \\
             --flowcell $params.flowcell \\
             --kit $params.kit \\
             --barcode_kits $params.barcode_kit \\
-            --cpu_threads_per_caller 1 \\
-            --num_callers $task.cpus \\
+            $proc_options \\
             --records_per_fastq 0 \\
             --compress_fastq
         guppy_basecaller --version &> guppy.version
