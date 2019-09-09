@@ -32,6 +32,7 @@ def helpMessage() {
       --kit                         Kit used to perform the sequencing e.g. SQK-LSK109
       --barcode_kit                 Barcode kit used to perform the sequencing e.g. SQK-PBK004
       --guppyGPU                    Whether to demultiplex with Guppy in GPU mode
+      --gpu_device                  Basecalling device specified to Guppy in GPU mode using '--device' (default: 'auto')
       --gpu_cluster_options         Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
       --skipDemultiplexing          Skip basecalling and demultiplexing step with Guppy
 
@@ -115,6 +116,7 @@ if (!params.skipDemultiplexing){
     summary['Kit ID']             = params.kit
     summary['Barcode Kit ID']     = params.barcode_kit
     summary['Guppy GPU Mode']     = params.guppyGPU ? 'Yes' : 'No'
+    summary['Guppy GPU Device']   = params.gpu_device
     summary['Guppy GPU Options']  = params.gpu_cluster_options
 }
 summary['Skip Alignment']         = params.skipAlignment ? 'Yes' : 'No'
@@ -211,7 +213,7 @@ if (!params.skipDemultiplexing){
         file "*.{log,js}"
 
         script:
-        def proc_options = params.guppyGPU ? "-x auto --num_callers $task.cpus --cpu_threads_per_caller 1 --gpu_runners_per_device 6" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        def proc_options = params.guppyGPU ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller 1 --gpu_runners_per_device 6" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         """
         guppy_basecaller \\
             --input_path $run_dir \\
