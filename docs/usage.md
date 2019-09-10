@@ -17,6 +17,7 @@
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
+  * [`--guppy_config`](#--guppy_config)
   * [`--guppyGPU`](#--guppygpu)
   * [`--gpu_device`](#--gpu_device)
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
@@ -159,6 +160,9 @@ Kit used to perform the sequencing e.g. `SQK-LSK109`
 
 ### `--barcode_kit`
 Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
+
+### `--guppy_config`
+Guppy config file used for basecalling passed with the '--config' parameter
 
 ### `--guppyGPU`
 Whether to demultiplex with Guppy in GPU mode
