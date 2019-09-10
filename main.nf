@@ -28,9 +28,10 @@ def helpMessage() {
 
     Demultiplexing
       --run_dir                     Path to Nanopore run directory (e.g. fastq_pass/)
-      --flowcell                    Flowcell used to perform the sequencing e.g. FLO-MIN106
-      --kit                         Kit used to perform the sequencing e.g. SQK-LSK109
+      --flowcell                    Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
+      --kit                         Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
       --barcode_kit                 Barcode kit used to perform the sequencing e.g. SQK-PBK004
+      --guppy_config                Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
       --guppyGPU                    Whether to demultiplex with Guppy in GPU mode
       --gpu_device                  Basecalling device specified to Guppy in GPU mode using '--device' (default: 'auto')
       --gpu_cluster_options         Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
@@ -71,9 +72,10 @@ if (params.help){
 if (params.samplesheet)         { ch_samplesheet = file(params.samplesheet, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 if (!params.skipDemultiplexing) {
     if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
-    if (!params.flowcell)       { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
-    if (!params.kit)            { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
-    if (!params.barcode_kit)    { exit 1, "Please specify a valid barcode kit for demultiplexing!" }
+    if (!params.guppy_config)   {
+        if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
+        if (!params.kit)        { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
+    }
 }
 if (!params.skipAlignment)      {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap'){
@@ -112,12 +114,13 @@ summary['Samplesheet']            = params.samplesheet
 summary['Skip Demultiplexing']    = params.skipDemultiplexing ? 'Yes' : 'No'
 if (!params.skipDemultiplexing){
     summary['Run Dir']            = params.run_dir
-    summary['Flowcell ID']        = params.flowcell
-    summary['Kit ID']             = params.kit
-    summary['Barcode Kit ID']     = params.barcode_kit
+    summary['Flowcell ID']        = params.flowcell ?: 'Not required'
+    summary['Kit ID']             = params.kit ?: 'Not required'
+    summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
+    summary['Guppy Config File']  = params.guppy_config ?: 'Unspecified'
     summary['Guppy GPU Mode']     = params.guppyGPU ? 'Yes' : 'No'
-    summary['Guppy GPU Device']   = params.gpu_device
-    summary['Guppy GPU Options']  = params.gpu_cluster_options
+    summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
+    summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
 }
 summary['Skip Alignment']         = params.skipAlignment ? 'Yes' : 'No'
 if (!params.skipAlignment){
@@ -180,9 +183,14 @@ process checkSampleSheet {
     file "*.csv" into ch_samplesheet_reformat
 
     script:  // This script is bundled with the pipeline, in nf-core/nanodemux/bin/
-    demultipex = params.skipDemultiplexing ? "" : "--demultiplex"
+    def demultipex = params.skipDemultiplexing ? "" : '--demultiplex'
+    def nobarcodes = params.barcode_kit ? "" : '--nobarcoding'
     """
-    check_samplesheet.py $samplesheet samplesheet_reformat.csv $demultipex
+    check_samplesheet.py \\
+        $samplesheet \\
+        samplesheet_reformat.csv \\
+        $demultipex \\
+        $nobarcodes
     """
 }
 
@@ -204,35 +212,40 @@ if (!params.skipDemultiplexing){
         file run_dir from ch_run_dir
 
         output:
-        file "fastq_merged/*.fastq.gz" into ch_guppy_fastq
-        file "*.txt" into ch_guppy_pycoqc_summary,
-                          ch_guppy_nanoplot_summary
+        file "fastq/*.fastq.gz" into ch_guppy_fastq
+        file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
+                                      ch_guppy_nanoplot_summary
+        file "basecalling/*"
         file "*.version" into ch_guppy_version
-        file "barcode*"
-        file "unclassified"
-        file "*.{log,js}"
 
         script:
+        def barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
+        def config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
         def proc_options = params.guppyGPU ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller 1 --gpu_runners_per_device 6" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         """
         guppy_basecaller \\
             --input_path $run_dir \\
-            --save_path . \\
-            --flowcell $params.flowcell \\
-            --kit $params.kit \\
-            --barcode_kits $params.barcode_kit \\
+            --save_path ./basecalling \\
             --records_per_fastq 0 \\
             --compress_fastq \\
+            $barcode_kit \\
+            $config \\
             $proc_options
         guppy_basecaller --version &> guppy.version
 
-        ## Concatenate fastq files for each barcode
-        mkdir fastq_merged
-        for dir in barcode*/
-        do
-            dir=\${dir%*/}
-            cat \$dir/*.fastq.gz > fastq_merged/\$dir.fastq.gz
-        done
+        ## Concatenate fastq files
+        mkdir fastq
+        cd basecalling
+        if [ -d "barcode01" ]
+        then
+            for dir in barcode*/
+            do
+                dir=\${dir%*/}
+                cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
+            done
+        else
+            cat *.fastq.gz > ../fastq/barcode01.fastq.gz
+        fi
         """
     }
 
