@@ -153,22 +153,22 @@ Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
 Path to Nanopore run directory e.g. `fastq_pass/`
 
 ### `--flowcell`
-Flowcell used to perform the sequencing e.g. `FLO-MIN106`
+Flowcell used to perform the sequencing e.g. `FLO-MIN106`. Not required if `--guppy_config` is specified.
 
 ### `--kit`
-Kit used to perform the sequencing e.g. `SQK-LSK109`
+Kit used to perform the sequencing e.g. `SQK-LSK109`. Not required if `--guppy_config` is specified.
 
 ### `--barcode_kit`
 Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
 
 ### `--guppy_config`
-Guppy config file used for basecalling passed with the '--config' parameter
+Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with ``--flowcell` and `--kit`.
 
 ### `--guppyGPU`
 Whether to demultiplex with Guppy in GPU mode
 
 ### `--gpu_device`
-Basecalling device specified to Guppy in GPU mode using '--device' (default: 'auto')
+Basecalling device specified to Guppy in GPU mode using `--device` (default: 'auto')
 
 ### `--gpu_cluster_options`
 Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
