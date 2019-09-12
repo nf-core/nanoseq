@@ -27,6 +27,7 @@ argParser.add_argument('DESIGN_FILE_OUT', help="Output design file.")
 
 ## OPTIONAL PARAMETERS
 argParser.add_argument('-dm', '--demultiplex', dest="DEMULTIPLEX", help="Whether demultipexing is to be performed (default: False).",action='store_true')
+argParser.add_argument('-bc', '--nobarcoding', dest="NOBARCODING", help="Whether barcode kit has been provided to Guppy (default: False).",action='store_true')
 args = argParser.parse_args()
 
 ############################################
@@ -45,8 +46,7 @@ if header != HEADER:
     print "{} header: {} != {}".format(ERROR_STR,','.join(header),','.join(HEADER))
     sys.exit(1)
 
-fout = open(args.DESIGN_FILE_OUT,'w')
-fout.write(','.join(HEADER) + '\n')
+outLines = []
 while True:
     line = fin.readline()
     if line:
@@ -91,9 +91,20 @@ while True:
                     sys.exit(1)
 
         barcode = 'barcode%s' % (barcode.zfill(2))
-        fout.write(','.join([sample,fastq,barcode,genome]) + '\n')
-
+        outLines.append([sample,fastq,barcode,genome])
     else:
         fin.close()
-        fout.close()
         break
+
+if args.NOBARCODING:
+    if len(outLines) != 1:
+        print "{}: Only a single-line can be specified in samplesheet without barcode information!".format(ERROR_STR)
+        sys.exit(1)
+    outLines[0][2] = 'barcode%s' % ('1'.zfill(2))
+
+## WRITE TO FILE
+fout = open(args.DESIGN_FILE_OUT,'w')
+fout.write(','.join(HEADER) + '\n')
+for line in outLines:
+    fout.write(','.join(line) + '\n')
+fout.close()
