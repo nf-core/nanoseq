@@ -174,7 +174,7 @@ def get_fasta(genome, genomeMap) {
 /*
  * PREPROCESSING - CHECK SAMPLESHEET
  */
-process checkSampleSheet {
+process CheckSampleSheet {
     tag "$samplesheet"
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
@@ -254,7 +254,7 @@ if (!params.skipDemultiplexing){
     /*
      * STEP 2 - QC using pycoQC
      */
-    process pycoQC {
+    process PycoQC {
         tag "$summary_txt"
         label 'process_low'
         publishDir "${params.outdir}/pycoqc", mode: 'copy',
@@ -282,7 +282,7 @@ if (!params.skipDemultiplexing){
     /*
      * STEP 3 - QC using NanoPlot
      */
-    process NanoPlot_summary {
+    process NanoPlotSummary {
         tag "$summary_txt"
         label 'process_low'
         publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
@@ -331,7 +331,7 @@ if (!params.skipDemultiplexing){
 /*
  * STEP 4 - FastQ QC using NanoPlot
  */
-process NanoPlot_fastq {
+process NanoPlotFastQ {
     tag "$sample"
     label 'process_low'
     publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
@@ -396,7 +396,7 @@ if (!params.skipAlignment){
      * STEP 5 - Align fastq files with minimap2
      */
     if (params.aligner == 'minimap2') {
-        process minimap2 {
+        process MiniMap2 {
             tag "$sample"
             label 'process_medium'
             if (params.saveAlignedIntermediates) {
@@ -425,7 +425,7 @@ if (!params.skipAlignment){
     /*
      * STEP 6 - Coordinate sort BAM files
      */
-    process sortBAM {
+    process SortBAM {
         tag "$sample"
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
@@ -539,7 +539,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 /*
  * STEP 8 - MultiQC
  */
-process multiqc {
+process MultiQC {
     publishDir "${params.outdir}/multiqc", mode: 'copy'
 
     when:
