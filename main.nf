@@ -238,7 +238,7 @@ if (!params.skipDemultiplexing){
         ## Concatenate fastq files
         mkdir fastq
         cd basecalling
-        if [ -d "barcode"* ]
+        if [ "\$(find . -type d -name "barcode*" )" != "" ]
         then
             for dir in barcode*/
             do
