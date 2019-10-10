@@ -1,4 +1,4 @@
-# ![nfcore/nanodemux](docs/images/nfcore-nanodemux_logo.png)
+# ![nfcore/nanodemux](docs/images/nf-core-nanodemux_logo.png)
 
 [![Build Status](https://travis-ci.com/nf-core/nanodemux.svg?branch=master)](https://travis-ci.com/nf-core/nanodemux)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A50.32.0-brightgreen.svg)](https://www.nextflow.io/)
@@ -21,6 +21,27 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
     * Convert `.sam` to co-ordinate sorted `.bam` and obtain mapping metrics ([`SAMtools`](http://www.htslib.org/doc/samtools.html))
 4. Present QC for alignment results ([`MultiQC`](https://multiqc.info/docs/))
 
+## Quick Start
+
+i. Install [`nextflow`](https://nf-co.re/usage/installation)
+
+ii. Install one of [`docker`](https://docs.docker.com/engine/installation/) or [`singularity`](https://www.sylabs.io/guides/3.0/user-guide/)
+
+iii. Download the pipeline and test it on a minimal dataset with a single command
+
+```bash
+nextflow run nf-core/nanodemux -profile test,<docker/singularity>
+```
+
+iv. Start running your own analysis!
+
+<!-- TODO nf-core: Update the default command above used to run the pipeline -->
+```bash
+nextflow run nf-core/nanodemux -profile <docker/singularity>
+```
+
+See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
+
 ## Documentation
 
 The nf-core/nanodemux pipeline comes with documentation about the pipeline, found in the `docs/` directory:
@@ -35,13 +56,21 @@ The nf-core/nanodemux pipeline comes with documentation about the pipeline, foun
 5. [Troubleshooting](https://nf-co.re/usage/troubleshooting)
 
 ## Credits
+
 nf-core/nanodemux was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from The Bioinformatics & Biostatistics Group for use at The Francis Crick Institute, London.
 
-Many thanks to others who have helped out along the way too, including (but not limited to):  [`@crickbabs`](https://github.com/crickbabs)
+Many thanks to others who have helped out along the way too, including (but not limited to): [`@crickbabs`](https://github.com/crickbabs)
+
+## Contributions and Support
+
+If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
+
+For further information or help, don't hesitate to get in touch on [Slack](https://nfcore.slack.com/channels/nf-core/nanodemux) (you can join with [this invite](https://nf-co.re/join/slack)).
 
 ## Citation
 
 <!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi. -->
-<!-- If you use  {{ cookiecutter.name }} for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
+<!-- If you use nf-core/nanodemux for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
 
-Ewels PA, Peltzer A, Fillinger S, Alneberg JA, Patel H, Wilm A, Garcia MU, Di Tommaso P, Nahnsen S. **nf-core: Community curated bioinformatics pipelines**. *bioRxiv*. 2019. p. 610741. [doi: 10.1101/610741](https://www.biorxiv.org/content/10.1101/610741v1).
+You can cite the `nf-core` pre-print as follows:
+> Ewels PA, Peltzer A, Fillinger S, Alneberg JA, Patel H, Wilm A, Garcia MU, Di Tommaso P, Nahnsen S. **nf-core: Community curated bioinformatics pipelines**. *bioRxiv*. 2019. p. 610741. [doi: 10.1101/610741](https://www.biorxiv.org/content/10.1101/610741v1).
