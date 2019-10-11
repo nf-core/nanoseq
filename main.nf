@@ -153,7 +153,7 @@ if (params.email || params.email_on_fail) {
   summary['MultiQC maxsize']      = params.maxMultiqcEmailFileSize
 }
 log.info summary.collect { k,v -> "${k.padRight(19)}: $v" }.join("\n")
-log.info "\033[2m----------------------------------------------------\033[0m"
+log.info "-\033[2m--------------------------------------------------\033[0m-"
 
 // Check the hostnames against configured profiles
 checkHostname()
@@ -552,7 +552,7 @@ process MultiQC {
     file ('workflow_summary/*') from create_workflow_summary(summary)
 
     output:
-    file "*multiqc_report.html" into multiqc_report
+    file "*multiqc_report.html" into ch_multiqc_report
     file "*_data"
     file "multiqc_plots"
     file "*.version" into ch_multiqc_version
@@ -606,7 +606,7 @@ workflow.onComplete {
     def mqc_report = null
     try {
         if (workflow.success) {
-            mqc_report = multiqc_report.getVal()
+            mqc_report = ch_multiqc_report.getVal()
             if (mqc_report.getClass() == ArrayList) {
                 log.warn "[nf-core/nanodemux] Found multiple reports from process 'multiqc', will use only one"
                 mqc_report = mqc_report[0]
