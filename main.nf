@@ -153,7 +153,7 @@ if (params.email || params.email_on_fail) {
   summary['MultiQC maxsize']      = params.maxMultiqcEmailFileSize
 }
 log.info summary.collect { k,v -> "${k.padRight(19)}: $v" }.join("\n")
-log.info "\033[2m----------------------------------------------------\033[0m"
+log.info "-\033[2m--------------------------------------------------\033[0m-"
 
 // Check the hostnames against configured profiles
 checkHostname()
