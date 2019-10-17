@@ -189,8 +189,6 @@ process checkSampleSheet {
     check_samplesheet.py \\
         $samplesheet \\
         samplesheet_reformat.csv \\
-        $demultipex \\
-        $nobarcodes
     """
 }
 

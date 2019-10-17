@@ -26,8 +26,8 @@ argParser.add_argument('DESIGN_FILE_IN', help="Input design file.")
 argParser.add_argument('DESIGN_FILE_OUT', help="Output design file.")
 
 ## OPTIONAL PARAMETERS
-argParser.add_argument('-dm', '--demultiplex', dest="DEMULTIPLEX", help="Whether demultipexing is to be performed (default: False).",action='store_true')
-argParser.add_argument('-bc', '--nobarcoding', dest="NOBARCODING", help="Whether barcode kit has been provided to Guppy (default: False).",action='store_true')
+# argParser.add_argument('-dm', '--demultiplex', dest="DEMULTIPLEX", help="Whether demultipexing is to be performed (default: False).",action='store_true')
+# argParser.add_argument('-bc', '--nobarcoding', dest="NOBARCODING", help="Whether barcode kit has been provided to Guppy (default: False).",action='store_true')
 args = argParser.parse_args()
 
 ############################################
@@ -68,12 +68,15 @@ while True:
             print "{}: Sample ID not specified!\nLine: '{}'".format(ERROR_STR,line.strip())
             sys.exit(1)
 
-        if args.DEMULTIPLEX:
+        if barcode:
             ## CHECK BARCODE COLUMN IS INTEGER
             if not barcode.isdigit():
                 print "{}: Barcode not an integer!\nLine: '{}'".format(ERROR_STR,line.strip())
                 sys.exit(1)
-        else:
+            else:
+                barcode = 'barcode%s' % (barcode.zfill(2))
+
+        if fastq:
             ## CHECK FASTQ FILE EXTENSION
             if fastq[-9:] != '.fastq.gz' and fastq[-6:] != '.fq.gz':
                 print "{}: FastQ file has incorrect extension (has to be '.fastq.gz' or 'fq.gz')!\nLine: '{}'".format(ERROR_STR,line.strip())
@@ -90,17 +93,16 @@ while True:
                     print "{}: Genome field incorrect extension (has to be '.fasta' or 'fa')!\nLine: '{}'".format(ERROR_STR,line.strip())
                     sys.exit(1)
 
-        barcode = 'barcode%s' % (barcode.zfill(2))
         outLines.append([sample,fastq,barcode,genome])
     else:
         fin.close()
         break
 
-if args.NOBARCODING:
-    if len(outLines) != 1:
-        print "{}: Only a single-line can be specified in samplesheet without barcode information!".format(ERROR_STR)
-        sys.exit(1)
-    outLines[0][2] = 'barcode%s' % ('1'.zfill(2))
+# if args.NOBARCODING:
+#     if len(outLines) != 1:
+#         print "{}: Only a single-line can be specified in samplesheet without barcode information!".format(ERROR_STR)
+#         sys.exit(1)
+#     outLines[0][2] = 'barcode%s' % ('1'.zfill(2))
 
 ## WRITE TO FILE
 fout = open(args.DESIGN_FILE_OUT,'w')
