@@ -37,7 +37,7 @@ def helpMessage() {
       --skip_demultiplexing [bool]    Skip basecalling and demultiplexing step with Guppy
 
     Alignment
-      --aligner                       Specifies the aligner to use (available are: graphmap or minimap2)
+      --aligner [str]                 Specifies the aligner to use (available are: graphmap or minimap2)
       --save_align_intermeds [bool]   Save the .sam files from the alignment step - not done by default
       --skip_alignment [bool]         Skip alignment and subsequent process
 
@@ -91,7 +91,7 @@ ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 //  this has the bonus effect of catching both -name and --name
 custom_runName = params.name
 if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {
-  custom_runName = workflow.runName
+    custom_runName = workflow.runName
 }
 
 // AWS batch settings
@@ -139,17 +139,17 @@ summary['Working dir']            = workflow.workDir
 summary['Script dir']             = workflow.projectDir
 summary['User']                   = workflow.userName
 if (workflow.profile == 'awsbatch') {
-   summary['AWS Region']          = params.awsregion
-   summary['AWS Queue']           = params.awsqueue
+    summary['AWS Region']         = params.awsregion
+    summary['AWS Queue']          = params.awsqueue
 }
 summary['Config Profile'] = workflow.profile
 if (params.config_profile_description) summary['Config Description'] = params.config_profile_description
 if (params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
 if (params.config_profile_url)         summary['Config URL']         = params.config_profile_url
 if (params.email || params.email_on_fail) {
-  summary['E-mail Address']       = params.email
-  summary['E-mail on failure']    = params.email_on_fail
-  summary['MultiQC maxsize']      = params.max_multiqc_email_size
+    summary['E-mail Address']     = params.email
+    summary['E-mail on failure']  = params.email_on_fail
+    summary['MultiQC maxsize']    = params.max_multiqc_email_size
 }
 log.info summary.collect { k,v -> "${k.padRight(19)}: $v" }.join("\n")
 log.info "-\033[2m--------------------------------------------------\033[0m-"
