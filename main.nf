@@ -1,11 +1,11 @@
 #!/usr/bin/env nextflow
 /*
 ========================================================================================
-                         nf-core/nanodemux
+                         nf-core/nanoseq
 ========================================================================================
- nf-core/nanodemux Analysis Pipeline.
+ nf-core/nanoseq Analysis Pipeline.
  #### Homepage / Documentation
- https://github.com/nf-core/nanodemux
+ https://github.com/nf-core/nanoseq
 ----------------------------------------------------------------------------------------
 */
 
@@ -18,7 +18,7 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-      nextflow run nf-core/nanodemux --input 'samplesheet.csv' -profile test,docker
+      nextflow run nf-core/nanoseq --input 'samplesheet.csv' -profile test,docker
 
     Mandatory arguments
       --input [file]                  Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
@@ -183,7 +183,7 @@ process CheckSampleSheet {
     output:
     file "*.csv" into ch_samplesheet_reformat
 
-    script:  // This script is bundled with the pipeline, in nf-core/nanodemux/bin/
+    script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
     demultipex = params.skip_demultiplexing ? "" : '--demultiplex'
     nobarcodes = params.barcode_kit ? "" : '--nobarcoding'
     """
@@ -525,10 +525,10 @@ process get_software_versions {
 def create_workflow_summary(summary) {
     def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
     yaml_file.text  = """
-    id: 'nf-core-nanodemux-summary'
+    id: 'nf-core-nanoseq-summary'
     description: " - this information is collected when the pipeline is started."
-    section_name: 'nf-core/nanodemux Workflow Summary'
-    section_href: 'https://github.com/nf-core/nanodemux'
+    section_name: 'nf-core/nanoseq Workflow Summary'
+    section_href: 'https://github.com/nf-core/nanoseq'
     plot_type: 'html'
     data: |
         <dl class=\"dl-horizontal\">
@@ -575,9 +575,9 @@ process MultiQC {
 workflow.onComplete {
 
     // Set up the e-mail variables
-    def subject = "[nf-core/nanodemux] Successful: $workflow.runName"
+    def subject = "[nf-core/nanoseq] Successful: $workflow.runName"
     if (!workflow.success) {
-      subject = "[nf-core/nanodemux] FAILED: $workflow.runName"
+      subject = "[nf-core/nanoseq] FAILED: $workflow.runName"
     }
     def email_fields = [:]
     email_fields['version'] = workflow.manifest.version
@@ -610,12 +610,12 @@ workflow.onComplete {
         if (workflow.success) {
             mqc_report = ch_multiqc_report.getVal()
             if (mqc_report.getClass() == ArrayList) {
-                log.warn "[nf-core/nanodemux] Found multiple reports from process 'multiqc', will use only one"
+                log.warn "[nf-core/nanoseq] Found multiple reports from process 'multiqc', will use only one"
                 mqc_report = mqc_report[0]
             }
         }
     } catch (all) {
-        log.warn "[nf-core/nanodemux] Could not attach MultiQC report to summary email"
+        log.warn "[nf-core/nanoseq] Could not attach MultiQC report to summary email"
     }
 
     // Check if we are only sending emails on failure
@@ -647,11 +647,11 @@ workflow.onComplete {
           if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
           // Try to send HTML e-mail using sendmail
           [ 'sendmail', '-t' ].execute() << sendmail_html
-          log.info "[nf-core/nanodemux] Sent summary e-mail to $email_address (sendmail)"
+          log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (sendmail)"
         } catch (all) {
           // Catch failures and try with plaintext
           [ 'mail', '-s', subject, email_address ].execute() << email_txt
-          log.info "[nf-core/nanodemux] Sent summary e-mail to $email_address (mail)"
+          log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (mail)"
         }
     }
 
@@ -677,10 +677,10 @@ workflow.onComplete {
     }
 
     if (workflow.success) {
-        log.info "${c_purple}[nf-core/nanodemux]${c_green} Pipeline completed successfully${c_reset}"
+        log.info "${c_purple}[nf-core/nanoseq]${c_green} Pipeline completed successfully${c_reset}"
     } else {
         checkHostname()
-        log.info "${c_purple}[nf-core/nanodemux]${c_red} Pipeline completed with errors${c_reset}"
+        log.info "${c_purple}[nf-core/nanoseq]${c_red} Pipeline completed with errors${c_reset}"
     }
 
 }
@@ -703,7 +703,7 @@ def nfcoreHeader() {
     ${c_blue}  |\\ | |__  __ /  ` /  \\ |__) |__         ${c_yellow}}  {${c_reset}
     ${c_blue}  | \\| |       \\__, \\__/ |  \\ |___     ${c_green}\\`-._,-`-,${c_reset}
                                             ${c_green}`._,._,\'${c_reset}
-    ${c_purple}  nf-core/nanodemux v${workflow.manifest.version}${c_reset}
+    ${c_purple}  nf-core/nanoseq v${workflow.manifest.version}${c_reset}
     -${c_dim}--------------------------------------------------${c_reset}-
     """.stripIndent()
 }
