@@ -5,7 +5,7 @@ import re
 
 # TODO nf-core: Add additional regexes for new tools in process get_software_versions
 regexes = {
-    'nf-core/nanodemux': ['pipeline.version', r"(\S+)"],
+    'nf-core/nanoseq': ['pipeline.version', r"(\S+)"],
     'Nextflow': ['nextflow.version', r"(\S+)"],
     'guppy': ['guppy.version', r"Version (\S+)"],
     'pycoQC': ['pycoqc.version', r"pycoQC v(\S+)"],
@@ -17,7 +17,7 @@ regexes = {
     'MultiQC': ['multiqc.version', r"multiqc, version (\S+)"],
 }
 results = OrderedDict()
-results['nf-core/nanodemux'] = '<span style="color:#999999;\">N/A</span>'
+results['nf-core/nanoseq'] = '<span style="color:#999999;\">N/A</span>'
 results['Nextflow'] = '<span style="color:#999999;\">N/A</span>'
 results['guppy'] = '<span style="color:#999999;\">N/A</span>'
 results['pycoQC'] = '<span style="color:#999999;\">N/A</span>'
@@ -47,8 +47,8 @@ for k in results:
 # Dump to YAML
 print ('''
 id: 'software_versions'
-section_name: 'nf-core/nanodemux Software Versions'
-section_href: 'https://github.com/nf-core/nanodemux'
+section_name: 'nf-core/nanoseq Software Versions'
+section_href: 'https://github.com/nf-core/nanoseq'
 plot_type: 'html'
 description: 'are collected at run time from the software output.'
 data: |
