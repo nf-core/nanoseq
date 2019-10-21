@@ -69,7 +69,7 @@ if (params.help) {
 /*
  * SET UP CONFIGURATION VARIABLES
  */
-if (params.samplesheet)         { ch_samplesheet = file(params.samplesheet, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
+if (params.input)               { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 if (!params.skip_demultiplexing) {
     if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
     if (!params.guppy_config)   {
@@ -110,7 +110,7 @@ log.info nfcoreHeader()
 def summary = [:]
 if (workflow.revision) summary['Pipeline Release'] = workflow.revision
 summary['Run Name']               = custom_runName ?: workflow.runName
-summary['Samplesheet']            = params.samplesheet
+summary['Samplesheet']            = params.input
 summary['Skip Demultiplexing']    = params.skip_demultiplexing ? 'Yes' : 'No'
 if (!params.skip_demultiplexing) {
     summary['Run Dir']            = params.run_dir
@@ -178,7 +178,7 @@ process CheckSampleSheet {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
     input:
-    file samplesheet from ch_samplesheet
+    file samplesheet from ch_input
 
     output:
     file "*.csv" into ch_samplesheet_reformat
