@@ -11,26 +11,26 @@
   * [Reproducibility](#reproducibility)
 * [Main arguments](#main-arguments)
   * [`-profile`](#-profile)
-  * [`--samplesheet`](#--samplesheet)
+  * [`--input`](#--input)
 * [Demultiplexing](#demultiplexing)
   * [`--run_dir`](#--run_dir)
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
   * [`--guppy_config`](#--guppy_config)
-  * [`--guppyGPU`](#--guppygpu)
+  * [`--guppy_gpu`](#--guppy_gpu)
   * [`--gpu_device`](#--gpu_device)
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
-  * [`--skipDemultiplexing`](#--skipdemultiplexing)
+  * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
   * [`--aligner`](#--aligner)
-  * [`--saveAlignedIntermediates`](#--savealignedintermedites)
-  * [`--skipAlignment`](#--skipalignment)
+  * [`--save_align_intermeds`](#--save_align_intermeds)
+  * [`--skip_alignment`](#--skip_alignment)
 * [Skipping QC steps](#skipping-qc-steps)
-  * [`--skipQC`](#--skipqc)
-  * [`--skipPycoQC`](#--skippycoqc)
-  * [`--skipNanoPlot`](#--skipnanoplot)
-  * [`--skipMultiQC`](#--skipmultiqc)
+  * [`--skip_qc`](#--skip_qc)
+  * [`--skip_pycoqc`](#--skip_pycoqc)
+  * [`--skip_nanoplot`](#--skip_nanoplot)
+  * [`--skip_multiqc`](#--skip_multiqc)
 * [Job resources](#job-resources)
   * [Automatic resubmission](#automatic-resubmission)
   * [Custom resource requests](#custom-resource-requests)
@@ -69,7 +69,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/nanodemux --samplesheet 'samplesheet.csv' -profile test,docker
+nextflow run nf-core/nanodemux --input 'samplesheet.csv' -profile test,docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -117,7 +117,7 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
   * A profile with a complete configuration for automated testing
   * Includes links to test data so needs no other parameters
 
-### `--samplesheet`
+### `--input`
 You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 4 columns, and a header row. As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without demultiplexing.
 
 #### With demultiplexing
@@ -132,7 +132,7 @@ Sample4,,4,/path/to/local/reference/genome.fa
 
 #### Without demultiplexing
 
-> You will also have to specify the `--skipDemultiplexing` parameter if you wish to bypass the demultiplexing step.
+> You will also have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
 
 ```bash
 sample,fastq,barcode,genome
@@ -166,8 +166,8 @@ Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
 ### `--guppy_config`
 Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with ``--flowcell` and `--kit`.
 
-### `--guppyGPU`
-Whether to demultiplex with Guppy in GPU mode
+### `--guppy_gpu`
+Whether to demultiplex with Guppy in GPU mode.
 
 ### `--gpu_device`
 Basecalling device specified to Guppy in GPU mode using `--device` (default: 'auto')
@@ -175,7 +175,7 @@ Basecalling device specified to Guppy in GPU mode using `--device` (default: 'au
 ### `--gpu_cluster_options`
 Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
 
-### `--skipDemultiplexing`
+### `--skip_demultiplexing`
 Skip basecalling and demultiplexing step with Guppy
 
 sample,fastq,barcode,genome
@@ -184,10 +184,10 @@ sample,fastq,barcode,genome
 ### `--aligner`                     
 Specifies the aligner to use (available are: `graphmap` or `minimap2`)
 
-### `--saveAlignedIntermediates`    
+### `--save_align_intermeds`    
 Save the `.sam` files from the alignment step - not done by default
 
-### `--skipAlignment`               
+### `--skip_alignment`               
 Skip alignment and subsequent process
 
 ## Skipping QC steps
@@ -197,10 +197,10 @@ The following options make this easy:
 
 | Step                    | Description                          |
 |-------------------------|--------------------------------------|
-| `--skipQC`              | Skip all QC steps apart from MultiQC |
-| `--skipPycoQC`          | Skip pycoQC                          |
-| `--skipNanoPlot`        | Skip NanoPlot                        |
-| `--skipMultiQC`         | Skip MultiQC                         |
+| `--skip_qc`             | Skip all QC steps apart from MultiQC |
+| `--skip_pycoqc`         | Skip pycoQC                          |
+| `--skip_nanoplot`       | Skip NanoPlot                        |
+| `--skip_multiqc`        | Skip MultiQC                         |
 
 
 ## Job resources
