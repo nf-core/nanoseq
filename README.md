@@ -65,7 +65,7 @@ Many thanks to others who have helped out along the way too, including (but not 
 
 If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
 
-For further information or help, don't hesitate to get in touch on [Slack](https://nfcore.slack.com/channels/nf-core/nanodemux) (you can join with [this invite](https://nf-co.re/join/slack)).
+For further information or help, don't hesitate to get in touch on [Slack](https://nfcore.slack.com/channels/nanodemux) (you can join with [this invite](https://nf-co.re/join/slack)).
 
 ## Citation
 
