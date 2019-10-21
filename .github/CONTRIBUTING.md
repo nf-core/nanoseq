@@ -1,24 +1,24 @@
-# nf-core/nanodemux: Contributing Guidelines
+# nf-core/nanoseq: Contributing Guidelines
 
-Hi there! Many thanks for taking an interest in improving nf-core/nanodemux.
+Hi there! Many thanks for taking an interest in improving nf-core/nanoseq.
 
-We try to manage the required tasks for nf-core/nanodemux using GitHub issues, you probably came to this page when creating one. Please use the pre-filled template to save time.
+We try to manage the required tasks for nf-core/nanoseq using GitHub issues, you probably came to this page when creating one. Please use the pre-filled template to save time.
 
 However, don't be put off by this template - other more general issues and suggestions are welcome! Contributions to the code are even more welcome ;)
 
-> If you need help using or modifying nf-core/nanodemux then the best place to ask is on the pipeline channel on [Slack](https://nf-co.re/join/slack/).
+> If you need help using or modifying nf-core/nanoseq then the best place to ask is on the pipeline channel on [Slack](https://nf-co.re/join/slack/).
 
 
 
 ## Contribution workflow
-If you'd like to write some code for nf-core/nanodemux, the standard workflow
+If you'd like to write some code for nf-core/nanoseq, the standard workflow
 is as follows:
 
 1. Check that there isn't already an issue about your idea in the
-   [nf-core/nanodemux issues](https://github.com/nf-core/nanodemux/issues) to avoid
+   [nf-core/nanoseq issues](https://github.com/nf-core/nanoseq/issues) to avoid
    duplicating work.
     * If there isn't one already, please create one so that others know you're working on this
-2. Fork the [nf-core/nanodemux repository](https://github.com/nf-core/nanodemux) to your GitHub account
+2. Fork the [nf-core/nanoseq repository](https://github.com/nf-core/nanoseq) to your GitHub account
 3. Make the necessary changes / additions within your forked repository
 4. Submit a Pull Request against the `dev` branch and wait for the code to be reviewed and merged.
 
@@ -44,4 +44,4 @@ If there are any failures then the automated tests fail.
 These tests are run both with the latest available version of Nextflow and also the minimum required version that is stated in the pipeline code.
 
 ## Getting help
-For further information/help, please consult the [nf-core/nanodemux documentation](https://github.com/nf-core/nanodemux#documentation) and don't hesitate to get in touch on the [nf-core/nanodemux pipeline channel](https://nfcore.slack.com/channels/nanodemux) on [Slack](https://nf-co.re/join/slack/).
+For further information/help, please consult the [nf-core/nanoseq documentation](https://github.com/nf-core/nanoseq#documentation) and don't hesitate to get in touch on the [nf-core/nanoseq pipeline channel](https://nfcore.slack.com/channels/nanoseq) on [Slack](https://nf-co.re/join/slack/).

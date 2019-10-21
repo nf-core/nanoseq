@@ -1,4 +1,4 @@
-# nf-core/nanodemux: Usage
+# nf-core/nanoseq: Usage
 
 ## Table of contents
 
@@ -11,26 +11,26 @@
   * [Reproducibility](#reproducibility)
 * [Main arguments](#main-arguments)
   * [`-profile`](#-profile)
-  * [`--samplesheet`](#--samplesheet)
+  * [`--input`](#--input)
 * [Demultiplexing](#demultiplexing)
   * [`--run_dir`](#--run_dir)
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
   * [`--guppy_config`](#--guppy_config)
-  * [`--guppyGPU`](#--guppygpu)
+  * [`--guppy_gpu`](#--guppy_gpu)
   * [`--gpu_device`](#--gpu_device)
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
-  * [`--skipDemultiplexing`](#--skipdemultiplexing)
+  * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
   * [`--aligner`](#--aligner)
-  * [`--saveAlignedIntermediates`](#--savealignedintermedites)
-  * [`--skipAlignment`](#--skipalignment)
+  * [`--save_align_intermeds`](#--save_align_intermeds)
+  * [`--skip_alignment`](#--skip_alignment)
 * [Skipping QC steps](#skipping-qc-steps)
-  * [`--skipQC`](#--skipqc)
-  * [`--skipPycoQC`](#--skippycoqc)
-  * [`--skipNanoPlot`](#--skipnanoplot)
-  * [`--skipMultiQC`](#--skipmultiqc)
+  * [`--skip_qc`](#--skip_qc)
+  * [`--skip_pycoqc`](#--skip_pycoqc)
+  * [`--skip_nanoplot`](#--skip_nanoplot)
+  * [`--skip_multiqc`](#--skip_multiqc)
 * [Job resources](#job-resources)
   * [Automatic resubmission](#automatic-resubmission)
   * [Custom resource requests](#custom-resource-requests)
@@ -41,6 +41,7 @@
   * [`--outdir`](#--outdir)
   * [`--email`](#--email)
   * [`--email_on_fail`](#--email_on_fail)
+  * [`--max_multiqc_email_size`](#--max_multiqc_email_size)
   * [`-name`](#-name)
   * [`-resume`](#-resume)
   * [`-c`](#-c)
@@ -68,7 +69,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/nanodemux --samplesheet 'samplesheet.csv' -profile test,docker
+nextflow run nf-core/nanoseq --input 'samplesheet.csv' -profile test,docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -86,13 +87,13 @@ results         # Finished results (configurable, see below)
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
 ```bash
-nextflow pull nf-core/nanodemux
+nextflow pull nf-core/nanoseq
 ```
 
 ### Reproducibility
 It's a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
 
-First, go to the [nf-core/nanodemux releases page](https://github.com/nf-core/nanodemux/releases) and find the latest version number - numeric only (eg. `1.3.1`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.3.1`.
+First, go to the [nf-core/nanoseq releases page](https://github.com/nf-core/nanoseq/releases) and find the latest version number - numeric only (eg. `1.3.1`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.3.1`.
 
 This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future.
 
@@ -108,15 +109,15 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
   * A generic configuration profile to be used with AWS Batch.
 * `docker`
   * A generic configuration profile to be used with [Docker](http://docker.com/)
-  * Pulls software from dockerhub: [`nfcore/nanodemux`](http://hub.docker.com/r/nfcore/nanodemux/)
+  * Pulls software from dockerhub: [`nfcore/nanoseq`](http://hub.docker.com/r/nfcore/nanoseq/)
 * `singularity`
   * A generic configuration profile to be used with [Singularity](http://singularity.lbl.gov/)
-  * Pulls software from DockerHub: [`nfcore/nanodemux`](http://hub.docker.com/r/nfcore/nanodemux/)
+  * Pulls software from DockerHub: [`nfcore/nanoseq`](http://hub.docker.com/r/nfcore/nanoseq/)
 * `test`
   * A profile with a complete configuration for automated testing
   * Includes links to test data so needs no other parameters
 
-### `--samplesheet`
+### `--input`
 You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 4 columns, and a header row. As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without demultiplexing.
 
 #### With demultiplexing
@@ -131,7 +132,7 @@ Sample4,,4,/path/to/local/reference/genome.fa
 
 #### Without demultiplexing
 
-> You will also have to specify the `--skipDemultiplexing` parameter if you wish to bypass the demultiplexing step.
+> You will also have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
 
 ```bash
 sample,fastq,barcode,genome
@@ -165,8 +166,8 @@ Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
 ### `--guppy_config`
 Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with ``--flowcell` and `--kit`.
 
-### `--guppyGPU`
-Whether to demultiplex with Guppy in GPU mode
+### `--guppy_gpu`
+Whether to demultiplex with Guppy in GPU mode.
 
 ### `--gpu_device`
 Basecalling device specified to Guppy in GPU mode using `--device` (default: 'auto')
@@ -174,7 +175,7 @@ Basecalling device specified to Guppy in GPU mode using `--device` (default: 'au
 ### `--gpu_cluster_options`
 Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
 
-### `--skipDemultiplexing`
+### `--skip_demultiplexing`
 Skip basecalling and demultiplexing step with Guppy
 
 sample,fastq,barcode,genome
@@ -183,10 +184,10 @@ sample,fastq,barcode,genome
 ### `--aligner`                     
 Specifies the aligner to use (available are: `graphmap` or `minimap2`)
 
-### `--saveAlignedIntermediates`    
+### `--save_align_intermeds`    
 Save the `.sam` files from the alignment step - not done by default
 
-### `--skipAlignment`               
+### `--skip_alignment`               
 Skip alignment and subsequent process
 
 ## Skipping QC steps
@@ -196,10 +197,10 @@ The following options make this easy:
 
 | Step                    | Description                          |
 |-------------------------|--------------------------------------|
-| `--skipQC`              | Skip all QC steps apart from MultiQC |
-| `--skipPycoQC`          | Skip pycoQC                          |
-| `--skipNanoPlot`        | Skip NanoPlot                        |
-| `--skipMultiQC`         | Skip MultiQC                         |
+| `--skip_qc`             | Skip all QC steps apart from MultiQC |
+| `--skip_pycoqc`         | Skip pycoQC                          |
+| `--skip_nanoplot`       | Skip NanoPlot                        |
+| `--skip_multiqc`        | Skip MultiQC                         |
 
 
 ## Job resources
@@ -234,6 +235,9 @@ Set this parameter to your e-mail address to get a summary e-mail with details o
 
 ### `--email_on_fail`
 This works exactly as with `--email`, except emails are only sent if the workflow is not successful.
+
+### `--max_multiqc_email_size`
+Theshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB).
 
 ### `-name`
 Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.

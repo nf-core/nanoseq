@@ -1,14 +1,14 @@
-# ![nfcore/nanodemux](docs/images/nf-core-nanodemux_logo.png)
+# ![nfcore/nanoseq](docs/images/nf-core-nanoseq_logo.png)
 
-[![Build Status](https://travis-ci.com/nf-core/nanodemux.svg?branch=master)](https://travis-ci.com/nf-core/nanodemux)
+[![Build Status](https://travis-ci.com/nf-core/nanoseq.svg?branch=master)](https://travis-ci.com/nf-core/nanoseq)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A519.04.0-brightgreen.svg)](https://www.nextflow.io/)
 
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg)](http://bioconda.github.io/)
-[![Docker](https://img.shields.io/docker/automated/nfcore/nanodemux.svg)](https://hub.docker.com/r/nfcore/nanodemux)
+[![Docker](https://img.shields.io/docker/automated/nfcore/nanoseq.svg)](https://hub.docker.com/r/nfcore/nanoseq)
 
 ## Introduction
 
-**nfcore/nanodemux** is a bioinformatics analysis pipeline that can be used to demultiplex, QC and map Nanopore data.
+**nfcore/nanoseq** is a bioinformatics analysis pipeline that can be used to demultiplex, QC and map Nanopore data.
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It comes with docker containers making installation trivial and results highly reproducible.
 
@@ -30,21 +30,21 @@ ii. Install one of [`docker`](https://docs.docker.com/engine/installation/) or [
 iii. Download the pipeline and test it on a minimal dataset with a single command
 
 ```bash
-nextflow run nf-core/nanodemux -profile test,<docker/singularity>
+nextflow run nf-core/nanoseq -profile test,<docker/singularity>
 ```
 
 iv. Start running your own analysis!
 
 <!-- TODO nf-core: Update the default command above used to run the pipeline -->
 ```bash
-nextflow run nf-core/nanodemux -profile <docker/singularity>
+nextflow run nf-core/nanoseq -profile <docker/singularity>
 ```
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
 
 ## Documentation
 
-The nf-core/nanodemux pipeline comes with documentation about the pipeline, found in the `docs/` directory:
+The nf-core/nanoseq pipeline comes with documentation about the pipeline, found in the `docs/` directory:
 
 1. [Installation](https://nf-co.re/usage/installation)
 2. Pipeline configuration
@@ -57,7 +57,7 @@ The nf-core/nanodemux pipeline comes with documentation about the pipeline, foun
 
 ## Credits
 
-nf-core/nanodemux was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from The Bioinformatics & Biostatistics Group for use at The Francis Crick Institute, London.
+nf-core/nanoseq was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from The Bioinformatics & Biostatistics Group for use at The Francis Crick Institute, London.
 
 Many thanks to others who have helped out along the way too, including (but not limited to): [`@crickbabs`](https://github.com/crickbabs)
 
@@ -65,12 +65,12 @@ Many thanks to others who have helped out along the way too, including (but not 
 
 If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
 
-For further information or help, don't hesitate to get in touch on [Slack](https://nfcore.slack.com/channels/nf-core/nanodemux) (you can join with [this invite](https://nf-co.re/join/slack)).
+For further information or help, don't hesitate to get in touch on [Slack](https://nfcore.slack.com/channels/nanoseq) (you can join with [this invite](https://nf-co.re/join/slack)).
 
 ## Citation
 
 <!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi. -->
-<!-- If you use nf-core/nanodemux for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
+<!-- If you use nf-core/nanoseq for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
 
 You can cite the `nf-core` pre-print as follows:
 > Ewels PA, Peltzer A, Fillinger S, Alneberg JA, Patel H, Wilm A, Garcia MU, Di Tommaso P, Nahnsen S. **nf-core: Community curated bioinformatics pipelines**. *bioRxiv*. 2019. p. 610741. [doi: 10.1101/610741](https://www.biorxiv.org/content/10.1101/610741v1).

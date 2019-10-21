@@ -1,14 +1,13 @@
 #!/usr/bin/env nextflow
 /*
 ========================================================================================
-                         nf-core/nanodemux
+                         nf-core/nanoseq
 ========================================================================================
- nf-core/nanodemux Analysis Pipeline.
+ nf-core/nanoseq Analysis Pipeline.
  #### Homepage / Documentation
- https://github.com/nf-core/nanodemux
+ https://github.com/nf-core/nanoseq
 ----------------------------------------------------------------------------------------
 */
-
 
 def helpMessage() {
     // TODO nf-core: Add to this help message with new command line parameters
@@ -19,50 +18,50 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/nanodemux --samplesheet 'samplesheet.csv' -profile test,docker
+      nextflow run nf-core/nanoseq --input 'samplesheet.csv' -profile test,docker
 
     Mandatory arguments
-      --samplesheet                 Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
-      -profile                      Configuration profile to use. Can use multiple (comma separated)
-                                    Available: docker, singularity, awsbatch, test and more.
+      --input [file]                  Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
+      -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
+                                      Available: docker, singularity, awsbatch, test and more.
 
     Demultiplexing
-      --run_dir                     Path to Nanopore run directory (e.g. fastq_pass/)
-      --flowcell                    Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
-      --kit                         Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
-      --barcode_kit                 Barcode kit used to perform the sequencing e.g. SQK-PBK004
-      --guppy_config                Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
-      --guppyGPU                    Whether to demultiplex with Guppy in GPU mode
-      --gpu_device                  Basecalling device specified to Guppy in GPU mode using '--device' (default: 'auto')
-      --gpu_cluster_options         Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
-      --skipDemultiplexing          Skip basecalling and demultiplexing step with Guppy
+      --run_dir [file]                Path to Nanopore run directory (e.g. fastq_pass/)
+      --flowcell [str]                Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
+      --kit [str]                     Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
+      --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
+      --guppy_config [file]           Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
+      --guppy_gpu [bool]              Whether to demultiplex with Guppy in GPU mode
+      --gpu_device [str]              Basecalling device specified to Guppy in GPU mode using '--device' (default: 'auto')
+      --gpu_cluster_options [str]     Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
+      --skip_demultiplexing [bool]    Skip basecalling and demultiplexing step with Guppy
 
     Alignment
-      --aligner                     Specifies the aligner to use (available are: graphmap or minimap2)
-      --saveAlignedIntermediates    Save the .sam files from the alignment step - not done by default
-      --skipAlignment               Skip alignment and subsequent process
+      --aligner [str]                 Specifies the aligner to use (available are: graphmap or minimap2)
+      --save_align_intermeds [bool]   Save the .sam files from the alignment step - not done by default
+      --skip_alignment [bool]         Skip alignment and subsequent process
 
     QC
-      --skipQC                      Skip all QC steps apart from MultiQC
-      --skipPycoQC                  Skip pycoQC
-      --skipNanoPlot                Skip NanoPlot
-      --skipMultiQC                 Skip MultiQC
+      --skip_qc [bool]                Skip all QC steps apart from MultiQC
+      --skip_pycoqc [bool]            Skip pycoQC
+      --skip_nanoplot [bool]          Skip NanoPlot
+      --skip_multiqc [bool]           Skip MultiQC
 
     Other
-      --outdir                      The output directory where the results will be saved
-      --email                       Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
-      --email_on_fail               Same as --email, except only send mail if the workflow is not successful
-      --maxMultiqcEmailFileSize     Theshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB)
-      -name                         Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
+      --outdir [file]                 The output directory where the results will be saved
+      --email [email]                 Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
+      --email_on_fail [email]         Same as --email, except only send mail if the workflow is not successful
+      --max_multiqc_email_size [str]  Theshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB)
+      -name [str]                     Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
 
     AWSBatch
-      --awsqueue                    The AWSBatch JobQueue that needs to be set when running on AWSBatch
-      --awsregion                   The AWS Region for your AWS Batch job to run on
+      --awsqueue [str]                The AWSBatch JobQueue that needs to be set when running on AWSBatch
+      --awsregion [str]               The AWS Region for your AWS Batch job to run on
     """.stripIndent()
 }
 
 // Show help message
-if (params.help){
+if (params.help) {
     helpMessage()
     exit 0
 }
@@ -70,16 +69,16 @@ if (params.help){
 /*
  * SET UP CONFIGURATION VARIABLES
  */
-if (params.samplesheet)         { ch_samplesheet = file(params.samplesheet, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
-if (!params.skipDemultiplexing) {
+if (params.input)               { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
+if (!params.skip_demultiplexing) {
     if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
     if (!params.guppy_config)   {
         if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
         if (!params.kit)        { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
     }
 }
-if (!params.skipAlignment)      {
-    if (params.aligner != 'minimap2' && params.aligner != 'graphmap'){
+if (!params.skip_alignment)      {
+    if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
     }
 }
@@ -91,19 +90,19 @@ ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
 custom_runName = params.name
-if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)){
-  custom_runName = workflow.runName
+if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {
+    custom_runName = workflow.runName
 }
 
 // AWS batch settings
-if ( workflow.profile == 'awsbatch') {
-  // AWSBatch sanity checking
-  if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
-  // Check outdir paths to be S3 buckets if running on AWSBatch
-  // related: https://github.com/nextflow-io/nextflow/issues/813
-  if (!params.outdir.startsWith('s3:')) exit 1, "Outdir not on S3 - specify S3 Bucket to run on AWSBatch!"
-  // Prevent trace files to be stored on S3 since S3 does not support rolling files.
-  if (workflow.tracedir.startsWith('s3:')) exit 1, "Specify a local tracedir or run without trace! S3 cannot be used for tracefiles."
+if (workflow.profile == 'awsbatch') {
+    // AWSBatch sanity checking
+    if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
+    // Check outdir paths to be S3 buckets if running on AWSBatch
+    // related: https://github.com/nextflow-io/nextflow/issues/813
+    if (!params.outdir.startsWith('s3:')) exit 1, "Outdir not on S3 - specify S3 Bucket to run on AWSBatch!"
+    // Prevent trace files to be stored on S3 since S3 does not support rolling files.
+    if (workflow.tracedir.startsWith('s3:')) exit 1, "Specify a local tracedir or run without trace! S3 cannot be used for tracefiles."
 }
 
 // Header log info
@@ -111,27 +110,27 @@ log.info nfcoreHeader()
 def summary = [:]
 if (workflow.revision) summary['Pipeline Release'] = workflow.revision
 summary['Run Name']               = custom_runName ?: workflow.runName
-summary['Samplesheet']            = params.samplesheet
-summary['Skip Demultiplexing']    = params.skipDemultiplexing ? 'Yes' : 'No'
-if (!params.skipDemultiplexing) {
+summary['Samplesheet']            = params.input
+summary['Skip Demultiplexing']    = params.skip_demultiplexing ? 'Yes' : 'No'
+if (!params.skip_demultiplexing) {
     summary['Run Dir']            = params.run_dir
     summary['Flowcell ID']        = params.flowcell ?: 'Not required'
     summary['Kit ID']             = params.kit ?: 'Not required'
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Guppy Config File']  = params.guppy_config ?: 'Unspecified'
-    summary['Guppy GPU Mode']     = params.guppyGPU ? 'Yes' : 'No'
+    summary['Guppy GPU Mode']     = params.guppy_gpu ? 'Yes' : 'No'
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
 }
-summary['Skip Alignment']         = params.skipAlignment ? 'Yes' : 'No'
-if (!params.skipAlignment){
+summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
+if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
-    summary['Save Intermeds']     = params.saveAlignedIntermediates ? 'Yes' : 'No'
+    summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
 }
-summary['Skip QC']                = params.skipQC ? 'Yes' : 'No'
-summary['Skip pycoQC']            = params.skipPycoQC ? 'Yes' : 'No'
-summary['Skip NanoPlot']          = params.skipNanoPlot ? 'Yes' : 'No'
-summary['Skip MultiQC']           = params.skipMultiQC ? 'Yes' : 'No'
+summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
+summary['Skip pycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
+summary['Skip NanoPlot']          = params.skip_nanoplot ? 'Yes' : 'No'
+summary['Skip MultiQC']           = params.skip_multiqc ? 'Yes' : 'No'
 summary['Max Resources']          = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']             = params.outdir
@@ -140,17 +139,17 @@ summary['Working dir']            = workflow.workDir
 summary['Script dir']             = workflow.projectDir
 summary['User']                   = workflow.userName
 if (workflow.profile == 'awsbatch') {
-   summary['AWS Region']          = params.awsregion
-   summary['AWS Queue']           = params.awsqueue
+    summary['AWS Region']         = params.awsregion
+    summary['AWS Queue']          = params.awsqueue
 }
 summary['Config Profile'] = workflow.profile
 if (params.config_profile_description) summary['Config Description'] = params.config_profile_description
 if (params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
 if (params.config_profile_url)         summary['Config URL']         = params.config_profile_url
 if (params.email || params.email_on_fail) {
-  summary['E-mail Address']       = params.email
-  summary['E-mail on failure']    = params.email_on_fail
-  summary['MultiQC maxsize']      = params.maxMultiqcEmailFileSize
+    summary['E-mail Address']     = params.email
+    summary['E-mail on failure']  = params.email_on_fail
+    summary['MultiQC maxsize']    = params.max_multiqc_email_size
 }
 log.info summary.collect { k,v -> "${k.padRight(19)}: $v" }.join("\n")
 log.info "-\033[2m--------------------------------------------------\033[0m-"
@@ -179,14 +178,14 @@ process CheckSampleSheet {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
     input:
-    file samplesheet from ch_samplesheet
+    file samplesheet from ch_input
 
     output:
     file "*.csv" into ch_samplesheet_reformat
 
-    script:  // This script is bundled with the pipeline, in nf-core/nanodemux/bin/
-    def demultipex = params.skipDemultiplexing ? "" : '--demultiplex'
-    def nobarcodes = params.barcode_kit ? "" : '--nobarcoding'
+    script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
+    demultipex = params.skip_demultiplexing ? "" : '--demultiplex'
+    nobarcodes = params.barcode_kit ? "" : '--nobarcoding'
     """
     check_samplesheet.py \\
         $samplesheet \\
@@ -196,7 +195,7 @@ process CheckSampleSheet {
     """
 }
 
-if (!params.skipDemultiplexing){
+if (!params.skip_demultiplexing) {
 
     /*
      * STEP 1 - Basecalling and demultipexing using Guppy
@@ -207,8 +206,8 @@ if (!params.skipDemultiplexing){
         clusterOptions = params.gpu_cluster_options
         publishDir path: "${params.outdir}/guppy", mode: 'copy',
             saveAs: { filename ->
-                if (!filename.endsWith(".version")) filename
-            }
+                          if (!filename.endsWith(".version")) filename
+                    }
 
         input:
         file run_dir from ch_run_dir
@@ -221,9 +220,9 @@ if (!params.skipDemultiplexing){
         file "*.version" into ch_guppy_version
 
         script:
-        def barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
-        def config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
-        def proc_options = params.guppyGPU ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller 1 --gpu_runners_per_device 6" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
+        config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
+        proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller 1 --gpu_runners_per_device 6" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         """
         guppy_basecaller \\
             --input_path $run_dir \\
@@ -259,11 +258,11 @@ if (!params.skipDemultiplexing){
         label 'process_low'
         publishDir "${params.outdir}/pycoqc", mode: 'copy',
             saveAs: { filename ->
-                if (!filename.endsWith(".version")) filename
-            }
+                          if (!filename.endsWith(".version")) filename
+                    }
 
         when:
-        !params.skipQC && !params.skipPycoQC
+        !params.skip_qc && !params.skip_pycoqc
 
         input:
         file summary_txt from ch_guppy_pycoqc_summary
@@ -288,7 +287,7 @@ if (!params.skipDemultiplexing){
         publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
 
         when:
-        !params.skipQC && !params.skipNanoPlot
+        !params.skip_qc && !params.skip_nanoplot
 
         input:
         file summary_txt from ch_guppy_nanoplot_summary
@@ -305,16 +304,18 @@ if (!params.skipDemultiplexing){
     /*
      * Create channels = [sample, fastq, genome]
      */
-    ch_samplesheet_reformat.splitCsv(header:true, sep:',')
-                           .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
-                           .set { ch_sample_info }
+    ch_samplesheet_reformat
+        .splitCsv(header:true, sep:',')
+        .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
+        .set { ch_sample_info }
 
-    ch_guppy_fastq.flatten()
-                  .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
-                  .join( ch_sample_info, by: 1)
-                  .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
-                  .into { ch_fastq_nanoplot;
-                          ch_fastq_align }
+    ch_guppy_fastq
+        .flatten()
+        .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
+        .join( ch_sample_info, by: 1 )
+        .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
+        .into { ch_fastq_nanoplot;
+                ch_fastq_align }
 } else {
     ch_guppy_version = Channel.empty()
     ch_pycoqc_version = Channel.empty()
@@ -322,10 +323,11 @@ if (!params.skipDemultiplexing){
     /*
      * Create channels = [sample, fastq, genome]
      */
-    ch_samplesheet_reformat.splitCsv(header:true, sep:',')
-                           .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
-                           .into {  ch_fastq_nanoplot;
-                                    ch_fastq_align }
+    ch_samplesheet_reformat
+        .splitCsv(header:true, sep:',')
+        .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
+        .into {  ch_fastq_nanoplot;
+                 ch_fastq_align }
 }
 
 /*
@@ -336,11 +338,11 @@ process NanoPlotFastQ {
     label 'process_low'
     publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
         saveAs: { filename ->
-            if (!filename.endsWith(".version")) filename
-        }
+                      if (!filename.endsWith(".version")) filename
+                }
 
     when:
-    !params.skipQC && !params.skipNanoPlot
+    !params.skip_qc && !params.skip_nanoplot
 
     input:
     set val(sample), file(fastq), file(genome) from ch_fastq_nanoplot
@@ -356,11 +358,12 @@ process NanoPlotFastQ {
     """
 }
 
-if (!params.skipAlignment){
+if (!params.skip_alignment) {
 
     // Dont map samples if reference genome hasnt been provided
-    ch_fastq_align.filter{ it[2] != null }
-                 .set { ch_fastq_align }
+    ch_fastq_align
+        .filter{ it[2] != null }
+        .set { ch_fastq_align }
 
     /*
      * STEP 5 - Align fastq files with GraphMap
@@ -369,11 +372,11 @@ if (!params.skipAlignment){
         process GraphMap {
             tag "$sample"
             label 'process_medium'
-            if (params.saveAlignedIntermediates) {
+            if (params.save_align_intermeds) {
                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
                     saveAs: { filename ->
-                        if (filename.endsWith(".sam")) filename
-                    }
+                                  if (filename.endsWith(".sam")) filename
+                            }
             }
 
             input:
@@ -399,11 +402,11 @@ if (!params.skipAlignment){
         process MiniMap2 {
             tag "$sample"
             label 'process_medium'
-            if (params.saveAlignedIntermediates) {
+            if (params.save_align_intermeds) {
                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
                     saveAs: { filename ->
-                        if (filename.endsWith(".sam")) filename
-                    }
+                                  if (filename.endsWith(".sam")) filename
+                            }
             }
 
             input:
@@ -430,13 +433,13 @@ if (!params.skipAlignment){
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
             saveAs: { filename ->
-                if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
-                else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
-                else if (filename.endsWith(".stats")) "samtools_stats/$filename"
-                else if (filename.endsWith(".sorted.bam")) filename
-                else if (filename.endsWith(".sorted.bam.bai")) filename
-                else null
-            }
+                          if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
+                          else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
+                          else if (filename.endsWith(".stats")) "samtools_stats/$filename"
+                          else if (filename.endsWith(".sorted.bam")) filename
+                          else if (filename.endsWith(".sorted.bam.bai")) filename
+                          else null
+                    }
 
         input:
         set val(sample), file(sam) from ch_align_sam
@@ -470,8 +473,8 @@ if (!params.skipAlignment){
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
-            if (!filename.endsWith(".version")) filename
-        }
+                      if (!filename.endsWith(".version")) filename
+                }
 
     input:
     file output_docs from ch_output_docs
@@ -492,10 +495,10 @@ process output_documentation {
  */
 process get_software_versions {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-        saveAs: {filename ->
-            if (filename.indexOf(".csv") > 0) filename
-            else null
-        }
+        saveAs: { filename ->
+                      if (filename.indexOf(".csv") > 0) filename
+                      else null
+                }
 
     input:
     file guppy from ch_guppy_version.collect().ifEmpty([])
@@ -522,10 +525,10 @@ process get_software_versions {
 def create_workflow_summary(summary) {
     def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
     yaml_file.text  = """
-    id: 'nf-core-nanodemux-summary'
+    id: 'nf-core-nanoseq-summary'
     description: " - this information is collected when the pipeline is started."
-    section_name: 'nf-core/nanodemux Workflow Summary'
-    section_href: 'https://github.com/nf-core/nanodemux'
+    section_name: 'nf-core/nanoseq Workflow Summary'
+    section_href: 'https://github.com/nf-core/nanoseq'
     plot_type: 'html'
     data: |
         <dl class=\"dl-horizontal\">
@@ -543,7 +546,7 @@ process MultiQC {
     publishDir "${params.outdir}/multiqc", mode: 'copy'
 
     when:
-    !params.skipMultiQC
+    !params.skip_multiqc
 
     input:
     file multiqc_config from ch_multiqc_config
@@ -569,13 +572,12 @@ process MultiQC {
 /*
  * Completion e-mail notification
  */
-
 workflow.onComplete {
 
     // Set up the e-mail variables
-    def subject = "[nf-core/nanodemux] Successful: $workflow.runName"
+    def subject = "[nf-core/nanoseq] Successful: $workflow.runName"
     if (!workflow.success) {
-      subject = "[nf-core/nanodemux] FAILED: $workflow.runName"
+      subject = "[nf-core/nanoseq] FAILED: $workflow.runName"
     }
     def email_fields = [:]
     email_fields['version'] = workflow.manifest.version
@@ -601,19 +603,19 @@ workflow.onComplete {
     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
 
-    // TODO nf-core: If not using MultiQC, strip out this code (including params.maxMultiqcEmailFileSize)
+    // TODO nf-core: If not using MultiQC, strip out this code (including params.max_multiqc_email_size)
     // On success try attach the multiqc report
     def mqc_report = null
     try {
         if (workflow.success) {
             mqc_report = ch_multiqc_report.getVal()
             if (mqc_report.getClass() == ArrayList) {
-                log.warn "[nf-core/nanodemux] Found multiple reports from process 'multiqc', will use only one"
+                log.warn "[nf-core/nanoseq] Found multiple reports from process 'multiqc', will use only one"
                 mqc_report = mqc_report[0]
             }
         }
     } catch (all) {
-        log.warn "[nf-core/nanodemux] Could not attach MultiQC report to summary email"
+        log.warn "[nf-core/nanoseq] Could not attach MultiQC report to summary email"
     }
 
     // Check if we are only sending emails on failure
@@ -634,7 +636,7 @@ workflow.onComplete {
     def email_html = html_template.toString()
 
     // Render the sendmail template
-    def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, baseDir: "$baseDir", mqcFile: mqc_report, mqcMaxSize: params.maxMultiqcEmailFileSize.toBytes() ]
+    def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, baseDir: "$baseDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
     def sf = new File("$baseDir/assets/sendmail_template.txt")
     def sendmail_template = engine.createTemplate(sf).make(smail_fields)
     def sendmail_html = sendmail_template.toString()
@@ -642,25 +644,25 @@ workflow.onComplete {
     // Send the HTML e-mail
     if (email_address) {
         try {
-          if ( params.plaintext_email ){ throw GroovyException('Send plaintext e-mail, not HTML') }
+          if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
           // Try to send HTML e-mail using sendmail
           [ 'sendmail', '-t' ].execute() << sendmail_html
-          log.info "[nf-core/nanodemux] Sent summary e-mail to $email_address (sendmail)"
+          log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (sendmail)"
         } catch (all) {
           // Catch failures and try with plaintext
           [ 'mail', '-s', subject, email_address ].execute() << email_txt
-          log.info "[nf-core/nanodemux] Sent summary e-mail to $email_address (mail)"
+          log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (mail)"
         }
     }
 
     // Write summary e-mail HTML to a file
-    def output_d = new File( "${params.outdir}/pipeline_info/" )
+    def output_d = new File("${params.outdir}/pipeline_info/")
     if (!output_d.exists()) {
       output_d.mkdirs()
     }
-    def output_hf = new File( output_d, "pipeline_report.html" )
+    def output_hf = new File(output_d, "pipeline_report.html")
     output_hf.withWriter { w -> w << email_html }
-    def output_tf = new File( output_d, "pipeline_report.txt" )
+    def output_tf = new File(output_d, "pipeline_report.txt")
     output_tf.withWriter { w -> w << email_txt }
 
     c_reset = params.monochrome_logs ? '' : "\033[0m";
@@ -675,15 +677,15 @@ workflow.onComplete {
     }
 
     if (workflow.success) {
-        log.info "${c_purple}[nf-core/nanodemux]${c_green} Pipeline completed successfully${c_reset}"
+        log.info "${c_purple}[nf-core/nanoseq]${c_green} Pipeline completed successfully${c_reset}"
     } else {
         checkHostname()
-        log.info "${c_purple}[nf-core/nanodemux]${c_red} Pipeline completed with errors${c_reset}"
+        log.info "${c_purple}[nf-core/nanoseq]${c_red} Pipeline completed with errors${c_reset}"
     }
 
 }
 
-def nfcoreHeader(){
+def nfcoreHeader() {
     // Log colors ANSI codes
     c_reset = params.monochrome_logs ? '' : "\033[0m";
     c_dim = params.monochrome_logs ? '' : "\033[2m";
@@ -701,12 +703,12 @@ def nfcoreHeader(){
     ${c_blue}  |\\ | |__  __ /  ` /  \\ |__) |__         ${c_yellow}}  {${c_reset}
     ${c_blue}  | \\| |       \\__, \\__/ |  \\ |___     ${c_green}\\`-._,-`-,${c_reset}
                                             ${c_green}`._,._,\'${c_reset}
-    ${c_purple}  nf-core/nanodemux v${workflow.manifest.version}${c_reset}
+    ${c_purple}  nf-core/nanoseq v${workflow.manifest.version}${c_reset}
     -${c_dim}--------------------------------------------------${c_reset}-
     """.stripIndent()
 }
 
-def checkHostname(){
+def checkHostname() {
     def c_reset = params.monochrome_logs ? '' : "\033[0m"
     def c_white = params.monochrome_logs ? '' : "\033[0;37m"
     def c_red = params.monochrome_logs ? '' : "\033[1;91m"
