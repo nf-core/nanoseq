@@ -121,7 +121,7 @@ if (!params.skip_demultiplexing) {
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Guppy Config File']  = params.guppy_config ?: 'Unspecified'
     summary['Guppy GPU Mode']     = params.guppy_gpu ? 'Yes' : 'No'
-    summary['Guppy GPU Runners']  = params.guppy_gpu_runners ?: 'Unspecified'
+    summary['Guppy GPU Runners']  = params.guppy_gpu_runners
     summary['Guppy CPU Threads']  = params.guppy_cpu_threads ?: 'Unspecified'
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
