@@ -175,7 +175,7 @@ Whether to demultiplex with Guppy in GPU mode.
 Number of '--gpu_runners_per_device' used for guppy when using `--guppy_gpu` (default: 6)
 
 ### `--guppy_cpu_threads`
-Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (default: 1)
+Number of '--cpu_threads_per_caller' used for guppy when using `--guppy_gpu` (default: 1)
 
 ### `--gpu_device`
 Basecalling device specified to Guppy in GPU mode using `--device` (default: 'auto')
