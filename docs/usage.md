@@ -171,10 +171,10 @@ Guppy config file used for basecalling passed with the `--config` parameter. Can
 ### `--guppy_gpu`
 Whether to demultiplex with Guppy in GPU mode.
 
-### `--guppy_gpu_runners_per_device`
+### `--guppy_gpu_runners`
 Number of '--gpu_runners_per_device' used for guppy when using '--guppy_gpu' (default: 6)
 
-### `--guppy_cpu_threads_per_caller`
+### `--guppy_cpu_threads`
 Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (default: 1)
 
 ### `--gpu_device`
