@@ -226,7 +226,6 @@ if (!params.skip_demultiplexing) {
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
         config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
-        gpu_runners = params.guppy_gpu_runners ? "--gpu_runners_per_device $params.guppy_gpu_runners" : "--gpu_runners_per_device 6"
         cpu_threads = params.guppy_cpu_threads ? "--cpu_threads_per_caller $params.guppy_cpu_threads" : "--cpu_threads_per_caller 1"
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus $cpu_threads $gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         """
