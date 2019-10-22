@@ -1,4 +1,4 @@
-# nf-core/nanodemux: Output
+# nf-core/nanoseq: Output
 
 This document describes the output produced by the pipeline. Most of the plots are taken from the MultiQC report, which summarises results at the end of the pipeline.
 
@@ -18,11 +18,11 @@ and processes data using the following steps:
 
 
 ## Demultiplexing
-*Documentation*: 
+*Documentation*:
 [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
 *Description*:
-Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skipDemultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified.
+Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skip_demultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified.
 
 *Output directories*:
 * `guppy/barcode*/`
@@ -55,7 +55,7 @@ An output of a .png plot of fastq QC.
 [SortBam](http://www.htslib.org/doc/samtools.html)
 
 *Description*:
-The FastQ reads are mapped to the given reference assembly provided using either GraphMap or Minimap2 and then sorted and indexed using SAMtools or these processes can be bypassed using the `--skipAlignment` parameter.
+The FastQ reads are mapped to the given reference assembly provided using either GraphMap or Minimap2 and then sorted and indexed using SAMtools or these processes can be bypassed using the `--skip_alignment` parameter.
 
 *Output directories*:
  * `graphmap/`
@@ -63,7 +63,7 @@ The FastQ reads are mapped to the given reference assembly provided using either
  * `results/minimap2`
  If the `--aligner minimap2` parameter is used, the results will be output here.
 
- The files resulting from the alignment with graphmap or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--saveAlignedIntermediates` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+ The files resulting from the alignment with graphmap or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--save_align_intermeds` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
  * `samtools_stats/`
  `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files using SAMtools.
 

@@ -2,7 +2,7 @@
 
 #######################################################################
 #######################################################################
-## Created on August 28th 2019 to check nf-core/nanodemux design file
+## Created on August 28th 2019 to check nf-core/nanoseq design file
 #######################################################################
 #######################################################################
 
@@ -16,7 +16,7 @@ import argparse
 ############################################
 ############################################
 
-Description = 'Reformat nf-core/nanodemux design file and check its contents.'
+Description = 'Reformat nf-core/nanoseq design file and check its contents.'
 Epilog = """Example usage: python check_samplesheet.py <DESIGN_FILE_IN> <DESIGN_FILE_OUT>"""
 
 argParser = argparse.ArgumentParser(description=Description, epilog=Epilog)
