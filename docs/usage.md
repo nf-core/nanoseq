@@ -19,6 +19,8 @@
   * [`--barcode_kit`](#--barcode_kit)
   * [`--guppy_config`](#--guppy_config)
   * [`--guppy_gpu`](#--guppy_gpu)
+  * [`--guppy_gpu_runners`](#--guppy_gpu_runners)
+  * [`--guppy_cpu_threads`](#--guppy_cpu_threads)
   * [`--gpu_device`](#--gpu_device)
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
   * [`--skip_demultiplexing`](#--skip_demultiplexing)
@@ -164,10 +166,16 @@ Kit used to perform the sequencing e.g. `SQK-LSK109`. Not required if `--guppy_c
 Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
 
 ### `--guppy_config`
-Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with ``--flowcell` and `--kit`.
+Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with `--flowcell` and `--kit`.
 
 ### `--guppy_gpu`
 Whether to demultiplex with Guppy in GPU mode.
+
+### `--guppy_gpu_runners`
+Number of '--gpu_runners_per_device' used for guppy when using `--guppy_gpu` (default: 6)
+
+### `--guppy_cpu_threads`
+Number of '--cpu_threads_per_caller' used for guppy when using `--guppy_gpu` (default: 1)
 
 ### `--gpu_device`
 Basecalling device specified to Guppy in GPU mode using `--device` (default: 'auto')

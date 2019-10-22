@@ -32,6 +32,8 @@ def helpMessage() {
       --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
       --guppy_config [file]           Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
       --guppy_gpu [bool]              Whether to demultiplex with Guppy in GPU mode
+      --guppy_gpu_runners [int]       Number of '--gpu_runners_per_device' used for guppy when using '--guppy_gpu' (default: 6)
+      --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (default: 1)
       --gpu_device [str]              Basecalling device specified to Guppy in GPU mode using '--device' (default: 'auto')
       --gpu_cluster_options [str]     Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
       --skip_demultiplexing [bool]    Skip basecalling and demultiplexing step with Guppy
@@ -119,6 +121,8 @@ if (!params.skip_demultiplexing) {
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Guppy Config File']  = params.guppy_config ?: 'Unspecified'
     summary['Guppy GPU Mode']     = params.guppy_gpu ? 'Yes' : 'No'
+    summary['Guppy GPU Runners']  = params.guppy_gpu_runners
+    summary['Guppy CPU Threads']  = params.guppy_cpu_threads
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
 }
@@ -222,7 +226,7 @@ if (!params.skip_demultiplexing) {
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
         config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
-        proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller 1 --gpu_runners_per_device 6" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         """
         guppy_basecaller \\
             --input_path $run_dir \\
