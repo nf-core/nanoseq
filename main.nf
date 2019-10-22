@@ -121,8 +121,8 @@ if (!params.skip_demultiplexing) {
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Guppy Config File']  = params.guppy_config ?: 'Unspecified'
     summary['Guppy GPU Mode']     = params.guppy_gpu ? 'Yes' : 'No'
-    summary['Guppy GPU Runners']  = params.guppy_gpu_runners ?: 'Unspecified'
-    summary['Guppy CPU Threads']  = params.guppy_cpu_threads ?: 'Unspecified'
+    summary['Guppy GPU Runners']  = params.guppy_gpu_runners
+    summary['Guppy CPU Threads']  = params.guppy_cpu_threads
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
 }
@@ -226,9 +226,7 @@ if (!params.skip_demultiplexing) {
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
         config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
-        gpu_runners = params.guppy_gpu_runners ? "--gpu_runners_per_device $params.guppy_gpu_runners" : "--gpu_runners_per_device 6"
-        cpu_threads = params.guppy_cpu_threads ? "--cpu_threads_per_caller $params.guppy_cpu_threads" : "--cpu_threads_per_caller 1"
-        proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus $cpu_threads $gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         """
         guppy_basecaller \\
             --input_path $run_dir \\
