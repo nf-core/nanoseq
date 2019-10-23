@@ -55,14 +55,14 @@ PycoQC and NanoPlot give general quality metrics about your reads. It provides i
 *Description*:  
 The FastQ reads are mapped to the given reference assembly provided using either GraphMap or Minimap2 and then sorted and indexed using SAMtools or these processes can be bypassed using the `--skip_alignment` parameter.
 
+The files resulting from the alignment with graphmap or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--save_align_intermeds` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+
 *Output directories*:  
 * `graphmap/`  
   If the `--aligner graphmap` parameter is used, the results will be output here.
 * `results/minimap2`  
   If the `--aligner minimap2` parameter is used, the results will be output here.
-
-The files resulting from the alignment with graphmap or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--save_align_intermeds` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
-* `samtools_stats/`  
+* `<ALIGNER>/samtools_stats/`  
   `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files using SAMtools.
 
 ## MultiQC
