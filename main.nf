@@ -79,7 +79,7 @@ if (!params.skip_alignment)     {
 }
 
 // TODO nf-core: Add in a check to see if running offline
-// Pre-download test-dataset to get files in "run_dir"
+// Pre-download test-dataset to get files for '--run_dir' parameter
 // Nextflow is unable to recursively download directories via HTTPS
 if (!params.skip_demultiplexing) {
     if (workflow.profile.split(',').contains('test')) {
