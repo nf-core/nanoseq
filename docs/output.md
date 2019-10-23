@@ -6,8 +6,7 @@ This document describes the output produced by the pipeline. Most of the plots a
 
 ## Pipeline overview
 
-The pipeline is built using [Nextflow](https://www.nextflow.io/)
-and processes data using the following steps:
+The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
 * [Guppy](#guppy) - demultiplexing of Nanopore data
 * [PycoQC](#pycoqc) - read quality control
@@ -19,13 +18,13 @@ and processes data using the following steps:
 
 ## Demultiplexing
 
-*Documentation*:
+*Documentation*:  
 [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
-*Description*:
+*Description*:  
 Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skip_demultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified.
 
-*Output directories*:
+*Output directories*:  
 * `guppy/barcode*/`  
   FastQ files output for each barcode
 * `guppy/unclassified/`  
@@ -34,14 +33,13 @@ Guppy will demultiplex and barcode the data given from an ONT device. The flowce
 
 ## Quality Control
 
-*Documentation*:
-[PycoQC](https://github.com/a-slide/pycoQC)
-[NanoPlot](https://github.com/wdecoster/NanoPlot)
+*Documentation*:  
+[PycoQC](https://github.com/a-slide/pycoQC), [NanoPlot](https://github.com/wdecoster/NanoPlot)
 
-*Description*:
+*Description*:  
 PycoQC and NanoPlot give general quality metrics about your reads. It provides information about the quality score distribution across your reads, read lengths and other general stats.
 
-*Output directories*:
+*Output directories*:  
 * `pycoQC/`  
   An .html file output is produced that includes a run summary and graphical representation of distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time, output over experiment time, read quality over experiment time, readlength over experiment time, and percentage of reads per barcode.
 * `nanoplot/summary/`  
@@ -51,15 +49,13 @@ PycoQC and NanoPlot give general quality metrics about your reads. It provides i
 
 ## Alignment
 
-*Documentation*:
-[GraphMap](https://github.com/isovic/graphmap)
-[MiniMap2](https://github.com/lh3/minimap2)
-[SortBam](http://www.htslib.org/doc/samtools.html)
+*Documentation*:  
+[GraphMap](https://github.com/isovic/graphmap), [MiniMap2](https://github.com/lh3/minimap2), [SortBam](http://www.htslib.org/doc/samtools.html)
 
-*Description*:
+*Description*:  
 The FastQ reads are mapped to the given reference assembly provided using either GraphMap or Minimap2 and then sorted and indexed using SAMtools or these processes can be bypassed using the `--skip_alignment` parameter.
 
-*Output directories*:
+*Output directories*:  
 * `graphmap/`  
   If the `--aligner graphmap` parameter is used, the results will be output here.
 * `results/minimap2`  
@@ -75,11 +71,10 @@ The files resulting from the alignment with graphmap or minimap2 of individual l
 
 The pipeline has special steps which allow the software versions used to be reported in the MultiQC output for future traceability.
 
-*Output directory*: `multiqc/`
-
-* `Project_multiqc_report.html`  
+*Output directories*:  
+* `multiqc/Project_multiqc_report.html`  
   MultiQC report - a standalone HTML file that can be viewed in your web browser
-* `Project_multiqc_data/`  
+* `multiqc/Project_multiqc_data/`  
   Directory containing parsed statistics from the different tools used in the pipeline
 
 For more information about how to use MultiQC reports, see [http://multiqc.info](http://multiqc.info)
