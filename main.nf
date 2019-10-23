@@ -90,7 +90,7 @@ if (!params.skip_demultiplexing) {
 
             script:
             """
-            git clone https://github.com/drpatelh/test-datasets.git --branch nanoseq --single-branch
+            git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
             """
         }
     } else {
