@@ -72,16 +72,33 @@ if (params.help) {
  * SET UP CONFIGURATION VARIABLES
  */
 if (params.input)               { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
-if (!params.skip_demultiplexing) {
-    if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
-    if (!params.guppy_config)   {
-        if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
-        if (!params.kit)        { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
-    }
-}
-if (!params.skip_alignment)      {
+if (!params.skip_alignment)     {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
+    }
+}
+
+// TODO nf-core: Add in a check to see if running offline
+// Pre-download test-dataset to get files for '--run_dir' parameter
+// Nextflow is unable to recursively download directories via HTTPS
+if (!params.skip_demultiplexing) {
+    if (workflow.profile.split(',').contains('test')) {
+        process GetTestData {
+
+            output:
+            file "test-datasets/fast5/" into ch_run_dir
+
+            script:
+            """
+            git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
+            """
+        }
+    } else {
+        if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
+        if (!params.guppy_config)   {
+            if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
+            if (!params.kit)        { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
+       }
     }
 }
 
