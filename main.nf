@@ -181,7 +181,8 @@ process CheckSampleSheet {
     file samplesheet from ch_input
 
     output:
-    file "*.csv" into ch_samplesheet_reformat
+    file "*.csv" into ch_samplesheet_reformat, ch_samplesheet_guppy
+    stdout into sample
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
     demultipex = params.skip_demultiplexing ? "" : '--demultiplex'
@@ -190,8 +191,19 @@ process CheckSampleSheet {
     check_samplesheet.py \\
         $samplesheet \\
         samplesheet_reformat.csv \\
+        $demultipex \\
+        $nobarcodes
     """
 }
+
+// Get the samplename for guppy no nobarcoding
+if (!params.barcode_kit){
+  ch_sample_name = ch_samplesheet_test.splitCsv(header:true, sep:',').first().map{it.barcode}
+} else {
+  ch_sample_name = Channel.from("barcode01")
+}
+
+
 
 if (!params.skip_demultiplexing) {
 
@@ -209,6 +221,7 @@ if (!params.skip_demultiplexing) {
 
         input:
         file run_dir from ch_run_dir
+        val sample_name from ch_sample_name
 
         output:
         file "fastq/*.fastq.gz" into ch_guppy_fastq
@@ -243,7 +256,7 @@ if (!params.skip_demultiplexing) {
                 cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
             done
         else
-            cat *.fastq.gz > ../fastq/barcode01.fastq.gz
+            cat *.fastq.gz > ../fastq/${sample_name}1.fastq.gz
         fi
         """
     }
@@ -301,16 +314,17 @@ if (!params.skip_demultiplexing) {
 
     /*
      * Create channels = [sample, fastq, genome]
-     */
+    */
+
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
-        .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
+        .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] } // [sample, barcode, genome]
         .set { ch_sample_info }
 
     ch_guppy_fastq
         .flatten()
-        .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
-        .join( ch_sample_info, by: 1 )
+        .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // e.g. [barcode001.fastq, barcode001]
+        .join( ch_sample_info, by: 1 ) // join on barcode
         .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
         .into { ch_fastq_nanoplot;
                 ch_fastq_align }
