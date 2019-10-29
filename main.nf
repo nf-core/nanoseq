@@ -196,16 +196,10 @@ process CheckSampleSheet {
     """
 }
 
-// Get the samplename for guppy no nobarcoding
-if (!params.barcode_kit){
-  ch_sample_name = ch_samplesheet_guppy.splitCsv(header:true, sep:',').first().map{it.barcode}
-} else {
-  ch_sample_name = Channel.from("barcode01")
-}
-
-
-
 if (!params.skip_demultiplexing) {
+
+    // Get samplename to name file for no barcoding option
+    ch_sample_name = ch_samplesheet_guppy.splitCsv(header:true, sep:',').first().map{it.barcode}
 
     /*
      * STEP 1 - Basecalling and demultipexing using Guppy
