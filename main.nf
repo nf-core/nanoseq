@@ -198,7 +198,7 @@ process CheckSampleSheet {
 
 // Get the samplename for guppy no nobarcoding
 if (!params.barcode_kit){
-  ch_sample_name = ch_samplesheet_test.splitCsv(header:true, sep:',').first().map{it.barcode}
+  ch_sample_name = ch_samplesheet_guppy.splitCsv(header:true, sep:',').first().map{it.barcode}
 } else {
   ch_sample_name = Channel.from("barcode01")
 }
