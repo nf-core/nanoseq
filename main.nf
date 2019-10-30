@@ -270,7 +270,7 @@ if (!params.skip_demultiplexing) {
                 cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
             done
         else
-            cat *.fastq.gz > ../fastq/${sample_name}1.fastq.gz
+            cat *.fastq.gz > ../fastq/${sample_name}.fastq.gz
         fi
         """
     }
@@ -328,8 +328,7 @@ if (!params.skip_demultiplexing) {
 
     /*
      * Create channels = [sample, fastq, genome]
-    */
-
+     */
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] } // [sample, barcode, genome]
