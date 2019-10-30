@@ -203,7 +203,6 @@ process CheckSampleSheet {
 
     output:
     file "*.csv" into ch_samplesheet_reformat, ch_samplesheet_guppy
-    stdout into sample
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
     demultipex = params.skip_demultiplexing ? "" : '--demultiplex'
