@@ -32,6 +32,8 @@ def helpMessage() {
       --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
       --guppy_config [file]           Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
       --guppy_gpu [bool]              Whether to demultiplex with Guppy in GPU mode
+      --guppy_gpu_runners [int]       Number of '--gpu_runners_per_device' used for guppy when using '--guppy_gpu' (default: 6)
+      --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (default: 1)
       --gpu_device [str]              Basecalling device specified to Guppy in GPU mode using '--device' (default: 'auto')
       --gpu_cluster_options [str]     Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
       --skip_demultiplexing [bool]    Skip basecalling and demultiplexing step with Guppy
@@ -70,16 +72,33 @@ if (params.help) {
  * SET UP CONFIGURATION VARIABLES
  */
 if (params.input)               { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
-if (!params.skip_demultiplexing) {
-    if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
-    if (!params.guppy_config)   {
-        if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
-        if (!params.kit)        { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
-    }
-}
-if (!params.skip_alignment)      {
+if (!params.skip_alignment)     {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
+    }
+}
+
+// TODO nf-core: Add in a check to see if running offline
+// Pre-download test-dataset to get files for '--run_dir' parameter
+// Nextflow is unable to recursively download directories via HTTPS
+if (!params.skip_demultiplexing) {
+    if (workflow.profile.split(',').contains('test')) {
+        process GetTestData {
+
+            output:
+            file "test-datasets/fast5/" into ch_run_dir
+
+            script:
+            """
+            git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
+            """
+        }
+    } else {
+        if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
+        if (!params.guppy_config)   {
+            if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for demultiplexing!" }
+            if (!params.kit)        { exit 1, "Please specify a valid kit identifier for demultiplexing!" }
+       }
     }
 }
 
@@ -119,6 +138,8 @@ if (!params.skip_demultiplexing) {
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Guppy Config File']  = params.guppy_config ?: 'Unspecified'
     summary['Guppy GPU Mode']     = params.guppy_gpu ? 'Yes' : 'No'
+    summary['Guppy GPU Runners']  = params.guppy_gpu_runners
+    summary['Guppy CPU Threads']  = params.guppy_cpu_threads
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
 }
@@ -227,7 +248,7 @@ if (!params.skip_demultiplexing) {
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
         config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
-        proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller 1 --gpu_runners_per_device 6" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         """
         guppy_basecaller \\
             --input_path $run_dir \\
@@ -583,7 +604,7 @@ workflow.onComplete {
     // Set up the e-mail variables
     def subject = "[nf-core/nanoseq] Successful: $workflow.runName"
     if (!workflow.success) {
-      subject = "[nf-core/nanoseq] FAILED: $workflow.runName"
+        subject = "[nf-core/nanoseq] FAILED: $workflow.runName"
     }
     def email_fields = [:]
     email_fields['version'] = workflow.manifest.version
@@ -650,21 +671,21 @@ workflow.onComplete {
     // Send the HTML e-mail
     if (email_address) {
         try {
-          if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
-          // Try to send HTML e-mail using sendmail
-          [ 'sendmail', '-t' ].execute() << sendmail_html
-          log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (sendmail)"
+            if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
+            // Try to send HTML e-mail using sendmail
+            [ 'sendmail', '-t' ].execute() << sendmail_html
+            log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (sendmail)"
         } catch (all) {
-          // Catch failures and try with plaintext
-          [ 'mail', '-s', subject, email_address ].execute() << email_txt
-          log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (mail)"
+            // Catch failures and try with plaintext
+            [ 'mail', '-s', subject, email_address ].execute() << email_txt
+            log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (mail)"
         }
     }
 
     // Write summary e-mail HTML to a file
     def output_d = new File("${params.outdir}/pipeline_info/")
     if (!output_d.exists()) {
-      output_d.mkdirs()
+        output_d.mkdirs()
     }
     def output_hf = new File(output_d, "pipeline_report.html")
     output_hf.withWriter { w -> w << email_html }
@@ -677,9 +698,9 @@ workflow.onComplete {
     c_red = params.monochrome_logs ? '' : "\033[0;31m";
 
     if (workflow.stats.ignoredCount > 0 && workflow.success) {
-      log.info "${c_purple}Warning, pipeline completed, but with errored process(es) ${c_reset}"
-      log.info "${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCount} ${c_reset}"
-      log.info "${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCount} ${c_reset}"
+        log.info "${c_purple}Warning, pipeline completed, but with errored process(es) ${c_reset}"
+        log.info "${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCount} ${c_reset}"
+        log.info "${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCount} ${c_reset}"
     }
 
     if (workflow.success) {
@@ -690,6 +711,7 @@ workflow.onComplete {
     }
 
 }
+
 
 def nfcoreHeader() {
     // Log colors ANSI codes
