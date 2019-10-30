@@ -102,7 +102,7 @@ if args.NOBARCODING:
     if len(outLines) != 1:
         print "{}: Only a single-line can be specified in samplesheet without barcode information!".format(ERROR_STR)
         sys.exit(1)
-    # USE SAMPLE NAME AS BARCODE WHEN NOT DEMULTIPLEXING
+    ## USE SAMPLE NAME AS BARCODE WHEN NOT DEMULTIPLEXING
     outLines[0][2] = sample
 
 ## WRITE TO FILE
