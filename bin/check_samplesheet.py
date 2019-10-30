@@ -78,8 +78,8 @@ while True:
 
         if fastq:
             ## CHECK FASTQ FILE EXTENSION
-            if fastq[-9:] != '.fastq.gz' and fastq[-6:] != '.fq.gz' and fastq[-6:] != '.fastq' and fastq[-3:] != '.fq':
-                print "{}: FastQ file has incorrect extension (has to be '.fastq.gz' or 'fq.gz' or '.fastq' or '.fq')!\nLine: '{}'".format(ERROR_STR,line.strip())
+            if fastq[-9:] != '.fastq.gz' and fastq[-6:] != '.fq.gz':
+                print "{}: FastQ file has incorrect extension (has to be '.fastq.gz' or 'fq.gz')!\nLine: '{}'".format(ERROR_STR,line.strip())
 
         if genome:
             ## CHECK GENOME HAS NO SPACES
@@ -89,8 +89,8 @@ while True:
 
             ## CHECK GENOME EXTENSION
             if len(genome.split('.')) > 1:
-                if genome[-6:] != '.fasta' and genome[-3:] != '.fa':
-                    print "{}: Genome field incorrect extension (has to be '.fasta' or 'fa')!\nLine: '{}'".format(ERROR_STR,line.strip())
+                if genome[-9:] != '.fasta.gz' and genome[-6:] != '.fa.gz':
+                    print "{}: Genome field incorrect extension (has to be '.fasta.gz' or 'fa.gz')!\nLine: '{}'".format(ERROR_STR,line.strip())
                     sys.exit(1)
 
         outLines.append([sample,fastq,barcode,genome])
