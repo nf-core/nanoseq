@@ -223,7 +223,11 @@ process CheckSampleSheet {
 if (!params.skip_demultiplexing) {
 
     // Get samplename to name file for no barcoding option
-    ch_sample_name = ch_samplesheet_guppy.splitCsv(header:true, sep:',').first().map{it.barcode}
+    ch_samplesheet_guppy
+        .splitCsv(header:true, sep:',')
+        .first()
+        .map { it.barcode }
+        .set { ch_sample_name }
 
     /*
      * STEP 1 - Basecalling and demultipexing using Guppy
@@ -239,7 +243,7 @@ if (!params.skip_demultiplexing) {
 
         input:
         file run_dir from ch_run_dir
-        val sample_name from ch_sample_name
+        val name from ch_sample_name
 
         output:
         file "fastq/*.fastq.gz" into ch_guppy_fastq
@@ -274,7 +278,7 @@ if (!params.skip_demultiplexing) {
                 cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
             done
         else
-            cat *.fastq.gz > ../fastq/${sample_name}.fastq.gz
+            cat *.fastq.gz > ../fastq/${name}.fastq.gz
         fi
         """
     }
