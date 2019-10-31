@@ -202,7 +202,7 @@ process CheckSampleSheet {
     file samplesheet from ch_input
 
     output:
-    file "*.csv" into ch_samplesheet_reformat
+    file "*.csv" into ch_samplesheet_reformat, ch_samplesheet_guppy
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
     demultipex = params.skip_demultiplexing ? "" : '--demultiplex'
@@ -218,6 +218,13 @@ process CheckSampleSheet {
 
 if (!params.skip_demultiplexing) {
 
+    // Get samplename to name file for no barcoding option
+    ch_samplesheet_guppy
+        .splitCsv(header:true, sep:',')
+        .first()
+        .map { it.barcode }
+        .set { ch_sample_name }
+
     /*
      * STEP 1 - Basecalling and demultipexing using Guppy
      */
@@ -232,6 +239,7 @@ if (!params.skip_demultiplexing) {
 
         input:
         file run_dir from ch_run_dir
+        val name from ch_sample_name
 
         output:
         file "fastq/*.fastq.gz" into ch_guppy_fastq
@@ -266,7 +274,7 @@ if (!params.skip_demultiplexing) {
                 cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
             done
         else
-            cat *.fastq.gz > ../fastq/barcode01.fastq.gz
+            cat *.fastq.gz > ../fastq/${name}.fastq.gz
         fi
         """
     }
@@ -327,13 +335,13 @@ if (!params.skip_demultiplexing) {
      */
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
-        .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
+        .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] } // [sample, barcode, genome]
         .set { ch_sample_info }
 
     ch_guppy_fastq
         .flatten()
-        .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
-        .join( ch_sample_info, by: 1 )
+        .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // e.g. [barcode001.fastq, barcode001]
+        .join( ch_sample_info, by: 1 ) // join on barcode
         .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
         .into { ch_fastq_nanoplot;
                 ch_fastq_align }
