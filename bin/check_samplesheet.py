@@ -89,7 +89,7 @@ while True:
 
             ## CHECK GENOME EXTENSION
             if len(genome.split('.')) > 1:
-                if genome[-9:] != '.fasta.gz' and genome[-6:] != '.fa.gz':
+                if genome[-6:] != '.fasta' and genome[-3:] != '.fa' and genome[-9:] != '.fasta.gz' and genome[-6:] != '.fa.gz':
                     print "{}: Genome field incorrect extension (has to be '.fasta.gz' or 'fa.gz')!\nLine: '{}'".format(ERROR_STR,line.strip())
                     sys.exit(1)
 
@@ -102,8 +102,9 @@ if args.NOBARCODING:
     if len(outLines) != 1:
         print "{}: Only a single-line can be specified in samplesheet without barcode information!".format(ERROR_STR)
         sys.exit(1)
+
     ## USE SAMPLE NAME AS BARCODE WHEN NOT DEMULTIPLEXING
-    outLines[0][2] = sample
+    outLines[0][2] = outLines[0][0]
 
 ## WRITE TO FILE
 fout = open(args.DESIGN_FILE_OUT,'w')

@@ -43,6 +43,10 @@ def helpMessage() {
       --save_align_intermeds [bool]   Save the .sam files from the alignment step - not done by default
       --skip_alignment [bool]         Skip alignment and subsequent process
 
+    Visualisation
+      --skip_vis [bool]               Skip all steps to generate bigwig and bigbed files
+      --skip_UCSC_vis [bool]          Skip steps to generate UCSC style bigwig and bigbed files
+
     QC
       --skip_qc [bool]                Skip all QC steps apart from MultiQC
       --skip_pycoqc [bool]            Skip pycoQC
@@ -473,6 +477,7 @@ if (!params.skip_alignment) {
         set val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
         file "*.version" into ch_samtools_version
+        file "*.sorted.bam" into ch_bam_bigwig, ch_bam_bigbed
 
         script:
         """
@@ -484,6 +489,99 @@ if (!params.skip_alignment) {
         samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
         samtools --version &> samtools.version
         """
+    }
+    if (!params.skip_vis){
+      // Generate chromosome size files
+      process GetChrSizes {
+
+        input:
+        file genome from refgenome
+
+        output:
+        file "${genome.simpleName}.chrSizes.txt" into chrsize_ch1, chrsize_ch2
+        file "${genome.baseName}.chrSizes.ucsc.txt" into ucsc_chrsize_ch1, ucsc_chrsize_ch2
+
+        script:
+        """
+        samtools faidx ${genome} > ${genome}.fai
+        cut -f1,2 ${genome}.fai > ${genome.simpleName}.chrSizes.txt
+        formatUCSC.pl ${genome.simpleName}.chrSizes.txt > \
+        ${genome.baseName}.chrSizes.ucsc.txt
+        """
+      }
+      // Make bigbed and bigwig
+      process Bam2BigWig {
+        input:
+        file bam from ch_bam_bigwig
+        // TO DO chrsizes.txt input
+
+        output:
+        file "${bam.baseName}.bw" into ch_bigwig
+        file "${bam.baseName}.bedgraph" into ch_make_UCSC_bigwig
+
+        script:
+        """
+        genomeCoverageBed -split -bg -ibam $bam > ${bam.baseName}.bedgraph
+        bedSort ${bam.baseName}.bedgraph ${bam.baseName}.bedgraph
+        bedGraphToBigWig ${bam.baseName}.bedgraph $chrSizes ${bam.baseName}.bw
+        """
+      }
+
+      process Bam2BigBed {
+        input:
+        file bam from ch_bam_bigbed
+        // TO DO chrsizes.txt
+
+        output:
+        file "${bam.baseName}.bed12" into ch_make_UCSC_bigbed
+        file "*.bb" into ch_bigbed
+
+        script:
+        """
+        bamToBed -bed12 -cigar -i $bam > ${bam.baseName}.bed12
+        bedtools sort -i ${bam.baseName}.bed12 > ${bam.baseName}.sorted.bed12
+        bedToBigBed ${bam.baseName}.sorted.bed12 $chrSizes ${bam.baseName}.bb
+        """
+      }
+
+      if (!params.skip_UCSC_vis){
+
+        // Make UCSC bigbed and bigwig
+        process UCSCBigWig {
+          input:
+          file bedgraph from ch_make_UCSC_bigwig
+          // TO DO chrsizes.txt
+
+          output:
+          file "*.ucsc.bw" into ch_make_UCSC_bigwig
+
+          script:
+          """
+          formatUCSC.pl $bedgraph > ${bedgraph.baseName}.ucsc.bedgraph
+          bedSort ${bedgraph.baseName}.ucsc.bedgraph ${bedgraph.baseName}.ucsc.bedgraph
+          bedGraphToBigWig ${bedgraph.baseName}.ucsc.bedgraph $ucscChrSize ${bedgraph.baseName}.ucsc.bw
+          """
+        }
+
+        process UCSCBigBed {
+          input:
+          file bed12 from ch_make_UCSC_bigbed
+
+          output:
+          file "*.bb" into ch_UCSC_bigbed
+
+          script:
+          """
+          formatUCSC.pl $bed12 > ${bed12.baseName}.ucsc.bed12
+          bedtools sort -i ${bed12.baseName}.ucsc.bed12 > ${bed12.baseName}.sorted.ucsc.bed12
+          bedToBigBed ${bed12.baseName}.sorted.ucsc.bed12 $ucscChrSize ${bed12.baseName}.ucsc.bb
+          """
+        }
+      } else {
+        // Make empty channels
+      }
+    } else {
+      // make empty channels
     }
 } else {
     ch_graphmap_version = Channel.empty()
