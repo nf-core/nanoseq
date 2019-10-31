@@ -239,7 +239,7 @@ if (!params.skip_demultiplexing) {
 
         input:
         file run_dir from ch_run_dir
-        val sample_name from ch_sample_name
+        val name from ch_sample_name
 
         output:
         file "fastq/*.fastq.gz" into ch_guppy_fastq
