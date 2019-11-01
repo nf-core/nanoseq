@@ -81,9 +81,6 @@ if (!params.skip_alignment)     {
     if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA'){
       exit 1, "Invalid protocol option: ${params.protocl}. Valid options: 'DNA', 'cDNA', 'directRNA'"
     }
-    if (params.procol == 'directRNA'){
-      params.stranded = true
-    }
 }
 
 // TODO nf-core: Add in a check to see if running offline
