@@ -25,6 +25,8 @@
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
   * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
+  * [`--protocol`](#--protocol)
+  * [`--stranded`](#--stranded)
   * [`--aligner`](#--aligner)
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
@@ -202,6 +204,24 @@ Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
 Skip basecalling and demultiplexing step with Guppy
 
 ## Alignment
+
+### `--protocol`
+
+Specifies the data type being inputted (DNA, cDNA or directRNA)
+
+### `--stranded`
+
+Specifies whether the inputted fastq files contain stranded data (default: false)
+
+The specific command line arguments for `graphmap` and `minimap2` using `--protocol` and `--stranded` are specified below:
+
+| `nanoseq` input              | `minimap2` presets  | `graphmap` presets |
+|------------------------------|---------------------|--------------------|
+| `--protocol DNA`             | -ax map-ont         | tba                |
+| `--protocol cDNA`            | -ax splice          | tba                |
+| `--protocol directRNA`       | -ax splice -uf -k14 | tba                |
+| `--protocol cDNA --stranded` | -ax splice -uf      | tba                |
+
 
 ### `--aligner`
 
