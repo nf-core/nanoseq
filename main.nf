@@ -40,7 +40,7 @@ def helpMessage() {
 
     Alignment
       --protocol [str]                Specifies the type of data being inputted (DNA, cDNA or directRNA)
-      --stranded [bool]               Specifies if the inputted data is stranded (default: false, automatically true when using --protocol directRNA)
+      --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
       --aligner [str]                 Specifies the aligner to use (available are: graphmap or minimap2)
       --save_align_intermeds [bool]   Save the .sam files from the alignment step - not done by default
       --skip_alignment [bool]         Skip alignment and subsequent process
