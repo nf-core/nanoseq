@@ -211,7 +211,7 @@ Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
 ### `--stranded`
 
-Specifies whether the inputted fastq files contain stranded data (default: false)
+Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
 
 The specific command line arguments for `graphmap` and `minimap2` using `--protocol` and `--stranded` are specified below:
 
