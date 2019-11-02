@@ -25,6 +25,8 @@
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
   * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
+  * [`--protocol`](#--protocol)
+  * [`--stranded`](#--stranded)
   * [`--aligner`](#--aligner)
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
@@ -202,6 +204,23 @@ Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
 Skip basecalling and demultiplexing step with Guppy
 
 ## Alignment
+
+### `--protocol`
+
+Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
+
+### `--stranded`
+
+Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
+
+When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap`:
+
+| `nanoseq` input              | `minimap2` presets  | `graphmap` presets |
+|------------------------------|---------------------|--------------------|
+| `--protocol DNA`             | -ax map-ont         | tba                |
+| `--protocol cDNA`            | -ax splice          | tba                |
+| `--protocol directRNA`       | -ax splice -uf -k14 | tba                |
+| `--protocol cDNA --stranded` | -ax splice -uf      | tba                |
 
 ### `--aligner`
 
