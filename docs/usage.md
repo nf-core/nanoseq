@@ -222,7 +222,6 @@ When using `--protocol`/`--stranded` the following command-line arguments will b
 | `--protocol directRNA`       | -ax splice -uf -k14 | tba                |
 | `--protocol cDNA --stranded` | -ax splice -uf      | tba                |
 
-
 ### `--aligner`
 
 Specifies the aligner to use (available are: `graphmap` or `minimap2`)
