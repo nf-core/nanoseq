@@ -39,7 +39,7 @@ def helpMessage() {
       --skip_demultiplexing [bool]    Skip basecalling and demultiplexing step with Guppy
 
     Alignment
-      --protocol [str]                Specifies the type of data being inputted (DNA, cDNA or directRNA)
+      --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
       --aligner [str]                 Specifies the aligner to use (available are: graphmap or minimap2)
       --save_align_intermeds [bool]   Save the .sam files from the alignment step - not done by default
