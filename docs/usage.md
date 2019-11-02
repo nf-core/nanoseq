@@ -207,7 +207,7 @@ Skip basecalling and demultiplexing step with Guppy
 
 ### `--protocol`
 
-Specifies the data type being inputted (DNA, cDNA or directRNA)
+Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
 ### `--stranded`
 
