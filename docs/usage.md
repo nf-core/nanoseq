@@ -213,7 +213,7 @@ Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
 Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
 
-The specific command line arguments for `graphmap` and `minimap2` using `--protocol` and `--stranded` are specified below:
+When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap`:
 
 | `nanoseq` input              | `minimap2` presets  | `graphmap` presets |
 |------------------------------|---------------------|--------------------|
