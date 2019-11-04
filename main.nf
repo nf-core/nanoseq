@@ -39,6 +39,8 @@ def helpMessage() {
       --skip_demultiplexing [bool]    Skip basecalling and demultiplexing step with Guppy
 
     Alignment
+      --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
+      --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
       --aligner [str]                 Specifies the aligner to use (available are: graphmap or minimap2)
       --save_align_intermeds [bool]   Save the .sam files from the alignment step - not done by default
       --skip_alignment [bool]         Skip alignment and subsequent process
@@ -75,6 +77,9 @@ if (params.input)               { ch_input = file(params.input, checkIfExists: t
 if (!params.skip_alignment)     {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
+    }
+    if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA'){
+      exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
     }
 }
 
@@ -147,6 +152,8 @@ summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
 if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
+    summary['Protocol']           = params.protocol
+    summary['Stranded']           = (params.stranded || params.protocol == 'directRNA') ? 'Yes' : 'No'
 }
 summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
 summary['Skip pycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
@@ -446,8 +453,11 @@ if (!params.skip_alignment) {
             file "*.version" into ch_minimap2_version
 
             script:
+            minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
+            kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+            stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
             """
-            minimap2 -ax map-ont -t $task.cpus $genome $fastq > ${sample}.sam
+            minimap2 $minimap_preset $kmer $stranded -t $task.cpus $genome $fastq > ${sample}.sam
             minimap2 --version &> minimap2.version
             """
         }
