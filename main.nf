@@ -39,8 +39,8 @@ def helpMessage() {
       --skip_demultiplexing [bool]    Skip basecalling and demultiplexing step with Guppy
 
     Alignment
-      --protocol [str]                Specifies the type of data being inputted (DNA, cDNA or directRNA)
-      --stranded [bool]               Specifies if the inputted data is stranded (default: false, automatically true when using --protocol directRNA)
+      --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
+      --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
       --aligner [str]                 Specifies the aligner to use (available are: graphmap or minimap2)
       --save_align_intermeds [bool]   Save the .sam files from the alignment step - not done by default
       --skip_alignment [bool]         Skip alignment and subsequent process
@@ -79,7 +79,11 @@ if (!params.skip_alignment)     {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
     }
     if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA'){
+<<<<<<< HEAD
       exit 1, "Invalid protocol option: ${params.protocl}. Valid options: 'DNA', 'cDNA', 'directRNA'"
+=======
+      exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
+>>>>>>> 4f7541ff864d89b8ff993216438823db7b49def1
     }
 }
 
