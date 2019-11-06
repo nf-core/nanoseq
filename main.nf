@@ -404,7 +404,9 @@ if (!params.skip_alignment) {
     ch_fastq_cross
         .filter{ it[2] != null }
         .map { it -> [ it[2], it[0], it[1] ] }
-        .set { ch_fastq_cross }
+        .into { ch_fastq_cross, ch_check_cross }
+
+        ch_check_cross.println()
 
     ch_fastq_index
         .filter{ it[2] != null }
@@ -464,7 +466,7 @@ if (!params.skip_alignment) {
         }
 
        ch_check.println()
-       
+
        ch_minimap_index
             .cross( ch_fastq_cross) // join on genome name
             .map { it -> [ it[1][1], it[1][2], it[0][1] ] }
