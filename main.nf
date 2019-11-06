@@ -466,7 +466,7 @@ if (!params.skip_alignment) {
        ch_minimap_index
             .cross( ch_fastq_cross) // join on genome name
             .map { it -> [ it[1][1], it[1][2], it[0][1] ] }
-            .set {ch_minimap_index}
+            .set {ch_fastq_align}
 
         process MiniMap2Align {
             tag "$sample"
@@ -479,7 +479,7 @@ if (!params.skip_alignment) {
             }
 
             input:
-            set val(sample), file(fastq), file(index) from ch_minimap_index
+            set val(sample), file(fastq), file(index) from ch_fastq_align
 
             output:
             set val(sample), file("*.sam") into ch_align_sam
