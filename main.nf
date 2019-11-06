@@ -468,7 +468,7 @@ if (!params.skip_alignment) {
        ch_check.println()
 
        ch_minimap_index
-            .map {it -> it[0].getName(), it[1]}
+            .map {it -> [it[0].getName(), it[1]]}
             .cross( ch_fastq_cross) // join on genome name
             .map { it -> [ it[1][1], it[1][2], it[0][1] ] }
             .set {ch_fastq_align}
