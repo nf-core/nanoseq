@@ -448,7 +448,7 @@ if (!params.skip_alignment) {
     if (params.aligner == 'minimap2') {
         process MiniMap2Index {
           input:
-          set file(genome) from ch_fastq_index
+          file(genome) from ch_fastq_index
 
           output:
           set file(genome), file("*.mmi") into ch_minimap_index
