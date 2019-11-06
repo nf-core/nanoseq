@@ -45,10 +45,6 @@ def helpMessage() {
       --save_align_intermeds [bool]   Save the .sam files from the alignment step - not done by default
       --skip_alignment [bool]         Skip alignment and subsequent process
 
-    Visualisation
-      --skip_vis [bool]               Skip all steps to generate bigwig and bigbed files
-      --skip_UCSC_vis [bool]          Skip steps to generate UCSC style bigwig and bigbed files
-
     QC
       --skip_qc [bool]                Skip all QC steps apart from MultiQC
       --skip_pycoqc [bool]            Skip pycoQC
@@ -201,6 +197,8 @@ def get_fasta(genome, genomeMap) {
     }
     return fasta
 }
+
+def genomeInfo = [:]
 
 /*
  * PREPROCESSING - CHECK SAMPLESHEET
@@ -355,7 +353,8 @@ if (!params.skip_demultiplexing) {
         .join( ch_sample_info, by: 1 ) // join on barcode
         .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
         .into { ch_fastq_nanoplot;
-                ch_fastq_align }
+                ch_fastq_cross;
+                ch_fastq_index }
 } else {
     ch_guppy_version = Channel.empty()
     ch_pycoqc_version = Channel.empty()
@@ -367,7 +366,8 @@ if (!params.skip_demultiplexing) {
         .splitCsv(header:true, sep:',')
         .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
         .into {  ch_fastq_nanoplot;
-                 ch_fastq_align }
+                 ch_fastq_cross;
+                 ch_fastq_index}
 }
 
 /*
@@ -401,9 +401,16 @@ process NanoPlotFastQ {
 if (!params.skip_alignment) {
 
     // Dont map samples if reference genome hasnt been provided
-    ch_fastq_align
+    ch_fastq_cross
         .filter{ it[2] != null }
-        .set { ch_fastq_align }
+        .map { it -> [ it[2], it[0], it[1] ] }
+        .set { ch_fastq_cross }
+
+    ch_fastq_index
+        .filter{ it[2] != null }
+        .map{it[2]}
+        .unique()
+        .set { ch_fastq_index }
 
     /*
      * STEP 5 - Align fastq files with GraphMap
@@ -420,7 +427,7 @@ if (!params.skip_alignment) {
             }
 
             input:
-            set val(sample), file(fastq), file(genome) from ch_fastq_align
+            set val(sample), file(fastq), file(genome) from ch_fastq_index
 
             output:
             set val(sample), file("*.sam") into ch_align_sam
@@ -439,7 +446,29 @@ if (!params.skip_alignment) {
      * STEP 5 - Align fastq files with minimap2
      */
     if (params.aligner == 'minimap2') {
-        process MiniMap2 {
+        process MiniMap2Index {
+          input:
+          set file(genome) from ch_fastq_index
+
+          output:
+          set file(genome), file("*.mmi") into ch_minimap_index
+
+          script:
+          minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
+          kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+          stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+          """
+          minimap2 $minimap_preset $kmer $stranded -t $task.cpus -d \
+          ${genome.baseName}.mmi $genome
+          """
+        }
+
+       ch_minimap_index
+            .cross( ch_fastq_cross) // join on genome name
+            .map { it -> [ it[1][1], it[1][2], it[0][1] ] }
+            .set {ch_minimap_index}
+
+        process MiniMap2Align {
             tag "$sample"
             label 'process_medium'
             if (params.save_align_intermeds) {
@@ -450,7 +479,7 @@ if (!params.skip_alignment) {
             }
 
             input:
-            set val(sample), file(fastq), file(genome) from ch_fastq_align
+            set val(sample), file(fastq), file(index) from ch_minimap_index
 
             output:
             set val(sample), file("*.sam") into ch_align_sam
@@ -461,7 +490,7 @@ if (!params.skip_alignment) {
             kmer = (params.protocol == 'directRNA') ? "-k14" : ""
             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
             """
-            minimap2 $minimap_preset $kmer $stranded -t $task.cpus $genome $fastq > ${sample}.sam
+            minimap2 $minimap_preset $kmer $stranded -t $task.cpus $index $fastq > ${sample}.sam
             minimap2 --version &> minimap2.version
             """
         }
@@ -491,7 +520,6 @@ if (!params.skip_alignment) {
         set val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
         file "*.version" into ch_samtools_version
-        file "*.sorted.bam" into ch_bam_bigwig, ch_bam_bigbed
 
         script:
         """
@@ -503,99 +531,6 @@ if (!params.skip_alignment) {
         samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
         samtools --version &> samtools.version
         """
-    }
-    if (!params.skip_vis){
-      // Generate chromosome size files
-      process GetChrSizes {
-
-        input:
-        file genome from refgenome
-
-        output:
-        file "${genome.simpleName}.chrSizes.txt" into chrsize_ch1, chrsize_ch2
-        file "${genome.baseName}.chrSizes.ucsc.txt" into ucsc_chrsize_ch1, ucsc_chrsize_ch2
-
-        script:
-        """
-        samtools faidx ${genome} > ${genome}.fai
-        cut -f1,2 ${genome}.fai > ${genome.simpleName}.chrSizes.txt
-        formatUCSC.pl ${genome.simpleName}.chrSizes.txt > \
-        ${genome.baseName}.chrSizes.ucsc.txt
-        """
-      }
-      // Make bigbed and bigwig
-      process Bam2BigWig {
-        input:
-        file bam from ch_bam_bigwig
-        // TO DO chrsizes.txt input
-
-        output:
-        file "${bam.baseName}.bw" into ch_bigwig
-        file "${bam.baseName}.bedgraph" into ch_make_UCSC_bigwig
-
-        script:
-        """
-        genomeCoverageBed -split -bg -ibam $bam > ${bam.baseName}.bedgraph
-        bedSort ${bam.baseName}.bedgraph ${bam.baseName}.bedgraph
-        bedGraphToBigWig ${bam.baseName}.bedgraph $chrSizes ${bam.baseName}.bw
-        """
-      }
-
-      process Bam2BigBed {
-        input:
-        file bam from ch_bam_bigbed
-        // TO DO chrsizes.txt
-
-        output:
-        file "${bam.baseName}.bed12" into ch_make_UCSC_bigbed
-        file "*.bb" into ch_bigbed
-
-        script:
-        """
-        bamToBed -bed12 -cigar -i $bam > ${bam.baseName}.bed12
-        bedtools sort -i ${bam.baseName}.bed12 > ${bam.baseName}.sorted.bed12
-        bedToBigBed ${bam.baseName}.sorted.bed12 $chrSizes ${bam.baseName}.bb
-        """
-      }
-
-      if (!params.skip_UCSC_vis){
-
-        // Make UCSC bigbed and bigwig
-        process UCSCBigWig {
-          input:
-          file bedgraph from ch_make_UCSC_bigwig
-          // TO DO chrsizes.txt
-
-          output:
-          file "*.ucsc.bw" into ch_make_UCSC_bigwig
-
-          script:
-          """
-          formatUCSC.pl $bedgraph > ${bedgraph.baseName}.ucsc.bedgraph
-          bedSort ${bedgraph.baseName}.ucsc.bedgraph ${bedgraph.baseName}.ucsc.bedgraph
-          bedGraphToBigWig ${bedgraph.baseName}.ucsc.bedgraph $ucscChrSize ${bedgraph.baseName}.ucsc.bw
-          """
-        }
-
-        process UCSCBigBed {
-          input:
-          file bed12 from ch_make_UCSC_bigbed
-
-          output:
-          file "*.bb" into ch_UCSC_bigbed
-
-          script:
-          """
-          formatUCSC.pl $bed12 > ${bed12.baseName}.ucsc.bed12
-          bedtools sort -i ${bed12.baseName}.ucsc.bed12 > ${bed12.baseName}.sorted.ucsc.bed12
-          bedToBigBed ${bed12.baseName}.sorted.ucsc.bed12 $ucscChrSize ${bed12.baseName}.ucsc.bb
-          """
-        }
-      } else {
-        // Make empty channels
-      }
-    } else {
-      // make empty channels
     }
 } else {
     ch_graphmap_version = Channel.empty()
