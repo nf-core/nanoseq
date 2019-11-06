@@ -403,7 +403,7 @@ if (!params.skip_alignment) {
     // Dont map samples if reference genome hasnt been provided
     ch_fastq_cross
         .filter{ it[2] != null }
-        .map { it -> [ it[2], it[0], it[1] ] }
+        .map { it -> [ it[2].getName(), it[0], it[1] ] }
         .into { ch_fastq_cross; ch_check_cross }
 
         ch_check_cross.println()
@@ -453,7 +453,7 @@ if (!params.skip_alignment) {
           file(genome) from ch_fastq_index
 
           output:
-          set file(genome), file("*.mmi") into ch_minimap_index, ch_check
+          set file(genome).getName(), file("*.mmi") into ch_minimap_index, ch_check
 
           script:
           minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
