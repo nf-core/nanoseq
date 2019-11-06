@@ -404,7 +404,7 @@ if (!params.skip_alignment) {
     ch_fastq_cross
         .filter{ it[2] != null }
         .map { it -> [ it[2], it[0], it[1] ] }
-        .into { ch_fastq_cross, ch_check_cross }
+        .into { ch_fastq_cross; ch_check_cross }
 
         ch_check_cross.println()
 
