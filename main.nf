@@ -451,7 +451,7 @@ if (!params.skip_alignment) {
           file(genome) from ch_fastq_index
 
           output:
-          set file(genome), file("*.mmi") into ch_minimap_index
+          set file(genome), file("*.mmi") into ch_minimap_index, ch_check
 
           script:
           minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
@@ -463,6 +463,8 @@ if (!params.skip_alignment) {
           """
         }
 
+       ch_check.println()
+       
        ch_minimap_index
             .cross( ch_fastq_cross) // join on genome name
             .map { it -> [ it[1][1], it[1][2], it[0][1] ] }
