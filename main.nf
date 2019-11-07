@@ -42,7 +42,7 @@ def helpMessage() {
     Alignment
       --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA" (Default: 'DNA')
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
-      --aligner [str]                 Specifies the aligner to use (available are: graphmap or minimap2) (Default: 'minimap2')
+      --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap) (Default: 'minimap2')
       --save_reference [bool]         Save the genome indices in the results directory
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
