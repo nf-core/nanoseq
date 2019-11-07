@@ -509,7 +509,7 @@ if (params.skip_alignment) {
         ch_minimap2_version = Channel.empty()
     }
 
-    // Convert genome_fasta to string from file to use cross()
+    Convert genome_fasta to string from file to use cross()
     ch_fastq_align
         .map { it -> [ it[0].toString(), it[1], it[2] ] }
         .set { ch_fastq_align }
