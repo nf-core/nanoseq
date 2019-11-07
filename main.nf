@@ -42,6 +42,7 @@ def helpMessage() {
     Alignment
       --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA" (Default: 'DNA')
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
+      --gtf [file]                    Path to GTF file. Not mandatory when using reference in iGenomes references in samplesheet
       --aligner [str]                 Specifies the aligner to use (available are: graphmap or minimap2) (Default: 'minimap2')
       --save_reference [bool]         Save the genome indices in the results directory
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
@@ -215,7 +216,7 @@ process CheckSampleSheet {
     """
 }
 
-// Function to see if genome exists in iGenomes
+// Function to see if fasta file exists in iGenomes
 def get_fasta(genome, genomeMap) {
     def fasta = null
     if (genome) {
@@ -226,6 +227,19 @@ def get_fasta(genome, genomeMap) {
         }
     }
     return fasta
+}
+
+// Function to see if gtf file exists in iGenomes
+def get_gtf(genome, genomeMap) {
+    def gtf = null
+    if (genome) {
+        if (genomeMap.containsKey(genome)) {
+            gtf = file(genomeMap[genome].gtf, checkIfExists: true)
+        } else {
+            gtf = file(genome, checkIfExists: true)
+        }
+    }
+    return gtf
 }
 
 if (params.skip_basecalling) {
@@ -400,10 +414,6 @@ process NanoPlotFastQ {
     """
 }
 
-// Add docs for new parameters
-// Check how to create graphmap index
-// test with and without basecalling
-
 if (params.skip_alignment) {
 
     ch_samtools_version = Channel.empty()
@@ -475,6 +485,7 @@ if (params.skip_alignment) {
 
     } else if (params.aligner == 'graphmap') {
 
+        // TODO nf-core: Create graphmap index with GTF instead
         process GraphMapIndex {
           tag "$fasta"
           label 'process_medium'
@@ -485,15 +496,13 @@ if (params.skip_alignment) {
           set val(name), file(fasta) from ch_fasta_index
 
           output:
-          //set val(name), file("*.mmi") into ch_index
+          set val(name), file("*.gmidx") into ch_index
           file "*.version" into ch_graphmap_version
 
           script:
-          //minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
-          //kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-          //stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+          //gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
           """
-          graphmap align -t $task.cpus -r $genome -d $fastq -o ${sample}.sam --extcigar
+          graphmap align -t $task.cpus -I -r $fasta
           echo \$(graphmap 2>&1) > graphmap.version
           """
         }
@@ -534,7 +543,7 @@ if (params.skip_alignment) {
             set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
 
             output:
-            set file(fasta), file(index), file(sizes), val(sample), file("*.sam") into ch_align_sam
+            set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
 
             script:
             minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
@@ -560,11 +569,11 @@ if (params.skip_alignment) {
             set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
 
             output:
-            set file(fasta), file(index), file(sizes), val(sample), file("*.sam") into ch_align_sam
+            set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
 
             script:
             """
-            graphmap align -t $task.cpus -r $genome -d $fastq -o ${sample}.sam --extcigar
+            graphmap align -t $task.cpus -r $genome -i $index -d $fastq -o ${sample}.sam --extcigar
             """
         }
     }
@@ -586,10 +595,10 @@ if (params.skip_alignment) {
                     }
 
         input:
-        set file(fasta), file(index), file(sizes), val(sample), file(sam) from ch_align_sam
+        set file(fasta), file(sizes), val(sample), file(sam) from ch_align_sam
 
         output:
-        set file(fasta), file(index), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
+        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
         script:
