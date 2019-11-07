@@ -287,7 +287,7 @@ if (!params.skip_demultiplexing) {
     }
 
     /*
-     * STEP 2 - QC using pycoQC
+     * STEP 2 - QC using PycoQC
      */
     process PycoQC {
         tag "$summary_txt"
@@ -363,9 +363,9 @@ if (!params.skip_demultiplexing) {
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
-        .into {  ch_fastq_nanoplot;
-                 ch_fastq_cross;
-                 ch_fastq_index}
+        .into { ch_fastq_nanoplot;
+                ch_fastq_cross;
+                ch_fastq_index }
 }
 
 /*
@@ -400,13 +400,13 @@ if (!params.skip_alignment) {
 
     // Dont map samples if reference genome hasnt been provided
     ch_fastq_cross
-        .filter{ it[2] != null }
+        .filter { it[2] != null }
         .map { it -> [ it[2].getName(), it[0], it[1] ] }
         .set { ch_fastq_cross}
 
     ch_fastq_index
-        .filter{ it[2] != null }
-        .map{it[2]}
+        .filter { it[2] != null }
+        .map { it[2] }
         .unique()
         .set { ch_fastq_index }
 
@@ -462,10 +462,10 @@ if (!params.skip_alignment) {
         }
 
        ch_minimap_index
-            .map {it -> [it[0].getName(), it[1]]}
-            .cross( ch_fastq_cross) // join on genome name
+            .map { it -> [it[0].getName(), it[1]] }
+            .cross( ch_fastq_cross ) // join on genome name
             .map { it -> [ it[1][1], it[1][2], it[0][1] ] }
-            .set {ch_fastq_align}
+            .set { ch_fastq_align }
 
         process MiniMap2Align {
             tag "$sample"
