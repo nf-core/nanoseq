@@ -400,6 +400,10 @@ process NanoPlotFastQ {
     """
 }
 
+// Add docs for new parameters
+// Check how to create graphmap index
+// test with and without basecalling
+
 if (params.skip_alignment) {
 
     ch_samtools_version = Channel.empty()
@@ -441,9 +445,10 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 6 - Align fastq files with minimap2
+     * STEP 6 - Create genome index
      */
     if (params.aligner == 'minimap2') {
+
         process MiniMap2Index {
           tag "$fasta"
           label 'process_medium'
@@ -454,7 +459,7 @@ if (params.skip_alignment) {
           set val(name), file(fasta) from ch_fasta_index
 
           output:
-          set val(name), file("*.mmi") into ch_minimap_index
+          set val(name), file("*.mmi") into ch_index
           file "*.version" into ch_minimap2_version
 
           script:
@@ -466,21 +471,54 @@ if (params.skip_alignment) {
           minimap2 --version &> minimap2.version
           """
         }
+        ch_graphmap_version = Channel.empty()
 
-        // Convert genome_fasta to string from file to use cross()
-        ch_fastq_align
-            .map { it -> [ it[0].toString(), it[1], it[2] ] }
-            .set { ch_fastq_align }
+    } else if (params.aligner == 'graphmap') {
 
-        // Create channels = [genome_fasta, index, sizes, sample, fastq]
-        ch_fasta_align
-            .join(ch_minimap_index)
-            .join(ch_chrom_sizes)
-            .cross(ch_fastq_align)
-            .flatten()
-            .collate(7)
-            .map { it -> [ it[1], it[2], it[3], it[6], it[5] ] }
-            .set { ch_fastq_align }
+        process GraphMapIndex {
+          tag "$fasta"
+          label 'process_medium'
+          publishDir path: { params.save_reference ? "${params.outdir}/reference_genome" : params.outdir },
+            saveAs: { params.save_reference ? it : null }, mode: 'copy'
+
+          input:
+          set val(name), file(fasta) from ch_fasta_index
+
+          output:
+          //set val(name), file("*.mmi") into ch_index
+          file "*.version" into ch_graphmap_version
+
+          script:
+          //minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
+          //kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+          //stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+          """
+          graphmap align -t $task.cpus -r $genome -d $fastq -o ${sample}.sam --extcigar
+          echo \$(graphmap 2>&1) > graphmap.version
+          """
+        }
+        ch_minimap2_version = Channel.empty()
+    }
+
+    // Convert genome_fasta to string from file to use cross()
+    ch_fastq_align
+        .map { it -> [ it[0].toString(), it[1], it[2] ] }
+        .set { ch_fastq_align }
+
+    // Create channels = [genome_fasta, index, sizes, sample, fastq]
+    ch_fasta_align
+        .join(ch_index)
+        .join(ch_chrom_sizes)
+        .cross(ch_fastq_align)
+        .flatten()
+        .collate(7)
+        .map { it -> [ it[1], it[2], it[3], it[6], it[5] ] }
+        .set { ch_fastq_align }
+
+    /*
+     * STEP 7 - Align fastq files
+     */
+    if (params.aligner == 'minimap2') {
 
         process MiniMap2Align {
             tag "$sample"
@@ -506,41 +544,33 @@ if (params.skip_alignment) {
             minimap2 $minimap_preset $kmer $stranded -t $task.cpus $index $fastq > ${sample}.sam
             """
         }
-        ch_graphmap_version = Channel.empty()
+    } else if (params.aligner == 'graphmap') {
+
+        process GraphMapAlign {
+            tag "$sample"
+            label 'process_medium'
+            if (params.save_align_intermeds) {
+                publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+                    saveAs: { filename ->
+                                  if (filename.endsWith(".sam")) filename
+                            }
+            }
+
+            input:
+            set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
+
+            output:
+            set file(fasta), file(index), file(sizes), val(sample), file("*.sam") into ch_align_sam
+
+            script:
+            """
+            graphmap align -t $task.cpus -r $genome -d $fastq -o ${sample}.sam --extcigar
+            """
+        }
     }
 
-//     /*
-//      * STEP 6 - Align fastq files with GraphMap
-//      */
-//     if (params.aligner == 'graphmap') {
-//         process GraphMap {
-//             tag "$sample"
-//             label 'process_medium'
-//             if (params.save_align_intermeds) {
-//                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-//                     saveAs: { filename ->
-//                                   if (filename.endsWith(".sam")) filename
-//                             }
-//             }
-//
-//             input:
-//             set val(sample), file(fastq), file(fasta) from ch_fastq_index
-//
-//             output:
-//             set val(sample), file("*.sam") into ch_align_sam
-//             file "*.version" into ch_graphmap_version
-//
-//             script:
-//             """
-//             graphmap align -t $task.cpus -r $genome -d $fastq -o ${sample}.sam --extcigar
-//             echo \$(graphmap 2>&1) > graphmap.version
-//             """
-//         }
-//         ch_minimap2_version = Channel.empty()
-//     }
-//
     /*
-     * STEP 8 - Coordinate sort BAM files
+     * STEP 7 - Coordinate sort BAM files
      */
     process SortBAM {
         tag "$sample"
