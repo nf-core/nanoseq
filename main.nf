@@ -198,8 +198,6 @@ def get_fasta(genome, genomeMap) {
     return fasta
 }
 
-def genomeInfo = [:]
-
 /*
  * PREPROCESSING - CHECK SAMPLESHEET
  */
