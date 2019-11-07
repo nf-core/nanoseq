@@ -78,7 +78,7 @@ if (!params.skip_alignment)     {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
     }
-    if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA'){
+    if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
       exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
     }
 }
@@ -119,14 +119,14 @@ if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {
 }
 
 // AWS batch settings
-if (workflow.profile == 'awsbatch') {
+if (workflow.profile.contains('awsbatch')) {
     // AWSBatch sanity checking
     if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
     // Check outdir paths to be S3 buckets if running on AWSBatch
     // related: https://github.com/nextflow-io/nextflow/issues/813
     if (!params.outdir.startsWith('s3:')) exit 1, "Outdir not on S3 - specify S3 Bucket to run on AWSBatch!"
     // Prevent trace files to be stored on S3 since S3 does not support rolling files.
-    if (workflow.tracedir.startsWith('s3:')) exit 1, "Specify a local tracedir or run without trace! S3 cannot be used for tracefiles."
+    if (params.tracedir.startsWith('s3:')) exit 1, "Specify a local tracedir or run without trace! S3 cannot be used for tracefiles."
 }
 
 // Header log info
@@ -209,7 +209,8 @@ process CheckSampleSheet {
     file samplesheet from ch_input
 
     output:
-    file "*.csv" into ch_samplesheet_reformat, ch_samplesheet_guppy
+    file "*.csv" into ch_samplesheet_reformat,
+                      ch_samplesheet_guppy
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
     demultipex = params.skip_demultiplexing ? "" : '--demultiplex'
@@ -337,9 +338,7 @@ if (!params.skip_demultiplexing) {
         """
     }
 
-    /*
-     * Create channels = [sample, fastq, genome]
-     */
+    // Create channels = [sample, fastq, genome]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] } // [sample, barcode, genome]
@@ -348,7 +347,7 @@ if (!params.skip_demultiplexing) {
     ch_guppy_fastq
         .flatten()
         .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // e.g. [barcode001.fastq, barcode001]
-        .join( ch_sample_info, by: 1 ) // join on barcode
+        .join(ch_sample_info, by: 1) // join on barcode
         .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
         .into { ch_fastq_nanoplot;
                 ch_fastq_cross;
@@ -357,9 +356,7 @@ if (!params.skip_demultiplexing) {
     ch_guppy_version = Channel.empty()
     ch_pycoqc_version = Channel.empty()
 
-    /*
-     * Create channels = [sample, fastq, genome]
-     */
+    // Create channels = [sample, fastq, genome]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
@@ -463,7 +460,7 @@ if (!params.skip_alignment) {
 
        ch_minimap_index
             .map { it -> [it[0].getName(), it[1]] }
-            .cross( ch_fastq_cross ) // join on genome name
+            .cross(ch_fastq_cross) // join on genome name
             .map { it -> [ it[1][1], it[1][2], it[0][1] ] }
             .set { ch_fastq_align }
 
