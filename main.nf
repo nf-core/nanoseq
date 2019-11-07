@@ -43,6 +43,7 @@ def helpMessage() {
       --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA" (Default: 'DNA')
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
       --aligner [str]                 Specifies the aligner to use (available are: graphmap or minimap2) (Default: 'minimap2')
+      --save_reference [bool]         Save the genome indices in the results directory
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
@@ -159,6 +160,7 @@ summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
 if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
+    summary['Save Genome Index']  = params.save_reference ? 'Yes' : 'No'
 }
 summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
 summary['Skip pycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
@@ -398,9 +400,9 @@ process NanoPlotFastQ {
 
 if (params.skip_alignment) {
 
-    ch_graphmap_version = Channel.empty()
-    ch_minimap2_version = Channel.empty()
     ch_samtools_version = Channel.empty()
+    ch_minimap2_version = Channel.empty()
+    ch_graphmap_version = Channel.empty()
     ch_sortbam_stats_mqc = Channel.empty()
 
 } else {
@@ -410,7 +412,8 @@ if (params.skip_alignment) {
         .map { it -> [ it[-1].toString(), it[-1] ] }  // [str(genome_fasta), genome_fasta]
         .filter { it[1] != null }
         .unique()
-        .set { ch_fasta_index }
+        .into { ch_fasta_sizes;
+                ch_fasta_index }
 
     /*
      * STEP 5 - Make chromosome sizes file
@@ -420,19 +423,50 @@ if (params.skip_alignment) {
         publishDir "${params.outdir}/reference_genome", mode: 'copy'
 
         input:
-        set val(name), file(fasta)  from ch_fasta_index
+        set val(name), file(fasta) from ch_fasta_sizes
 
         output:
         set val(name), file("*.sizes") into ch_chrom_sizes
+        file "*.version" into ch_samtools_version
 
         script:
         """
         samtools faidx $fasta
         cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
+        samtools --version &> samtools.version
         """
     }
 
-    
+    /*
+     * STEP 6 - Align fastq files with minimap2
+     */
+    if (params.aligner == 'minimap2') {
+        process MiniMap2Index {
+          tag "$fasta"
+          label 'process_medium'
+          publishDir path: { params.save_reference ? "${params.outdir}/reference_genome" : params.outdir },
+            saveAs: { params.save_reference ? it : null }, mode: 'copy'
+
+          input:
+          set val(name), file(fasta) from ch_fasta_index
+
+          output:
+          set val(name), file("*.mmi") into ch_minimap_index
+          file "*.version" into ch_minimap2_version
+
+          script:
+          minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
+          kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+          stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+          """
+          minimap2 $minimap_preset $kmer $stranded -t $task.cpus -d ${fasta}.mmi $fasta
+          minimap2 --version &> minimap2.version
+          """
+        }
+        ch_minimap_index.println()
+    }
+
+
 
 
 
@@ -454,7 +488,7 @@ if (params.skip_alignment) {
 }
 
 //     /*
-//      * STEP 5 - Align fastq files with GraphMap
+//      * STEP 6 - Align fastq files with GraphMap
 //      */
 //     if (params.aligner == 'graphmap') {
 //         process GraphMap {
@@ -484,7 +518,7 @@ if (params.skip_alignment) {
 //     }
 //
 //     /*
-//      * STEP 5 - Align fastq files with minimap2
+//      * STEP 7 - Align fastq files with minimap2
 //      */
 //     if (params.aligner == 'minimap2') {
 //         process MiniMap2Index {
@@ -525,7 +559,6 @@ if (params.skip_alignment) {
 //
 //             output:
 //             set val(sample), file("*.sam") into ch_align_sam
-//             file "*.version" into ch_minimap2_version
 //
 //             script:
 //             minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
@@ -533,14 +566,13 @@ if (params.skip_alignment) {
 //             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
 //             """
 //             minimap2 $minimap_preset $kmer $stranded -t $task.cpus $index $fastq > ${sample}.sam
-//             minimap2 --version &> minimap2.version
 //             """
 //         }
 //         ch_graphmap_version = Channel.empty()
 //     }
 //
 //     /*
-//      * STEP 6 - Coordinate sort BAM files
+//      * STEP 8 - Coordinate sort BAM files
 //      */
 //     process SortBAM {
 //         tag "$sample"
@@ -561,7 +593,6 @@ if (params.skip_alignment) {
 //         output:
 //         set val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
 //         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
-//         file "*.version" into ch_samtools_version
 //
 //         script:
 //         """
@@ -571,7 +602,6 @@ if (params.skip_alignment) {
 //         samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
 //         samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
 //         samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
-//         samtools --version &> samtools.version
 //         """
 //     }
 // }
