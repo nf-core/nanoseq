@@ -596,38 +596,38 @@ process output_documentation {
     Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='rmarkdown.version')"
     """
 }
-//
-// /*
-//  * Parse software version numbers
-//  */
-// process get_software_versions {
-//     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (filename.indexOf(".csv") > 0) filename
-//                       else null
-//                 }
-//
-//     input:
-//     file guppy from ch_guppy_version.collect().ifEmpty([])
-//     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-//     file nanoplot from ch_nanoplot_version.first()
-//     file graphmap from ch_graphmap_version.first().ifEmpty([])
-//     file minimap2 from ch_minimap2_version.first().ifEmpty([])
-//     file samtools from ch_samtools_version.first().ifEmpty([])
-//     file rmarkdown from ch_rmarkdown_version.collect()
-//     //file multiqc from ch_multiqc_version.collect().ifEmpty([])
-//
-//     output:
-//     file 'software_versions_mqc.yaml' into software_versions_yaml
-//     file "software_versions.csv"
-//
-//     script:
-//     """
-//     echo $workflow.manifest.version > pipeline.version
-//     echo $workflow.nextflow.version > nextflow.version
-//     scrape_software_versions.py &> software_versions_mqc.yaml
-//     """
-// }
+
+/*
+ * Parse software version numbers
+ */
+process get_software_versions {
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+        saveAs: { filename ->
+                      if (filename.indexOf(".csv") > 0) filename
+                      else null
+                }
+
+    input:
+    file guppy from ch_guppy_version.collect().ifEmpty([])
+    file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
+    file nanoplot from ch_nanoplot_version.first()
+    file graphmap from ch_graphmap_version.first().ifEmpty([])
+    file minimap2 from ch_minimap2_version.first().ifEmpty([])
+    file samtools from ch_samtools_version.first().ifEmpty([])
+    file rmarkdown from ch_rmarkdown_version.collect()
+    //file multiqc from ch_multiqc_version.collect().ifEmpty([])
+
+    output:
+    file 'software_versions_mqc.yaml' into software_versions_yaml
+    file "software_versions.csv"
+
+    script:
+    """
+    echo $workflow.manifest.version > pipeline.version
+    echo $workflow.nextflow.version > nextflow.version
+    scrape_software_versions.py &> software_versions_mqc.yaml
+    """
+}
 //
 // def create_workflow_summary(summary) {
 //     def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
