@@ -26,8 +26,7 @@ argParser.add_argument('DESIGN_FILE_IN', help="Input design file.")
 argParser.add_argument('DESIGN_FILE_OUT', help="Output design file.")
 
 ## OPTIONAL PARAMETERS
-argParser.add_argument('-dm', '--demultiplex', dest="DEMULTIPLEX", help="Whether demultipexing is to be performed (default: False).",action='store_true')
-argParser.add_argument('-bc', '--nobarcoding', dest="NOBARCODING", help="Whether barcode kit has been provided to Guppy (default: False).",action='store_true')
+argParser.add_argument('-sd', '--skip_demultiplex', dest="SKIP_DEMULTIPLEXING", help="Whether demultipexing is to be performed (default: False).",action='store_true')
 args = argParser.parse_args()
 
 ############################################
@@ -98,7 +97,7 @@ while True:
         fin.close()
         break
 
-if args.NOBARCODING:
+if args.SKIP_DEMULTIPLEXING:
     if len(outLines) != 1:
         print("{}: Only a single-line can be specified in samplesheet without barcode information!".format(ERROR_STR))
         sys.exit(1)
