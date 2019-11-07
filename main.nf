@@ -75,6 +75,8 @@ if (params.help) {
  * SET UP CONFIGURATION VARIABLES
  */
 if (params.input)               { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
+if (!params.barcode_kit)        { params.skip_demultiplexing = true } // Skip demultiplexing if barcode kit isnt provided
+if (params.skip_basecalling)    { params.skip_demultiplexing = true } // Cannot demultiplex without performing basecalling too
 if (!params.skip_alignment)     {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
@@ -107,14 +109,6 @@ if (!params.skip_basecalling) {
             if (!params.kit)        { exit 1, "Please specify a valid kit identifier for basecalling!" }
        }
     }
-} else {
-    // Cannot demultiplex without performing basecalling too
-    params.skip_demultiplexing = true
-}
-
-// Skip demultiplexing if barcode kit isnt provided
-if (!params.barcode_kit) {
-    params.skip_demultiplexing = true
 }
 
 // Stage config files
@@ -232,7 +226,20 @@ process CheckSampleSheet {
     """
 }
 
-if (!params.skip_basecalling) {
+if (params.skip_basecalling) {
+
+    ch_guppy_version = Channel.empty()
+    ch_pycoqc_version = Channel.empty()
+
+    // Create channels = [sample, fastq, genome_fasta]
+    ch_samplesheet_reformat
+        .splitCsv(header:true, sep:',')
+        .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
+        .into { ch_fastq_nanoplot;
+                ch_fastq_cross;
+                ch_fastq_index }
+
+} else {
 
     // Create channels = [sample, barcode, genome_fasta]
     ch_samplesheet_reformat
@@ -352,68 +359,65 @@ if (!params.skip_basecalling) {
         """
     }
 
+    // Create channels = [sample, fastq, genome_fasta]
     ch_guppy_fastq
         .flatten()
         .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
         .join(ch_sample_info, by: 1) // join on barcode
-        .map { it -> [ it[2], it[1], it[3] ] } // [sample, fastq, genome_fasta]
-        .into { ch_fastq_nanoplot;
-                ch_fastq_cross;
-                ch_fastq_index }
-} else {
-    ch_guppy_version = Channel.empty()
-    ch_pycoqc_version = Channel.empty()
-
-    // Create channels = [sample, fastq, genome_fasta]
-    ch_samplesheet_reformat
-        .splitCsv(header:true, sep:',')
-        .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
+        .map { it -> [ it[2], it[1], it[3] ] }
         .into { ch_fastq_nanoplot;
                 ch_fastq_cross;
                 ch_fastq_index }
 }
 
-// /*
-//  * STEP 4 - FastQ QC using NanoPlot
-//  */
-// process NanoPlotFastQ {
-//     tag "$sample"
-//     label 'process_low'
-//     publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (!filename.endsWith(".version")) filename
-//                 }
-//
-//     when:
-//     !params.skip_qc && !params.skip_nanoplot
-//
-//     input:
-//     set val(sample), file(fastq), file(genome) from ch_fastq_nanoplot
-//
-//     output:
-//     file "*.{png,html,txt,log}"
-//     file "*.version" into ch_nanoplot_version
-//
-//     script:
-//     """
-//     NanoPlot -t $task.cpus --fastq $fastq
-//     NanoPlot --version &> nanoplot.version
-//     """
-// }
-//
-// if (!params.skip_alignment) {
-//
-//     // Dont map samples if reference genome hasnt been provided
-//     ch_fastq_cross
-//         .filter { it[2] != null }
-//         .map { it -> [ it[2].getName(), it[0], it[1] ] }
-//         .set { ch_fastq_cross}
-//
-//     ch_fastq_index
-//         .filter { it[2] != null }
-//         .map { it[2] }
-//         .unique()
-//         .set { ch_fastq_index }
+/*
+ * STEP 4 - FastQ QC using NanoPlot
+ */
+process NanoPlotFastQ {
+    tag "$sample"
+    label 'process_low'
+    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    when:
+    !params.skip_qc && !params.skip_nanoplot
+
+    input:
+    set val(sample), file(fastq), file(fasta) from ch_fastq_nanoplot
+
+    output:
+    file "*.{png,html,txt,log}"
+    file "*.version" into ch_nanoplot_version
+
+    script:
+    """
+    NanoPlot -t $task.cpus --fastq $fastq
+    NanoPlot --version &> nanoplot.version
+    """
+}
+
+if (params.skip_alignment) {
+
+    ch_graphmap_version = Channel.empty()
+    ch_minimap2_version = Channel.empty()
+    ch_samtools_version = Channel.empty()
+    ch_sortbam_stats_mqc = Channel.empty()
+
+} else {
+    // Dont map samples if reference genome hasnt been provided
+    ch_fastq_cross
+        .filter { it[2] != null }
+        .map { it -> [ it[2].getName(), it[0], it[1] ] }
+        .set { ch_fastq_cross }
+    ch_fastq_cross.println()
+}
+    // ch_fastq_index
+    //     .filter { it[2] != null }
+    //     .map { it[2] }
+    //     .unique()
+    //     .set { ch_fastq_index }
 //
 //     /*
 //      * STEP 5 - Align fastq files with GraphMap
@@ -430,7 +434,7 @@ if (!params.skip_basecalling) {
 //             }
 //
 //             input:
-//             set val(sample), file(fastq), file(genome) from ch_fastq_index
+//             set val(sample), file(fastq), file(fasta) from ch_fastq_index
 //
 //             output:
 //             set val(sample), file("*.sam") into ch_align_sam
@@ -451,10 +455,10 @@ if (!params.skip_basecalling) {
 //     if (params.aligner == 'minimap2') {
 //         process MiniMap2Index {
 //           input:
-//           file(genome) from ch_fastq_index
+//           file(fasta) from ch_fastq_index
 //
 //           output:
-//           set file(genome), file("*.mmi") into ch_minimap_index
+//           set file(fasta), file("*.mmi") into ch_minimap_index
 //
 //           script:
 //           minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
@@ -536,11 +540,6 @@ if (!params.skip_basecalling) {
 //         samtools --version &> samtools.version
 //         """
 //     }
-// } else {
-//     ch_graphmap_version = Channel.empty()
-//     ch_minimap2_version = Channel.empty()
-//     ch_samtools_version = Channel.empty()
-//     ch_sortbam_stats_mqc = Channel.empty()
 // }
 //
 // /*
