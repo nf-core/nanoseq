@@ -220,7 +220,7 @@ process CheckSampleSheet {
                       ch_samplesheet_guppy
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
-    demultiplex = params.skip_demultiplexing ? '--skip_demultiplex' : ''
+    demultiplex = params.skip_demultiplexing ? '--skip_demultiplexing' : ''
     """
     check_samplesheet.py \\
         $samplesheet \\
