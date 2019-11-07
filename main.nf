@@ -84,10 +84,11 @@ if (!params.skip_alignment)     {
     }
 }
 
-// TODO nf-core: Add in a check to see if running offline
-// Pre-download test-dataset to get files for '--run_dir' parameter
-// Nextflow is unable to recursively download directories via HTTPS
 if (!params.skip_basecalling) {
+
+    // TODO nf-core: Add in a check to see if running offline
+    // Pre-download test-dataset to get files for '--run_dir' parameter
+    // Nextflow is unable to recursively download directories via HTTPS
     if (workflow.profile.split(',').contains('test')) {
         process GetTestData {
 
@@ -106,6 +107,9 @@ if (!params.skip_basecalling) {
             if (!params.kit)        { exit 1, "Please specify a valid kit identifier for basecalling!" }
        }
     }
+} else {
+    // Cannot demultiplex without performing basecalling too
+    params.skip_demultiplexing = true
 }
 
 // Skip demultiplexing if barcode kit isnt provided
