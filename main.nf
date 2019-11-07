@@ -233,26 +233,27 @@ if (params.skip_basecalling) {
     ch_guppy_version = Channel.empty()
     ch_pycoqc_version = Channel.empty()
 
-    // Create channels = [sample, fastq, genome_fasta]
+    // Create channels = [genome_fasta, fastq, sample]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
-        .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
+        .map { row -> [ get_fasta(row.genome, params.genomes), file(row.fastq, checkIfExists: true), row.sample ] }
         .into { ch_fastq_nanoplot;
-                ch_fastq_index }
+                ch_fastq_index;
+                ch_fastq_align }
 
 } else {
 
-    // Create channels = [sample, barcode, genome_fasta]
+    // Create channels = [genome_fasta, barcode, sample]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
-        .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
+        .map { row -> [ get_fasta(row.genome, params.genomes), row.barcode, row.sample ] }
         .into { ch_sample_info;
                 ch_sample_name }
 
     // Get sample name for single sample when --skip_demultiplexing
     ch_sample_name
         .first()
-        .map { it[0] }
+        .map { it[-1] }
         .set { ch_sample_name }
 
     /*
@@ -360,14 +361,15 @@ if (params.skip_basecalling) {
         """
     }
 
-    // Create channels = [sample, fastq, genome_fasta]
+    // Create channels = [genome_fasta, fastq, sample]
     ch_guppy_fastq
         .flatten()
-        .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
+        .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
         .join(ch_sample_info, by: 1) // join on barcode
         .map { it -> [ it[2], it[1], it[3] ] }
         .into { ch_fastq_nanoplot;
-                ch_fastq_index }
+                ch_fastq_index;
+                ch_fastq_align }
 }
 
 /*
@@ -385,7 +387,7 @@ process NanoPlotFastQ {
     !params.skip_qc && !params.skip_nanoplot
 
     input:
-    set val(sample), file(fastq), file(fasta) from ch_fastq_nanoplot
+    set val(fasta), file(fastq), val(sample) from ch_fastq_nanoplot
 
     output:
     file "*.{png,html,txt,log}"
@@ -409,11 +411,12 @@ if (params.skip_alignment) {
 
     // Get unique list of all genome fasta files
     ch_fastq_index
-        .map { it -> [ it[-1].toString(), it[-1] ] }  // [str(genome_fasta), genome_fasta]
+        .map { it -> [ it[0].toString(), it[0] ] }  // [str(genome_fasta), genome_fasta]
         .filter { it[1] != null }
         .unique()
         .into { ch_fasta_sizes;
-                ch_fasta_index }
+                ch_fasta_index;
+                ch_fasta_align }
 
     /*
      * STEP 5 - Make chromosome sizes file
@@ -463,29 +466,48 @@ if (params.skip_alignment) {
           minimap2 --version &> minimap2.version
           """
         }
-        ch_minimap_index.println()
+
+        // Convert genome_fasta to string from file to use cross()
+        ch_fastq_align
+            .map { it -> [ it[0].toString(), it[1], it[2] ] }
+            .set { ch_fastq_align }
+
+        // Create channels = [genome_fasta, index, sizes, sample, fastq]
+        ch_fasta_align
+            .join(ch_minimap_index)
+            .join(ch_chrom_sizes)
+            .cross(ch_fastq_align)
+            .flatten()
+            .collate(7)
+            .map { it -> [ it[1], it[2], it[3], it[6], it[5] ] }
+            .set { ch_fastq_align }
+
+        process MiniMap2Align {
+            tag "$sample"
+            label 'process_medium'
+            if (params.save_align_intermeds) {
+                publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+                    saveAs: { filename ->
+                                  if (filename.endsWith(".sam")) filename
+                            }
+            }
+
+            input:
+            set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
+
+            output:
+            set file(fasta), file(index), file(sizes), val(sample), file("*.sam") into ch_align_sam
+
+            script:
+            minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
+            kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+            stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+            """
+            minimap2 $minimap_preset $kmer $stranded -t $task.cpus $index $fastq > ${sample}.sam
+            """
+        }
+        ch_graphmap_version = Channel.empty()
     }
-
-
-
-
-
-
-
-
-    // ch_fastq_cross
-    //     .filter { it[2] != null }
-    //     .map { it -> [ it[2].getName(), it[0], it[1] ] }
-    //     .set { ch_fastq_cross }
-    // ch_fastq_cross.println()
-    //
-    // ch_fastq_index
-    //     .filter { it[2] != null }
-    //     .map { it[2] }
-    //     .unique()
-    //     .set { ch_fastq_index }
-    // ch_fastq_index.println()
-}
 
 //     /*
 //      * STEP 6 - Align fastq files with GraphMap
@@ -517,117 +539,63 @@ if (params.skip_alignment) {
 //         ch_minimap2_version = Channel.empty()
 //     }
 //
-//     /*
-//      * STEP 7 - Align fastq files with minimap2
-//      */
-//     if (params.aligner == 'minimap2') {
-//         process MiniMap2Index {
-//           input:
-//           file(fasta) from ch_fastq_index
-//
-//           output:
-//           set file(fasta), file("*.mmi") into ch_minimap_index
-//
-//           script:
-//           minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
-//           kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-//           stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-//           """
-//           minimap2 $minimap_preset $kmer $stranded -t $task.cpus -d \
-//           ${genome.baseName}.mmi $genome
-//           """
-//         }
-//
-//        ch_minimap_index
-//             .map { it -> [it[0].getName(), it[1]] }
-//             .cross(ch_fastq_cross) // join on genome name
-//             .map { it -> [ it[1][1], it[1][2], it[0][1] ] }
-//             .set { ch_fastq_align }
-//
-//         process MiniMap2Align {
-//             tag "$sample"
-//             label 'process_medium'
-//             if (params.save_align_intermeds) {
-//                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-//                     saveAs: { filename ->
-//                                   if (filename.endsWith(".sam")) filename
-//                             }
-//             }
-//
-//             input:
-//             set val(sample), file(fastq), file(index) from ch_fastq_align
-//
-//             output:
-//             set val(sample), file("*.sam") into ch_align_sam
-//
-//             script:
-//             minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
-//             kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-//             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-//             """
-//             minimap2 $minimap_preset $kmer $stranded -t $task.cpus $index $fastq > ${sample}.sam
-//             """
-//         }
-//         ch_graphmap_version = Channel.empty()
-//     }
-//
-//     /*
-//      * STEP 8 - Coordinate sort BAM files
-//      */
-//     process SortBAM {
-//         tag "$sample"
-//         label 'process_medium'
-//         publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-//             saveAs: { filename ->
-//                           if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
-//                           else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
-//                           else if (filename.endsWith(".stats")) "samtools_stats/$filename"
-//                           else if (filename.endsWith(".sorted.bam")) filename
-//                           else if (filename.endsWith(".sorted.bam.bai")) filename
-//                           else null
-//                     }
-//
-//         input:
-//         set val(sample), file(sam) from ch_align_sam
-//
-//         output:
-//         set val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
-//         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
-//
-//         script:
-//         """
-//         samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
-//         samtools sort -@ $task.cpus -o ${sample}.sorted.bam -T $sample ${sample}.bam
-//         samtools index ${sample}.sorted.bam
-//         samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
-//         samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
-//         samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
-//         """
-//     }
-// }
-//
-// /*
-//  * STEP 7 - Output Description HTML
-//  */
-// process output_documentation {
-//     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (!filename.endsWith(".version")) filename
-//                 }
-//
-//     input:
-//     file output_docs from ch_output_docs
-//
-//     output:
-//     file "results_description.html"
-//     file "*.version" into ch_rmarkdown_version
-//
-//     script:
-//     """
-//     markdown_to_html.r $output_docs results_description.html
-//     Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='rmarkdown.version')"
-//     """
-// }
+    /*
+     * STEP 8 - Coordinate sort BAM files
+     */
+    process SortBAM {
+        tag "$sample"
+        label 'process_medium'
+        publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+            saveAs: { filename ->
+                          if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
+                          else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
+                          else if (filename.endsWith(".stats")) "samtools_stats/$filename"
+                          else if (filename.endsWith(".sorted.bam")) filename
+                          else if (filename.endsWith(".sorted.bam.bai")) filename
+                          else null
+                    }
+
+        input:
+        set file(fasta), file(index), file(sizes), val(sample), file(sam) from ch_align_sam
+
+        output:
+        set file(fasta), file(index), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
+        file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
+
+        script:
+        """
+        samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
+        samtools sort -@ $task.cpus -o ${sample}.sorted.bam -T $sample ${sample}.bam
+        samtools index ${sample}.sorted.bam
+        samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
+        samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
+        samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
+        """
+    }
+}
+
+/*
+ * STEP 7 - Output Description HTML
+ */
+process output_documentation {
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    input:
+    file output_docs from ch_output_docs
+
+    output:
+    file "results_description.html"
+    file "*.version" into ch_rmarkdown_version
+
+    script:
+    """
+    markdown_to_html.r $output_docs results_description.html
+    Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='rmarkdown.version')"
+    """
+}
 //
 // /*
 //  * Parse software version numbers
