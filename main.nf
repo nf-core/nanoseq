@@ -234,14 +234,14 @@ process CheckSampleSheet {
 
 if (!params.skip_basecalling) {
 
-    // Create channels = [sample, barcode, genome]
+    // Create channels = [sample, barcode, genome_fasta]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { row -> [ row.sample, row.barcode, get_fasta(row.genome, params.genomes) ] }
         .into { ch_sample_info;
                 ch_sample_name }
 
-    // Get sample name for single sample i.e. when --barcode_kit isnt supplied
+    // Get sample name for single sample when --skip_demultiplexing
     ch_sample_name
         .first()
         .map { it[0] }
@@ -352,28 +352,27 @@ if (!params.skip_basecalling) {
         """
     }
 
-    // ch_guppy_fastq
-    //     .flatten()
-    //     .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // e.g. [barcode001.fastq, barcode001]
-    //     .join(ch_sample_info, by: 1) // join on barcode
-    //     .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
-    //     .into { ch_fastq_nanoplot;
-    //             ch_fastq_cross;
-    //             ch_fastq_index }
+    ch_guppy_fastq
+        .flatten()
+        .map{ it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
+        .join(ch_sample_info, by: 1) // join on barcode
+        .map { it -> [ it[2], it[1], it[3] ] } // [sample, fastq, genome_fasta]
+        .into { ch_fastq_nanoplot;
+                ch_fastq_cross;
+                ch_fastq_index }
+} else {
+    ch_guppy_version = Channel.empty()
+    ch_pycoqc_version = Channel.empty()
+
+    // Create channels = [sample, fastq, genome_fasta]
+    ch_samplesheet_reformat
+        .splitCsv(header:true, sep:',')
+        .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
+        .into { ch_fastq_nanoplot;
+                ch_fastq_cross;
+                ch_fastq_index }
 }
-// } else {
-//     ch_guppy_version = Channel.empty()
-//     ch_pycoqc_version = Channel.empty()
-//
-//     // Create channels = [sample, fastq, genome]
-//     ch_samplesheet_reformat
-//         .splitCsv(header:true, sep:',')
-//         .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
-//         .into { ch_fastq_nanoplot;
-//                 ch_fastq_cross;
-//                 ch_fastq_index }
-// }
-//
+
 // /*
 //  * STEP 4 - FastQ QC using NanoPlot
 //  */
