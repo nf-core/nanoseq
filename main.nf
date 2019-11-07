@@ -141,8 +141,11 @@ def summary = [:]
 if (workflow.revision) summary['Pipeline Release'] = workflow.revision
 summary['Run Name']               = custom_runName ?: workflow.runName
 summary['Samplesheet']            = params.input
+summary['Protocol']               = params.protocol
+summary['Stranded']               = (params.stranded || params.protocol == 'directRNA') ? 'Yes' : 'No'
+summary['Skip Basecalling']       = params.skip_basecalling ? 'Yes' : 'No'
 summary['Skip Demultiplexing']    = params.skip_demultiplexing ? 'Yes' : 'No'
-if (!params.skip_demultiplexing) {
+if (!params.skip_basecalling) {
     summary['Run Dir']            = params.run_dir
     summary['Flowcell ID']        = params.flowcell ?: 'Not required'
     summary['Kit ID']             = params.kit ?: 'Not required'
@@ -158,8 +161,6 @@ summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
 if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
-    summary['Protocol']           = params.protocol
-    summary['Stranded']           = (params.stranded || params.protocol == 'directRNA') ? 'Yes' : 'No'
 }
 summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
 summary['Skip pycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
