@@ -229,8 +229,7 @@ process CheckSampleSheet {
     check_samplesheet.py \\
         $samplesheet \\
         samplesheet_reformat.csv \\
-        $demultiplex \\
-        $nobarcodes
+        $demultiplex
     """
 }
 
