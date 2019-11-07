@@ -42,7 +42,6 @@ def helpMessage() {
     Alignment
       --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA" (Default: 'DNA')
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
-      --gtf [file]                    Path to GTF file. Not mandatory when using reference in iGenomes references in samplesheet
       --aligner [str]                 Specifies the aligner to use (available are: graphmap or minimap2) (Default: 'minimap2')
       --save_reference [bool]         Save the genome indices in the results directory
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
@@ -229,28 +228,15 @@ def get_fasta(genome, genomeMap) {
     return fasta
 }
 
-// Function to see if gtf file exists in iGenomes
-def get_gtf(genome, genomeMap) {
-    def gtf = null
-    if (genome) {
-        if (genomeMap.containsKey(genome)) {
-            gtf = file(genomeMap[genome].gtf, checkIfExists: true)
-        } else {
-            gtf = file(genome, checkIfExists: true)
-        }
-    }
-    return gtf
-}
-
 if (params.skip_basecalling) {
 
     ch_guppy_version = Channel.empty()
     ch_pycoqc_version = Channel.empty()
 
-    // Create channels = [genome_fasta, fastq, sample]
+    // Create channels = [genome_fasta, sample, fastq]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
-        .map { row -> [ get_fasta(row.genome, params.genomes), file(row.fastq, checkIfExists: true), row.sample ] }
+        .map { row -> [ get_fasta(row.genome, params.genomes), row.sample, file(row.fastq, checkIfExists: true) ] }
         .into { ch_fastq_nanoplot;
                 ch_fastq_index;
                 ch_fastq_align }
@@ -375,12 +361,12 @@ if (params.skip_basecalling) {
         """
     }
 
-    // Create channels = [genome_fasta, fastq, sample]
+    // Create channels = [genome_fasta, sample, fastq]
     ch_guppy_fastq
         .flatten()
         .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
         .join(ch_sample_info, by: 1) // join on barcode
-        .map { it -> [ it[2], it[1], it[3] ] }
+        .map { it -> [ it[2], it[3], it[1] ] }
         .into { ch_fastq_nanoplot;
                 ch_fastq_index;
                 ch_fastq_align }
@@ -401,7 +387,7 @@ process NanoPlotFastQ {
     !params.skip_qc && !params.skip_nanoplot
 
     input:
-    set val(fasta), file(fastq), val(sample) from ch_fastq_nanoplot
+    set val(fasta), val(sample), file(fastq) from ch_fastq_nanoplot
 
     output:
     file "*.{png,html,txt,log}"
@@ -486,6 +472,7 @@ if (params.skip_alignment) {
     } else if (params.aligner == 'graphmap') {
 
         // TODO nf-core: Create graphmap index with GTF instead
+        // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
         process GraphMapIndex {
           tag "$fasta"
           label 'process_medium'
@@ -500,7 +487,6 @@ if (params.skip_alignment) {
           file "*.version" into ch_graphmap_version
 
           script:
-          //gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
           """
           graphmap align -t $task.cpus -I -r $fasta
           echo \$(graphmap 2>&1) > graphmap.version
@@ -521,7 +507,7 @@ if (params.skip_alignment) {
         .cross(ch_fastq_align)
         .flatten()
         .collate(7)
-        .map { it -> [ it[1], it[2], it[3], it[6], it[5] ] }
+        .map { it -> [ it[1], it[2], it[3], it[5], it[6] ] }
         .set { ch_fastq_align }
 
     /*
@@ -574,7 +560,7 @@ if (params.skip_alignment) {
 
             script:
             """
-            graphmap align -t $task.cpus -r $genome -i $index -d $fastq -o ${sample}.sam --extcigar
+            graphmap align -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
             """
         }
     }
