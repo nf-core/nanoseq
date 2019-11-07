@@ -226,12 +226,12 @@ process CheckSampleSheet {
 
 if (!params.skip_demultiplexing) {
 
-    // Get samplename to name file for no barcoding option
+    // Get sample name for single sample i.e. when --barcode_kit isnt supplied
     ch_samplesheet_guppy
         .splitCsv(header:true, sep:',')
         .first()
-        .map { it.barcode }
-        .set { ch_sample_name }
+        .map { it.sample }
+        .into { ch_sample_name }
 
     /*
      * STEP 1 - Basecalling and demultipexing using Guppy
