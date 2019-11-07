@@ -190,19 +190,6 @@ log.info "-\033[2m--------------------------------------------------\033[0m-"
 // Check the hostnames against configured profiles
 checkHostname()
 
-// Function to see if genome exists in iGenomes
-def get_fasta(genome, genomeMap) {
-    def fasta = null
-    if (genome) {
-        if (genomeMap.containsKey(genome)) {
-            fasta = file(genomeMap[genome].fasta, checkIfExists: true)
-        } else {
-            fasta = file(genome, checkIfExists: true)
-        }
-    }
-    return fasta
-}
-
 /*
  * PREPROCESSING - CHECK SAMPLESHEET
  */
@@ -226,6 +213,19 @@ process CheckSampleSheet {
     """
 }
 
+// Function to see if genome exists in iGenomes
+def get_fasta(genome, genomeMap) {
+    def fasta = null
+    if (genome) {
+        if (genomeMap.containsKey(genome)) {
+            fasta = file(genomeMap[genome].fasta, checkIfExists: true)
+        } else {
+            fasta = file(genome, checkIfExists: true)
+        }
+    }
+    return fasta
+}
+
 if (params.skip_basecalling) {
 
     ch_guppy_version = Channel.empty()
@@ -236,7 +236,6 @@ if (params.skip_basecalling) {
         .splitCsv(header:true, sep:',')
         .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
         .into { ch_fastq_nanoplot;
-                ch_fastq_cross;
                 ch_fastq_index }
 
 } else {
@@ -366,7 +365,6 @@ if (params.skip_basecalling) {
         .join(ch_sample_info, by: 1) // join on barcode
         .map { it -> [ it[2], it[1], it[3] ] }
         .into { ch_fastq_nanoplot;
-                ch_fastq_cross;
                 ch_fastq_index }
 }
 
@@ -406,19 +404,49 @@ if (params.skip_alignment) {
     ch_sortbam_stats_mqc = Channel.empty()
 
 } else {
-    // Dont map samples if reference genome hasnt been provided
-    ch_fastq_cross
-        .filter { it[2] != null }
-        .map { it -> [ it[2].getName(), it[0], it[1] ] }
-        .set { ch_fastq_cross }
-    ch_fastq_cross.println()
-}
+
+    ch_fastq_index
+        .map { it -> it[-1] }  // [genome_fasta]
+        .filter { it[0] != null }
+        .unique()
+        .set { ch_fasta_index }
+
+    /*
+     * STEP 5 - Make chromosome sizes file
+     */
+    process GetChromSizes {
+        tag "$fasta"
+        publishDir "${params.outdir}/reference_genome", mode: 'copy'
+
+        input:
+        file fasta from ch_fasta_index
+
+        output:
+        set val(fasta), file("*.sizes") into ch_chrom_sizes
+
+        script:
+        """
+        samtools faidx $fasta
+        cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
+        """
+    }
+    ch_chrom_sizes.println()
+
+
+    // ch_fastq_cross
+    //     .filter { it[2] != null }
+    //     .map { it -> [ it[2].getName(), it[0], it[1] ] }
+    //     .set { ch_fastq_cross }
+    // ch_fastq_cross.println()
+    //
     // ch_fastq_index
     //     .filter { it[2] != null }
     //     .map { it[2] }
     //     .unique()
     //     .set { ch_fastq_index }
-//
+    // ch_fastq_index.println()
+}
+
 //     /*
 //      * STEP 5 - Align fastq files with GraphMap
 //      */
