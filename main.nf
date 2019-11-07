@@ -405,9 +405,10 @@ if (params.skip_alignment) {
 
 } else {
 
+    // Get unique list of all genome fasta files
     ch_fastq_index
-        .map { it -> it[-1] }  // [genome_fasta]
-        .filter { it[0] != null }
+        .map { it -> [ it[-1].toString(), it[-1] ] }  // [str(genome_fasta), genome_fasta]
+        .filter { it[1] != null }
         .unique()
         .set { ch_fasta_index }
 
@@ -419,10 +420,10 @@ if (params.skip_alignment) {
         publishDir "${params.outdir}/reference_genome", mode: 'copy'
 
         input:
-        file fasta from ch_fasta_index
+        set val(name), file(fasta)  from ch_fasta_index
 
         output:
-        set val(fasta), file("*.sizes") into ch_chrom_sizes
+        set val(name), file("*.sizes") into ch_chrom_sizes
 
         script:
         """
@@ -430,7 +431,12 @@ if (params.skip_alignment) {
         cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
         """
     }
-    ch_chrom_sizes.println()
+
+    
+
+
+
+
 
 
     // ch_fastq_cross
