@@ -553,6 +553,7 @@ if (params.skip_alignment) {
             minimap2 $minimap_preset $kmer $stranded -t $task.cpus $index $fastq > ${sample}.sam
             """
         }
+
     } else if (params.aligner == 'graphmap') {
 
         process GraphMapAlign {
@@ -579,7 +580,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 7 - Coordinate sort BAM files
+     * STEP 8 - Coordinate sort BAM files
      */
     process SortBAM {
         tag "$sample"
@@ -614,7 +615,7 @@ if (params.skip_alignment) {
 }
 
 /*
- * STEP 7 - Output Description HTML
+ * STEP 9 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
@@ -686,7 +687,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 }
 
 /*
- * STEP 8 - MultiQC
+ * STEP 10 - MultiQC
  */
 process MultiQC {
     publishDir "${params.outdir}/multiqc", mode: 'copy'
