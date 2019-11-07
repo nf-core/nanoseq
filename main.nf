@@ -404,7 +404,7 @@ if (!params.skip_alignment) {
     ch_fastq_cross
         .filter{ it[2] != null }
         .map { it -> [ it[2].getName(), it[0], it[1] ] }
-        .into { ch_fastq_cross}
+        .set { ch_fastq_cross}
 
     ch_fastq_index
         .filter{ it[2] != null }
