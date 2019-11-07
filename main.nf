@@ -220,13 +220,12 @@ process CheckSampleSheet {
                       ch_samplesheet_guppy
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
-    demultipex = params.skip_demultiplexing ? "" : '--demultiplex'
-    nobarcodes = params.barcode_kit ? "" : '--nobarcoding'
+    demultiplex = params.skip_demultiplexing ? '--skip_demultiplex' : ''
     """
     check_samplesheet.py \\
         $samplesheet \\
         samplesheet_reformat.csv \\
-        $demultipex \\
+        $demultiplex \\
         $nobarcodes
     """
 }

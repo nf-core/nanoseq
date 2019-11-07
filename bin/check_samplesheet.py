@@ -26,7 +26,7 @@ argParser.add_argument('DESIGN_FILE_IN', help="Input design file.")
 argParser.add_argument('DESIGN_FILE_OUT', help="Output design file.")
 
 ## OPTIONAL PARAMETERS
-argParser.add_argument('-sd', '--skip_demultiplex', dest="SKIP_DEMULTIPLEXING", help="Whether demultipexing is to be performed (default: False).",action='store_true')
+argParser.add_argument('-sd', '--skip_demultiplexing', dest="SKIP_DEMULTIPLEXING", help="Whether demultipexing is to be performed (default: False).",action='store_true')
 args = argParser.parse_args()
 
 ############################################
