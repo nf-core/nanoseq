@@ -414,6 +414,7 @@ if (params.skip_alignment) {
     ch_samtools_version = Channel.empty()
     ch_minimap2_version = Channel.empty()
     ch_graphmap_version = Channel.empty()
+    ch_bedtools_version = Channel.empty()
     ch_sortbam_stats_mqc = Channel.empty()
 
 } else {
