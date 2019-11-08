@@ -623,7 +623,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 10 - Convert BAM to BEDGraph
+     * STEP 10 - Convert BEDGraph to BigWig
      */
     process BedGraphToBigWig {
         tag "$sample"
