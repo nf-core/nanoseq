@@ -41,6 +41,7 @@ iv. Start running your own analysis!
 ```bash
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
+    --protocol DNA \
     --run_dir ./fast5/ \
     --flowcell FLO-MIN106 \
     --kit SQK-LSK109 \
