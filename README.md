@@ -37,9 +37,14 @@ nextflow run nf-core/nanoseq -profile test,<docker/singularity/institute>
 
 iv. Start running your own analysis!
 
-<!-- TODO nf-core: Update the default command above used to run the pipeline -->
 ```bash
-nextflow run nf-core/nanoseq -profile <docker/singularity/institute>
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --run_dir ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-LSK109 \
+    --barcode_kit SQK-PBK004 \
+    -profile <docker/singularity/institute>
 ```
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
@@ -59,7 +64,7 @@ The nf-core/nanoseq pipeline comes with documentation about the pipeline, found 
 
 ## Credits
 
-nf-core/nanoseq was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from The Bioinformatics & Biostatistics Group for use at The Francis Crick Institute, London.
+nf-core/nanoseq was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from The Bioinformatics & Biostatistics Group for use at [The Francis Crick Institute](https://www.crick.ac.uk/), Sweden. [Laura Wratten](https://github.com/lwratten) from the [Genome Institute of Singapore](https://www.a-star.edu.sg/gis) is one of the main contributors along with [Johannes Alneberg](https://github.com/alneberg) and [Franziska Bonath](https://github.com/FranBonath) from [SciLifeLab](https://www.scilifelab.se/), Sweden.
 
 Many thanks to others who have helped out along the way too, including (but not limited to): [`@crickbabs`](https://github.com/crickbabs)
 
