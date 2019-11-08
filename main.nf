@@ -81,8 +81,6 @@ if (params.help) {
  * SET UP CONFIGURATION VARIABLES
  */
 if (params.input)               { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
-if (!params.barcode_kit)        { params.skip_demultiplexing = true } // Skip demultiplexing if barcode kit isnt provided
-if (params.skip_basecalling)    { params.skip_demultiplexing = true } // Cannot demultiplex without performing basecalling too
 if (!params.skip_alignment)     {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
@@ -114,6 +112,12 @@ if (!params.skip_basecalling) {
             if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
             if (!params.kit)        { exit 1, "Please specify a valid kit identifier for basecalling!" }
        }
+    }
+} else {
+    // Cannot demultiplex without performing basecalling
+    // Skip demultiplexing if barcode kit isnt provided
+    if (!params.barcode_kit) {
+        params.skip_demultiplexing = true
     }
 }
 
