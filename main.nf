@@ -355,7 +355,8 @@ if (!params.skip_demultiplexing) {
         .join( ch_sample_info, by: 1 ) // join on barcode
         .map { it -> [ it[2], it[1], it[3] ] }      // [sample, fastq, genome]
         .into { ch_fastq_nanoplot;
-                ch_fastq_align }
+                ch_fastq_cross;
+                ch_fastq_index }
 } else {
     ch_guppy_version = Channel.empty()
     ch_pycoqc_version = Channel.empty()
@@ -367,7 +368,8 @@ if (!params.skip_demultiplexing) {
         .splitCsv(header:true, sep:',')
         .map { row -> [ row.sample, file(row.fastq, checkIfExists: true), get_fasta(row.genome, params.genomes) ] }
         .into {  ch_fastq_nanoplot;
-                 ch_fastq_align }
+                 ch_fastq_cross;
+                 ch_fastq_index}
 }
 
 /*
@@ -401,9 +403,16 @@ process NanoPlotFastQ {
 if (!params.skip_alignment) {
 
     // Dont map samples if reference genome hasnt been provided
-    ch_fastq_align
+    ch_fastq_cross
         .filter{ it[2] != null }
-        .set { ch_fastq_align }
+        .map { it -> [ it[2].getName(), it[0], it[1] ] }
+        .set { ch_fastq_cross}
+
+    ch_fastq_index
+        .filter{ it[2] != null }
+        .map{it[2]}
+        .unique()
+        .set { ch_fastq_index }
 
     /*
      * STEP 5 - Align fastq files with GraphMap
@@ -420,7 +429,7 @@ if (!params.skip_alignment) {
             }
 
             input:
-            set val(sample), file(fastq), file(genome) from ch_fastq_align
+            set val(sample), file(fastq), file(genome) from ch_fastq_index
 
             output:
             set val(sample), file("*.sam") into ch_align_sam
@@ -439,7 +448,30 @@ if (!params.skip_alignment) {
      * STEP 5 - Align fastq files with minimap2
      */
     if (params.aligner == 'minimap2') {
-        process MiniMap2 {
+        process MiniMap2Index {
+          input:
+          file(genome) from ch_fastq_index
+
+          output:
+          set file(genome), file("*.mmi") into ch_minimap_index
+
+          script:
+          minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
+          kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+          stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+          """
+          minimap2 $minimap_preset $kmer $stranded -t $task.cpus -d \
+          ${genome.baseName}.mmi $genome
+          """
+        }
+
+       ch_minimap_index
+            .map {it -> [it[0].getName(), it[1]]}
+            .cross( ch_fastq_cross) // join on genome name
+            .map { it -> [ it[1][1], it[1][2], it[0][1] ] }
+            .set {ch_fastq_align}
+
+        process MiniMap2Align {
             tag "$sample"
             label 'process_medium'
             if (params.save_align_intermeds) {
@@ -450,7 +482,7 @@ if (!params.skip_alignment) {
             }
 
             input:
-            set val(sample), file(fastq), file(genome) from ch_fastq_align
+            set val(sample), file(fastq), file(index) from ch_fastq_align
 
             output:
             set val(sample), file("*.sam") into ch_align_sam
@@ -461,7 +493,7 @@ if (!params.skip_alignment) {
             kmer = (params.protocol == 'directRNA') ? "-k14" : ""
             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
             """
-            minimap2 $minimap_preset $kmer $stranded -t $task.cpus $genome $fastq > ${sample}.sam
+            minimap2 $minimap_preset $kmer $stranded -t $task.cpus $index $fastq > ${sample}.sam
             minimap2 --version &> minimap2.version
             """
         }
