@@ -19,7 +19,8 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 2. FastQ QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot))
 3. Alignment ([`GraphMap`](https://github.com/isovic/graphmap) or [`minimap2`](https://github.com/lh3/minimap2))
     * Convert `.sam` to co-ordinate sorted `.bam` and obtain mapping metrics ([`SAMtools`](http://www.htslib.org/doc/samtools.html))
-4. Present QC for alignment results ([`MultiQC`](https://multiqc.info/docs/))
+4. Create bedGraph ([`BEDTools`](https://github.com/arq5x/bedtools2/) and bigWig ([`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/)) coverage tracks for visualisation
+5. Present QC for alignment results ([`MultiQC`](https://multiqc.info/docs/))
 
 ## Quick Start
 
