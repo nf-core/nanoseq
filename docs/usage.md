@@ -12,6 +12,7 @@
 * [Main arguments](#main-arguments)
   * [`-profile`](#-profile)
   * [`--input`](#--input)
+  * [`--protocol`](#--protocol)
 * [Basecalling](#basecalling)
   * [`--run_dir`](#--run_dir)
   * [`--flowcell`](#--flowcell)
@@ -25,7 +26,6 @@
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
   * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
-  * [`--protocol`](#--protocol)
   * [`--stranded`](#--stranded)
   * [`--aligner`](#--aligner)
   * [`--save_align_intermeds`](#--save_align_intermeds)
@@ -157,6 +157,10 @@ Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
 | `barcode`| Barcode identifier attributed to that sample when multiplexing samples in integer format.                                  |
 | `genome` | Genome fasta for alignment. This can either be a local path, or the appropriate key for a genome available on [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) (see [iGenomes config file](../conf/igenomes.config)). If unspecified then the alignment step will be skipped for that sample. |
 
+### `--protocol`
+
+Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
+
 ## Basecalling
 
 ### `--run_dir`
@@ -208,10 +212,6 @@ Skip basecalling with Guppy
 Skip demultiplexing with Guppy
 
 ## Alignment
-
-### `--protocol`
-
-Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
 ### `--stranded`
 
