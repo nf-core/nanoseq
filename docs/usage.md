@@ -12,17 +12,21 @@
 * [Main arguments](#main-arguments)
   * [`-profile`](#-profile)
   * [`--input`](#--input)
-* [Demultiplexing](#demultiplexing)
+  * [`--protocol`](#--protocol)
+* [Basecalling](#basecalling)
   * [`--run_dir`](#--run_dir)
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
   * [`--guppy_config`](#--guppy_config)
   * [`--guppy_gpu`](#--guppy_gpu)
+  * [`--guppy_gpu_runners`](#--guppy_gpu_runners)
+  * [`--guppy_cpu_threads`](#--guppy_cpu_threads)
   * [`--gpu_device`](#--gpu_device)
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
   * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
+  * [`--stranded`](#--stranded)
   * [`--aligner`](#--aligner)
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
@@ -55,8 +59,8 @@
   * [`--multiqc_config`](#--multiqc_config)
 <!-- TOC END -->
 
-
 ## Introduction
+
 Nextflow handles job submissions on SLURM or other environments, and supervises running the jobs. Thus the Nextflow process must run until the pipeline is finished. We recommend that you put the process running in the background through `screen` / `tmux` or similar tool. Alternatively you can run nextflow within a cluster job submitted your job scheduler.
 
 It is recommended to limit the Nextflow Java virtual machines memory. We recommend adding the following line to your environment (typically in `~/.bashrc` or `~./bash_profile`):
@@ -66,10 +70,18 @@ NXF_OPTS='-Xms1g -Xmx4g'
 ```
 
 ## Running the pipeline
-The typical command for running the pipeline is as follows:
+
+A typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/nanoseq --input 'samplesheet.csv' -profile test,docker
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --run_dir ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-LSK109 \
+    --barcode_kit SQK-PBK004 \
+    -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -84,6 +96,7 @@ results         # Finished results (configurable, see below)
 ```
 
 ### Updating the pipeline
+
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
 ```bash
@@ -91,16 +104,17 @@ nextflow pull nf-core/nanoseq
 ```
 
 ### Reproducibility
+
 It's a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
 
 First, go to the [nf-core/nanoseq releases page](https://github.com/nf-core/nanoseq/releases) and find the latest version number - numeric only (eg. `1.3.1`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.3.1`.
 
 This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future.
 
-
 ## Main arguments
 
 ### `-profile`
+
 Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments. Note that multiple profiles can be loaded, for example: `-profile docker` - the order of arguments is important!
 
 If `-profile` is not specified at all the pipeline will be run locally and expects all software to be installed and available on the `PATH`.
@@ -118,9 +132,10 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
   * Includes links to test data so needs no other parameters
 
 ### `--input`
+
 You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 4 columns, and a header row. As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without demultiplexing.
 
-#### With demultiplexing
+#### With basecalling and demultiplexing
 
 ```bash
 sample,fastq,barcode,genome
@@ -130,9 +145,16 @@ Sample3,,3,hg19
 Sample4,,4,/path/to/local/reference/genome.fa
 ```
 
-#### Without demultiplexing
+#### With basecalling but not demultiplexing
 
-> You will also have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
+```bash
+sample,fastq,barcode,genome
+Sample1,,1,mm10
+```
+
+> You will have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
+
+#### Without both basecalling and demultiplexing
 
 ```bash
 sample,fastq,barcode,genome
@@ -140,6 +162,9 @@ Sample1,SAM101A1.fastq.gz,,mm10
 Sample2,SAM101A2.fastq.gz,,mm10
 Sample3,SAM101A3.fastq.gz,,hg19
 Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
+
+> You will have to specify the `--skip_basecalling` parameter if you wish to bypass the basecalling and demultiplexing steps.
+
 ```
 
 | Column   | Description                                                                                                                |
@@ -149,45 +174,85 @@ Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
 | `barcode`| Barcode identifier attributed to that sample when multiplexing samples in integer format.                                  |
 | `genome` | Genome fasta for alignment. This can either be a local path, or the appropriate key for a genome available on [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) (see [iGenomes config file](../conf/igenomes.config)). If unspecified then the alignment step will be skipped for that sample. |
 
-## Demultiplexing
+### `--protocol`
+
+Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
+
+## Basecalling
 
 ### `--run_dir`
+
 Path to Nanopore run directory e.g. `fastq_pass/`
 
 ### `--flowcell`
+
 Flowcell used to perform the sequencing e.g. `FLO-MIN106`. Not required if `--guppy_config` is specified.
 
 ### `--kit`
+
 Kit used to perform the sequencing e.g. `SQK-LSK109`. Not required if `--guppy_config` is specified.
 
 ### `--barcode_kit`
+
 Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
 
 ### `--guppy_config`
-Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with ``--flowcell` and `--kit`.
+
+Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with `--flowcell` and `--kit`.
 
 ### `--guppy_gpu`
+
 Whether to demultiplex with Guppy in GPU mode.
 
+### `--guppy_gpu_runners`
+
+Number of '--gpu_runners_per_device' used for guppy when using `--guppy_gpu` (default: 6)
+
+### `--guppy_cpu_threads`
+
+Number of '--cpu_threads_per_caller' used for guppy when using `--guppy_gpu` (default: 1)
+
 ### `--gpu_device`
+
 Basecalling device specified to Guppy in GPU mode using `--device` (default: 'auto')
 
 ### `--gpu_cluster_options`
+
 Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
 
-### `--skip_demultiplexing`
-Skip basecalling and demultiplexing step with Guppy
+### `--skip_basecalling`
 
-sample,fastq,barcode,genome
+Skip basecalling with Guppy
+
+### `--skip_demultiplexing`
+
+Skip demultiplexing with Guppy
+
 ## Alignment
 
-### `--aligner`                     
+### `--stranded`
+
+Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
+
+When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap`:
+
+| `nanoseq` input              | `minimap2` presets  | `graphmap` presets |
+|------------------------------|---------------------|--------------------|
+| `--protocol DNA`             | -ax map-ont         | tba                |
+| `--protocol cDNA`            | -ax splice          | tba                |
+| `--protocol directRNA`       | -ax splice -uf -k14 | tba                |
+| `--protocol cDNA --stranded` | -ax splice -uf      | tba                |
+
+### `--aligner`
+
 Specifies the aligner to use (available are: `graphmap` or `minimap2`)
 
-### `--save_align_intermeds`    
+### `--save_align_intermeds`
+
 Save the `.sam` files from the alignment step - not done by default
 
-### `--skip_alignment`               
+### `--skip_alignment`
+
 Skip alignment and subsequent process
 
 ## Skipping QC steps
@@ -202,12 +267,14 @@ The following options make this easy:
 | `--skip_nanoplot`       | Skip NanoPlot                        |
 | `--skip_multiqc`        | Skip MultiQC                         |
 
-
 ## Job resources
+
 ### Automatic resubmission
+
 Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the steps in the pipeline, if the job exits with an error code of `143` (exceeded requested resources) it will automatically resubmit with higher requests (2 x original, then 3 x original). If it still fails after three times then the pipeline is stopped.
 
 ### Custom resource requests
+
 Wherever process-specific requirements are set in the pipeline, the default value can be changed by creating a custom config file. See the files hosted at [`nf-core/configs`](https://github.com/nf-core/configs/tree/master/conf) for examples.
 
 If you are likely to be running `nf-core` pipelines regularly it may be a good idea to request that your custom config file is uploaded to the `nf-core/configs` git repository. Before you do this please can you test that the config file works with your pipeline of choice using the `-c` parameter (see definition below). You can then create a pull request to the `nf-core/configs` repository with the addition of your config file, associated documentation file (see examples in [`nf-core/configs/docs`](https://github.com/nf-core/configs/tree/master/docs)), and amending [`nfcore_custom.config`](https://github.com/nf-core/configs/blob/master/nfcore_custom.config) to include your custom profile.
@@ -215,10 +282,15 @@ If you are likely to be running `nf-core` pipelines regularly it may be a good i
 If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack/).
 
 ## AWS Batch specific parameters
+
 Running the pipeline on AWS Batch requires a couple of specific parameters to be set according to your AWS Batch configuration. Please use the `-awsbatch` profile and then specify all of the following parameters.
+
 ### `--awsqueue`
+
 The JobQueue that you intend to use on AWS Batch.
+
 ### `--awsregion`
+
 The AWS region to run your job in. Default is set to `eu-west-1` but can be adjusted to your needs.
 
 Please make sure to also set the `-w/--work-dir` and `--outdir` parameters to a S3 storage bucket of your choice - you'll get an error message notifying you if you didn't.
@@ -228,18 +300,23 @@ Please make sure to also set the `-w/--work-dir` and `--outdir` parameters to a 
 <!-- TODO nf-core: Describe any other command line flags here -->
 
 ### `--outdir`
+
 The output directory where the results will be saved.
 
 ### `--email`
+
 Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.
 
 ### `--email_on_fail`
+
 This works exactly as with `--email`, except emails are only sent if the workflow is not successful.
 
 ### `--max_multiqc_email_size`
+
 Theshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB).
 
 ### `-name`
+
 Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
 
 This is used in the MultiQC report (if not default) and in the summary HTML / e-mail (always).
@@ -247,6 +324,7 @@ This is used in the MultiQC report (if not default) and in the summary HTML / e-
 **NB:** Single hyphen (core Nextflow option)
 
 ### `-resume`
+
 Specify this when restarting a pipeline. Nextflow will used cached results from any pipeline steps where the inputs are the same, continuing from where it got to previously.
 
 You can also supply a run name to resume a specific run: `-resume [run-name]`. Use the `nextflow log` command to show previous run names.
@@ -254,6 +332,7 @@ You can also supply a run name to resume a specific run: `-resume [run-name]`. U
 **NB:** Single hyphen (core Nextflow option)
 
 ### `-c`
+
 Specify the path to a specific config file (this is a core NextFlow command).
 
 **NB:** Single hyphen (core Nextflow option)
@@ -261,6 +340,7 @@ Specify the path to a specific config file (this is a core NextFlow command).
 Note - you can use this to override pipeline defaults.
 
 ### `--custom_config_version`
+
 Provide git commit id for custom Institutional configs hosted at `nf-core/configs`. This was implemented for reproducibility purposes. Default is set to `master`.
 
 ```bash
@@ -269,6 +349,7 @@ Provide git commit id for custom Institutional configs hosted at `nf-core/config
 ```
 
 ### `--custom_config_base`
+
 If you're running offline, nextflow will not be able to fetch the institutional config files
 from the internet. If you don't need them, then this is not a problem. If you do need them,
 you should download the files from the repo and tell nextflow where to find them with the
@@ -289,22 +370,28 @@ nextflow run /path/to/pipeline/ --custom_config_base /path/to/my/configs/configs
 > files + singularity containers + institutional configs in one go for you, to make this process easier.
 
 ### `--max_memory`
+
 Use to set a top-limit for the default memory requirement for each process.
 Should be a string in the format integer-unit. eg. `--max_memory '8.GB'`
 
 ### `--max_time`
+
 Use to set a top-limit for the default time requirement for each process.
 Should be a string in the format integer-unit. eg. `--max_time '2.h'`
 
 ### `--max_cpus`
+
 Use to set a top-limit for the default CPU requirement for each process.
 Should be a string in the format integer-unit. eg. `--max_cpus 1`
 
 ### `--plaintext_email`
+
 Set to receive plain-text e-mails instead of HTML formatted.
 
 ### `--monochrome_logs`
+
 Set to disable colourful command line output and live life in monochrome.
 
 ### `--multiqc_config`
+
 Specify a path to a custom MultiQC configuration file.

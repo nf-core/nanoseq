@@ -26,8 +26,7 @@ argParser.add_argument('DESIGN_FILE_IN', help="Input design file.")
 argParser.add_argument('DESIGN_FILE_OUT', help="Output design file.")
 
 ## OPTIONAL PARAMETERS
-argParser.add_argument('-dm', '--demultiplex', dest="DEMULTIPLEX", help="Whether demultipexing is to be performed (default: False).",action='store_true')
-argParser.add_argument('-bc', '--nobarcoding', dest="NOBARCODING", help="Whether barcode kit has been provided to Guppy (default: False).",action='store_true')
+argParser.add_argument('-sd', '--skip_demultiplexing', dest="SKIP_DEMULTIPLEXING", help="Whether demultipexing is to be performed (default: False).",action='store_true')
 args = argParser.parse_args()
 
 ############################################
@@ -43,7 +42,7 @@ HEADER = ['sample', 'fastq', 'barcode', 'genome']
 fin = open(args.DESIGN_FILE_IN,'r')
 header = fin.readline().strip().split(',')
 if header != HEADER:
-    print "{} header: {} != {}".format(ERROR_STR,','.join(header),','.join(HEADER))
+    print("{} header: {} != {}".format(ERROR_STR,','.join(header),','.join(HEADER)))
     sys.exit(1)
 
 outLines = []
@@ -56,51 +55,54 @@ while True:
         ## CHECK VALID NUMBER OF COLUMNS PER SAMPLE
         numCols = len([x for x in lspl if x])
         if numCols < 2:
-            print "{}: Invalid number of columns (minimum of 2)!\nLine: '{}'".format(ERROR_STR,line.strip())
+            print("{}: Invalid number of columns (minimum of 2)!\nLine: '{}'".format(ERROR_STR,line.strip()))
             sys.exit(1)
 
         if sample:
             ## CHECK SAMPLE ID HAS NO SPACES
             if sample.find(' ') != -1:
-                print "{}: Sample ID contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip())
+                print("{}: Sample ID contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
         else:
-            print "{}: Sample ID not specified!\nLine: '{}'".format(ERROR_STR,line.strip())
+            print("{}: Sample ID not specified!\nLine: '{}'".format(ERROR_STR,line.strip()))
             sys.exit(1)
 
-        if args.DEMULTIPLEX:
+        if barcode:
             ## CHECK BARCODE COLUMN IS INTEGER
             if not barcode.isdigit():
-                print "{}: Barcode not an integer!\nLine: '{}'".format(ERROR_STR,line.strip())
+                print("{}: Barcode not an integer!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
-        else:
+            else:
+                barcode = 'barcode%s' % (barcode.zfill(2))
+
+        if fastq:
             ## CHECK FASTQ FILE EXTENSION
             if fastq[-9:] != '.fastq.gz' and fastq[-6:] != '.fq.gz':
-                print "{}: FastQ file has incorrect extension (has to be '.fastq.gz' or 'fq.gz')!\nLine: '{}'".format(ERROR_STR,line.strip())
+                print("{}: FastQ file has incorrect extension (has to be '.fastq.gz' or '.fq.gz')!\nLine: '{}'".format(ERROR_STR,line.strip()))
 
         if genome:
             ## CHECK GENOME HAS NO SPACES
             if genome.find(' ') != -1:
-                print "{}: Genome field contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip())
+                print("{}: Genome field contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
 
             ## CHECK GENOME EXTENSION
             if len(genome.split('.')) > 1:
-                if genome[-6:] != '.fasta' and genome[-3:] != '.fa':
-                    print "{}: Genome field incorrect extension (has to be '.fasta' or 'fa')!\nLine: '{}'".format(ERROR_STR,line.strip())
+                if genome[-6:] != '.fasta' and genome[-3:] != '.fa' and genome[-9:] != '.fasta.gz' and genome[-6:] != '.fa.gz':
+                    print("{}: Genome field incorrect extension (has to be '.fasta' or '.fa' or '.fasta.gz' or '.fa.gz')!\nLine: '{}'".format(ERROR_STR,line.strip()))
                     sys.exit(1)
 
-        barcode = 'barcode%s' % (barcode.zfill(2))
         outLines.append([sample,fastq,barcode,genome])
     else:
         fin.close()
         break
 
-if args.NOBARCODING:
+if args.SKIP_DEMULTIPLEXING:
     if len(outLines) != 1:
-        print "{}: Only a single-line can be specified in samplesheet without barcode information!".format(ERROR_STR)
+        print("{}: Only a single-line can be specified in samplesheet without barcode information!".format(ERROR_STR))
         sys.exit(1)
-    outLines[0][2] = 'barcode%s' % ('1'.zfill(2))
+    ## USE SAMPLE NAME AS BARCODE WHEN NOT DEMULTIPLEXING
+    outLines[0][2] = outLines[0][0]
 
 ## WRITE TO FILE
 fout = open(args.DESIGN_FILE_OUT,'w')

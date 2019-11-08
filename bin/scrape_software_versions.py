@@ -13,6 +13,7 @@ regexes = {
     'GraphMap': ['graphmap.version', r"Version: v(\S+)"],
     'minimap2': ['minimap2.version', r"(\S+)"],
     'Samtools': ['samtools.version', r"samtools (\S+)"],
+    'BEDTools': ['v_bedtools.txt', r"bedtools v(\S+)"],
     'rmarkdown': ['rmarkdown.version', r"(\S+)"],
     'MultiQC': ['multiqc.version', r"multiqc, version (\S+)"],
 }
@@ -25,6 +26,7 @@ results['NanoPlot'] = '<span style="color:#999999;\">N/A</span>'
 results['GraphMap'] = '<span style="color:#999999;\">N/A</span>'
 results['minimap2'] = '<span style="color:#999999;\">N/A</span>'
 results['Samtools'] = '<span style="color:#999999;\">N/A</span>'
+results['BEDTools'] = '<span style="color:#999999;\">N/A</span>'
 results['rmarkdown'] = '<span style="color:#999999;\">N/A</span>'
 results['MultiQC'] = '<span style="color:#999999;\">N/A</span>'
 
@@ -40,7 +42,7 @@ for k, v in regexes.items():
         results[k] = False
 
 # Remove software set to false in results
-for k in results:
+for k in list(results):
     if not results[k]:
         del(results[k])
 
