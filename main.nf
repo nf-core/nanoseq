@@ -51,6 +51,7 @@ def helpMessage() {
       --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap) (Default: 'minimap2')
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
+      --save_bedgraph
 
     QC
       --skip_qc [bool]                Skip all QC steps apart from MultiQC (Default: false)
