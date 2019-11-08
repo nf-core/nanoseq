@@ -19,6 +19,7 @@ def helpMessage() {
 
       nextflow run nf-core/nanoseq \
           --input samplesheet.csv \
+          --protocol DNA \
           --run_dir ./fast5/ \
           --flowcell FLO-MIN106 \
           --kit SQK-LSK109 \
@@ -27,6 +28,7 @@ def helpMessage() {
 
     Mandatory arguments
       --input [file]                  Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
+      --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA"
       -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
                                       Available: docker, singularity, awsbatch, test and more.
 
@@ -45,7 +47,6 @@ def helpMessage() {
       --skip_demultiplexing [bool]    Skip demultiplexing with Guppy (Default: false)
 
     Alignment
-      --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA" (Default: 'DNA')
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
       --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap) (Default: 'minimap2')
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
