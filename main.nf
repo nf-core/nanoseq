@@ -48,7 +48,6 @@ def helpMessage() {
       --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA" (Default: 'DNA')
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
       --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap) (Default: 'minimap2')
-      --save_reference [bool]         Save the genome indices in the results directory
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
@@ -165,7 +164,6 @@ summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
 if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
-    summary['Save Genome Index']  = params.save_reference ? 'Yes' : 'No'
 }
 summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
 summary['Skip pycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
@@ -428,7 +426,6 @@ if (params.skip_alignment) {
      */
     process GetChromSizes {
         tag "$fasta"
-        publishDir "${params.outdir}/reference_genome", mode: 'copy'
 
         input:
         set val(name), file(fasta) from ch_fasta_sizes
@@ -453,8 +450,6 @@ if (params.skip_alignment) {
         process MiniMap2Index {
           tag "$fasta"
           label 'process_medium'
-          publishDir path: { params.save_reference ? "${params.outdir}/reference_genome" : params.outdir },
-            saveAs: { params.save_reference ? it : null }, mode: 'copy'
 
           input:
           set val(name), file(fasta) from ch_fasta_index
@@ -481,8 +476,6 @@ if (params.skip_alignment) {
         process GraphMapIndex {
           tag "$fasta"
           label 'process_medium'
-          publishDir path: { params.save_reference ? "${params.outdir}/reference_genome" : params.outdir },
-            saveAs: { params.save_reference ? it : null }, mode: 'copy'
 
           input:
           set val(name), file(fasta) from ch_fasta_index
@@ -610,7 +603,10 @@ if (params.skip_alignment) {
     process BAMToBedGraph {
         tag "$sample"
         label 'process_medium'
-        publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy'
+        publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
+            saveAs: { filename ->
+                          if (filename.endsWith(".bedGraph")) filename
+                    }
 
         input:
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bam
@@ -632,19 +628,21 @@ if (params.skip_alignment) {
     process BedGraphToBigWig {
         tag "$sample"
         label 'process_medium'
-        publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy'
+        publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
+            saveAs: { filename ->
+                          if (filename.endsWith(".bigWig")) filename
+                          else null
+                    }
 
         input:
         set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
 
         output:
         set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
-        //file "*.version" into ch_bigwig_version
 
         script:
         """
         bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
-        #bedGraphToBigWig --version > bedtools.version
         """
     }
 }
