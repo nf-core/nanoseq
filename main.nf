@@ -81,14 +81,6 @@ if (params.help) {
  * SET UP CONFIGURATION VARIABLES
  */
 if (params.input)               { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
-if (!params.skip_alignment)     {
-    if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
-        exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
-    }
-    if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
-      exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
-    }
-}
 
 if (!params.skip_basecalling) {
 
@@ -118,6 +110,15 @@ if (!params.skip_basecalling) {
     // Skip demultiplexing if barcode kit isnt provided
     if (!params.barcode_kit) {
         params.skip_demultiplexing = true
+    }
+}
+
+if (!params.skip_alignment)     {
+    if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
+        exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
+    }
+    if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
+      exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
     }
 }
 
