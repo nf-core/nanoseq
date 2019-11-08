@@ -10,7 +10,6 @@
 */
 
 def helpMessage() {
-    // TODO nf-core: Add to this help message with new command line parameters
     log.info nfcoreHeader()
     log.info"""
 
@@ -18,7 +17,13 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-      nextflow run nf-core/nanoseq --input 'samplesheet.csv' -profile test,docker
+      nextflow run nf-core/nanoseq \
+          --input samplesheet.csv \
+          --run_dir ./fast5/ \
+          --flowcell FLO-MIN106 \
+          --kit SQK-LSK109 \
+          --barcode_kit SQK-PBK004 \
+          -profile docker
 
     Mandatory arguments
       --input [file]                  Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
