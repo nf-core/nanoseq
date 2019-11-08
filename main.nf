@@ -617,7 +617,7 @@ if (params.skip_alignment) {
 
         output:
         set file(fasta), file(sizes), val(sample), file("*.bedGraph") into ch_bedgraph
-        file "*.version" into ch_bedgraph_version
+        file "*.version" into ch_bedtools_version
 
         script:
         """
@@ -629,7 +629,7 @@ if (params.skip_alignment) {
     /*
      * STEP 10 - Convert BAM to BEDGraph
      */
-    process BAMToBedGraph {
+    process BedGraphToBigWig {
         tag "$sample"
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy'
@@ -639,12 +639,12 @@ if (params.skip_alignment) {
 
         output:
         set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
-        //file "*.version" into ch_bedgraph_version
+        //file "*.version" into ch_bigwig_version
 
         script:
         """
         bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
-        #bedtools --version > bedtools.version
+        #bedGraphToBigWig --version > bedtools.version
         """
     }
 }
