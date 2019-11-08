@@ -71,10 +71,17 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
 ## Running the pipeline
 
-The typical command for running the pipeline is as follows:
+A typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/nanoseq --input 'samplesheet.csv' -profile test,docker
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --run_dir ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-LSK109 \
+    --barcode_kit SQK-PBK004 \
+    -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -128,7 +135,7 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
 
 You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 4 columns, and a header row. As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without demultiplexing.
 
-#### With demultiplexing
+#### With basecalling and demultiplexing
 
 ```bash
 sample,fastq,barcode,genome
@@ -138,9 +145,16 @@ Sample3,,3,hg19
 Sample4,,4,/path/to/local/reference/genome.fa
 ```
 
-#### Without demultiplexing
+#### With basecalling but not demultiplexing
 
-> You will also have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
+```bash
+sample,fastq,barcode,genome
+Sample1,,1,mm10
+```
+
+> You will have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
+
+#### Without both basecalling and demultiplexing
 
 ```bash
 sample,fastq,barcode,genome
@@ -148,6 +162,9 @@ Sample1,SAM101A1.fastq.gz,,mm10
 Sample2,SAM101A2.fastq.gz,,mm10
 Sample3,SAM101A3.fastq.gz,,hg19
 Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
+
+> You will have to specify the `--skip_basecalling` parameter if you wish to bypass the basecalling and demultiplexing steps.
+
 ```
 
 | Column   | Description                                                                                                                |
