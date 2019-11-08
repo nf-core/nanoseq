@@ -79,11 +79,7 @@ if (!params.skip_alignment)     {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
     }
     if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA'){
-<<<<<<< HEAD
-      exit 1, "Invalid protocol option: ${params.protocl}. Valid options: 'DNA', 'cDNA', 'directRNA'"
-=======
       exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
->>>>>>> 4f7541ff864d89b8ff993216438823db7b49def1
     }
 }
 
