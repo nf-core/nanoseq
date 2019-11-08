@@ -603,10 +603,54 @@ if (params.skip_alignment) {
         samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
         """
     }
+
+    /*
+     * STEP 9 - Convert BAM to BEDGraph
+     */
+    process BAMToBedGraph {
+        tag "$sample"
+        label 'process_medium'
+        publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy'
+
+        input:
+        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bam
+
+        output:
+        set file(fasta), file(sizes), val(sample), file("*.bedGraph") into ch_bedgraph
+        file "*.version" into ch_bedgraph_version
+
+        script:
+        """
+        genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
+        bedtools --version > bedtools.version
+        """
+    }
+
+    /*
+     * STEP 10 - Convert BAM to BEDGraph
+     */
+    process BAMToBedGraph {
+        tag "$sample"
+        label 'process_medium'
+        publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy'
+
+        input:
+        set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
+
+        output:
+        set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
+        //file "*.version" into ch_bedgraph_version
+
+        script:
+        """
+        bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
+        #bedtools --version > bedtools.version
+        """
+    }
 }
 
 /*
- * STEP 9 - Output Description HTML
+ * STEP 11 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
@@ -645,6 +689,7 @@ process get_software_versions {
     file samtools from ch_samtools_version.first().ifEmpty([])
     file minimap2 from ch_minimap2_version.first().ifEmpty([])
     file graphmap from ch_graphmap_version.first().ifEmpty([])
+    file bedtools from ch_bedtools_version.first().ifEmpty([])
     file rmarkdown from ch_rmarkdown_version.collect()
     //file multiqc from ch_multiqc_version.collect().ifEmpty([])
 
@@ -678,7 +723,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 }
 
 /*
- * STEP 10 - MultiQC
+ * STEP 12 - MultiQC
  */
 process MultiQC {
     publishDir "${params.outdir}/multiqc", mode: 'copy'
