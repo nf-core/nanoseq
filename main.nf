@@ -631,7 +631,6 @@ if (params.skip_alignment) {
         publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
             saveAs: { filename ->
                           if (filename.endsWith(".bigWig")) filename
-                          else null
                     }
 
         input:
@@ -689,7 +688,6 @@ process get_software_versions {
     file graphmap from ch_graphmap_version.first().ifEmpty([])
     file bedtools from ch_bedtools_version.first().ifEmpty([])
     file rmarkdown from ch_rmarkdown_version.collect()
-    //file multiqc from ch_multiqc_version.collect().ifEmpty([])
 
     output:
     file 'software_versions_mqc.yaml' into software_versions_yaml
@@ -699,6 +697,7 @@ process get_software_versions {
     """
     echo $workflow.manifest.version > pipeline.version
     echo $workflow.nextflow.version > nextflow.version
+    multiqc --version &> multiqc.version
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
@@ -739,14 +738,12 @@ process MultiQC {
     file "*multiqc_report.html" into ch_multiqc_report
     file "*_data"
     file "multiqc_plots"
-    file "*.version" into ch_multiqc_version
 
     script:
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     """
     multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content -m samtools
-    multiqc --version &> multiqc.version
     """
 }
 
