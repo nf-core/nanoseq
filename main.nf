@@ -590,7 +590,7 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(sam) from ch_align_sam
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
+        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bigwig, ch_sortbam_bigbed
         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
         script:
@@ -616,7 +616,7 @@ if (params.skip_alignment) {
                     }
 
         input:
-        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bam
+        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigwig
 
         output:
         set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
@@ -627,6 +627,30 @@ if (params.skip_alignment) {
         genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
         bedGraphToBigWig ${sample}.bedGraph $sizes ${sample}.bigWig
         bedtools --version > bedtools.version
+        """
+    }
+
+    /*
+     * STEP 10 - Convert BAM to BigBed
+     */
+    process BAMToBigBed {
+        tag "$sample"
+        label 'process_medium'
+        publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
+            saveAs: { filename ->
+                          if (filename.endsWith(".bb")) filename
+                    }
+        input:
+        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigbed
+
+        output:
+        set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
+
+        script:
+        """
+        bamToBed -bed12 -cigar -i ${bam[0]} > ${sample}.bed12
+        bedtools sort -i ${sample}.bed12 > ${sample}.sorted.bed12
+        bedToBigBed ${sample}.sorted.bed12 $sizes ${sample}.bb
         """
     }
 }
