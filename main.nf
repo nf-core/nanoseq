@@ -127,16 +127,6 @@ if (!params.skip_alignment) {
     }
 }
 
-if (params.skip_visualisation) {
-    println("Worked but didn't change the params?")
-    params.skip_bigbed = true
-    params.skip_bigwig =  true
-} else {
-  println("No into statement")
-}
-
-
-
 // Stage config files
 ch_multiqc_config = file(params.multiqc_config, checkIfExists: true)
 ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
@@ -625,56 +615,55 @@ if (params.skip_alignment) {
     /*
      * STEP 9 - Convert BAM to BigWig
      */
-    if (!params.skip_bigwig){
-        process BAMToBigWig {
-            tag "$sample"
-            label 'process_medium'
-            publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
-                saveAs: { filename ->
-                              if (filename.endsWith(".bigWig")) filename
-                        }
+    process BAMToBigWig {
+        tag "$sample"
+        label 'process_medium'
+        publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
+            saveAs: { filename ->
+                          if (filename.endsWith(".bigWig")) filename
+                    }
+        when:
+        !params.skip_visualisation && !params.skip_bigwig
 
-            input:
-            set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigwig
+        input:
+        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigwig
 
-            output:
-            set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
-            file "*.version" into ch_bedtools_version
+        output:
+        set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
+        file "*.version" into ch_bedtools_version
 
-            script:
-            """
-            genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
-            bedGraphToBigWig ${sample}.bedGraph $sizes ${sample}.bigWig
-            bedtools --version > bedtools.version
-            """
-        }
+        script:
+        """
+        genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
+        bedGraphToBigWig ${sample}.bedGraph $sizes ${sample}.bigWig
+        bedtools --version > bedtools.version
+        """
     }
-
 
     /*
      * STEP 10 - Convert BAM to BigBed
      */
-    if (!params.skip_bigbed){
-        process BAMToBigBed {
-            tag "$sample"
-            label 'process_medium'
-            publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
-                saveAs: { filename ->
-                              if (filename.endsWith(".bb")) filename
-                        }
-            input:
-            set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigbed
+    process BAMToBigBed {
+        tag "$sample"
+        label 'process_medium'
+        publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
+            saveAs: { filename ->
+                          if (filename.endsWith(".bb")) filename
+                    }
+        when:
+        !params.skip_visualisation && !params.skip_bigbed
+        input:
+        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigbed
 
-            output:
-            set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
+        output:
+        set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
 
-            script:
-            """
-            bamToBed -bed12 -cigar -i ${bam[0]} > ${sample}.bed12
-            bedtools sort -i ${sample}.bed12 > ${sample}.sorted.bed12
-            bedToBigBed ${sample}.sorted.bed12 $sizes ${sample}.bb
-            """
-        }
+        script:
+        """
+        bamToBed -bed12 -cigar -i ${bam[0]} > ${sample}.bed12
+        bedtools sort -i ${sample}.bed12 > ${sample}.sorted.bed12
+        bedToBigBed ${sample}.sorted.bed12 $sizes ${sample}.bb
+        """
     }
 }
 
