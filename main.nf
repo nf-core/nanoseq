@@ -127,9 +127,12 @@ if (!params.skip_alignment) {
     }
 }
 
-if (params.skip_visualisation) {
+if (params.skip_visualisation) {]
+    println("Worked but didn't change the params?")
     params.skip_bigbed = true
     params.skip_bigwig =  true
+} else {
+  println("No into statement")
 }
 
 
