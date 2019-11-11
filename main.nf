@@ -656,7 +656,7 @@ if (params.skip_alignment) {
 }
 
 /*
- * STEP 10 - Output Description HTML
+ * STEP 11 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
@@ -729,7 +729,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 }
 
 /*
- * STEP 11 - MultiQC
+ * STEP 12 - MultiQC
  */
 process MultiQC {
     publishDir "${params.outdir}/multiqc", mode: 'copy'
