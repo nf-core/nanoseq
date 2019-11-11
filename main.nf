@@ -660,7 +660,7 @@ if (params.skip_alignment) {
 
         script:
         """
-        bamToBed -bed12 -cigar -i ${bam[0]} > ${sample}.bed12
+        bedtools bamtobed -bed12 -cigar -i ${bam[0]} > ${sample}.bed12
         bedtools sort -i ${sample}.bed12 > ${sample}.sorted.bed12
         bedToBigBed ${sample}.sorted.bed12 $sizes ${sample}.bb
         """
