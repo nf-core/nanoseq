@@ -52,6 +52,11 @@ def helpMessage() {
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
+    Visualisation
+      --skip_visualisation [bool]     Skip BigWig and BigBed file generation (Default: false)
+      --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
+      --skip_bigwig [bool]            Skip BigWig file generation (Default: false)
+
     QC
       --skip_qc [bool]                Skip all QC steps apart from MultiQC (Default: false)
       --skip_pycoqc [bool]            Skip pycoQC (Default: false)
@@ -113,13 +118,18 @@ if (!params.skip_basecalling) {
     }
 }
 
-if (!params.skip_alignment)     {
+if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
     }
     if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
       exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
     }
+}
+
+if (params.skip_visualisation) {
+    params.skip_bigbed = true
+    params.skip_bigwig =  true
 }
 
 // Stage config files
@@ -607,51 +617,56 @@ if (params.skip_alignment) {
     /*
      * STEP 9 - Convert BAM to BigWig
      */
-    process BAMToBigWig {
-        tag "$sample"
-        label 'process_medium'
-        publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
-            saveAs: { filename ->
-                          if (filename.endsWith(".bigWig")) filename
-                    }
+    if (!params.skip_bigwig){
+        process BAMToBigWig {
+            tag "$sample"
+            label 'process_medium'
+            publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
+                saveAs: { filename ->
+                              if (filename.endsWith(".bigWig")) filename
+                        }
 
-        input:
-        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigwig
+            input:
+            set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigwig
 
-        output:
-        set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
-        file "*.version" into ch_bedtools_version
+            output:
+            set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
+            file "*.version" into ch_bedtools_version
 
-        script:
-        """
-        genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
-        bedGraphToBigWig ${sample}.bedGraph $sizes ${sample}.bigWig
-        bedtools --version > bedtools.version
-        """
+            script:
+            """
+            genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
+            bedGraphToBigWig ${sample}.bedGraph $sizes ${sample}.bigWig
+            bedtools --version > bedtools.version
+            """
+        }
     }
+
 
     /*
      * STEP 10 - Convert BAM to BigBed
      */
-    process BAMToBigBed {
-        tag "$sample"
-        label 'process_medium'
-        publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
-            saveAs: { filename ->
-                          if (filename.endsWith(".bb")) filename
-                    }
-        input:
-        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigbed
+    if (!params.skip_bigbed){
+        process BAMToBigBed {
+            tag "$sample"
+            label 'process_medium'
+            publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
+                saveAs: { filename ->
+                              if (filename.endsWith(".bb")) filename
+                        }
+            input:
+            set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigbed
 
-        output:
-        set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
+            output:
+            set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
 
-        script:
-        """
-        bamToBed -bed12 -cigar -i ${bam[0]} > ${sample}.bed12
-        bedtools sort -i ${sample}.bed12 > ${sample}.sorted.bed12
-        bedToBigBed ${sample}.sorted.bed12 $sizes ${sample}.bb
-        """
+            script:
+            """
+            bamToBed -bed12 -cigar -i ${bam[0]} > ${sample}.bed12
+            bedtools sort -i ${sample}.bed12 > ${sample}.sorted.bed12
+            bedToBigBed ${sample}.sorted.bed12 $sizes ${sample}.bb
+            """
+        }
     }
 }
 
