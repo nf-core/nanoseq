@@ -54,8 +54,8 @@ def helpMessage() {
 
     Visualisation
       --skip_visualisation [bool]     Skip BigWig and BigBed file generation (Default: false)
-      --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
       --skip_bigwig [bool]            Skip BigWig file generation (Default: false)
+      --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
 
     QC
       --skip_qc [bool]                Skip all QC steps apart from MultiQC (Default: false)
