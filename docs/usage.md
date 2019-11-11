@@ -30,6 +30,10 @@
   * [`--aligner`](#--aligner)
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
+* [Visualisation file generation](#visualisation-file-generation)
+  * [`--skip_visualisation`](#--skip_visualisation)
+  * [`--skip_bigwig`](#--skip_bigwig)
+  * [`--skip_bigbed`](#--skip_bigbed)
 * [Skipping QC steps](#skipping-qc-steps)
   * [`--skip_qc`](#--skip_qc)
   * [`--skip_pycoqc`](#--skip_pycoqc)
@@ -254,6 +258,15 @@ Save the `.sam` files from the alignment step - not done by default
 ### `--skip_alignment`
 
 Skip alignment and subsequent process
+
+## Visualisation file generation
+
+| Step                    | Description                            |
+|-------------------------|----------------------------------------|
+| `--skip_visualisation`  | Skip BigBed and BigWig file generation |
+| `--skip_bigwig`         | Skip BigWig file generation            |
+| `--skip_bigbed`         | Skip BigBed file generation            |
+
 
 ## Skipping QC steps
 
