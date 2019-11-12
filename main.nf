@@ -598,7 +598,7 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(sam) from ch_align_sam
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bigwig, ch_sortbam_bigbed
+        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bed12, ch_sortbam_bedgraph
         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
         script:
@@ -613,50 +613,65 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 9 - Convert BAM to BigWig
+     * STEP 9 - Convert BAM to BEDGraph
      */
-    process BAMToBigWig {
+    process BAMToBedGraph {
+        tag "$sample"
+        label 'process_medium'
+
+        when:
+        !params.skip_alignment && !params.skip_bigwig
+        input:
+        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bedgraph
+
+        output:
+        set file(fasta), file(sizes), val(sample), file("*.bedGraph") into ch_bedgraph
+        file "*.version" into ch_bedtools_version
+
+        script:
+        """
+        genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
+        bedtools --version > bedtools.version
+        """
+    }
+
+    /*
+     * STEP 10 - Convert BEDGraph to BigWig
+     */
+    process BedGraphToBigWig {
         tag "$sample"
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
             saveAs: { filename ->
                           if (filename.endsWith(".bigWig")) filename
                     }
-        when:
-        !params.skip_visualisation && !params.skip_bigwig
 
         input:
-        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigwig
+        set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
 
         output:
         set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
-        file "*.version" into ch_bedtools_version
 
         script:
         """
-        genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
-        bedGraphToBigWig ${sample}.bedGraph $sizes ${sample}.bigWig
-        bedtools --version > bedtools.version
+        bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
         """
     }
 
     /*
-     * STEP 10 - Convert BAM to BigBed
+     * STEP 11 - Convert BAM to BED12
      */
-    process BAMToBigBed {
+    process BAMToBed12 {
         tag "$sample"
         label 'process_medium'
-        publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
-            saveAs: { filename ->
-                          if (filename.endsWith(".bb")) filename
-                    }
+
         when:
         !params.skip_visualisation && !params.skip_bigbed
         input:
-        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bigbed
+        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
+        set file(fasta), file(sizes), val(sample), file("*.sorted.bed12") into ch_bed12
 
         script:
         """
@@ -665,10 +680,32 @@ if (params.skip_alignment) {
         bedToBigBed ${sample}.sorted.bed12 $sizes ${sample}.bb
         """
     }
+
+    /*
+     * STEP 12 - Convert BED12 to BigBED
+     */
+    process Bed12ToBigBed {
+        tag "$sample"
+        label 'process_medium'
+        publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
+            saveAs: { filename ->
+                          if (filename.endsWith(".bb")) filename
+                    }
+        input:
+        set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
+
+        output:
+        set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
+
+        script:
+        """
+        bedToBigBed $bed12 $sizes ${sample}.bb
+        """
+    }
 }
 
 /*
- * STEP 11 - Output Description HTML
+ * STEP 13 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
@@ -741,7 +778,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 }
 
 /*
- * STEP 12 - MultiQC
+ * STEP 14 - MultiQC
  */
 process MultiQC {
     publishDir "${params.outdir}/multiqc", mode: 'copy'
