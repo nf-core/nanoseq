@@ -267,7 +267,6 @@ Skip alignment and subsequent process
 | `--skip_bigwig`         | Skip BigWig file generation            |
 | `--skip_bigbed`         | Skip BigBed file generation            |
 
-
 ## Skipping QC steps
 
 The pipeline contains a number of quality control steps. Sometimes, it may not be desirable to run all of them if time and compute resources are limited.
