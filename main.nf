@@ -429,7 +429,7 @@ process FastQC {
     label 'process_medium'
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
+                      filename.endsWith(".zip") ? "zips/$filename" : "$filename"
                 }
 
     when:
@@ -444,7 +444,7 @@ process FastQC {
 
     script:
     """
-    fastqc -t $task.cpus $fastq
+    fastqc -q -t $task.cpus $fastq
     fastqc --version &> fastqc.version
     """
 }
