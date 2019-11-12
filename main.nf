@@ -61,6 +61,7 @@ def helpMessage() {
       --skip_qc [bool]                Skip all QC steps apart from MultiQC (Default: false)
       --skip_pycoqc [bool]            Skip pycoQC (Default: false)
       --skip_nanoplot [bool]          Skip NanoPlot (Default: false)
+      --skip_fastqc [bool]            Skip FastQC (Default: false)
       --skip_multiqc [bool]           Skip MultiQC (Default: false)
 
     Other
@@ -182,6 +183,7 @@ summary['Skip BigWig Generation'] = params.skip_bigwig ? 'Yes' : 'No'
 summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
 summary['Skip pycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
 summary['Skip NanoPlot']          = params.skip_nanoplot ? 'Yes' : 'No'
+summary['Skip FastQC']            = params.skip_fastqc ? 'Yes' : 'No'
 summary['Skip MultiQC']           = params.skip_multiqc ? 'Yes' : 'No'
 summary['Max Resources']          = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -255,6 +257,7 @@ if (params.skip_basecalling) {
         .splitCsv(header:true, sep:',')
         .map { row -> [ get_fasta(row.genome, params.genomes), row.sample, file(row.fastq, checkIfExists: true) ] }
         .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
                 ch_fastq_index;
                 ch_fastq_align }
 
@@ -385,6 +388,7 @@ if (params.skip_basecalling) {
         .join(ch_sample_info, by: 1) // join on barcode
         .map { it -> [ it[2], it[3], it[1] ] }
         .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
                 ch_fastq_index;
                 ch_fastq_align }
 }
@@ -417,6 +421,34 @@ process NanoPlotFastQ {
     """
 }
 
+/*
+ * STEP 5 - FastQ QC using FastQC
+ */
+process FastQC {
+    tag "$name"
+    label 'process_medium'
+    publishDir "${params.outdir}/fastqc", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    when:
+    !params.skip_fastqc && !params.skip_qc
+
+    input:
+    set val(fasta), val(sample), file(fastq) from ch_fastq_fastqc
+
+    output:
+    file "*.{zip,html}"
+    file "*.version" into ch_fastqc_version
+
+    script:
+    """
+    fastqc -q -t $task.cpus $fastq
+    fastqc --version &> fastqc.version
+    """
+}
+
 if (params.skip_alignment) {
 
     ch_samtools_version = Channel.empty()
@@ -437,7 +469,7 @@ if (params.skip_alignment) {
                 ch_fasta_align }
 
     /*
-     * STEP 5 - Make chromosome sizes file
+     * STEP 6 - Make chromosome sizes file
      */
     process GetChromSizes {
         tag "$fasta"
@@ -458,7 +490,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 6 - Create genome index
+     * STEP 7 - Create genome index
      */
     if (params.aligner == 'minimap2') {
 
@@ -524,7 +556,7 @@ if (params.skip_alignment) {
         .set { ch_fastq_align }
 
     /*
-     * STEP 7 - Align fastq files
+     * STEP 8 - Align fastq files
      */
     if (params.aligner == 'minimap2') {
 
@@ -579,7 +611,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 8 - Coordinate sort BAM files
+     * STEP 9 - Coordinate sort BAM files
      */
     process SortBAM {
         tag "$sample"
@@ -613,7 +645,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 9 - Convert BAM to BEDGraph
+     * STEP 10 - Convert BAM to BEDGraph
      */
     process BAMToBedGraph {
         tag "$sample"
@@ -636,7 +668,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 10 - Convert BEDGraph to BigWig
+     * STEP 11 - Convert BEDGraph to BigWig
      */
     process BedGraphToBigWig {
         tag "$sample"
@@ -659,7 +691,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 11 - Convert BAM to BED12
+     * STEP 12 - Convert BAM to BED12
      */
     process BAMToBed12 {
         tag "$sample"
@@ -680,7 +712,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 12 - Convert BED12 to BigBED
+     * STEP 13 - Convert BED12 to BigBED
      */
     process Bed12ToBigBed {
         tag "$sample"
@@ -703,7 +735,7 @@ if (params.skip_alignment) {
 }
 
 /*
- * STEP 13 - Output Description HTML
+ * STEP 14 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
@@ -739,6 +771,7 @@ process get_software_versions {
     file guppy from ch_guppy_version.collect().ifEmpty([])
     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
     file nanoplot from ch_nanoplot_version.first()
+    file fastqc from ch_fastqc_version.first()
     file samtools from ch_samtools_version.first().ifEmpty([])
     file minimap2 from ch_minimap2_version.first().ifEmpty([])
     file graphmap from ch_graphmap_version.first().ifEmpty([])
@@ -776,7 +809,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 }
 
 /*
- * STEP 14 - MultiQC
+ * STEP 15 - MultiQC
  */
 process MultiQC {
     publishDir "${params.outdir}/multiqc", mode: 'copy'
