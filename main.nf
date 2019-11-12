@@ -671,13 +671,11 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.sorted.bed12") into ch_bed12
+        set file(fasta), file(sizes), val(sample), file("*.bed12") into ch_bed12
 
         script:
         """
-        bedtools bamtobed -bed12 -cigar -i ${bam[0]} > ${sample}.bed12
-        bedtools sort -i ${sample}.bed12 > ${sample}.sorted.bed12
-        bedToBigBed ${sample}.sorted.bed12 $sizes ${sample}.bb
+        bedtools bamtobed -bed12 -cigar -i ${bam[0]} | sort -k1,1 -k2,2n > ${sample}.bed12
         """
     }
 
