@@ -445,8 +445,8 @@ process FastQC {
     script:
     """
     fastqc -q -t $task.cpus $fastq
-    mv ${fastq}_fastqc.html ${sample}_fastqc.html
-    mv ${fastq}_fastqc.zip ${sample}_fastqc.zip
+    mv ${fastq.baseName}_fastqc.html ${sample}_fastqc.html
+    mv ${fastq.baseName}_fastqc.zip ${sample}_fastqc.zip
     fastqc --version &> fastqc.version
     """
 }
