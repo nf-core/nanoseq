@@ -178,8 +178,8 @@ if (!params.skip_alignment) {
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
 }
 summary['Skip Visualisation']     = params.skip_visualisation ? 'Yes' : 'No'
-summary['Skip BigBed Generation'] = params.skip_bigbed ? 'Yes' : 'No'
-summary['Skip BigWig Generation'] = params.skip_bigwig ? 'Yes' : 'No'
+summary['Skip BigBed']            = params.skip_bigbed ? 'Yes' : 'No'
+summary['Skip BigWig']            = params.skip_bigwig ? 'Yes' : 'No'
 summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
 summary['Skip pycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
 summary['Skip NanoPlot']          = params.skip_nanoplot ? 'Yes' : 'No'
@@ -444,7 +444,7 @@ process FastQC {
 
     script:
     """
-    fastqc -q -t $task.cpus $fastq
+    fastqc -t $task.cpus $fastq
     fastqc --version &> fastqc.version
     """
 }
