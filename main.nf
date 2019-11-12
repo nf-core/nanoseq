@@ -425,7 +425,7 @@ process NanoPlotFastQ {
  * STEP 5 - FastQ QC using FastQC
  */
 process FastQC {
-    tag "$name"
+    tag "$sample"
     label 'process_medium'
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
