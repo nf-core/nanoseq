@@ -38,6 +38,7 @@
   * [`--skip_qc`](#--skip_qc)
   * [`--skip_pycoqc`](#--skip_pycoqc)
   * [`--skip_nanoplot`](#--skip_nanoplot)
+  * [`--skip_fastqc`](#--skip_fastqc)
   * [`--skip_multiqc`](#--skip_multiqc)
 * [Job resources](#job-resources)
   * [Automatic resubmission](#automatic-resubmission)
@@ -277,6 +278,7 @@ The following options make this easy:
 | `--skip_qc`             | Skip all QC steps apart from MultiQC |
 | `--skip_pycoqc`         | Skip pycoQC                          |
 | `--skip_nanoplot`       | Skip NanoPlot                        |
+| `--skip_fastqc`         | Skip FastQC                          |
 | `--skip_multiqc`        | Skip MultiQC                         |
 
 ## Job resources
