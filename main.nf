@@ -442,7 +442,7 @@ process FastQC {
 
     script:
     """
-    [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
+    [ ! -f ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
     fastqc -q -t $task.cpus ${sample}.fastq.gz
     fastqc --version > fastqc.version
     """
@@ -723,7 +723,7 @@ if (params.skip_alignment) {
                     }
         when:
         !params.skip_bigbed
-        
+
         input:
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
 
