@@ -263,7 +263,6 @@ Skip alignment and subsequent process
 
 | Step                    | Description                            |
 |-------------------------|----------------------------------------|
-| `--skip_visualisation`  | Skip BigBed and BigWig file generation |
 | `--skip_bigwig`         | Skip BigWig file generation            |
 | `--skip_bigbed`         | Skip BigBed file generation            |
 
