@@ -281,7 +281,6 @@ if (params.skip_basecalling) {
     process Guppy {
         tag "$run_dir"
         label 'process_high'
-        clusterOptions = params.gpu_cluster_options
         publishDir path: "${params.outdir}/guppy", mode: 'copy',
             saveAs: { filename ->
                           if (!filename.endsWith(".version")) filename
