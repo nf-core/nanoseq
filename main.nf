@@ -720,7 +720,7 @@ if (params.skip_alignment) {
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
             saveAs: { filename ->
-                          if (filename.endsWith(".bb")) filename
+                          if (filename.endsWith(".bigBed")) filename
                     }
         when:
         !params.skip_bigbed
