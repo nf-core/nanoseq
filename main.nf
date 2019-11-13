@@ -722,6 +722,9 @@ if (params.skip_alignment) {
             saveAs: { filename ->
                           if (filename.endsWith(".bb")) filename
                     }
+        when:
+        !params.skip_bigbed
+  
         input:
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
 
