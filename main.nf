@@ -437,15 +437,14 @@ process FastQC {
     set val(fasta), val(sample), file(fastq) from ch_fastq_fastqc
 
     output:
-    file "*.{zip,html}"
+    file "*.{zip,html}" into ch_fastq_mqc
     file "*.version" into ch_fastqc_version
 
     script:
     """
-    fastqc -q -t $task.cpus $fastq
-    mv ${fastq.simpleName}_fastqc.html ${sample}_fastqc.html
-    mv ${fastq.simpleName}_fastqc.zip ${sample}_fastqc.zip
-    fastqc --version &> fastqc.version
+    [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
+    fastqc -q -t $task.cpus ${sample}.fastq.gz
+    fastqc --version > fastqc.version
     """
 }
 
