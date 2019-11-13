@@ -629,7 +629,8 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(sam) from ch_align_sam
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bed12, ch_sortbam_bedgraph
+        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bed12,
+                                                                                       ch_sortbam_bedgraph
         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
         script:
@@ -676,6 +677,8 @@ if (params.skip_alignment) {
             saveAs: { filename ->
                           if (filename.endsWith(".bigWig")) filename
                     }
+        when:
+        !params.skip_bigwig
 
         input:
         set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
@@ -720,6 +723,9 @@ if (params.skip_alignment) {
             saveAs: { filename ->
                           if (filename.endsWith(".bigBed")) filename
                     }
+        when:
+        !params.skip_bigbed
+
         input:
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
 
@@ -819,7 +825,7 @@ process MultiQC {
     input:
     file multiqc_config from ch_multiqc_config
     file ('samtools/*')  from ch_sortbam_stats_mqc.collect().ifEmpty([])
-    file ('fastqc/*')  from ch_fastqc_mqc.collect().ifEmpty([])
+    file ('fastqc/*')  from ch_fastq_mqc.collect().ifEmpty([])
     file ('software_versions/*') from software_versions_yaml.collect()
     file ('workflow_summary/*') from create_workflow_summary(summary)
 
