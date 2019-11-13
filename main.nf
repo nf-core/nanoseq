@@ -437,7 +437,7 @@ process FastQC {
     set val(fasta), val(sample), file(fastq) from ch_fastq_fastqc
 
     output:
-    file "*.{zip,html}"
+    file "*.{zip,html}" into ch_fastqc_mqc
     file "*.version" into ch_fastqc_version
 
     script:
