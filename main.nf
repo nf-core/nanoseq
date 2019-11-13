@@ -92,13 +92,14 @@ if (!params.skip_basecalling) {
     // TODO nf-core: Add in a check to see if running offline
     // Pre-download test-dataset to get files for '--run_dir' parameter
     // Nextflow is unable to recursively download directories via HTTPS
-    if (workflow.profile.split(',').contains('test')) {
+    if (workflow.profile.contains('test')) {
         process GetTestData {
 
             output:
-            file "test-datasets/fast5/" into ch_run_dir
+            file "test-datasets/fast5/$barcoded/" into ch_run_dir
 
             script:
+            barcoded = workflow.profile.contains('test_nonbc') ? "nonbarcoded" : "barcoded"
             """
             git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
             """
