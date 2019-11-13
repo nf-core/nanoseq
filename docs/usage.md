@@ -259,7 +259,7 @@ Save the `.sam` files from the alignment step - not done by default
 
 Skip alignment and subsequent process
 
-## Visualisation file generation
+## Coverage tracks
 
 | Step                    | Description                            |
 |-------------------------|----------------------------------------|
