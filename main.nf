@@ -85,7 +85,7 @@ if (params.help) {
 /*
  * SET UP CONFIGURATION VARIABLES
  */
-if (params.input)               { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
+if (params.input) { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 
 if (!params.skip_basecalling) {
 
@@ -431,7 +431,7 @@ process FastQC {
                 }
 
     when:
-    !params.skip_fastqc && !params.skip_qc
+    !params.skip_qc && !params.skip_fastqc
 
     input:
     set val(fasta), val(sample), file(fastq) from ch_fastq_fastqc
