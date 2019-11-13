@@ -442,10 +442,9 @@ process FastQC {
 
     script:
     """
-    fastqc -q -t $task.cpus $fastq
-    mv ${fastq.simpleName}_fastqc.html ${sample}_fastqc.html
-    mv ${fastq.simpleName}_fastqc.zip ${sample}_fastqc.zip
-    fastqc --version &> fastqc.version
+    [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
+    fastqc -q -t $task.cpus ${sample}.fastq.gz
+    fastqc --version > fastqc.version
     """
 }
 
@@ -724,7 +723,7 @@ if (params.skip_alignment) {
                     }
         when:
         !params.skip_bigbed
-  
+ 
         input:
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
 
