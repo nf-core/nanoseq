@@ -67,7 +67,7 @@ The nf-core/nanoseq pipeline comes with documentation about the pipeline, found 
 
 ## Credits
 
-nf-core/nanoseq was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from The Bioinformatics & Biostatistics Group for use at [The Francis Crick Institute](https://www.crick.ac.uk/), London. [Laura Wratten](https://github.com/lwratten) from the [Genome Institute of Singapore](https://www.a-star.edu.sg/gis) is one of the primary contributors along with [Johannes Alneberg](https://github.com/alneberg) and [Franziska Bonath](https://github.com/FranBonath) from [SciLifeLab](https://www.scilifelab.se/), Sweden.
+nf-core/nanoseq was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from [The Bioinformatics & Biostatistics Group](https://www.crick.ac.uk/research/science-technology-platforms/bioinformatics-and-biostatistics/) for use at [The Francis Crick Institute](https://www.crick.ac.uk/), London. [Laura Wratten](https://github.com/lwratten) from the [Genome Institute of Singapore](https://www.a-star.edu.sg/gis) is one of the primary contributors along with [Johannes Alneberg](https://github.com/alneberg) and [Franziska Bonath](https://github.com/FranBonath) from [SciLifeLab](https://www.scilifelab.se/), Sweden.
 
 Many thanks to others who have helped out along the way too, including (but not limited to): [`@crickbabs`](https://github.com/crickbabs), [@AnnaSyme](https://github.com/AnnaSyme).
 
