@@ -53,7 +53,6 @@ def helpMessage() {
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
     Visualisation
-      --skip_visualisation [bool]     Skip BigWig and BigBed file generation (Default: false)
       --skip_bigwig [bool]            Skip BigWig file generation (Default: false)
       --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
 
@@ -177,7 +176,6 @@ if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
 }
-summary['Skip Visualisation']     = params.skip_visualisation ? 'Yes' : 'No'
 summary['Skip BigBed']            = params.skip_bigbed ? 'Yes' : 'No'
 summary['Skip BigWig']            = params.skip_bigwig ? 'Yes' : 'No'
 summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
@@ -654,7 +652,7 @@ if (params.skip_alignment) {
         label 'process_medium'
 
         when:
-        !params.skip_alignment && !params.skip_bigwig
+        !params.skip_bigwig
         input:
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bedgraph
 
@@ -700,7 +698,7 @@ if (params.skip_alignment) {
         label 'process_medium'
 
         when:
-        !params.skip_visualisation && !params.skip_bigbed
+        !params.skip_bigbed
         input:
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
 
@@ -721,17 +719,17 @@ if (params.skip_alignment) {
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
             saveAs: { filename ->
-                          if (filename.endsWith(".bb")) filename
+                          if (filename.endsWith(".bigBed")) filename
                     }
         input:
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
+        set file(fasta), file(sizes), val(sample), file("*.bigBed") into ch_bigbed
 
         script:
         """
-        bedToBigBed $bed12 $sizes ${sample}.bb
+        bedToBigBed $bed12 $sizes ${sample}.bigBed
         """
     }
 }
