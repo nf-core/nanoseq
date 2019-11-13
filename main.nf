@@ -176,7 +176,6 @@ if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
 }
-summary['Skip Visualisation']     = params.skip_visualisation ? 'Yes' : 'No'
 summary['Skip BigBed']            = params.skip_bigbed ? 'Yes' : 'No'
 summary['Skip BigWig']            = params.skip_bigwig ? 'Yes' : 'No'
 summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
