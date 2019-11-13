@@ -733,7 +733,7 @@ if (params.skip_alignment) {
 
         script:
         """
-        bedToBigBed $bed12 $sizes ${sample}.bb
+        bedToBigBed $bed12 $sizes ${sample}.bigBed
         """
     }
 }
