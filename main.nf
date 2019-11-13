@@ -653,7 +653,7 @@ if (params.skip_alignment) {
         label 'process_medium'
 
         when:
-        !params.skip_alignment && !params.skip_bigwig
+        !params.skip_bigwig
         input:
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bedgraph
 
