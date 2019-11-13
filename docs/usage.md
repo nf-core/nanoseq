@@ -30,7 +30,7 @@
   * [`--aligner`](#--aligner)
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
-* [Visualisation file generation](#visualisation-file-generation)
+* [Coverage tracks](#coverage-tracks)
   * [`--skip_bigwig`](#--skip_bigwig)
   * [`--skip_bigbed`](#--skip_bigbed)
 * [Skipping QC steps](#skipping-qc-steps)
