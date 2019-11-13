@@ -630,7 +630,8 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(sam) from ch_align_sam
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bed12, ch_sortbam_bedgraph
+        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bed12,
+                                                                                       ch_sortbam_bedgraph
         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
         script:
