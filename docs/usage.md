@@ -30,10 +30,14 @@
   * [`--aligner`](#--aligner)
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
+* [Coverage tracks](#coverage-tracks)
+  * [`--skip_bigwig`](#--skip_bigwig)
+  * [`--skip_bigbed`](#--skip_bigbed)
 * [Skipping QC steps](#skipping-qc-steps)
   * [`--skip_qc`](#--skip_qc)
   * [`--skip_pycoqc`](#--skip_pycoqc)
   * [`--skip_nanoplot`](#--skip_nanoplot)
+  * [`--skip_fastqc`](#--skip_fastqc)
   * [`--skip_multiqc`](#--skip_multiqc)
 * [Job resources](#job-resources)
   * [Automatic resubmission](#automatic-resubmission)
@@ -255,6 +259,13 @@ Save the `.sam` files from the alignment step - not done by default
 
 Skip alignment and subsequent process
 
+## Coverage tracks
+
+| Step                    | Description                            |
+|-------------------------|----------------------------------------|
+| `--skip_bigwig`         | Skip BigWig file generation            |
+| `--skip_bigbed`         | Skip BigBed file generation            |
+
 ## Skipping QC steps
 
 The pipeline contains a number of quality control steps. Sometimes, it may not be desirable to run all of them if time and compute resources are limited.
@@ -265,6 +276,7 @@ The following options make this easy:
 | `--skip_qc`             | Skip all QC steps apart from MultiQC |
 | `--skip_pycoqc`         | Skip pycoQC                          |
 | `--skip_nanoplot`       | Skip NanoPlot                        |
+| `--skip_fastqc`         | Skip FastQC                          |
 | `--skip_multiqc`        | Skip MultiQC                         |
 
 ## Job resources
