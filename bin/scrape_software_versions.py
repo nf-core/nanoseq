@@ -10,7 +10,7 @@ regexes = {
     'guppy': ['guppy.version', r"Version (\S+)"],
     'pycoQC': ['pycoqc.version', r"pycoQC v(\S+)"],
     'NanoPlot': ['nanoplot.version', r"NanoPlot (\S+)"],
-    'NanoPlot': ['fastqc.version', r"FastQC v(\S+)"],
+    'NanoPlot': ['fastqc.version', r"FastQC (\S+)"],
     'GraphMap': ['graphmap.version', r"Version: v(\S+)"],
     'minimap2': ['minimap2.version', r"(\S+)"],
     'Samtools': ['samtools.version', r"samtools (\S+)"],
