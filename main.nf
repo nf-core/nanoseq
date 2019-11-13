@@ -823,6 +823,7 @@ process MultiQC {
     input:
     file multiqc_config from ch_multiqc_config
     file ('samtools/*')  from ch_sortbam_stats_mqc.collect().ifEmpty([])
+    file ('fastqc/*')  from ch_fastqc_mqc.collect().ifEmpty([])
     file ('software_versions/*') from software_versions_yaml.collect()
     file ('workflow_summary/*') from create_workflow_summary(summary)
 
@@ -835,7 +836,8 @@ process MultiQC {
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     """
-    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content -m samtools
+    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content \
+    -m samtools -m fastqc
     """
 }
 
