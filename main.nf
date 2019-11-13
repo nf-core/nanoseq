@@ -729,7 +729,7 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
+        set file(fasta), file(sizes), val(sample), file("*.bigBed") into ch_bigbed
 
         script:
         """
