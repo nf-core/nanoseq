@@ -723,7 +723,7 @@ if (params.skip_alignment) {
                     }
         when:
         !params.skip_bigbed
- 
+        
         input:
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
 
