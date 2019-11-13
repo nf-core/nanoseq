@@ -442,8 +442,7 @@ process FastQC {
 
     script:
     """
-    [ ! -f ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
-    fastqc -q -t $task.cpus ${sample}.fastq.gz
+    fastqc -q -t $task.cpus $fastq
     fastqc --version > fastqc.version
     """
 }
