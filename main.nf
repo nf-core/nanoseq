@@ -699,7 +699,7 @@ if (params.skip_alignment) {
         label 'process_medium'
 
         when:
-        !params.skip_visualisation && !params.skip_bigbed
+        !params.skip_bigbed
         input:
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
 
