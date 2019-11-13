@@ -437,7 +437,7 @@ process FastQC {
     set val(fasta), val(sample), file(fastq) from ch_fastq_fastqc
 
     output:
-    file "*.{zip,html}" into ch_fastq_mqc
+    file "*.{zip,html}" into ch_fastqc_mqc
     file "*.version" into ch_fastqc_version
 
     script:
@@ -825,7 +825,7 @@ process MultiQC {
     input:
     file multiqc_config from ch_multiqc_config
     file ('samtools/*')  from ch_sortbam_stats_mqc.collect().ifEmpty([])
-    file ('fastqc/*')  from ch_fastq_mqc.collect().ifEmpty([])
+    file ('fastqc/*')  from ch_fastqc_mqc.collect().ifEmpty([])
     file ('software_versions/*') from software_versions_yaml.collect()
     file ('workflow_summary/*') from create_workflow_summary(summary)
 
