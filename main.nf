@@ -701,7 +701,7 @@ if (params.skip_alignment) {
         label 'process_medium'
 
         when:
-        !params.skip_bigbed && params.protocol == 'directRNA'
+        !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
         input:
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
@@ -726,7 +726,7 @@ if (params.skip_alignment) {
                           if (filename.endsWith(".bigBed")) filename
                     }
         when:
-        !params.skip_bigbed && params.protocol == 'directRNA'
+        !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
         input:
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
