@@ -53,7 +53,6 @@ def helpMessage() {
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
     Visualisation
-      --skip_visualisation [bool]     Skip BigWig and BigBed file generation (Default: false)
       --skip_bigwig [bool]            Skip BigWig file generation (Default: false)
       --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
 
