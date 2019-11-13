@@ -653,6 +653,7 @@ if (params.skip_alignment) {
 
         when:
         !params.skip_bigwig
+
         input:
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bedgraph
 
@@ -700,7 +701,8 @@ if (params.skip_alignment) {
         label 'process_medium'
 
         when:
-        !params.skip_bigbed
+        !params.skip_bigbed && params.protocol == 'directRNA'
+
         input:
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
 
@@ -724,7 +726,7 @@ if (params.skip_alignment) {
                           if (filename.endsWith(".bigBed")) filename
                     }
         when:
-        !params.skip_bigbed
+        !params.skip_bigbed && params.protocol == 'directRNA'
 
         input:
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
@@ -775,8 +777,8 @@ process get_software_versions {
     input:
     file guppy from ch_guppy_version.collect().ifEmpty([])
     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    file nanoplot from ch_nanoplot_version.first()
-    file fastqc from ch_fastqc_version.first()
+    file nanoplot from ch_nanoplot_version.first().ifEmpty([])
+    file fastqc from ch_fastqc_version.first().ifEmpty([])
     file samtools from ch_samtools_version.first().ifEmpty([])
     file minimap2 from ch_minimap2_version.first().ifEmpty([])
     file graphmap from ch_graphmap_version.first().ifEmpty([])
@@ -838,8 +840,8 @@ process MultiQC {
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     """
-    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content \
-    -m samtools -m fastqc
+    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content \\
+        -m samtools -m fastqc
     """
 }
 
@@ -872,7 +874,6 @@ workflow.onComplete {
     if (workflow.repository) email_fields['summary']['Pipeline repository Git URL'] = workflow.repository
     if (workflow.commitId) email_fields['summary']['Pipeline repository Git Commit'] = workflow.commitId
     if (workflow.revision) email_fields['summary']['Pipeline Git branch/tag'] = workflow.revision
-    if (workflow.container) email_fields['summary']['Docker image'] = workflow.container
     email_fields['summary']['Nextflow Version'] = workflow.nextflow.version
     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
