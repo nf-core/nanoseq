@@ -31,7 +31,6 @@
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
 * [Visualisation file generation](#visualisation-file-generation)
-  * [`--skip_visualisation`](#--skip_visualisation)
   * [`--skip_bigwig`](#--skip_bigwig)
   * [`--skip_bigbed`](#--skip_bigbed)
 * [Skipping QC steps](#skipping-qc-steps)
