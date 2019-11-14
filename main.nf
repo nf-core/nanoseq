@@ -85,20 +85,21 @@ if (params.help) {
 /*
  * SET UP CONFIGURATION VARIABLES
  */
-if (params.input)               { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
+if (params.input) { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 
 if (!params.skip_basecalling) {
 
     // TODO nf-core: Add in a check to see if running offline
     // Pre-download test-dataset to get files for '--run_dir' parameter
     // Nextflow is unable to recursively download directories via HTTPS
-    if (workflow.profile.split(',').contains('test')) {
+    if (workflow.profile.contains('test')) {
         process GetTestData {
 
             output:
-            file "test-datasets/fast5/" into ch_run_dir
+            file "test-datasets/fast5/$barcoded/" into ch_run_dir
 
             script:
+            barcoded = workflow.profile.contains('test_nonbc') ? "nonbarcoded" : "barcoded"
             """
             git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
             """
@@ -280,7 +281,6 @@ if (params.skip_basecalling) {
     process Guppy {
         tag "$run_dir"
         label 'process_high'
-        clusterOptions = params.gpu_cluster_options
         publishDir path: "${params.outdir}/guppy", mode: 'copy',
             saveAs: { filename ->
                           if (!filename.endsWith(".version")) filename
@@ -431,7 +431,7 @@ process FastQC {
                 }
 
     when:
-    !params.skip_fastqc && !params.skip_qc
+    !params.skip_qc && !params.skip_fastqc
 
     input:
     set val(fasta), val(sample), file(fastq) from ch_fastq_fastqc
@@ -653,6 +653,7 @@ if (params.skip_alignment) {
 
         when:
         !params.skip_bigwig
+
         input:
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bedgraph
 
@@ -700,7 +701,8 @@ if (params.skip_alignment) {
         label 'process_medium'
 
         when:
-        !params.skip_bigbed
+        !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
+
         input:
         set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
 
@@ -724,7 +726,7 @@ if (params.skip_alignment) {
                           if (filename.endsWith(".bigBed")) filename
                     }
         when:
-        !params.skip_bigbed
+        !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
         input:
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
@@ -775,8 +777,8 @@ process get_software_versions {
     input:
     file guppy from ch_guppy_version.collect().ifEmpty([])
     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    file nanoplot from ch_nanoplot_version.first()
-    file fastqc from ch_fastqc_version.first()
+    file nanoplot from ch_nanoplot_version.first().ifEmpty([])
+    file fastqc from ch_fastqc_version.first().ifEmpty([])
     file samtools from ch_samtools_version.first().ifEmpty([])
     file minimap2 from ch_minimap2_version.first().ifEmpty([])
     file graphmap from ch_graphmap_version.first().ifEmpty([])
@@ -838,8 +840,7 @@ process MultiQC {
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     """
-    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content \
-    -m samtools -m fastqc
+    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content -m fastqc -m samtools
     """
 }
 
@@ -872,7 +873,6 @@ workflow.onComplete {
     if (workflow.repository) email_fields['summary']['Pipeline repository Git URL'] = workflow.repository
     if (workflow.commitId) email_fields['summary']['Pipeline repository Git Commit'] = workflow.commitId
     if (workflow.revision) email_fields['summary']['Pipeline Git branch/tag'] = workflow.revision
-    if (workflow.container) email_fields['summary']['Docker image'] = workflow.container
     email_fields['summary']['Nextflow Version'] = workflow.nextflow.version
     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
