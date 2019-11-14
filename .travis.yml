@@ -43,4 +43,4 @@ script:
   # Run the pipeline with barcoded data and graphmap
   - nextflow run ${TRAVIS_BUILD_DIR} -profile test,docker --aligner graphmap -ansi-log false
   # Run the pipeline with non-barcoded data and mimimap2
-  - nextflow run ${TRAVIS_BUILD_DIR} -profile test_nobc,docker --aligner minimap2 -ansi-log false
+  - nextflow run ${TRAVIS_BUILD_DIR} -profile test_nonbc,docker --aligner minimap2 -ansi-log false
