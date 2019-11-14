@@ -52,10 +52,15 @@ def helpMessage() {
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
+    Coverage tracks
+      --skip_bigwig [bool]            Skip BigWig file generation (Default: false)
+      --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
+
     QC
       --skip_qc [bool]                Skip all QC steps apart from MultiQC (Default: false)
       --skip_pycoqc [bool]            Skip pycoQC (Default: false)
       --skip_nanoplot [bool]          Skip NanoPlot (Default: false)
+      --skip_fastqc [bool]            Skip FastQC (Default: false)
       --skip_multiqc [bool]           Skip MultiQC (Default: false)
 
     Other
@@ -80,20 +85,21 @@ if (params.help) {
 /*
  * SET UP CONFIGURATION VARIABLES
  */
-if (params.input)               { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
+if (params.input) { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 
 if (!params.skip_basecalling) {
 
     // TODO nf-core: Add in a check to see if running offline
     // Pre-download test-dataset to get files for '--run_dir' parameter
     // Nextflow is unable to recursively download directories via HTTPS
-    if (workflow.profile.split(',').contains('test')) {
+    if (workflow.profile.contains('test')) {
         process GetTestData {
 
             output:
-            file "test-datasets/fast5/" into ch_run_dir
+            file "test-datasets/fast5/$barcoded/" into ch_run_dir
 
             script:
+            barcoded = workflow.profile.contains('test_nonbc') ? "nonbarcoded" : "barcoded"
             """
             git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
             """
@@ -113,7 +119,7 @@ if (!params.skip_basecalling) {
     }
 }
 
-if (!params.skip_alignment)     {
+if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
     }
@@ -171,9 +177,12 @@ if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
 }
+summary['Skip BigBed']            = params.skip_bigbed ? 'Yes' : 'No'
+summary['Skip BigWig']            = params.skip_bigwig ? 'Yes' : 'No'
 summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
 summary['Skip pycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
 summary['Skip NanoPlot']          = params.skip_nanoplot ? 'Yes' : 'No'
+summary['Skip FastQC']            = params.skip_fastqc ? 'Yes' : 'No'
 summary['Skip MultiQC']           = params.skip_multiqc ? 'Yes' : 'No'
 summary['Max Resources']          = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -247,6 +256,7 @@ if (params.skip_basecalling) {
         .splitCsv(header:true, sep:',')
         .map { row -> [ get_fasta(row.genome, params.genomes), row.sample, file(row.fastq, checkIfExists: true) ] }
         .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
                 ch_fastq_index;
                 ch_fastq_align }
 
@@ -271,7 +281,6 @@ if (params.skip_basecalling) {
     process Guppy {
         tag "$run_dir"
         label 'process_high'
-        clusterOptions = params.gpu_cluster_options
         publishDir path: "${params.outdir}/guppy", mode: 'copy',
             saveAs: { filename ->
                           if (!filename.endsWith(".version")) filename
@@ -377,6 +386,7 @@ if (params.skip_basecalling) {
         .join(ch_sample_info, by: 1) // join on barcode
         .map { it -> [ it[2], it[3], it[1] ] }
         .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
                 ch_fastq_index;
                 ch_fastq_align }
 }
@@ -409,6 +419,35 @@ process NanoPlotFastQ {
     """
 }
 
+/*
+ * STEP 5 - FastQ QC using FastQC
+ */
+process FastQC {
+    tag "$sample"
+    label 'process_medium'
+    publishDir "${params.outdir}/fastqc", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    when:
+    !params.skip_qc && !params.skip_fastqc
+
+    input:
+    set val(fasta), val(sample), file(fastq) from ch_fastq_fastqc
+
+    output:
+    file "*.{zip,html}" into ch_fastqc_mqc
+    file "*.version" into ch_fastqc_version
+
+    script:
+    """
+    [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
+    fastqc -q -t $task.cpus ${sample}.fastq.gz
+    fastqc --version > fastqc.version
+    """
+}
+
 if (params.skip_alignment) {
 
     ch_samtools_version = Channel.empty()
@@ -429,7 +468,7 @@ if (params.skip_alignment) {
                 ch_fasta_align }
 
     /*
-     * STEP 5 - Make chromosome sizes file
+     * STEP 6 - Make chromosome sizes file
      */
     process GetChromSizes {
         tag "$fasta"
@@ -450,7 +489,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 6 - Create genome index
+     * STEP 7 - Create genome index
      */
     if (params.aligner == 'minimap2') {
 
@@ -516,7 +555,7 @@ if (params.skip_alignment) {
         .set { ch_fastq_align }
 
     /*
-     * STEP 7 - Align fastq files
+     * STEP 8 - Align fastq files
      */
     if (params.aligner == 'minimap2') {
 
@@ -571,7 +610,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 8 - Coordinate sort BAM files
+     * STEP 9 - Coordinate sort BAM files
      */
     process SortBAM {
         tag "$sample"
@@ -590,7 +629,8 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(sam) from ch_align_sam
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bam
+        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bed12,
+                                                                                       ch_sortbam_bedgraph
         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
         script:
@@ -605,18 +645,17 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 9 - Convert BAM to BEDGraph
+     * STEP 10 - Convert BAM to BEDGraph
      */
     process BAMToBedGraph {
         tag "$sample"
         label 'process_medium'
-        publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
-            saveAs: { filename ->
-                          if (filename.endsWith(".bedGraph")) filename
-                    }
+
+        when:
+        !params.skip_bigwig
 
         input:
-        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bam
+        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bedgraph
 
         output:
         set file(fasta), file(sizes), val(sample), file("*.bedGraph") into ch_bedgraph
@@ -630,7 +669,7 @@ if (params.skip_alignment) {
     }
 
     /*
-     * STEP 10 - Convert BEDGraph to BigWig
+     * STEP 11 - Convert BEDGraph to BigWig
      */
     process BedGraphToBigWig {
         tag "$sample"
@@ -639,6 +678,8 @@ if (params.skip_alignment) {
             saveAs: { filename ->
                           if (filename.endsWith(".bigWig")) filename
                     }
+        when:
+        !params.skip_bigwig
 
         input:
         set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
@@ -651,10 +692,57 @@ if (params.skip_alignment) {
         bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
         """
     }
+
+    /*
+     * STEP 12 - Convert BAM to BED12
+     */
+    process BAMToBed12 {
+        tag "$sample"
+        label 'process_medium'
+
+        when:
+        !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
+
+        input:
+        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
+
+        output:
+        set file(fasta), file(sizes), val(sample), file("*.bed12") into ch_bed12
+
+        script:
+        """
+        bedtools bamtobed -bed12 -cigar -i ${bam[0]} | sort -k1,1 -k2,2n > ${sample}.bed12
+        """
+    }
+
+    /*
+     * STEP 13 - Convert BED12 to BigBED
+     */
+    process Bed12ToBigBed {
+        tag "$sample"
+        label 'process_medium'
+        publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
+            saveAs: { filename ->
+                          if (filename.endsWith(".bigBed")) filename
+                    }
+        when:
+        !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
+
+        input:
+        set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
+
+        output:
+        set file(fasta), file(sizes), val(sample), file("*.bigBed") into ch_bigbed
+
+        script:
+        """
+        bedToBigBed $bed12 $sizes ${sample}.bigBed
+        """
+    }
 }
 
 /*
- * STEP 11 - Output Description HTML
+ * STEP 14 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
@@ -689,7 +777,8 @@ process get_software_versions {
     input:
     file guppy from ch_guppy_version.collect().ifEmpty([])
     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    file nanoplot from ch_nanoplot_version.first()
+    file nanoplot from ch_nanoplot_version.first().ifEmpty([])
+    file fastqc from ch_fastqc_version.first().ifEmpty([])
     file samtools from ch_samtools_version.first().ifEmpty([])
     file minimap2 from ch_minimap2_version.first().ifEmpty([])
     file graphmap from ch_graphmap_version.first().ifEmpty([])
@@ -727,7 +816,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 }
 
 /*
- * STEP 12 - MultiQC
+ * STEP 15 - MultiQC
  */
 process MultiQC {
     publishDir "${params.outdir}/multiqc", mode: 'copy'
@@ -738,6 +827,7 @@ process MultiQC {
     input:
     file multiqc_config from ch_multiqc_config
     file ('samtools/*')  from ch_sortbam_stats_mqc.collect().ifEmpty([])
+    file ('fastqc/*')  from ch_fastqc_mqc.collect().ifEmpty([])
     file ('software_versions/*') from software_versions_yaml.collect()
     file ('workflow_summary/*') from create_workflow_summary(summary)
 
@@ -750,7 +840,7 @@ process MultiQC {
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     """
-    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content -m samtools
+    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content -m fastqc -m samtools
     """
 }
 
@@ -783,7 +873,6 @@ workflow.onComplete {
     if (workflow.repository) email_fields['summary']['Pipeline repository Git URL'] = workflow.repository
     if (workflow.commitId) email_fields['summary']['Pipeline repository Git Commit'] = workflow.commitId
     if (workflow.revision) email_fields['summary']['Pipeline Git branch/tag'] = workflow.revision
-    if (workflow.container) email_fields['summary']['Docker image'] = workflow.container
     email_fields['summary']['Nextflow Version'] = workflow.nextflow.version
     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
