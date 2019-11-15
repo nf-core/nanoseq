@@ -43,6 +43,7 @@ def helpMessage() {
       --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (Default: 1)
       --gpu_device [str]              Basecalling device specified to Guppy in GPU mode using '--device' (Default: 'auto')
       --gpu_cluster_options [str]     Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
+      --guppy_model [file]            Custom basecalling model file to use for Guppy basecalling, such as the output from Taiyaki (Optional)
       --skip_basecalling [bool]       Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]    Skip demultiplexing with Guppy (Default: false)
 
@@ -171,6 +172,7 @@ if (!params.skip_basecalling) {
     summary['Guppy CPU Threads']  = params.guppy_cpu_threads
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
+    summary['Custom Basecalling Model']  = params.guppy_model ?:'Unspecified'
 }
 summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
 if (!params.skip_alignment) {
@@ -301,6 +303,7 @@ if (params.skip_basecalling) {
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
         config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        model = params.guppy_model ? "--model $params.guppy_model" : ""
         """
         guppy_basecaller \\
             --input_path $run_dir \\
@@ -309,7 +312,8 @@ if (params.skip_basecalling) {
             --compress_fastq \\
             $barcode_kit \\
             $config \\
-            $proc_options
+            $proc_options \\
+            $model
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files
