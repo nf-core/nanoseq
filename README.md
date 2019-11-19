@@ -1,10 +1,7 @@
 # ![nfcore/nanoseq](docs/images/nf-core-nanoseq_logo.png)
 
 [![Build Status](https://travis-ci.com/nf-core/nanoseq.svg?branch=master)](https://travis-ci.com/nf-core/nanoseq)
-[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A519.04.0-brightgreen.svg)](https://www.nextflow.io/)
-
-[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg)](http://bioconda.github.io/)
-[![Docker](https://img.shields.io/docker/automated/nfcore/nanoseq.svg)](https://hub.docker.com/r/nfcore/nanoseq)
+[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A519.10.0-brightgreen.svg)](https://www.nextflow.io/)
 
 ## Introduction
 
@@ -16,10 +13,12 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 1. Basecalling, barcoding and adapter trimming ([`Guppy`](https://nanoporetech.com/nanopore-sequencing-data-analysis); *optional*)
     * Sequencing QC ([`pycoQC`](https://github.com/a-slide/pycoQC), [`NanoPlot`](https://github.com/wdecoster/NanoPlot))
-2. FastQ QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot))
+2. FastQ QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot), [`FastQC`](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
 3. Alignment ([`GraphMap`](https://github.com/isovic/graphmap) or [`minimap2`](https://github.com/lh3/minimap2))
-    * Convert `.sam` to co-ordinate sorted `.bam` and obtain mapping metrics ([`SAMtools`](http://www.htslib.org/doc/samtools.html))
-4. Present QC for alignment results ([`MultiQC`](https://multiqc.info/docs/))
+    * Each sample can be mapped to its own reference genome if multiplexed in this way
+    * Convert SAM to co-ordinate sorted BAM and obtain mapping metrics ([`SAMtools`](http://www.htslib.org/doc/samtools.html))
+4. Create bigWig ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/)) and bigBed ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedToBigBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)) coverage tracks for visualisation
+5. Present QC for alignment results ([`MultiQC`](https://multiqc.info/docs/))
 
 ## Quick Start
 
@@ -37,9 +36,15 @@ nextflow run nf-core/nanoseq -profile test,<docker/singularity/institute>
 
 iv. Start running your own analysis!
 
-<!-- TODO nf-core: Update the default command above used to run the pipeline -->
 ```bash
-nextflow run nf-core/nanoseq -profile <docker/singularity/institute>
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --run_dir ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-LSK109 \
+    --barcode_kit SQK-PBK004 \
+    -profile <docker/singularity/institute>
 ```
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
@@ -59,9 +64,9 @@ The nf-core/nanoseq pipeline comes with documentation about the pipeline, found 
 
 ## Credits
 
-nf-core/nanoseq was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from The Bioinformatics & Biostatistics Group for use at The Francis Crick Institute, London.
+nf-core/nanoseq was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from [The Bioinformatics & Biostatistics Group](https://www.crick.ac.uk/research/science-technology-platforms/bioinformatics-and-biostatistics/) for use at [The Francis Crick Institute](https://www.crick.ac.uk/), London. [Laura Wratten](https://github.com/lwratten) from the [Genome Institute of Singapore](https://www.a-star.edu.sg/gis) is one of the primary contributors along with [Johannes Alneberg](https://github.com/alneberg) and [Franziska Bonath](https://github.com/FranBonath) from [SciLifeLab](https://www.scilifelab.se/), Sweden.
 
-Many thanks to others who have helped out along the way too, including (but not limited to): [`@crickbabs`](https://github.com/crickbabs)
+Many thanks to others who have helped out along the way too, including (but not limited to): [`@crickbabs`](https://github.com/crickbabs), [@AnnaSyme](https://github.com/AnnaSyme).
 
 ## Contributions and Support
 

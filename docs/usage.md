@@ -12,6 +12,7 @@
 * [Main arguments](#main-arguments)
   * [`-profile`](#-profile)
   * [`--input`](#--input)
+  * [`--protocol`](#--protocol)
 * [Basecalling](#basecalling)
   * [`--run_dir`](#--run_dir)
   * [`--flowcell`](#--flowcell)
@@ -25,16 +26,12 @@
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
   * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
-  * [`--protocol`](#--protocol)
   * [`--stranded`](#--stranded)
   * [`--aligner`](#--aligner)
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
+* [Coverage tracks](#coverage-tracks)
 * [Skipping QC steps](#skipping-qc-steps)
-  * [`--skip_qc`](#--skip_qc)
-  * [`--skip_pycoqc`](#--skip_pycoqc)
-  * [`--skip_nanoplot`](#--skip_nanoplot)
-  * [`--skip_multiqc`](#--skip_multiqc)
 * [Job resources](#job-resources)
   * [Automatic resubmission](#automatic-resubmission)
   * [Custom resource requests](#custom-resource-requests)
@@ -71,10 +68,17 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
 ## Running the pipeline
 
-The typical command for running the pipeline is as follows:
+A typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/nanoseq --input 'samplesheet.csv' -profile test,docker
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --run_dir ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-LSK109 \
+    --barcode_kit SQK-PBK004 \
+    -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -128,7 +132,7 @@ If `-profile` is not specified at all the pipeline will be run locally and expec
 
 You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 4 columns, and a header row. As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without demultiplexing.
 
-#### With demultiplexing
+#### With basecalling and demultiplexing
 
 ```bash
 sample,fastq,barcode,genome
@@ -138,9 +142,16 @@ Sample3,,3,hg19
 Sample4,,4,/path/to/local/reference/genome.fa
 ```
 
-#### Without demultiplexing
+#### With basecalling but not demultiplexing
 
-> You will also have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
+```bash
+sample,fastq,barcode,genome
+Sample1,,1,mm10
+```
+
+> You will have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
+
+#### Without both basecalling and demultiplexing
 
 ```bash
 sample,fastq,barcode,genome
@@ -148,6 +159,9 @@ Sample1,SAM101A1.fastq.gz,,mm10
 Sample2,SAM101A2.fastq.gz,,mm10
 Sample3,SAM101A3.fastq.gz,,hg19
 Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
+
+> You will have to specify the `--skip_basecalling` parameter if you wish to bypass the basecalling and demultiplexing steps.
+
 ```
 
 | Column   | Description                                                                                                                |
@@ -156,6 +170,10 @@ Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
 | `fastq`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
 | `barcode`| Barcode identifier attributed to that sample when multiplexing samples in integer format.                                  |
 | `genome` | Genome fasta for alignment. This can either be a local path, or the appropriate key for a genome available on [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) (see [iGenomes config file](../conf/igenomes.config)). If unspecified then the alignment step will be skipped for that sample. |
+
+### `--protocol`
+
+Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
 ## Basecalling
 
@@ -199,15 +217,15 @@ Basecalling device specified to Guppy in GPU mode using `--device` (default: 'au
 
 Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
 
+### `--skip_basecalling`
+
+Skip basecalling with Guppy
+
 ### `--skip_demultiplexing`
 
-Skip basecalling and demultiplexing step with Guppy
+Skip demultiplexing with Guppy
 
 ## Alignment
-
-### `--protocol`
-
-Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
 ### `--stranded`
 
@@ -234,6 +252,13 @@ Save the `.sam` files from the alignment step - not done by default
 
 Skip alignment and subsequent process
 
+## Coverage tracks
+
+| Step                    | Description                            |
+|-------------------------|----------------------------------------|
+| `--skip_bigwig`         | Skip BigWig file generation            |
+| `--skip_bigbed`         | Skip BigBed file generation            |
+
 ## Skipping QC steps
 
 The pipeline contains a number of quality control steps. Sometimes, it may not be desirable to run all of them if time and compute resources are limited.
@@ -244,6 +269,7 @@ The following options make this easy:
 | `--skip_qc`             | Skip all QC steps apart from MultiQC |
 | `--skip_pycoqc`         | Skip pycoQC                          |
 | `--skip_nanoplot`       | Skip NanoPlot                        |
+| `--skip_fastqc`         | Skip FastQC                          |
 | `--skip_multiqc`        | Skip MultiQC                         |
 
 ## Job resources
