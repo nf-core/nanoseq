@@ -48,7 +48,7 @@ def helpMessage() {
 
     Alignment
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
-      --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap) (Default: 'minimap2')
+      --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap2) (Default: 'minimap2')
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
@@ -120,8 +120,8 @@ if (!params.skip_basecalling) {
 }
 
 if (!params.skip_alignment) {
-    if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
-        exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
+    if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
+        exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap2'"
     }
     if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
       exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
@@ -452,7 +452,7 @@ if (params.skip_alignment) {
 
     ch_samtools_version = Channel.empty()
     ch_minimap2_version = Channel.empty()
-    ch_graphmap_version = Channel.empty()
+    ch_graphmap2_version = Channel.empty()
     ch_bedtools_version = Channel.empty()
     ch_sortbam_stats_mqc = Channel.empty()
 
@@ -513,13 +513,13 @@ if (params.skip_alignment) {
           minimap2 --version &> minimap2.version
           """
         }
-        ch_graphmap_version = Channel.empty()
+        ch_graphmap2_version = Channel.empty()
 
-    } else if (params.aligner == 'graphmap') {
+    } else if (params.aligner == 'graphmap2') {
 
         // TODO nf-core: Create graphmap2 index with GTF instead
         // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
-        process GraphMapIndex {
+        process GraphMap2Index {
           tag "$fasta"
           label 'process_medium'
 
@@ -528,13 +528,13 @@ if (params.skip_alignment) {
 
           output:
           set val(name), file("*.gmidx") into ch_index
-          file "*.version" into ch_graphmap_version
+          file "*.version" into ch_graphmap2_version
 
           script:
-          graphmap_preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
+          graphmap2_preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
           """
-          graphmap2 align $graphmap_preset -t $task.cpus -I -r $fasta
-          echo \$(graphmap2 2>&1) > graphmap.version
+          graphmap2 align $graphmap2_preset -t $task.cpus -I -r $fasta
+          echo \$(graphmap2 2>&1) > graphmap2.version
           """
         }
         ch_minimap2_version = Channel.empty()
@@ -585,9 +585,9 @@ if (params.skip_alignment) {
             """
         }
 
-    } else if (params.aligner == 'graphmap') {
+    } else if (params.aligner == 'graphmap2') {
 
-        process GraphMapAlign {
+        process GraphMap2Align {
             tag "$sample"
             label 'process_medium'
             if (params.save_align_intermeds) {
@@ -604,9 +604,9 @@ if (params.skip_alignment) {
             set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
 
             script:
-            graphmap_preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
+            graphmap2_preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
             """
-            graphmap2 align $graphmap_preset -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
+            graphmap2 align $graphmap2_preset -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
             """
         }
     }
@@ -783,7 +783,7 @@ process get_software_versions {
     file fastqc from ch_fastqc_version.first().ifEmpty([])
     file samtools from ch_samtools_version.first().ifEmpty([])
     file minimap2 from ch_minimap2_version.first().ifEmpty([])
-    file graphmap2 from ch_graphmap_version.first().ifEmpty([])
+    file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
     file bedtools from ch_bedtools_version.first().ifEmpty([])
     file rmarkdown from ch_rmarkdown_version.collect()
 

@@ -231,9 +231,9 @@ Skip demultiplexing with Guppy
 
 Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
 
-When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap`:
+When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap2`:
 
-| `nanoseq` input              | `minimap2` presets  | `graphmap` presets |
+| `nanoseq` input              | `minimap2` presets  | `graphmap2` presets |
 |------------------------------|---------------------|--------------------|
 | `--protocol DNA`             | -ax map-ont         | tba                |
 | `--protocol cDNA`            | -ax splice          | tba                |
@@ -242,7 +242,7 @@ When using `--protocol`/`--stranded` the following command-line arguments will b
 
 ### `--aligner`
 
-Specifies the aligner to use (available are: `graphmap` or `minimap2`)
+Specifies the aligner to use (available are: `graphmap2` or `minimap2`)
 
 ### `--save_align_intermeds`
 

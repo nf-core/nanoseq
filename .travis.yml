@@ -40,11 +40,9 @@ script:
   - markdownlint ${TRAVIS_BUILD_DIR} -c ${TRAVIS_BUILD_DIR}/.github/markdownlint.yml
   # Run the pipeline with barcoded data and mimimap2
   - nextflow run ${TRAVIS_BUILD_DIR} -ansi-log false -profile test,docker --aligner minimap2
-  # Run the pipeline with barcoded data and graphmap
-  - nextflow run ${TRAVIS_BUILD_DIR} -ansi-log false -profile test,docker --aligner graphmap
+  # Run the pipeline with barcoded data and graphmap2
+  - nextflow run ${TRAVIS_BUILD_DIR} -ansi-log false -profile test,docker --aligner graphmap2
   # Run the pipeline with non-barcoded data and mimimap2
   - nextflow run ${TRAVIS_BUILD_DIR} -ansi-log false -profile test_nonbc,docker --aligner minimap2
   # Run the pipeline with non-barcoded data and skipping alignment
   - nextflow run ${TRAVIS_BUILD_DIR} -ansi-log false -profile test_nonbc,docker --skip_alignment
-
-
