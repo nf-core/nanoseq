@@ -11,7 +11,7 @@ regexes = {
     'pycoQC': ['pycoqc.version', r"pycoQC v(\S+)"],
     'NanoPlot': ['nanoplot.version', r"NanoPlot (\S+)"],
     'FastQC': ['fastqc.version', r"FastQC v(\S+)"],
-    'GraphMap': ['graphmap.version', r"Version: v(\S+)"],
+    'GraphMap2': ['graphmap2.version', r"Version: v(\S+)"],
     'minimap2': ['minimap2.version', r"(\S+)"],
     'Samtools': ['samtools.version', r"samtools (\S+)"],
     'BEDTools': ['v_bedtools.txt', r"bedtools v(\S+)"],
@@ -25,7 +25,7 @@ results['guppy'] = '<span style="color:#999999;\">N/A</span>'
 results['pycoQC'] = '<span style="color:#999999;\">N/A</span>'
 results['NanoPlot'] = '<span style="color:#999999;\">N/A</span>'
 results['FastQC'] = '<span style="color:#999999;\">N/A</span>'
-results['GraphMap'] = '<span style="color:#999999;\">N/A</span>'
+results['GraphMap2'] = '<span style="color:#999999;\">N/A</span>'
 results['minimap2'] = '<span style="color:#999999;\">N/A</span>'
 results['Samtools'] = '<span style="color:#999999;\">N/A</span>'
 results['BEDTools'] = '<span style="color:#999999;\">N/A</span>'
