@@ -235,10 +235,10 @@ When using `--protocol`/`--stranded` the following command-line arguments will b
 
 | `nanoseq` input              | `minimap2` presets  | `graphmap2` presets |
 |------------------------------|---------------------|--------------------|
-| `--protocol DNA`             | -ax map-ont         | tba                |
-| `--protocol cDNA`            | -ax splice          | tba                |
-| `--protocol directRNA`       | -ax splice -uf -k14 | tba                |
-| `--protocol cDNA --stranded` | -ax splice -uf      | tba                |
+| `--protocol DNA`             | -ax map-ont         | no presets         |
+| `--protocol cDNA`            | -ax splice          | -x rnaseq          |
+| `--protocol directRNA`       | -ax splice -uf -k14 | -x rnaseq          |
+| `--protocol cDNA --stranded` | -ax splice -uf      | -x rnaseq          |
 
 ### `--aligner`
 
