@@ -517,7 +517,7 @@ if (params.skip_alignment) {
 
     } else if (params.aligner == 'graphmap') {
 
-        // TODO nf-core: Create graphmap index with GTF instead
+        // TODO nf-core: Create graphmap2 index with GTF instead
         // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
         process GraphMapIndex {
           tag "$fasta"
@@ -531,9 +531,10 @@ if (params.skip_alignment) {
           file "*.version" into ch_graphmap_version
 
           script:
+          graphmap_preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
           """
-          graphmap align -t $task.cpus -I -r $fasta
-          echo \$(graphmap 2>&1) > graphmap.version
+          graphmap2 align $graphmap_preset -t $task.cpus -I -r $fasta
+          echo \$(graphmap2 2>&1) > graphmap.version
           """
         }
         ch_minimap2_version = Channel.empty()
@@ -603,8 +604,9 @@ if (params.skip_alignment) {
             set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
 
             script:
+            graphmap_preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
             """
-            graphmap align -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
+            graphmap2 align $graphmap_preset -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
             """
         }
     }
@@ -781,7 +783,7 @@ process get_software_versions {
     file fastqc from ch_fastqc_version.first().ifEmpty([])
     file samtools from ch_samtools_version.first().ifEmpty([])
     file minimap2 from ch_minimap2_version.first().ifEmpty([])
-    file graphmap from ch_graphmap_version.first().ifEmpty([])
+    file graphmap2 from ch_graphmap_version.first().ifEmpty([])
     file bedtools from ch_bedtools_version.first().ifEmpty([])
     file rmarkdown from ch_rmarkdown_version.collect()
 
