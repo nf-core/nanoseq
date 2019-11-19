@@ -111,6 +111,7 @@ if (!params.skip_basecalling) {
             if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
             if (!params.kit)        { exit 1, "Please specify a valid kit identifier for basecalling!" }
        }
+       if (params.guppy_model)      { ch_model = Channel.fromPath(params.guppy_model, checkIfExists: true) } else { ch_model = Channel.empty() }
     }
 } else {
     // Cannot demultiplex without performing basecalling
@@ -291,19 +292,20 @@ if (params.skip_basecalling) {
         input:
         file run_dir from ch_run_dir
         val name from ch_sample_name
+        file model_file from ch_model
 
         output:
         file "fastq/*.fastq.gz" into ch_guppy_fastq
         file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
                                       ch_guppy_nanoplot_summary
         file "basecalling/*"
-        file "*.version" into ch_guppy_version
+        file "*.version" into ch_guppy_version.ifEmpty([])
 
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
         config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
-        model = params.guppy_model ? "--model $params.guppy_model" : ""
+        model = params.guppy_model ? "--model" : ""
         """
         guppy_basecaller \\
             --input_path $run_dir \\
@@ -313,7 +315,7 @@ if (params.skip_basecalling) {
             $barcode_kit \\
             $config \\
             $proc_options \\
-            $model
+            $model $model_file
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files
