@@ -201,7 +201,7 @@ Guppy config file used for basecalling passed with the `--config` parameter. Can
 
 ### `--guppy_model`
 
-Custom basecalling model file (`json`) to pass to Guppy for basecalling. Such models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki).
+Custom basecalling model file (`json`) to pass to Guppy for basecalling. Custom basecalling models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki).
 
 ### `--guppy_gpu`
 
