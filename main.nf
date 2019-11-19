@@ -292,14 +292,14 @@ if (params.skip_basecalling) {
         input:
         file run_dir from ch_run_dir
         val name from ch_sample_name
-        file model_file from ch_model
+        file model_file from ch_model.ifEmpty([])
 
         output:
         file "fastq/*.fastq.gz" into ch_guppy_fastq
         file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
                                       ch_guppy_nanoplot_summary
         file "basecalling/*"
-        file "*.version" into ch_guppy_version.ifEmpty([])
+        file "*.version" into ch_guppy_version
 
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
