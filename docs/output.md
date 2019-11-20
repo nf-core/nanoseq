@@ -91,7 +91,7 @@ The files resulting from the alignment with graphmap or minimap2 of individual l
 [`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/), [`bedToBigBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)
 
 *Description*:
-Creation of bigWig and bigBed coverage tracks for visualisation. This can by bypassed by setting the parameters `--skip_bigwig` and/or `--skip_bigbed`.
+Creation of bigWig and bigBed coverage tracks for visualisation. This can be bypassed by setting the parameters `--skip_bigwig` and/or `--skip_bigbed`.
 
 *Output directories*:
 * `<ALIGNER>/bigwig`  
