@@ -14,7 +14,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 * [GraphMap](#graphmap) - mapping for long reads
 * [MiniMap2](#minimap2) - mapping for long reads
 * [SortBam](#sortbam) - coordinate sort BAM files using SAMtools
-* [bedtools](#bedtools) - Create bigWig and bigBed files 
+* [bedtools](#bedtools) - create bigWig and bigBed files 
 * [MultiQC](#multiqc) - aggregate report, describing results of the alignment
 
 ## Demultiplexing
@@ -23,7 +23,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
 *Description*:  
-Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skip_demultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified. The output in each barcode folder is then merged into one fastq file for easier downstream processesing. 
+Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skip_demultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified. The output in each barcode folder is then merged into one fastq file for easier downstream processing.
 
 *Output directories*:
 
@@ -34,7 +34,7 @@ Guppy will demultiplex and barcode the data given from an ONT device. The flowce
 * `guppy/fastq`
   Merged output of fastq files into one fastq for each barcode
 
-## Sequncing Quality Control
+## Sequencing Quality Control
 
 *Documentation*:  
 [PycoQC](https://github.com/a-slide/pycoQC), [NanoPlot](https://github.com/wdecoster/NanoPlot)
@@ -49,7 +49,6 @@ PycoQC and NanoPlot give general quality metrics about the sequencing run. It pr
   An .html file output is produced that includes a run summary and graphical representation of distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time, output over experiment time, read quality over experiment time, readlength over experiment time, and percentage of reads per barcode.
 * `nanoplot/summary/`  
   An output of .png files of metric plots and an html summary file of overall run.
-
 
 ## FastQ Quality Control
 *Documentation*:  
@@ -91,7 +90,7 @@ The files resulting from the alignment with graphmap or minimap2 of individual l
 [`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/), [`bedToBigBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)
 
 *Description*:
-Creation of bigWig and bigBed coverage tracks for visualisation. This can by bypassed by setting the parameters `--skip_bigwig` and/or `--skip_bigbed`.
+Creation of bigWig and bigBed coverage tracks for visualisation. This can be bypassed by setting the parameters `--skip_bigwig` and/or `--skip_bigbed`.
 
 *Output directories*:
 * `<ALIGNER>/bigwig`  
