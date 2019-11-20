@@ -57,6 +57,7 @@ PycoQC and NanoPlot give general quality metrics about the sequencing run. It pr
 
 *Description*:  
 NanoPlot give general quality metrics about the fastq output from Guppy. It provides information about the quality score distribution across your reads, read lengths and other general stats.
+![Nanoplot - Read quality vs read length](images/NanoPlot_output.png)
 
 *Output directories*:
 
@@ -72,6 +73,8 @@ NanoPlot give general quality metrics about the fastq output from Guppy. It prov
 The FastQ reads are mapped to the given reference assembly provided using either GraphMap or Minimap2 and then sorted and indexed using SAMtools or these processes can be bypassed using the `--skip_alignment` parameter.
 
 The files resulting from the alignment with graphmap or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--save_align_intermeds` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+
+![ALIGNER - Alignment per barcode](images/mqc_samtools_alignment_plot_1.png)
 
 *Output directories*:
 
