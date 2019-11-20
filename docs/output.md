@@ -14,7 +14,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 * [GraphMap](#graphmap) - mapping for long reads
 * [MiniMap2](#minimap2) - mapping for long reads
 * [SortBam](#sortbam) - coordinate sort BAM files using SAMtools
-* [bedtools](#bedtools) - Create bigWig and bigBed files 
+* [bedtools](#bedtools) - create bigWig and bigBed files 
 * [MultiQC](#multiqc) - aggregate report, describing results of the alignment
 
 ## Demultiplexing
