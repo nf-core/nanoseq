@@ -56,7 +56,7 @@ PycoQC and NanoPlot give general quality metrics about the sequencing run. It pr
 [NanoPlot](https://github.com/wdecoster/NanoPlot)
 
 *Description*:  
-NanoPlot give general quality metrics about the fastq output from Guppy. It provides information about the quality score distribution across your reads, read lengths and other general stats.
+NanoPlot give general quality metrics about the fastq output per barcode from Guppy. It provides information about the quality score distribution across your reads, read lengths and other general stats.
 ![Nanoplot - Read quality vs read length](images/NanoPlot_output.png)
 
 *Output directories*:
