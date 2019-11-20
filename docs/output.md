@@ -50,7 +50,6 @@ PycoQC and NanoPlot give general quality metrics about the sequencing run. It pr
 * `nanoplot/summary/`  
   An output of a .png file of a statistical run summary and an html summary file of overall run.
 
-
 ## FastQ Quality Control
 *Documentation*:  
 [NanoPlot](https://github.com/wdecoster/NanoPlot)
