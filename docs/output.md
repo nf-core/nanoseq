@@ -11,7 +11,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 * [Guppy](#guppy) - demultiplexing of Nanopore data
 * [PycoQC](#pycoqc) - read quality control
 * [NanoPlot](#nanoplot) - read quality control
-* [GraphMap](#graphmap) - mapping for long reads
+* [GraphMap2](#graphmap2) - mapping for long reads
 * [MiniMap2](#minimap2) - mapping for long reads
 * [SortBam](#sortbam) - coordinate sort BAM files using SAMtools
 * [bedtools](#bedtools) - create bigWig and bigBed files 
@@ -66,17 +66,16 @@ NanoPlot give general quality metrics about the fastq output per barcode from Gu
 ## Alignment
 
 *Documentation*:  
-[GraphMap](https://github.com/isovic/graphmap), [MiniMap2](https://github.com/lh3/minimap2), [SortBam](http://www.htslib.org/doc/samtools.html)
+[GraphMap2](https://github.com/lbcb-sci/graphmap2), [MiniMap2](https://github.com/lh3/minimap2), [SortBam](http://www.htslib.org/doc/samtools.html)
 
 *Description*:  
-The FastQ reads are mapped to the given reference assembly provided using either GraphMap or Minimap2 and then sorted and indexed using SAMtools or these processes can be bypassed using the `--skip_alignment` parameter.
+The FastQ reads are mapped to the given reference assembly provided using either GraphMap2 or Minimap2 and then sorted and indexed using SAMtools or these processes can be bypassed using the `--skip_alignment` parameter.
 
-The files resulting from the alignment with graphmap or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--save_align_intermeds` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+The files resulting from the alignment with graphmap2 or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--save_align_intermeds` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
 
 ![ALIGNER - Alignment per barcode](images/mqc_samtools_alignment_plot_1.png)
 
 *Output directories*:
-
 * `graphmap/`  
   If the `--aligner graphmap` parameter is used, the sorted and indexed bam files will be output here.
 * `minimap2/`  
@@ -105,7 +104,7 @@ Creation of bigWig and bigBed coverage tracks for visualisation. This can be byp
 The pipeline has special steps which allow the software versions used to be reported in the MultiQC output for future traceability.
 
 *Output directories*:
-  
+
 * `multiqc/Project_multiqc_report.html`  
   MultiQC report - a standalone HTML file that can be viewed in your web browser
 * `multiqc/multiqc_data/`  
