@@ -23,7 +23,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
 *Description*:  
-Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skip_demultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified. The output in each barcode folder is then merged into one fastq file for easier downstream processesing. 
+Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skip_demultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified. The output in each barcode folder is then merged into one fastq file for easier downstream processing.
 
 *Output directories*:
 
