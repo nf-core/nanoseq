@@ -48,7 +48,7 @@ PycoQC and NanoPlot give general quality metrics about the sequencing run. It pr
 * `pycoQC/`  
   An .html file output is produced that includes a run summary and graphical representation of distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time, output over experiment time, read quality over experiment time, readlength over experiment time, and percentage of reads per barcode.
 * `nanoplot/summary/`  
-  An output of a .png file of a statistical run summary and an html summary file of overall run.
+  An output of .png files of metric plots and an html summary file of overall run.
 
 
 ## FastQ Quality Control
