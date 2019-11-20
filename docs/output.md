@@ -34,7 +34,7 @@ Guppy will demultiplex and barcode the data given from an ONT device. The flowce
 * `guppy/fastq`
   Merged output of fastq files into one fastq for each barcode
 
-## Sequncing Quality Control
+## Sequencing Quality Control
 
 *Documentation*:  
 [PycoQC](https://github.com/a-slide/pycoQC), [NanoPlot](https://github.com/wdecoster/NanoPlot)
