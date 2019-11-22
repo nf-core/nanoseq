@@ -77,7 +77,7 @@ The files resulting from the alignment with graphmap2 or minimap2 of individual 
 
 *Output directories*:
 * `graphmap2/`  
-  If the `--aligner graphmap` parameter is used, the sorted and indexed bam files will be output here.
+  If the `--aligner graphmap2` parameter is used, the sorted and indexed bam files will be output here.
 * `minimap2/`  
   If the `--aligner minimap2` parameter is used, the sorted and indexed bam files will be output here.
 * `<ALIGNER>/samtools_stats/`  
