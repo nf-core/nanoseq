@@ -31,13 +31,7 @@
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
 * [Coverage tracks](#coverage-tracks)
-  * [`--skip_bigwig`](#--skip-bigwig)
-  * [`--skip_bigbed`](#--skip-bigbed)
 * [Skipping QC steps](#skipping-qc-steps)
-  * [`--skip_qc`](#--skip-qc)
-  * [`--skip_pycoqc`](#--skip-pycoqc)
-  * [`--skip_nanoplot`](#--skip-nanoplot)
-  * [`--skip_multiqc`](#--skip-multiqc)
 * [Job resources](#job-resources)
   * [Automatic resubmission](#automatic-resubmission)
   * [Custom resource requests](#custom-resource-requests)
@@ -276,6 +270,7 @@ The following options make this easy:
 | `--skip_qc`             | Skip all QC steps apart from MultiQC |
 | `--skip_pycoqc`         | Skip pycoQC                          |
 | `--skip_nanoplot`       | Skip NanoPlot                        |
+| `--skip_fastqc`         | Skip FastQC                          |
 | `--skip_multiqc`        | Skip MultiQC                         |
 
 ## Job resources
