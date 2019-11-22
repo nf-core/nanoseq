@@ -94,7 +94,7 @@ Creation of bigWig and bigBed coverage tracks for visualisation. This can be byp
 *Output directories*:
 * `<ALIGNER>/bigwig/`  
   The bigWig files will be output here.
-* `<ALIGNER>/bigbed`  
+* `<ALIGNER>/bigbed/`  
   The bigbed files will be output here.
 
 ## MultiQC
