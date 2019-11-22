@@ -303,8 +303,6 @@ Please make sure to also set the `-w/--work-dir` and `--outdir` parameters to a 
 
 ## Other command line parameters
 
-<!-- TODO nf-core: Describe any other command line flags here -->
-
 ### `--outdir`
 
 The output directory where the results will be saved.
