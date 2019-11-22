@@ -31,7 +31,7 @@ Guppy will demultiplex and barcode the data given from an ONT device. The flowce
   FastQ files output for each barcode
 * `guppy/basecalling/unclassified/`  
   FastQ files output that are unclassified
-* `guppy/fastq`
+* `guppy/fastq/`
   Merged output of fastq files into one fastq for each barcode
 
 ## Sequencing Quality Control
