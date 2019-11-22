@@ -92,7 +92,7 @@ The files resulting from the alignment with graphmap2 or minimap2 of individual 
 Creation of bigWig and bigBed coverage tracks for visualisation. This can be bypassed by setting the parameters `--skip_bigwig` and/or `--skip_bigbed`.
 
 *Output directories*:
-* `<ALIGNER>/bigwig`  
+* `<ALIGNER>/bigwig/`  
   The bigWig files will be output here.
 * `<ALIGNER>/bigbed`  
   The bigbed files will be output here.
