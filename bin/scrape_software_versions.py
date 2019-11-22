@@ -4,6 +4,7 @@ from collections import OrderedDict
 import re
 
 
+# TODO nf-core: Add additional regexes for new tools in process get_software_versions
 regexes = {
     'nf-core/nanoseq': ['pipeline.version', r"(\S+)"],
     'Nextflow': ['nextflow.version', r"(\S+)"],
