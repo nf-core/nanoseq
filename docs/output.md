@@ -76,7 +76,7 @@ The files resulting from the alignment with graphmap2 or minimap2 of individual 
 ![ALIGNER - Alignment per barcode](images/mqc_samtools_alignment_plot_1.png)
 
 *Output directories*:
-* `graphmap/`  
+* `graphmap2/`  
   If the `--aligner graphmap` parameter is used, the sorted and indexed bam files will be output here.
 * `minimap2/`  
   If the `--aligner minimap2` parameter is used, the sorted and indexed bam files will be output here.
