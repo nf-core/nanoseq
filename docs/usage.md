@@ -78,7 +78,6 @@ nextflow run nf-core/nanoseq \
     --flowcell FLO-MIN106 \
     --kit SQK-LSK109 \
     --barcode_kit SQK-PBK004 \
-    --aligner minimap2 \
     -profile docker
 ```
 
