@@ -14,6 +14,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 * [GraphMap2](#graphmap2) - mapping for long reads
 * [MiniMap2](#minimap2) - mapping for long reads
 * [SortBam](#sortbam) - coordinate sort BAM files using SAMtools
+* [bedtools](#bedtools) - create bigWig and bigBed files
 * [MultiQC](#multiqc) - aggregate report, describing results of the alignment
 
 ## Demultiplexing
@@ -22,32 +23,46 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
 *Description*:  
-Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skip_demultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified.
+Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skip_demultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified. The output in each barcode folder is then merged into one fastq file for easier downstream processing.
 
 *Output directories*:
 
-* `guppy/barcode*/`  
+* `guppy/basecalling/barcode*/`  
   FastQ files output for each barcode
-* `guppy/unclassified/`  
+* `guppy/basecalling/unclassified/`  
   FastQ files output that are unclassified
-* `guppy/sequencing_summary.txt`
+* `guppy/fastq/`
+  Merged output of fastq files into one fastq for each barcode
 
-## Quality Control
+## Sequencing Quality Control
 
 *Documentation*:  
 [PycoQC](https://github.com/a-slide/pycoQC), [NanoPlot](https://github.com/wdecoster/NanoPlot)
 
 *Description*:  
-PycoQC and NanoPlot give general quality metrics about your reads. It provides information about the quality score distribution across your reads, read lengths and other general stats.
+PycoQC and NanoPlot give general quality metrics about the sequencing run. It provides information about the distribution of read length, read length over time, number of reads per barcode and other general stats.
+![PycoQC - Number of Reads per Barcode plot](images/NumberofReadsperBarcode.png)
 
 *Output directories*:
 
 * `pycoQC/`  
   An .html file output is produced that includes a run summary and graphical representation of distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time, output over experiment time, read quality over experiment time, readlength over experiment time, and percentage of reads per barcode.
 * `nanoplot/summary/`  
-  An output of a .png file of a statistical summary and an html summary file.
-* `nanoplot/fastq/`  
-  An output of a .png plot of fastq QC.
+  An output of .png files of metric plots and an html summary file of overall run.
+
+## FastQ Quality Control
+
+*Documentation*:  
+[NanoPlot](https://github.com/wdecoster/NanoPlot)
+
+*Description*:  
+NanoPlot give general quality metrics about the fastq output per barcode from Guppy. It provides information about the quality score distribution across your reads, read lengths and other general stats.
+![Nanoplot - Read quality vs read length](images/NanoPlot_output.png)
+
+*Output directories*:
+
+* `nanoplot/fastq/`
+  An output of QC metric plots in individual .png files and in one html file summarizing the output.
 
 ## Alignment
 
@@ -59,14 +74,31 @@ The FastQ reads are mapped to the given reference assembly provided using either
 
 The files resulting from the alignment with graphmap2 or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--save_align_intermeds` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
 
+![ALIGNER - Alignment per barcode](images/mqc_samtools_alignment_plot_1.png)
+
 *Output directories*:
 
-* `graphmap2/`  
-  If the `--aligner graphmap2` parameter is used, the results will be output here.
-* `results/minimap2`  
-  If the `--aligner minimap2` parameter is used, the results will be output here.
-* `<ALIGNER>/samtools_stats/`  
+* `graphmap2/`
+  If the `--aligner graphmap2` parameter is used, the sorted and indexed bam files will be output here.
+* `minimap2/`
+  If the `--aligner minimap2` parameter is used, the sorted and indexed bam files will be output here.
+* `<ALIGNER>/samtools_stats/`
   `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files using SAMtools.
+
+## bigWig and bigBed
+
+*Documentation*:
+[`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/), [`bedToBigBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)
+
+*Description*:
+Creation of bigWig and bigBed coverage tracks for visualisation. This can be bypassed by setting the parameters `--skip_bigwig` and/or `--skip_bigbed`.
+
+*Output directories*:
+
+* `<ALIGNER>/bigwig/`  
+  The bigWig files will be output here.
+* `<ALIGNER>/bigbed/`  
+  The bigbed files will be output here.
 
 ## MultiQC
 
@@ -78,7 +110,26 @@ The pipeline has special steps which allow the software versions used to be repo
 
 * `multiqc/Project_multiqc_report.html`  
   MultiQC report - a standalone HTML file that can be viewed in your web browser
-* `multiqc/Project_multiqc_data/`  
+* `multiqc/multiqc_data/`  
   Directory containing parsed statistics from the different tools used in the pipeline
+* `multiqc/multiqc_plots/`
+  Directory containing the image files of the graphs included in MultiQC
 
 For more information about how to use MultiQC reports, see [http://multiqc.info](http://multiqc.info)
+
+## Pipeline information
+
+*Documentation*:  
+[Nextflow](https://www.nextflow.io/docs/latest/tracing.html)
+
+*Description*:  
+Nextflow provides excellent functionality for generating various reports relevant to the running and execution of the pipeline. This will allow you to trouble-shoot errors with the running of the pipeline, and also provide you with other information such as launch commands, run times and resource usage.
+
+*Output directories*:
+
+* `pipeline_info/`  
+  * Reports generated by the pipeline - `pipeline_report.html`, `pipeline_report.txt` and `software_versions.csv`.
+  * Reports generated by Nextflow - `execution_report.html`, `execution_timeline.html`, `execution_trace.txt` and `pipeline_dag.svg`.
+  * Reformatted samplesheet files used as input to the pipeline - `samplesheet_reformat.csv`.
+* `Documentation/`  
+  Documentation for interpretation of results in HTML format - `results_description.html`.
