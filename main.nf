@@ -315,7 +315,7 @@ if (params.skip_basecalling) {
             $barcode_kit \\
             $config \\
             $proc_options \\
-            $model ${workDir}/${model_file}
+            $model \$PWD/${model_file}
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files
