@@ -119,6 +119,8 @@ if (!params.skip_basecalling) {
            ch_model = Channel.empty()
            local_model = params.guppy_model
          }
+       } else {
+         ch_model = Channel.empty()
        }
     }
 } else {
