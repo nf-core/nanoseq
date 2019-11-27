@@ -111,7 +111,15 @@ if (!params.skip_basecalling) {
             if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
             if (!params.kit)        { exit 1, "Please specify a valid kit identifier for basecalling!" }
        }
-       if (params.guppy_model)      { ch_model = Channel.fromPath(params.guppy_model, checkIfExists: true) } else { ch_model = Channel.empty() }
+       local_model = ""
+       if (params.guppy_model)      {
+         if (file(params.guppy_model).exists())   {
+           ch_model = Channel.fromPath(params.guppy_model, checkIfExists: true)
+         } else {
+           ch_model = Channel.empty()
+           local_model = params.guppy_model
+         }
+       }
     }
 } else {
     // Cannot demultiplex without performing basecalling
@@ -306,6 +314,7 @@ if (params.skip_basecalling) {
         config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         model = params.guppy_model ? "--model" : ""
+        model_path = local_model ? "$local_model" : "\$PWD/"
         """
         guppy_basecaller \\
             --input_path $run_dir \\
@@ -315,7 +324,7 @@ if (params.skip_basecalling) {
             $barcode_kit \\
             $config \\
             $proc_options \\
-            $model \$PWD/${model_file}
+            $model ${model_path}${model_file}
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files
