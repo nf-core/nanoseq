@@ -315,8 +315,8 @@ if (params.skip_basecalling) {
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
         config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
-        model = params.guppy_model ? "--model" : ""
-        model_path = (local_model && params.guppy_model) ? "$local_model" : "\$PWD/"
+        model_path = (local_model && params.guppy_model) ? "--model $local_model" : ""
+        if (!model_path) model_path = params.guppy_model ? "--model \$PWD/" : ""
         """
         guppy_basecaller \\
             --input_path $run_dir \\
@@ -326,7 +326,7 @@ if (params.skip_basecalling) {
             $barcode_kit \\
             $config \\
             $proc_options \\
-            $model ${model_path}${model_file}
+            ${model_path}${model_file}
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files
