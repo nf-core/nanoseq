@@ -113,15 +113,13 @@ if (!params.skip_basecalling) {
        }
     }
     local_model = ""
+    ch_model = Channel.empty()
     if (params.guppy_model) {
       if (file(params.guppy_model).exists())   {
         ch_model = Channel.fromPath(params.guppy_model, checkIfExists: true)
       } else {
-        ch_model = Channel.empty()
         local_model = params.guppy_model
       }
-    } else {
-      ch_model = Channel.empty()
     }
 } else {
     // Cannot demultiplex without performing basecalling
