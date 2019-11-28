@@ -38,7 +38,7 @@ def helpMessage() {
       --kit [str]                     Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
       --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
       --guppy_config [file]           Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
-      --guppy_model [file]            Custom basecalling model file (JSON) to use for Guppy basecalling, such as the output from Taiyaki (Default: false)
+      --guppy_model [file/str]        Custom basecalling model file (JSON) to use for Guppy basecalling, such as the output from Taiyaki. CAN THIS BE A STRING TOO? (Default: false)
       --guppy_gpu [bool]              Whether to perform basecalling with Guppy in GPU mode (Default: false)
       --guppy_gpu_runners [int]       Number of '--gpu_runners_per_device' used for guppy when using '--guppy_gpu' (Default: 6)
       --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (Default: 1)
