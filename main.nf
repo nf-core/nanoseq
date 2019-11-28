@@ -112,7 +112,7 @@ if (!params.skip_basecalling) {
             if (!params.kit)        { exit 1, "Please specify a valid kit identifier for basecalling!" }
        }
     }
-    local_model = ""
+    def local_model = ""
     if (params.guppy_model) {
       if (file(params.guppy_model).exists())   {
         ch_model = Channel.fromPath(params.guppy_model, checkIfExists: true)
