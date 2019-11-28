@@ -89,7 +89,10 @@ if (params.help) {
 if (params.input) { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 
 if (!params.skip_basecalling) {
-
+    local_model = ""
+    ch_model = Channel.empty()
+    local_config = ""
+    ch_config = Channel.empty()
     // TODO nf-core: Add in a check to see if running offline
     // Pre-download test-dataset to get files for '--run_dir' parameter
     // Nextflow is unable to recursively download directories via HTTPS
@@ -110,10 +113,14 @@ if (!params.skip_basecalling) {
         if (!params.guppy_config)   {
             if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
             if (!params.kit)        { exit 1, "Please specify a valid kit identifier for basecalling!" }
+       } else {
+         if (file(params.guppy_config).exists()) {
+           ch_config = Channel.fromPath(params.guppy_config, checkIfExists: true)
+         } else {
+           local_config = params.guppy_config
+         }
        }
     }
-    local_model = ""
-    ch_model = Channel.empty()
     if (params.guppy_model) {
       if (file(params.guppy_model).exists())   {
         ch_model = Channel.fromPath(params.guppy_model, checkIfExists: true)
@@ -301,6 +308,7 @@ if (params.skip_basecalling) {
         file run_dir from ch_run_dir
         val name from ch_sample_name
         file model_file from ch_model.ifEmpty([])
+        file config_file from ch_config.ifEmpty([])
 
         output:
         file "fastq/*.fastq.gz" into ch_guppy_fastq
@@ -311,10 +319,11 @@ if (params.skip_basecalling) {
 
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
-        config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
+        config = (params.guppy_config && local_config) ? "--config $params.guppy_config" : ""
+        if (!config) config = params.guppy_config ? "--config \$PWD/" : "--flowcell $params.flowcell --kit $params.kit"
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
-        model_path = (local_model && params.guppy_model) ? "--model $local_model" : ""
-        if (!model_path) model_path = params.guppy_model ? "--model \$PWD/" : ""
+        model = (params.guppy_model && local_model) ? "--model $local_model" : ""
+        if (!model) model = params.guppy_model ? "--model \$PWD/" : ""
         """
         guppy_basecaller \\
             --input_path $run_dir \\
@@ -322,9 +331,9 @@ if (params.skip_basecalling) {
             --records_per_fastq 0 \\
             --compress_fastq \\
             $barcode_kit \\
-            $config \\
+            ${config}${config_file} \\
             $proc_options \\
-            ${model_path}${model_file}
+            ${model}${model_file}
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files
