@@ -700,7 +700,7 @@ if (params.skip_alignment) {
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
             saveAs: { filename ->
-                          if (filename.endsWith(".bigWig")) filename
+                          if (filename.endsWith(".bw")) filename
                     }
         when:
         !params.skip_bigwig
@@ -709,11 +709,11 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
+        set file(fasta), file(sizes), val(sample), file("*.bw") into ch_bigwig
 
         script:
         """
-        bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
+        bedGraphToBigWig $bedgraph $sizes ${sample}.bw
         """
     }
 
@@ -747,7 +747,7 @@ if (params.skip_alignment) {
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
             saveAs: { filename ->
-                          if (filename.endsWith(".bigBed")) filename
+                          if (filename.endsWith(".bb")) filename
                     }
         when:
         !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
@@ -756,11 +756,11 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.bigBed") into ch_bigbed
+        set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
 
         script:
         """
-        bedToBigBed $bed12 $sizes ${sample}.bigBed
+        bedToBigBed $bed12 $sizes ${sample}.bb
         """
     }
 }
