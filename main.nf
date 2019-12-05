@@ -37,7 +37,8 @@ def helpMessage() {
       --flowcell [str]                Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
       --kit [str]                     Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
       --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
-      --guppy_config [file]           Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
+      --guppy_config [file/str]       Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
+      --guppy_model [file/str]        Custom basecalling model file (JSON) to use for Guppy basecalling, such as the output from Taiyaki. CAN THIS BE A STRING TOO? (Default: false)
       --guppy_gpu [bool]              Whether to perform basecalling with Guppy in GPU mode (Default: false)
       --guppy_gpu_runners [int]       Number of '--gpu_runners_per_device' used for guppy when using '--guppy_gpu' (Default: 6)
       --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (Default: 1)
@@ -88,7 +89,10 @@ if (params.help) {
 if (params.input) { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 
 if (!params.skip_basecalling) {
-
+    local_model = ""
+    ch_model = Channel.empty()
+    local_config = ""
+    ch_config = Channel.empty()
     // TODO nf-core: Add in a check to see if running offline
     // Pre-download test-dataset to get files for '--run_dir' parameter
     // Nextflow is unable to recursively download directories via HTTPS
@@ -109,7 +113,20 @@ if (!params.skip_basecalling) {
         if (!params.guppy_config)   {
             if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
             if (!params.kit)        { exit 1, "Please specify a valid kit identifier for basecalling!" }
+       } else {
+         if (file(params.guppy_config).exists()) {
+           ch_config = Channel.fromPath(params.guppy_config, checkIfExists: true)
+         } else {
+           local_config = params.guppy_config
+         }
        }
+    }
+    if (params.guppy_model) {
+      if (file(params.guppy_model).exists())   {
+        ch_model = Channel.fromPath(params.guppy_model, checkIfExists: true)
+      } else {
+        local_model = params.guppy_model
+      }
     }
 } else {
     // Cannot demultiplex without performing basecalling
@@ -171,6 +188,7 @@ if (!params.skip_basecalling) {
     summary['Guppy CPU Threads']  = params.guppy_cpu_threads
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
+    summary['Custom Guppy Model'] = params.guppy_model ?:'Unspecified'
 }
 summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
 if (!params.skip_alignment) {
@@ -289,6 +307,8 @@ if (params.skip_basecalling) {
         input:
         file run_dir from ch_run_dir
         val name from ch_sample_name
+        file model_file from ch_model.ifEmpty([])
+        file config_file from ch_config.ifEmpty([])
 
         output:
         file "fastq/*.fastq.gz" into ch_guppy_fastq
@@ -299,8 +319,11 @@ if (params.skip_basecalling) {
 
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
-        config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
+        config = (params.guppy_config && local_config) ? "--config $params.guppy_config" : ""
+        if (!config) config = params.guppy_config ? "--config \$PWD/" : "--flowcell $params.flowcell --kit $params.kit"
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        model = (params.guppy_model && local_model) ? "--model $local_model" : ""
+        if (!model) model = params.guppy_model ? "--model \$PWD/" : ""
         """
         guppy_basecaller \\
             --input_path $run_dir \\
@@ -308,8 +331,9 @@ if (params.skip_basecalling) {
             --records_per_fastq 0 \\
             --compress_fastq \\
             $barcode_kit \\
-            $config \\
-            $proc_options
+            ${config}${config_file} \\
+            $proc_options \\
+            ${model}${model_file}
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files
@@ -678,7 +702,7 @@ if (params.skip_alignment) {
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
             saveAs: { filename ->
-                          if (filename.endsWith(".bigWig")) filename
+                          if (filename.endsWith(".bw")) filename
                     }
         when:
         !params.skip_bigwig
@@ -687,11 +711,11 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
+        set file(fasta), file(sizes), val(sample), file("*.bw") into ch_bigwig
 
         script:
         """
-        bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
+        bedGraphToBigWig $bedgraph $sizes ${sample}.bw
         """
     }
 
@@ -725,7 +749,7 @@ if (params.skip_alignment) {
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
             saveAs: { filename ->
-                          if (filename.endsWith(".bigBed")) filename
+                          if (filename.endsWith(".bb")) filename
                     }
         when:
         !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
@@ -734,11 +758,11 @@ if (params.skip_alignment) {
         set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
 
         output:
-        set file(fasta), file(sizes), val(sample), file("*.bigBed") into ch_bigbed
+        set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
 
         script:
         """
-        bedToBigBed $bed12 $sizes ${sample}.bigBed
+        bedToBigBed $bed12 $sizes ${sample}.bb
         """
     }
 }

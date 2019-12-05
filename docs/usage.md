@@ -19,11 +19,13 @@
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
   * [`--guppy_config`](#--guppy_config)
+  * [`--guppy_model`](#--guppy_model)
   * [`--guppy_gpu`](#--guppy_gpu)
   * [`--guppy_gpu_runners`](#--guppy_gpu_runners)
   * [`--guppy_cpu_threads`](#--guppy_cpu_threads)
   * [`--gpu_device`](#--gpu_device)
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
+  * [`--skip_basecalling`](#--skip_basecalling)
   * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
   * [`--stranded`](#--stranded)
@@ -196,6 +198,11 @@ Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
 ### `--guppy_config`
 
 Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with `--flowcell` and `--kit`.
+This can be a local file (i.e. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data` directory of Guppy.
+
+### `--guppy_model`
+
+Custom basecalling model file (`json`) to pass to Guppy for basecalling with the `--model` parameter. Custom basecalling models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki). This can also be a string specifying a model stored in the `/opt/ont/guppy/data` directory of Guppy.
 
 ### `--guppy_gpu`
 
