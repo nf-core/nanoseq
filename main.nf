@@ -38,7 +38,7 @@ def helpMessage() {
       --kit [str]                     Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
       --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
       --guppy_config [file/str]       Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
-      --guppy_model [file/str]        Custom basecalling model file (JSON) to use for Guppy basecalling, such as the output from Taiyaki. CAN THIS BE A STRING TOO? (Default: false)
+      --guppy_model [file/str]        Custom basecalling model file (JSON) to use for Guppy basecalling, such as the output from Taiyaki (Default: false)
       --guppy_gpu [bool]              Whether to perform basecalling with Guppy in GPU mode (Default: false)
       --guppy_gpu_runners [int]       Number of '--gpu_runners_per_device' used for guppy when using '--guppy_gpu' (Default: 6)
       --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (Default: 1)
@@ -89,10 +89,12 @@ if (params.help) {
 if (params.input) { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 
 if (!params.skip_basecalling) {
-    local_model = ""
-    ch_model = Channel.empty()
-    local_config = ""
-    ch_config = Channel.empty()
+
+    //local_model = ""
+    //local_config = ""
+    def guppy_config = false
+    def guppy_model = false
+
     // TODO nf-core: Add in a check to see if running offline
     // Pre-download test-dataset to get files for '--run_dir' parameter
     // Nextflow is unable to recursively download directories via HTTPS
@@ -109,25 +111,25 @@ if (!params.skip_basecalling) {
             """
         }
     } else {
-        if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
-        if (!params.guppy_config)   {
-            if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
-            if (!params.kit)        { exit 1, "Please specify a valid kit identifier for basecalling!" }
-       } else {
-         if (file(params.guppy_config).exists()) {
-           ch_config = Channel.fromPath(params.guppy_config, checkIfExists: true)
-         } else {
-           local_config = params.guppy_config
-         }
-       }
-    }
-    if (params.guppy_model) {
-      if (file(params.guppy_model).exists())   {
-        ch_model = Channel.fromPath(params.guppy_model, checkIfExists: true)
-      } else {
-        local_model = params.guppy_model
-      }
-    }
+        if (params.run_dir) { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
+
+        if (!params.guppy_config) {
+            if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
+            if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!" }
+        } else if (file(params.guppy_config).exists()) {
+            guppy_config = Channel.fromPath(params.guppy_config, checkIfExists: true)
+        } else {
+            guppy_config = params.guppy_config
+        }
+        //}
+    //}
+        if (params.guppy_model) {
+            if (file(params.guppy_model).exists()) {
+                guppy_model = Channel.fromPath(params.guppy_model, checkIfExists: true)
+            } else {
+                guppy_model = params.guppy_model
+            }
+        }
 } else {
     // Cannot demultiplex without performing basecalling
     // Skip demultiplexing if barcode kit isnt provided
