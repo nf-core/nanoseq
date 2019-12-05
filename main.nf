@@ -88,8 +88,6 @@ if (params.help) {
  */
 if (params.input) { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 
-def guppy_model = ""
-def guppy_config = ""
 def ch_guppy_model = Channel.empty()
 def ch_guppy_config = Channel.empty()
 if (!params.skip_basecalling) {
@@ -119,16 +117,12 @@ if (!params.skip_basecalling) {
         if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!" }
     } else if (file(params.guppy_config).exists()) {
         ch_guppy_config = Channel.fromPath(params.guppy_config)
-    } else {
-        guppy_config = params.guppy_config
     }
 
     // Need to stage guppy_model properly depending on whether its a file or string
     if (params.guppy_model) {
         if (file(params.guppy_model).exists()) {
             ch_guppy_model = Channel.fromPath(params.guppy_model)
-        } else {
-            guppy_model = params.guppy_model
         }
     }
 
@@ -311,10 +305,8 @@ if (params.skip_basecalling) {
         input:
         file run_dir from ch_run_dir
         val name from ch_sample_name
-        //file model_file from ch_model.ifEmpty([])
-        //file config_file from ch_config.ifEmpty([])
-        file gmodel from guppy_model.ifEmpty([])
-        file gconfig from guppy_config.ifEmpty([])
+        file guppy_model from ch_guppy_model.ifEmpty([])
+        file guppy_config from ch_guppy_config.ifEmpty([])
 
         output:
         file "fastq/*.fastq.gz" into ch_guppy_fastq
@@ -324,14 +316,19 @@ if (params.skip_basecalling) {
         file "*.version" into ch_guppy_version
 
         script:
+        // if param != false and is file then use file otherwise use params value
+
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        def config = "--flowcell $params.flowcell --kit $params.kit"
+        if (params.guppy_config) config = ch_guppy_config.isEmpty() ? "--config $params.guppy_config" : "--config $guppy_config"
+        if (params.guppy_model) model = ch_guppy_model.isEmpty() ? "--model $params.guppy_model" : "--model $guppy_model"
+        //config = (params.guppy_config && ch_guppy_model.isEmpty())
+        // config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
         //config = (params.guppy_config && local_config) ? "--config $params.guppy_config" : ""
         //if (!config) config = params.guppy_config ? "--config \$PWD/" : "--flowcell $params.flowcell --kit $params.kit"
         //model = (params.guppy_model && local_model) ? "--model $local_model" : ""
         //if (!model) model = params.guppy_model ? "--model \$PWD/" : ""
-        config = guppy_config ? "--config $guppy_config" : ""
-        model = guppy_model ? "--model $guppy_model" : ""
         //${config}${config_file}
         //${model}${model_file}
         """
