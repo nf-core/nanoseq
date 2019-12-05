@@ -117,19 +117,19 @@ if (!params.skip_basecalling) {
             if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
             if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!" }
         } else if (file(params.guppy_config).exists()) {
-            guppy_config = Channel.fromPath(params.guppy_config, checkIfExists: true)
+            guppy_config = Channel.fromPath(params.guppy_config)
         } else {
             guppy_config = params.guppy_config
         }
-        //}
-    //}
+
         if (params.guppy_model) {
             if (file(params.guppy_model).exists()) {
-                guppy_model = Channel.fromPath(params.guppy_model, checkIfExists: true)
+                guppy_model = Channel.fromPath(params.guppy_model)
             } else {
                 guppy_model = params.guppy_model
             }
         }
+    }
 } else {
     // Cannot demultiplex without performing basecalling
     // Skip demultiplexing if barcode kit isnt provided
@@ -321,11 +321,13 @@ if (params.skip_basecalling) {
 
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
-        config = (params.guppy_config && local_config) ? "--config $params.guppy_config" : ""
-        if (!config) config = params.guppy_config ? "--config \$PWD/" : "--flowcell $params.flowcell --kit $params.kit"
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
-        model = (params.guppy_model && local_model) ? "--model $local_model" : ""
-        if (!model) model = params.guppy_model ? "--model \$PWD/" : ""
+        //config = (params.guppy_config && local_config) ? "--config $params.guppy_config" : ""
+        //if (!config) config = params.guppy_config ? "--config \$PWD/" : "--flowcell $params.flowcell --kit $params.kit"
+        //model = (params.guppy_model && local_model) ? "--model $local_model" : ""
+        //if (!model) model = params.guppy_model ? "--model \$PWD/" : ""
+        config = guppy_config ? "--config $guppy_config" : ""
+        model = guppy_model ? "--model $guppy_model" : ""
         """
         guppy_basecaller \\
             --input_path $run_dir \\
@@ -333,9 +335,13 @@ if (params.skip_basecalling) {
             --records_per_fastq 0 \\
             --compress_fastq \\
             $barcode_kit \\
-            ${config}${config_file} \\
             $proc_options \\
-            ${model}${model_file}
+            $config \\
+            $model
+
+        #${config}${config_file} \\
+        #${model}${model_file}
+
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files
