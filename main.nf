@@ -181,12 +181,12 @@ if (!params.skip_basecalling) {
     summary['Kit ID']             = params.kit ?: 'Not required'
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Guppy Config File']  = params.guppy_config ?: 'Unspecified'
+    summary['Guppy Model File']   = params.guppy_model ?:'Unspecified'
     summary['Guppy GPU Mode']     = params.guppy_gpu ? 'Yes' : 'No'
     summary['Guppy GPU Runners']  = params.guppy_gpu_runners
     summary['Guppy CPU Threads']  = params.guppy_cpu_threads
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
-    summary['Custom Guppy Model'] = params.guppy_model ?:'Unspecified'
 }
 summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
 if (!params.skip_alignment) {
@@ -319,9 +319,9 @@ if (params.skip_basecalling) {
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         def config = "--flowcell $params.flowcell --kit $params.kit"
-        if (params.guppy_config) config = guppy_config == [] ? "--config $guppy_config" : "--config $params.guppy_config"
+        if (params.guppy_config) config = guppy_config == [] ? "--config ./$guppy_config" : "--config $params.guppy_config"
         def model = ""
-        if (params.guppy_model) model = guppy_model == [] ? "--model $guppy_model" : "--model $params.guppy_model"
+        if (params.guppy_model) model = guppy_model == [] ? "--model ./$guppy_model" : "--model $params.guppy_model"
         println(params.guppy_config)
         println(params.guppy_model)
         println(config)
