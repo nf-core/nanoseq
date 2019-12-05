@@ -322,10 +322,6 @@ if (params.skip_basecalling) {
         if (params.guppy_config) config = file(params.guppy_model).exists() ? "--config ./$guppy_config" : "--config $params.guppy_config"
         def model = ""
         if (params.guppy_model) model = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
-        println(params.guppy_config)
-        println(params.guppy_model)
-        println(config)
-        println(model)
         """
         guppy_basecaller \\
             --input_path $run_dir \\
