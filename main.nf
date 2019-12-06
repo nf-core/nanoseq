@@ -256,11 +256,14 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     // Check if fastq file exists
     def fastq = null
     if (sample.fastq) {
-        fastq = file(sample.fastq, checkIfExists: true)
-        if (!fastq.endsWith(".fastq.gz") || !fastq.endsWith(".fq.gz")) {
-            log.error "FastQ files must have '.fastq.gz' or '.fq.gz' extension. Please check samplesheet."
+        println(sample.fastq.endsWith(".fastq.gz"))
+        println(sample.fastq.endsWith(".fq.gz"))
+        if (!sample.fastq.endsWith(".fastq.gz") || !sample.fastq.endsWith(".fq.gz")) {
+            log.error "FastQ files must have '.fastq.gz' or '.fq.gz' extension. Please check samplesheet:"
             log.error sample.toMapString()
             System.exit(0)
+        } else {
+            fastq = file(sample.fastq, checkIfExists: true)
         }
     }
 
@@ -278,11 +281,12 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
     // Check if transcriptome file is in gtf format
     if (sample.transcriptome) {
-        gtf = file(sample.transcriptome, checkIfExists: true)
-        if (!gtf.endsWith(".gtf")) {
-            log.error "GTF files must have '.gtf' extension. Please check samplesheet."
+        if (!sample.transcriptome.endsWith(".gtf")) {
+            log.error "GTF files must have '.gtf' extension. Please check samplesheet:"
             log.error sample.toMapString()
             System.exit(0)
+        } else {
+            gtf = file(sample.transcriptome, checkIfExists: true)
         }
     }
 
