@@ -36,7 +36,7 @@ args = argParser.parse_args()
 ############################################
 
 ERROR_STR = 'ERROR: Please check samplesheet'
-HEADER = ['sample', 'fastq', 'barcode', 'genome']
+HEADER = ['sample', 'fastq', 'barcode', 'genome', 'transcriptome']
 
 ## CHECK HEADER
 fin = open(args.DESIGN_FILE_IN,'r')
@@ -50,7 +50,7 @@ while True:
     line = fin.readline()
     if line:
         lspl = [x.strip() for x in line.strip().split(',')]
-        sample,fastq,barcode,genome = lspl
+        sample,fastq,barcode,genome,transcriptome = lspl
 
         ## CHECK VALID NUMBER OF COLUMNS PER SAMPLE
         numCols = len([x for x in lspl if x])
@@ -58,8 +58,8 @@ while True:
             print("{}: Invalid number of columns (minimum of 2)!\nLine: '{}'".format(ERROR_STR,line.strip()))
             sys.exit(1)
 
+        ## CHECK SAMPLE ID ENTRIES
         if sample:
-            ## CHECK SAMPLE ID HAS NO SPACES
             if sample.find(' ') != -1:
                 print("{}: Sample ID contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
@@ -67,32 +67,54 @@ while True:
             print("{}: Sample ID not specified!\nLine: '{}'".format(ERROR_STR,line.strip()))
             sys.exit(1)
 
+        ## CHECK BARCODE ENTRIES
         if barcode:
-            ## CHECK BARCODE COLUMN IS INTEGER
             if not barcode.isdigit():
                 print("{}: Barcode not an integer!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
             else:
                 barcode = 'barcode%s' % (barcode.zfill(2))
 
+        ## CHECK FASTQ ENTRIES
         if fastq:
-            ## CHECK FASTQ FILE EXTENSION
             if fastq[-9:] != '.fastq.gz' and fastq[-6:] != '.fq.gz':
                 print("{}: FastQ file has incorrect extension (has to be '.fastq.gz' or '.fq.gz')!\nLine: '{}'".format(ERROR_STR,line.strip()))
 
+        ## CHECK GENOME ENTRIES
         if genome:
-            ## CHECK GENOME HAS NO SPACES
             if genome.find(' ') != -1:
                 print("{}: Genome field contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
 
-            ## CHECK GENOME EXTENSION
             if len(genome.split('.')) > 1:
                 if genome[-6:] != '.fasta' and genome[-3:] != '.fa' and genome[-9:] != '.fasta.gz' and genome[-6:] != '.fa.gz':
-                    print("{}: Genome field incorrect extension (has to be '.fasta' or '.fa' or '.fasta.gz' or '.fa.gz')!\nLine: '{}'".format(ERROR_STR,line.strip()))
+                    print("{}: Genome field incorrect extension (has to be '.fasta' or '.fa', '.fasta.gz' or '.fa.gz')!\nLine: '{}'".format(ERROR_STR,line.strip()))
                     sys.exit(1)
 
-        outLines.append([sample,fastq,barcode,genome])
+        ## CHECK TRANSCRIPTOME ENTRIES
+        if transcriptome:
+            if transcriptome.find(' ') != -1:
+                print("{}: Transcriptome field contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip()))
+                sys.exit(1)
+
+            if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-4:] != '.gtf':
+                print("{}: Transcriptome field incorrect extension (has to be '.fasta', '.fa' or '.gtf')!\nLine: '{}'".format(ERROR_STR,line.strip()))
+                sys.exit(1)
+
+        ## USE TRANSCRIPTOME FASTA FOR MAPPING OVER GENOME
+        if not genome and transcriptome:
+            if transcriptome[-4:] != '.gtf':
+                genome = transcriptome
+                transcriptome = ''
+            else:
+                print("{}: If genome isnt provided, transcriptome must be in fasta format for mapping!\nLine: '{}'".format(ERROR_STR,line.strip()))
+                sys.exit(1)
+        elif genome and transcriptome:
+            if transcriptome[-4:] != '.gtf':
+                genome = transcriptome
+                transcriptome = ''
+
+        outLines.append([sample,fastq,barcode,genome,transcriptome])
     else:
         fin.close()
         break
