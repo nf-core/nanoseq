@@ -502,81 +502,49 @@ def get_reference(ArrayList channel) {
     }
 }
 
-// ch_fastq_index
-//     .map { it -> [ it[2], it[3], it[4] ] }
-//     .map { get_reference(it) }
-//     .into { ch_fastq_sizes;
-//             ch_fastq_index }
-// ch_fastq_sizes.println()
+if (params.skip_alignment) {
 
-// /*
-//  * STEP 6 - Make chromosome sizes file
-//  */
-// process GetChromSizes {
-//     tag "$fasta"
-//
-//     input:
-//     set val(name), file(fasta) from ch_fasta_sizes
-//
-//     output:
-//     set val(name), file("*.sizes") into ch_chrom_sizes
-//     file "*.version" into ch_samtools_version
-//
-//     script:
-//     """
-//     samtools faidx $fasta
-//     cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
-//     samtools --version &> samtools.version
-//     """
-// }
+    ch_samtools_version = Channel.empty()
+    ch_minimap2_version = Channel.empty()
+    ch_graphmap2_version = Channel.empty()
+    ch_bedtools_version = Channel.empty()
+    ch_sortbam_stats_mqc = Channel.empty()
 
+} else {
 
-// if (params.skip_alignment) {
-//
-//     ch_samtools_version = Channel.empty()
-//     ch_minimap2_version = Channel.empty()
-//     ch_graphmap2_version = Channel.empty()
-//     ch_bedtools_version = Channel.empty()
-//     ch_sortbam_stats_mqc = Channel.empty()
-//
-// } else {
-//
-//     // USE TRANSCRIPTOME OVER GENOME IF FASTA
-//     // IF GTF IS PROVIDED THEN USE THAT TO CREATE BED12
-//
-//     // Get unique list of all genome fasta files
-//     ch_fastq_index
-//         .map { get_reference(it) }
-//         .map { it -> [ it[2].toString(), it[2], it[] ] }  // [str(genome_fasta), genome_fasta]
-//         .filter { it[1] != null }
-//         .unique()
-//         .into { ch_fasta_sizes;
-//                 ch_fasta_index;
-//                 ch_fasta_align }
-//
-// }
+    // Get unique list of all genome fasta files
+    ch_fastq_index
+        .map { it -> [ it[2], it[3], it[4] ] }
+        .map { get_reference(it) }
+        .filter { it[1] != null }
+        .unique()
+        .into { ch_fasta_sizes;
+                ch_fasta_index }
 
-// //
-// //     /*
-// //      * STEP 6 - Make chromosome sizes file
-// //      */
-// //     process GetChromSizes {
-// //         tag "$fasta"
-// //
-// //         input:
-// //         set val(name), file(fasta) from ch_fasta_sizes
-// //
-// //         output:
-// //         set val(name), file("*.sizes") into ch_chrom_sizes
-// //         file "*.version" into ch_samtools_version
-// //
-// //         script:
-// //         """
-// //         samtools faidx $fasta
-// //         cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
-// //         samtools --version &> samtools.version
-// //         """
-// //     }
+    /*
+     * STEP 6 - Make chromosome sizes file
+     */
+    process GetChromSizes {
+        tag "$fasta"
+
+        input:
+        set val(name), file(fasta), file(gtf), val(is_transcript_fasta) from ch_fasta_sizes
+
+        output:
+        set val(name), file("*.sizes") into ch_chrom_sizes
+        file "*.version" into ch_samtools_version
+
+        script:
+        """
+        samtools faidx $fasta
+        cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
+        samtools --version &> samtools.version
+        """
+    }
+    // USE TRANSCRIPTOME OVER GENOME IF FASTA
+    // IF GTF IS PROVIDED THEN USE THAT TO CREATE BED12
+
+}
 // //
 // //     /*
 // //      * STEP 7 - Create genome index
