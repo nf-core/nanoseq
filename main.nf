@@ -269,7 +269,7 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     fastq = sample.fastq ? file(sample.fastq, checkIfExists: true) : null
     transcriptome = sample.transcriptome ? file(sample.transcriptome, checkIfExists: true) : null
 
-    return [ sample.sample, fastq, sample.barcode, fasta, transcriptome ]
+    return [ sample.sample, fastq, sample.barcode, genome, transcriptome ]
 }
 
 if (params.skip_basecalling) {
@@ -277,7 +277,7 @@ if (params.skip_basecalling) {
     ch_guppy_version = Channel.empty()
     ch_pycoqc_version = Channel.empty()
 
-    // Create channels = [sample, fastq, fasta, gtf]
+    // Create channels = [sample, fastq, genome, transcriptome]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
@@ -286,146 +286,145 @@ if (params.skip_basecalling) {
                 ch_fastq_fastqc;
                 ch_fastq_index;
                 ch_fastq_align }
+} else {
+
+    // Create channels = [sample, barcode, genome, transcriptome]
+    ch_samplesheet_reformat
+        .splitCsv(header:true, sep:',')
+        .map { get_sample_info(it, params.genomes) }
+        .map { it -> [ it[0], it[2], it[3], it[4] ] }
+        .into { ch_sample_info;
+                ch_sample_name }
+
+    // Get sample name for single sample when --skip_demultiplexing
+    ch_sample_name
+        .first()
+        .map { it[0] }
+        .set { ch_sample_name }
+
+    /*
+     * STEP 1 - Basecalling and demultipexing using Guppy
+     */
+    process Guppy {
+        tag "$run_dir"
+        label 'process_high'
+        publishDir path: "${params.outdir}/guppy", mode: 'copy',
+            saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                    }
+
+        input:
+        file run_dir from ch_run_dir
+        val name from ch_sample_name
+        file guppy_config from ch_guppy_config.ifEmpty([])
+        file guppy_model from ch_guppy_model.ifEmpty([])
+
+        output:
+        file "fastq/*.fastq.gz" into ch_guppy_fastq
+        file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
+                                      ch_guppy_nanoplot_summary
+        file "basecalling/*"
+        file "*.version" into ch_guppy_version
+
+        script:
+        barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
+        proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        def config = "--flowcell $params.flowcell --kit $params.kit"
+        if (params.guppy_config) config = file(params.guppy_config).exists() ? "--config ./$guppy_config" : "--config $params.guppy_config"
+        def model = ""
+        if (params.guppy_model) model = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
+        """
+        guppy_basecaller \\
+            --input_path $run_dir \\
+            --save_path ./basecalling \\
+            --records_per_fastq 0 \\
+            --compress_fastq \\
+            $barcode_kit \\
+            $proc_options \\
+            $config \\
+            $model
+
+        guppy_basecaller --version &> guppy.version
+
+        ## Concatenate fastq files
+        mkdir fastq
+        cd basecalling
+        if [ "\$(find . -type d -name "barcode*" )" != "" ]
+        then
+            for dir in barcode*/
+            do
+                dir=\${dir%*/}
+                cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
+            done
+        else
+            cat *.fastq.gz > ../fastq/${name}.fastq.gz
+        fi
+        """
+    }
+
+    /*
+     * STEP 2 - QC using PycoQC
+     */
+    process PycoQC {
+        tag "$summary_txt"
+        label 'process_low'
+        publishDir "${params.outdir}/pycoqc", mode: 'copy',
+            saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                    }
+
+        when:
+        !params.skip_qc && !params.skip_pycoqc
+
+        input:
+        file summary_txt from ch_guppy_pycoqc_summary
+
+        output:
+        file "*.html"
+        file "*.version" into ch_pycoqc_version
+
+        script:
+        """
+        pycoQC -f $summary_txt -o pycoQC_output.html
+        pycoQC --version &> pycoqc.version
+        """
+    }
+
+    /*
+     * STEP 3 - QC using NanoPlot
+     */
+    process NanoPlotSummary {
+        tag "$summary_txt"
+        label 'process_low'
+        publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
+
+        when:
+        !params.skip_qc && !params.skip_nanoplot
+
+        input:
+        file summary_txt from ch_guppy_nanoplot_summary
+
+        output:
+        file "*.{png,html,txt,log}"
+
+        script:
+        """
+        NanoPlot -t $task.cpus --summary $summary_txt
+        """
+    }
+
+    // Create channels = [sample, fastq, genome, transcriptome]
+    ch_guppy_fastq
+        .flatten()
+        .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
+        .join(ch_sample_info, by: 1) // join on barcode
+        .map { it -> [ it[2], it[1], it[3], it[4] ] }
+        .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
+                ch_fastq_index;
+                ch_fastq_align }
 }
-// } else {
-//
-//     // Create channels = [sample, barcode, fasta, gtf]
-//     ch_samplesheet_reformat
-//         .splitCsv(header:true, sep:',')
-//         .map { get_sample_info(it, params.genomes) }
-//         .map { it -> [ it[0], it[2], it[3], it[4] ] }
-//         .into { ch_sample_info;
-//                 ch_sample_name }
-//
-//     // Get sample name for single sample when --skip_demultiplexing
-//     ch_sample_name
-//         .first()
-//         .map { it[0] }
-//         .set { ch_sample_name }
-//
-//     /*
-//      * STEP 1 - Basecalling and demultipexing using Guppy
-//      */
-//     process Guppy {
-//         tag "$run_dir"
-//         label 'process_high'
-//         publishDir path: "${params.outdir}/guppy", mode: 'copy',
-//             saveAs: { filename ->
-//                           if (!filename.endsWith(".version")) filename
-//                     }
-//
-//         input:
-//         file run_dir from ch_run_dir
-//         val name from ch_sample_name
-//         file guppy_config from ch_guppy_config.ifEmpty([])
-//         file guppy_model from ch_guppy_model.ifEmpty([])
-//
-//         output:
-//         file "fastq/*.fastq.gz" into ch_guppy_fastq
-//         file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
-//                                       ch_guppy_nanoplot_summary
-//         file "basecalling/*"
-//         file "*.version" into ch_guppy_version
-//
-//         script:
-//         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
-//         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
-//         def config = "--flowcell $params.flowcell --kit $params.kit"
-//         if (params.guppy_config) config = file(params.guppy_config).exists() ? "--config ./$guppy_config" : "--config $params.guppy_config"
-//         def model = ""
-//         if (params.guppy_model) model = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
-//         """
-//         guppy_basecaller \\
-//             --input_path $run_dir \\
-//             --save_path ./basecalling \\
-//             --records_per_fastq 0 \\
-//             --compress_fastq \\
-//             $barcode_kit \\
-//             $proc_options \\
-//             $config \\
-//             $model
-//
-//         guppy_basecaller --version &> guppy.version
-//
-//         ## Concatenate fastq files
-//         mkdir fastq
-//         cd basecalling
-//         if [ "\$(find . -type d -name "barcode*" )" != "" ]
-//         then
-//             for dir in barcode*/
-//             do
-//                 dir=\${dir%*/}
-//                 cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
-//             done
-//         else
-//             cat *.fastq.gz > ../fastq/${name}.fastq.gz
-//         fi
-//         """
-//     }
-//
-//     /*
-//      * STEP 2 - QC using PycoQC
-//      */
-//     process PycoQC {
-//         tag "$summary_txt"
-//         label 'process_low'
-//         publishDir "${params.outdir}/pycoqc", mode: 'copy',
-//             saveAs: { filename ->
-//                           if (!filename.endsWith(".version")) filename
-//                     }
-//
-//         when:
-//         !params.skip_qc && !params.skip_pycoqc
-//
-//         input:
-//         file summary_txt from ch_guppy_pycoqc_summary
-//
-//         output:
-//         file "*.html"
-//         file "*.version" into ch_pycoqc_version
-//
-//         script:
-//         """
-//         pycoQC -f $summary_txt -o pycoQC_output.html
-//         pycoQC --version &> pycoqc.version
-//         """
-//     }
-//
-//     /*
-//      * STEP 3 - QC using NanoPlot
-//      */
-//     process NanoPlotSummary {
-//         tag "$summary_txt"
-//         label 'process_low'
-//         publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
-//
-//         when:
-//         !params.skip_qc && !params.skip_nanoplot
-//
-//         input:
-//         file summary_txt from ch_guppy_nanoplot_summary
-//
-//         output:
-//         file "*.{png,html,txt,log}"
-//
-//         script:
-//         """
-//         NanoPlot -t $task.cpus --summary $summary_txt
-//         """
-//     }
-//
-//     // Create channels = [sample, fastq, fasta, gtf]
-//     ch_guppy_fastq
-//         .flatten()
-//         .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
-//         .join(ch_sample_info, by: 1) // join on barcode
-//         .map { it -> [ it[2], it[1], it[3], it[4] ] }
-//         .into { ch_fastq_nanoplot;
-//                 ch_fastq_fastqc;
-//                 ch_fastq_index;
-//                 ch_fastq_align }
-// }
-//
+
 // /*
 //  * STEP 4 - FastQ QC using NanoPlot
 //  */
