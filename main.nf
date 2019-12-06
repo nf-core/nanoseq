@@ -491,14 +491,14 @@ def get_reference(ArrayList channel) {
 
     def is_gtf = false
     def is_transcript_fasta = false
-    (genome_fasta, transcript_fasta, transcript_gtf) = channel
+    (sample, fastq, genome_fasta, transcript_fasta, transcript_gtf) = channel
     if (transcript_fasta != null) {
         genome_fasta = transcript_fasta
         is_transcript_fasta = true
     }
 
     if (genome_fasta != null) {
-        return [genome_fasta.toString(), genome_fasta, transcript_gtf, is_transcript_fasta ]
+        return [ genome_fasta, transcript_gtf, is_transcript_fasta ]
     }
 }
 
@@ -512,14 +512,17 @@ if (params.skip_alignment) {
 
 } else {
 
-    // Get unique list of all genome fasta files
-    ch_fastq_index
-        .map { it -> [ it[2], it[3], it[4] ] }
-        .map { get_reference(it) }
-        .filter { it[1] != null }
-        .unique()
-        .into { ch_fasta_sizes;
-                ch_fasta_index }
+    // // Get unique list of all genome fasta files
+    // ch_fastq_index
+    //     .map { get_reference(it) }
+    //     .filter { it[1] != null }
+    //     .unique()
+    //     .into { ch_fasta_sizes;
+    //             ch_fasta_index }
+
+    // GET UNIQUE LIST OF CHROM SIZES BASED ON REFERENCE GENOME NAME AND NOT ENTIRE LIST
+    // GENERATE SEPARATE CHANNEL TO CREATE MINIMAP INDICES AND GTF2BED PROCESS
+
 
     /*
      * STEP 6 - Make chromosome sizes file
