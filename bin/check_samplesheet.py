@@ -79,6 +79,7 @@ while True:
         if fastq:
             if fastq[-9:] != '.fastq.gz' and fastq[-6:] != '.fq.gz':
                 print("{}: FastQ file has incorrect extension (has to be '.fastq.gz' or '.fq.gz')!\nLine: '{}'".format(ERROR_STR,line.strip()))
+                sys.exit(1)
 
         ## CHECK GENOME ENTRIES
         if genome:
