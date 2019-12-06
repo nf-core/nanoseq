@@ -249,10 +249,21 @@ process CheckSampleSheet {
     """
 }
 
-// Function to see resolve fasta and gtf file if using iGenomes
+// Function to resolve fasta and gtf file if using iGenomes
 // Returns [sample, fastq, barcode, fasta, gtf]
 def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
+    // Check if fastq file exists
+    def fastq = null
+    if (sample.fastq) {
+        fastq = file(sample.fastq, checkIfExists: true)
+        if (!fastq.endsWith(".fastq.gz") || !fastq.endsWith(".fq.gz")) {
+            log.info "FastQ files must have '.fastq.gz' or '.fq.gz' extension"
+            System.exit(0)
+        }
+    }
+
+    // Resolve fasta and gtf file it using iGenomes
     def fasta = null
     def gtf = null
     if (sample.genome) {
@@ -264,50 +275,54 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
         }
     }
 
+    // Check if transcriptome file is in gtf format
     if (sample.transcriptome) {
-        if (sample.transcriptome.substring(sample.transcriptome.lastIndexOf(".") + 1) == 'gtf') {
-            gtf = file(sample.transcriptome, checkIfExists: true)
+        //if (sample.transcriptome.substring(sample.transcriptome.lastIndexOf(".") + 1) == 'gtf') {
+        gtf = file(sample.transcriptome, checkIfExists: true)
+        if (!gtf.endsWith(".gtf")) {
+            log.info "GTF files must have '.gtf' extension"
+            System.exit(0)
         }
     }
 
-    return [ sample.sample, sample.fastq, sample.barcode, fasta, gtf ]
+    return [ sample.sample, fastq, sample.barcode, fasta, gtf ]
 }
-
-ch_samplesheet_reformat
-    .splitCsv(header:true, sep:',')
-    .map { get_sample_info(it, params.genomes) }
-    .println()
-
 
 if (params.skip_basecalling) {
 
     ch_guppy_version = Channel.empty()
     ch_pycoqc_version = Channel.empty()
 
-    // Create channels = [genome_fasta, genome_gtf , sample, fastq]
+    // Create channels = [fasta, gtf, sample, fastq]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
-        .map { row -> [ get_fasta(row.genome, params.genomes), get_gtf(row.genome, params.genomes), row.sample, file(row.fastq, checkIfExists: true) ] }
-        .into { ch_fastq_nanoplot;
-                ch_fastq_fastqc;
-                ch_fastq_index;
-                ch_fastq_align }
+        .map { get_sample_info(it, params.genomes) }
+        .map { it -> [ it[3], it[4], it[0], it[1] ] }
+        .println()
+        //.map { row -> [ get_fasta(row.genome, params.genomes), get_gtf(row.genome, params.genomes), row.sample, file(row.fastq, checkIfExists: true) ] }
+        //.into { ch_fastq_nanoplot;
+        //        ch_fastq_fastqc;
+        //        ch_fastq_index;
+        //        ch_fastq_align }
 
 } else {
 
-    // Create channels = [genome_fasta, barcode, sample]
+    // Create channels = [fasta, gtf, barcode, sample]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
-        .map { row -> [ get_fasta(row.genome, params.genomes), row.barcode, row.sample ] }
-        .into { ch_sample_info;
-                ch_sample_name }
-
-    // Get sample name for single sample when --skip_demultiplexing
-    ch_sample_name
-        .first()
-        .map { it[-1] }
-        .set { ch_sample_name }
+        .map { get_sample_info(it, params.genomes) }
+        .map { it -> [ it[3], it[4], it[2], it[0] ] }
+        .println()
+        //.map { row -> [ get_fasta(row.genome, params.genomes), row.barcode, row.sample ] }
+        //.into { ch_sample_info;
+        //        ch_sample_name }
 }
+    // Get sample name for single sample when --skip_demultiplexing
+    // ch_sample_name
+    //     .first()
+    //     .map { it[-1] }
+    //     .set { ch_sample_name }
+
 //     /*
 //      * STEP 1 - Basecalling and demultipexing using Guppy
 //      */
