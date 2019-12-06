@@ -256,15 +256,7 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     // Check if fastq file exists
     def fastq = null
     if (sample.fastq) {
-        println(sample.fastq.endsWith(".fastq.gz"))
-        println(sample.fastq.endsWith(".fq.gz"))
-        if (!sample.fastq.endsWith(".fastq.gz") || !sample.fastq.endsWith(".fq.gz")) {
-            log.error "FastQ files must have '.fastq.gz' or '.fq.gz' extension. Please check samplesheet:"
-            log.error sample.toMapString()
-            System.exit(0)
-        } else {
-            fastq = file(sample.fastq, checkIfExists: true)
-        }
+        fastq = file(sample.fastq, checkIfExists: true)
     }
 
     // Resolve fasta and gtf file it using iGenomes
@@ -281,13 +273,7 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
     // Check if transcriptome file is in gtf format
     if (sample.transcriptome) {
-        if (!sample.transcriptome.endsWith(".gtf")) {
-            log.error "GTF files must have '.gtf' extension. Please check samplesheet:"
-            log.error sample.toMapString()
-            System.exit(0)
-        } else {
-            gtf = file(sample.transcriptome, checkIfExists: true)
-        }
+        gtf = file(sample.transcriptome, checkIfExists: true)
     }
 
     return [ sample.sample, fastq, sample.barcode, fasta, gtf ]
