@@ -277,11 +277,11 @@ if (params.skip_basecalling) {
     ch_guppy_version = Channel.empty()
     ch_pycoqc_version = Channel.empty()
 
-    // Create channels = [fasta, gtf, sample, fastq]
+    // Create channels = [sample, fastq, fasta, gtf]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[3], it[4], it[0], it[1] ] }
+        .map { it -> [ it[0], it[1], it[3], it[4] ] }
         .into { ch_fastq_nanoplot;
                 ch_fastq_fastqc;
                 ch_fastq_index;
@@ -482,7 +482,13 @@ process FastQC {
     fastqc --version > fastqc.version
     """
 }
-//
+
+
+// NEED TO CONVERT GTF TO BED12 AND STAGE THOSE FILES TOO.
+
+
+
+
 // if (params.skip_alignment) {
 //
 //     ch_samtools_version = Channel.empty()
