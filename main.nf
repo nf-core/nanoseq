@@ -688,7 +688,7 @@ if (params.skip_alignment) {
 
         script:
         """
-        genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
+        genomeCoverageBed -split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
         bedtools --version > bedtools.version
         """
     }
