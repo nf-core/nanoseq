@@ -265,10 +265,10 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
         }
     }
 
-    // Check if fasta and gtf file exists
+    // Check if fastq and gtf file exists
     fastq = sample.fastq ? file(sample.fastq, checkIfExists: true) : null
     gtf = sample.transcriptome ? file(sample.transcriptome, checkIfExists: true) : null
-    
+
     return [ sample.sample, fastq, sample.barcode, fasta, gtf ]
 }
 
@@ -282,12 +282,10 @@ if (params.skip_basecalling) {
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
         .map { it -> [ it[3], it[4], it[0], it[1] ] }
-        .println()
-        //.map { row -> [ get_fasta(row.genome, params.genomes), get_gtf(row.genome, params.genomes), row.sample, file(row.fastq, checkIfExists: true) ] }
-        //.into { ch_fastq_nanoplot;
-        //        ch_fastq_fastqc;
-        //        ch_fastq_index;
-        //        ch_fastq_align }
+        .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
+                ch_fastq_index;
+                ch_fastq_align }
 
 } else {
 
@@ -296,10 +294,8 @@ if (params.skip_basecalling) {
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
         .map { it -> [ it[3], it[4], it[2], it[0] ] }
-        .println()
-        //.map { row -> [ get_fasta(row.genome, params.genomes), row.barcode, row.sample ] }
-        //.into { ch_sample_info;
-        //        ch_sample_name }
+        .into { ch_sample_info;
+                ch_sample_name }
 }
     // Get sample name for single sample when --skip_demultiplexing
     // ch_sample_name
