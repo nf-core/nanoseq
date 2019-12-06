@@ -130,7 +130,7 @@ if args.SKIP_DEMULTIPLEXING:
 
 ## WRITE TO FILE
 fout = open(args.DESIGN_FILE_OUT,'w')
-fout.write(','.join(HEADER) + '\n')
+fout.write(','.join(['sample', 'fastq', 'barcode', 'genome', 'transcript_fasta', 'transcript_gtf']) + '\n')
 for line in outLines:
     fout.write(','.join(line) + '\n')
 fout.close()
