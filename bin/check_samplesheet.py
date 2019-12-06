@@ -93,8 +93,8 @@ while True:
                     sys.exit(1)
 
         ## CHECK TRANSCRIPTOME ENTRIES
-        transcriptome_fasta = ''
-        transcriptome_gtf = ''
+        transcript_fasta = ''
+        transcript_gtf = ''
         if transcriptome:
 
             if transcriptome.find(' ') != -1:
@@ -106,9 +106,9 @@ while True:
                 sys.exit(1)
 
             if transcriptome[-4:] == '.gtf':
-                transcriptome_gtf = transcriptome
+                transcript_gtf = transcriptome
             else:
-                transcriptome_fasta = transcriptome
+                transcript_fasta = transcriptome
 
         ## CHECK FOR TRANSCRIPTOME FASTA
         if not genome and transcriptome:
@@ -116,7 +116,7 @@ while True:
                 print("{}: If genome isnt provided, transcriptome must be in fasta format for mapping!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
 
-        outLines.append([sample,fastq,barcode,genome,transcriptome_fasta,transcriptome_gtf])
+        outLines.append([sample,fastq,barcode,genome,transcript_fasta,transcript_gtf])
     else:
         fin.close()
         break
