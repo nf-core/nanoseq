@@ -258,7 +258,8 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     if (sample.fastq) {
         fastq = file(sample.fastq, checkIfExists: true)
         if (!fastq.endsWith(".fastq.gz") || !fastq.endsWith(".fq.gz")) {
-            log.info "FastQ files must have '.fastq.gz' or '.fq.gz' extension"
+            log.error "FastQ files must have '.fastq.gz' or '.fq.gz' extension. Please check samplesheet."
+            log.error sample.toMapString()
             System.exit(0)
         }
     }
@@ -277,10 +278,10 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
     // Check if transcriptome file is in gtf format
     if (sample.transcriptome) {
-        //if (sample.transcriptome.substring(sample.transcriptome.lastIndexOf(".") + 1) == 'gtf') {
         gtf = file(sample.transcriptome, checkIfExists: true)
         if (!gtf.endsWith(".gtf")) {
-            log.info "GTF files must have '.gtf' extension"
+            log.error "GTF files must have '.gtf' extension. Please check samplesheet."
+            log.error sample.toMapString()
             System.exit(0)
         }
     }
