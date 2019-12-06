@@ -107,10 +107,6 @@ while True:
             if transcriptome[-4:] == '.gtf':
                 print("{}: If genome isnt provided, transcriptome must be in fasta format for mapping!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
-        elif genome and transcriptome:
-            if transcriptome[-4:] != '.gtf':
-                genome = transcriptome
-                transcriptome = ''
 
         outLines.append([sample,fastq,barcode,genome,transcriptome])
     else:
