@@ -255,11 +255,11 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
     // Resolve fasta and gtf file if using iGenomes
     def genome = null
-    def transcriptome = null
+    def gtf = null
     if (sample.genome) {
         if (genomeMap.containsKey(sample.genome)) {
             genome = file(genomeMap[sample.genome].fasta, checkIfExists: true)
-            transcriptome = file(genomeMap[sample.genome].gtf, checkIfExists: true)
+            gtf = file(genomeMap[sample.genome].gtf, checkIfExists: true)
         } else {
             genome = file(sample.genome, checkIfExists: true)
         }
@@ -267,7 +267,7 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
     // Check if fastq and gtf file exists
     fastq = sample.fastq ? file(sample.fastq, checkIfExists: true) : null
-    transcriptome = sample.transcriptome ? file(sample.transcriptome, checkIfExists: true) : null
+    transcriptome = sample.transcriptome ? file(sample.transcriptome, checkIfExists: true) : gtf
 
     return [ sample.sample, fastq, sample.barcode, genome, transcriptome ]
 }
@@ -481,25 +481,32 @@ process FastQC {
     fastqc --version > fastqc.version
     """
 }
-//
-// if (params.skip_alignment) {
-//
-//     ch_samtools_version = Channel.empty()
-//     ch_minimap2_version = Channel.empty()
-//     ch_graphmap2_version = Channel.empty()
-//     ch_bedtools_version = Channel.empty()
-//     ch_sortbam_stats_mqc = Channel.empty()
-//
-// } else {
-//
-//     // Get unique list of all genome fasta files
-//     ch_fastq_index
-//         .map { it -> [ it[2].toString(), it[2] ] }  // [str(genome_fasta), genome_fasta]
-//         .filter { it[1] != null }
-//         .unique()
-//         .into { ch_fasta_sizes;
-//                 ch_fasta_index;
-//                 ch_fasta_align }
+
+if (params.skip_alignment) {
+
+    ch_samtools_version = Channel.empty()
+    ch_minimap2_version = Channel.empty()
+    ch_graphmap2_version = Channel.empty()
+    ch_bedtools_version = Channel.empty()
+    ch_sortbam_stats_mqc = Channel.empty()
+
+} else {
+
+    // Get unique list of all genome fasta files
+    ch_fastq_index
+        .println()
+        //.map { it -> [ it[2].toString(), it[2] ] }  // [str(genome_fasta), genome_fasta]
+        //.filter { it[1] != null }
+        //.unique()
+        //.into { ch_fasta_sizes;
+        //        ch_fasta_index;
+        //        ch_fasta_align }
+
+
+    // USE TRANSCRIPTOME OVER GENOME IF FASTA
+    // IF GTF IS PROVIDED THEN USE THAT TO CREATE BED12
+
+}
 //
 //     /*
 //      * STEP 6 - Make chromosome sizes file
