@@ -284,7 +284,6 @@ if (params.skip_basecalling) {
         .map { get_sample_info(it, params.genomes) }
         .map { it -> [ it[0], it[1], it[3], it[4], it[5] ] }
         .into { ch_fastq_nanoplot;
-                ch_fastq_fastqc;
                 ch_fastq_index;
                 ch_fastq_align }
 } else {
@@ -421,98 +420,117 @@ if (params.skip_basecalling) {
         .join(ch_sample_info, by: 1) // join on barcode
         .map { it -> [ it[2], it[1], it[3], it[4], it[5] ] }
         .into { ch_fastq_nanoplot;
-                ch_fastq_fastqc;
                 ch_fastq_index;
                 ch_fastq_align }
 }
 
-ch_fastq_nanoplot.println()
+/*
+ * STEP 4 - FastQ QC using NanoPlot
+ */
+ch_fastq_nanoplot
+    .map { it -> [ it[0], it[1] ] }
+    .into { ch_fastq_nanoplot;
+            ch_fastq_fastqc }
 
-//
+process NanoPlotFastQ {
+    tag "$sample"
+    label 'process_low'
+    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    when:
+    !params.skip_qc && !params.skip_nanoplot
+
+    input:
+    set val(sample), file(fastq) from ch_fastq_nanoplot
+
+    output:
+    file "*.{png,html,txt,log}"
+    file "*.version" into ch_nanoplot_version
+
+    script:
+    """
+    NanoPlot -t $task.cpus --fastq $fastq
+    NanoPlot --version &> nanoplot.version
+    """
+}
+
+/*
+ * STEP 5 - FastQ QC using FastQC
+ */
+process FastQC {
+    tag "$sample"
+    label 'process_medium'
+    publishDir "${params.outdir}/fastqc", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    when:
+    !params.skip_qc && !params.skip_fastqc
+
+    input:
+    set val(sample), file(fastq) from ch_fastq_fastqc
+
+    output:
+    file "*.{zip,html}" into ch_fastqc_mqc
+    file "*.version" into ch_fastqc_version
+
+    script:
+    """
+    [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
+    fastqc -q -t $task.cpus ${sample}.fastq.gz
+    fastqc --version > fastqc.version
+    """
+}
+
+// Function to resolve fasta and gtf file if using iGenomes
+def get_reference(ArrayList channel) {
+
+    def is_gtf = false
+    def is_transcript_fasta = false
+    (genome_fasta, transcript_fasta, transcript_gtf) = channel
+    if (transcript_fasta != null) {
+        genome_fasta = transcript_fasta
+        is_transcript_fasta = true
+    }
+
+    if (genome_fasta != null) {
+        return [genome_fasta.toString(), genome_fasta, transcript_gtf, is_transcript_fasta ]
+    }
+}
+
+// ch_fastq_index
+//     .map { it -> [ it[2], it[3], it[4] ] }
+//     .map { get_reference(it) }
+//     .into { ch_fastq_sizes;
+//             ch_fastq_index }
+// ch_fastq_sizes.println()
+
 // /*
-//  * STEP 4 - FastQ QC using NanoPlot
+//  * STEP 6 - Make chromosome sizes file
 //  */
-// process NanoPlotFastQ {
-//     tag "$sample"
-//     label 'process_low'
-//     publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (!filename.endsWith(".version")) filename
-//                 }
-//
-//     when:
-//     !params.skip_qc && !params.skip_nanoplot
+// process GetChromSizes {
+//     tag "$fasta"
 //
 //     input:
-//     set val(sample), file(fastq), val(genome), val(transcriptome) from ch_fastq_nanoplot
+//     set val(name), file(fasta) from ch_fasta_sizes
 //
 //     output:
-//     file "*.{png,html,txt,log}"
-//     file "*.version" into ch_nanoplot_version
+//     set val(name), file("*.sizes") into ch_chrom_sizes
+//     file "*.version" into ch_samtools_version
 //
 //     script:
 //     """
-//     NanoPlot -t $task.cpus --fastq $fastq
-//     NanoPlot --version &> nanoplot.version
+//     samtools faidx $fasta
+//     cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
+//     samtools --version &> samtools.version
 //     """
 // }
-//
-// /*
-//  * STEP 5 - FastQ QC using FastQC
-//  */
-// process FastQC {
-//     tag "$sample"
-//     label 'process_medium'
-//     publishDir "${params.outdir}/fastqc", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (!filename.endsWith(".version")) filename
-//                 }
-//
-//     when:
-//     !params.skip_qc && !params.skip_fastqc
-//
-//     input:
-//     set val(sample), file(fastq), val(genome), val(transcriptome) from ch_fastq_fastqc
-//
-//     output:
-//     file "*.{zip,html}" into ch_fastqc_mqc
-//     file "*.version" into ch_fastqc_version
-//
-//     script:
-//     """
-//     [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
-//     fastqc -q -t $task.cpus ${sample}.fastq.gz
-//     fastqc --version > fastqc.version
-//     """
-// }
-//
-// // Function to resolve fasta and gtf file if using iGenomes
-// // Returns [sample, fastq, barcode, fasta, gtf]
-// def get_reference(ArrayList channel) {
-//
-//     def is_gtf = false
-//     def is_fasta = false
-//     (sample, fastq, genome, transcriptome) = channel
-//     if (transcriptome != null) {
-//         if (transcriptome.toString().endsWith('.gtf')) {
-//             is_gtf = true
-//         } else {
-//             is_fasta = true
-//             genome = transcriptome
-//         }
-//     }
-//
-//     return [sample, fastq, genome, transcriptome, is_fasta, is_gtf]
-// }
-//
-// // [Homozygote_A12, barcode01.fastq.gz, /camp/svc/reference/Genomics/iGenomes/Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta/genome.fa, /camp/svc/reference/Genomics/iGenomes/Homo_sapiens/UCSC/hg19/Annotation/Genes/genes.gtf]
-// // [Homozygote_D08, barcode02.fastq.gz, /camp/stp/babs/working/patelh/genome/hg19/hg19.fa, /camp/stp/babs/working/patelh/genome/hg19/genome_annotation/07-06-17/all_refseq_genes.gtf]
-// // [Heterozygote_mosaic_A05, barcode03.fastq.gz, /camp/stp/babs/working/patelh/genome/hg19/hg19.fa, null]
-// // [Heterozygote_A08, barcode04.fastq.gz, null, /camp/stp/babs/working/patelh/genome/hg19/hg19.fa]
-//
-// // USE TRANSCRIPTOME OVER GENOME IF FASTA
-// // IF GTF IS PROVIDED THEN USE THAT TO CREATE BED12
-//
+
+
 // if (params.skip_alignment) {
 //
 //     ch_samtools_version = Channel.empty()
@@ -522,6 +540,9 @@ ch_fastq_nanoplot.println()
 //     ch_sortbam_stats_mqc = Channel.empty()
 //
 // } else {
+//
+//     // USE TRANSCRIPTOME OVER GENOME IF FASTA
+//     // IF GTF IS PROVIDED THEN USE THAT TO CREATE BED12
 //
 //     // Get unique list of all genome fasta files
 //     ch_fastq_index
@@ -534,6 +555,7 @@ ch_fastq_nanoplot.println()
 //                 ch_fasta_align }
 //
 // }
+
 // //
 // //     /*
 // //      * STEP 6 - Make chromosome sizes file
