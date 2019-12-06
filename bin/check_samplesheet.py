@@ -89,7 +89,7 @@ while True:
 
             if len(genome.split('.')) > 1:
                 if genome[-6:] != '.fasta' and genome[-3:] != '.fa' and genome[-9:] != '.fasta.gz' and genome[-6:] != '.fa.gz':
-                    print("{}: Genome field incorrect extension (has to be '.fasta' or '.fa', '.fasta.gz' or '.fa.gz')!\nLine: '{}'".format(ERROR_STR,line.strip()))
+                    print("{}: Genome field incorrect extension (has to be '.fasta', '.fa', '.fasta.gz' or '.fa.gz')!\nLine: '{}'".format(ERROR_STR,line.strip()))
                     sys.exit(1)
 
         ## CHECK TRANSCRIPTOME ENTRIES
@@ -98,16 +98,13 @@ while True:
                 print("{}: Transcriptome field contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
 
-            if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-4:] != '.gtf':
-                print("{}: Transcriptome field incorrect extension (has to be '.fasta', '.fa' or '.gtf')!\nLine: '{}'".format(ERROR_STR,line.strip()))
+            if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-9:] != '.fasta.gz' and transcriptome[-6:] != '.fa.gz' and transcriptome[-4:] != '.gtf':
+                print("{}: Transcriptome field incorrect extension (has to be '.fasta', '.fa', '.fasta.gz', '.fa.gz' or '.gtf')!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
 
         ## USE TRANSCRIPTOME FASTA FOR MAPPING OVER GENOME
         if not genome and transcriptome:
-            if transcriptome[-4:] != '.gtf':
-                genome = transcriptome
-                transcriptome = ''
-            else:
+            if transcriptome[-4:] == '.gtf':
                 print("{}: If genome isnt provided, transcriptome must be in fasta format for mapping!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
         elif genome and transcriptome:
