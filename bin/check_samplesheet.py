@@ -102,7 +102,7 @@ while True:
                 print("{}: Transcriptome field incorrect extension (has to be '.fasta', '.fa', '.fasta.gz', '.fa.gz' or '.gtf')!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
 
-        ## USE TRANSCRIPTOME FASTA FOR MAPPING OVER GENOME
+        ## CHECK FOR TRANSCRIPTOME FASTA
         if not genome and transcriptome:
             if transcriptome[-4:] == '.gtf':
                 print("{}: If genome isnt provided, transcriptome must be in fasta format for mapping!\nLine: '{}'".format(ERROR_STR,line.strip()))
