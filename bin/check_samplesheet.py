@@ -93,7 +93,10 @@ while True:
                     sys.exit(1)
 
         ## CHECK TRANSCRIPTOME ENTRIES
+        transcriptome_fasta = ''
+        transcriptome_gtf = ''
         if transcriptome:
+
             if transcriptome.find(' ') != -1:
                 print("{}: Transcriptome field contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
@@ -102,13 +105,18 @@ while True:
                 print("{}: Transcriptome field incorrect extension (has to be '.fasta', '.fa', '.fasta.gz', '.fa.gz' or '.gtf')!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
 
+            if transcriptome[-4:] == '.gtf':
+                transcriptome_gtf = transcriptome
+            else:
+                transcriptome_fasta = transcriptome
+
         ## CHECK FOR TRANSCRIPTOME FASTA
         if not genome and transcriptome:
             if transcriptome[-4:] == '.gtf':
                 print("{}: If genome isnt provided, transcriptome must be in fasta format for mapping!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
 
-        outLines.append([sample,fastq,barcode,genome,transcriptome])
+        outLines.append([sample,fastq,barcode,genome,transcriptome_fasta,transcriptome_gtf])
     else:
         fin.close()
         break
