@@ -482,6 +482,33 @@ process FastQC {
     """
 }
 
+// Function to resolve fasta and gtf file if using iGenomes
+// Returns [sample, fastq, barcode, fasta, gtf]
+def get_reference(ArrayList channel) {
+
+    def is_gtf = false
+    def is_fasta = false
+    (sample, fastq, genome, transcriptome) = channel
+    if (transcriptome != null) {
+        if (transcriptome.toString().endsWith('.gtf')) {
+            is_gtf = true
+        } else {
+            is_fasta = true
+            genome = transcriptome
+        }
+    }
+
+    return [sample, fastq, genome, transcriptome, is_fasta, is_gtf]
+}
+
+// [Homozygote_A12, barcode01.fastq.gz, /camp/svc/reference/Genomics/iGenomes/Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta/genome.fa, /camp/svc/reference/Genomics/iGenomes/Homo_sapiens/UCSC/hg19/Annotation/Genes/genes.gtf]
+// [Homozygote_D08, barcode02.fastq.gz, /camp/stp/babs/working/patelh/genome/hg19/hg19.fa, /camp/stp/babs/working/patelh/genome/hg19/genome_annotation/07-06-17/all_refseq_genes.gtf]
+// [Heterozygote_mosaic_A05, barcode03.fastq.gz, /camp/stp/babs/working/patelh/genome/hg19/hg19.fa, null]
+// [Heterozygote_A08, barcode04.fastq.gz, null, /camp/stp/babs/working/patelh/genome/hg19/hg19.fa]
+
+// USE TRANSCRIPTOME OVER GENOME IF FASTA
+// IF GTF IS PROVIDED THEN USE THAT TO CREATE BED12
+
 if (params.skip_alignment) {
 
     ch_samtools_version = Channel.empty()
@@ -494,6 +521,7 @@ if (params.skip_alignment) {
 
     // Get unique list of all genome fasta files
     ch_fastq_index
+        .map { get_reference(it) }
         .println()
         //.map { it -> [ it[2].toString(), it[2] ] }  // [str(genome_fasta), genome_fasta]
         //.filter { it[1] != null }
@@ -501,10 +529,6 @@ if (params.skip_alignment) {
         //.into { ch_fasta_sizes;
         //        ch_fasta_index;
         //        ch_fasta_align }
-
-
-    // USE TRANSCRIPTOME OVER GENOME IF FASTA
-    // IF GTF IS PROVIDED THEN USE THAT TO CREATE BED12
 
 }
 //
