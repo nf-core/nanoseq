@@ -289,18 +289,18 @@ if (params.skip_basecalling) {
 
 } else {
 
-    // Create channels = [fasta, gtf, barcode, sample]
+    // Create channels = [sample, barcode, fasta, gtf]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[3], it[4], it[2], it[0] ] }
+        .map { it -> [ it[0], it[2], it[3], it[4] ] }
         .into { ch_sample_info;
                 ch_sample_name }
 
     // Get sample name for single sample when --skip_demultiplexing
     ch_sample_name
         .first()
-        .map { it[-1] }
+        .map { it[0] }
         .set { ch_sample_name }
 
     /*
@@ -414,19 +414,19 @@ if (params.skip_basecalling) {
         """
     }
 
-    ch_guppy_fastq.println()
-    // // Create channels = [genome_fasta, sample, fastq]
-    // ch_guppy_fastq
-    //     .flatten()
-    //     .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
-    //     .join(ch_sample_info, by: 1) // join on barcode
-    //     .map { it -> [ it[2], it[3], it[1] ] }
-    //     .into { ch_fastq_nanoplot;
-    //             ch_fastq_fastqc;
-    //             ch_fastq_index;
-    //             ch_fastq_align }
+    // Create channels = [sample, fastq, fasta, gtf]
+    ch_guppy_fastq
+        .flatten()
+        .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
+        .join(ch_sample_info, by: 1) // join on barcode
+        .map { it -> [ it[2], it[1], it[3], it[4] ] }
+        .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
+                ch_fastq_index;
+                ch_fastq_align }
 }
 
+ch_fastq_align.println()
 // /*
 //  * STEP 4 - FastQ QC using NanoPlot
 //  */
