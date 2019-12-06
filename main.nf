@@ -425,62 +425,62 @@ if (params.skip_basecalling) {
                 ch_fastq_align }
 }
 
-// /*
-//  * STEP 4 - FastQ QC using NanoPlot
-//  */
-// process NanoPlotFastQ {
-//     tag "$sample"
-//     label 'process_low'
-//     publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (!filename.endsWith(".version")) filename
-//                 }
-//
-//     when:
-//     !params.skip_qc && !params.skip_nanoplot
-//
-//     input:
-//     set val(sample), file(fastq), val(fasta), val(gtf) from ch_fastq_nanoplot
-//
-//     output:
-//     file "*.{png,html,txt,log}"
-//     file "*.version" into ch_nanoplot_version
-//
-//     script:
-//     """
-//     NanoPlot -t $task.cpus --fastq $fastq
-//     NanoPlot --version &> nanoplot.version
-//     """
-// }
-//
-// /*
-//  * STEP 5 - FastQ QC using FastQC
-//  */
-// process FastQC {
-//     tag "$sample"
-//     label 'process_medium'
-//     publishDir "${params.outdir}/fastqc", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (!filename.endsWith(".version")) filename
-//                 }
-//
-//     when:
-//     !params.skip_qc && !params.skip_fastqc
-//
-//     input:
-//     set val(sample), file(fastq), val(fasta), val(gtf) from ch_fastq_fastqc
-//
-//     output:
-//     file "*.{zip,html}" into ch_fastqc_mqc
-//     file "*.version" into ch_fastqc_version
-//
-//     script:
-//     """
-//     [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
-//     fastqc -q -t $task.cpus ${sample}.fastq.gz
-//     fastqc --version > fastqc.version
-//     """
-// }
+/*
+ * STEP 4 - FastQ QC using NanoPlot
+ */
+process NanoPlotFastQ {
+    tag "$sample"
+    label 'process_low'
+    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    when:
+    !params.skip_qc && !params.skip_nanoplot
+
+    input:
+    set val(sample), file(fastq), val(genome), val(transcriptome) from ch_fastq_nanoplot
+
+    output:
+    file "*.{png,html,txt,log}"
+    file "*.version" into ch_nanoplot_version
+
+    script:
+    """
+    NanoPlot -t $task.cpus --fastq $fastq
+    NanoPlot --version &> nanoplot.version
+    """
+}
+
+/*
+ * STEP 5 - FastQ QC using FastQC
+ */
+process FastQC {
+    tag "$sample"
+    label 'process_medium'
+    publishDir "${params.outdir}/fastqc", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    when:
+    !params.skip_qc && !params.skip_fastqc
+
+    input:
+    set val(sample), file(fastq), val(genome), val(transcriptome) from ch_fastq_fastqc
+
+    output:
+    file "*.{zip,html}" into ch_fastqc_mqc
+    file "*.version" into ch_fastqc_version
+
+    script:
+    """
+    [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
+    fastqc -q -t $task.cpus ${sample}.fastq.gz
+    fastqc --version > fastqc.version
+    """
+}
 //
 // if (params.skip_alignment) {
 //
