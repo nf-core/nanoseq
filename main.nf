@@ -253,12 +253,6 @@ process CheckSampleSheet {
 // Returns [sample, fastq, barcode, fasta, gtf]
 def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
-    // Check if fastq file exists
-    def fastq = null
-    if (sample.fastq) {
-        fastq = file(sample.fastq, checkIfExists: true)
-    }
-
     // Resolve fasta and gtf file it using iGenomes
     def fasta = null
     def gtf = null
@@ -271,11 +265,10 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
         }
     }
 
-    // Check if transcriptome file is in gtf format
-    if (sample.transcriptome) {
-        gtf = file(sample.transcriptome, checkIfExists: true)
-    }
-
+    // Check if fasta and gtf file exists
+    fastq = sample.fastq ? file(sample.fastq, checkIfExists: true) : null
+    gtf = sample.transcriptome ? file(sample.transcriptome, checkIfExists: true) : null
+    
     return [ sample.sample, fastq, sample.barcode, fasta, gtf ]
 }
 
