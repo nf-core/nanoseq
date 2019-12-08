@@ -519,27 +519,27 @@ if (!params.skip_alignment) {
         """
     }
 
-    process MakeGeneBED {
-        tag "$gtf"
-        label 'process_low'
-        publishDir "${params.outdir}/reference_genome", mode: 'copy'
-
-        input:
-        file gtf from ch_gtf
-
-        output:
-        file "*.bed" into ch_gene_bed
-
-        script: // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
-        """
-        gtf2bed $gtf > ${gtf.baseName}.bed
-        """
-    }
-
-
+    /*
+     * STEP 7 - Convert GTF to BED12
+     */
+    // process GTF2BED {
+    //     tag "$gtf"
+    //     label 'process_low'
+    //
+    //     input:
+    //     file gtf from ch_gtf
+    //
+    //     output:
+    //     file "*.bed" into ch_gene_bed
+    //
+    //     script: // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
+    //     """
+    //     gtf2bed $gtf > ${gtf.baseName}.bed
+    //     """
+    // }
 
     /*
-     * STEP 7 - Create genome/transcriptome index
+     * STEP 8 - Create genome/transcriptome index
      */
     if (params.aligner == 'minimap2') {
         process MiniMap2Index {
@@ -603,7 +603,7 @@ if (!params.skip_alignment) {
 //         .set { ch_fastq_align }
 //
 //     /*
-//      * STEP 8 - Align fastq files
+//      * STEP 9 - Align fastq files
 //      */
 //     if (params.aligner == 'minimap2') {
 //
@@ -664,7 +664,7 @@ if (!params.skip_alignment) {
 }
 
 // /*
-//  * STEP 9 - Coordinate sort BAM files
+//  * STEP 10 - Coordinate sort BAM files
 //  */
 // process SortBAM {
 //     tag "$sample"
@@ -702,7 +702,7 @@ if (!params.skip_alignment) {
 // }
 //
 // /*
-//  * STEP 10 - Convert BAM to BEDGraph
+//  * STEP 11 - Convert BAM to BEDGraph
 //  */
 // process BAMToBedGraph {
 //     tag "$sample"
@@ -726,7 +726,7 @@ if (!params.skip_alignment) {
 // }
 //
 // /*
-//  * STEP 11 - Convert BEDGraph to BigWig
+//  * STEP 12 - Convert BEDGraph to BigWig
 //  */
 // process BedGraphToBigWig {
 //     tag "$sample"
@@ -751,7 +751,7 @@ if (!params.skip_alignment) {
 // }
 //
 // /*
-//  * STEP 12 - Convert BAM to BED12
+//  * STEP 13 - Convert BAM to BED12
 //  */
 // process BAMToBed12 {
 //     tag "$sample"
@@ -773,7 +773,7 @@ if (!params.skip_alignment) {
 // }
 //
 // /*
-//  * STEP 13 - Convert BED12 to BigBED
+//  * STEP 14 - Convert BED12 to BigBED
 //  */
 // process Bed12ToBigBed {
 //     tag "$sample"
@@ -798,7 +798,7 @@ if (!params.skip_alignment) {
 // }
 
 /*
- * STEP 14 - Output Description HTML
+ * STEP 15 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
