@@ -484,36 +484,56 @@ process FastQC {
     """
 }
 
-// TODO pipeline: What if this channel is empty?
 // Get unique list of all fasta files
-ch_fastq_index
-    .map { it -> [ it[2].toString(), it[2] ] }  // [str(fasta), fasta]
-    .filter { it[1] }
-    .unique()
-    .into { ch_fasta_sizes;
-            ch_fasta_index;
-            ch_fasta_align }
+if (!params.skip_alignment) {
+    ch_fastq_index
+        .map { it -> [ it[2].toString(), it[2] ] }  // [str(fasta), fasta]
+        .filter { it[1] }
+        .unique()
+        .into { ch_fasta_sizes;
+                ch_fasta_index;
+                ch_fasta_align }
+} //else {
+  //     ch_samtools_version = Channel.empty()
+  //     ch_minimap2_version = Channel.empty()
+  //     ch_graphmap2_version = Channel.empty()
+  //     ch_bedtools_version = Channel.empty()
+  //     ch_sortbam_stats_mqc = Channel.empty()
+//}
 
-// /*
-//  * STEP 6 - Make chromosome sizes file
-//  */
-// process GetChromSizes {
-//     tag "$fasta"
-//
-//     input:
-//     set val(name), file(fasta), file(gtf), val(is_transcript_fasta) from ch_fasta_sizes
-//
-//     output:
-//     set val(name), file("*.sizes") into ch_chrom_sizes
-//     file "*.version" into ch_samtools_version
-//
-//     script:
-//     """
-//     samtools faidx $fasta
-//     cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
-//     samtools --version &> samtools.version
-//     """
-// }
+/*
+ * STEP 6 - Make chromosome sizes file
+ */
+process GetChromSizes {
+    tag "$fasta"
+
+    when:
+    !params.skip_alignment
+
+    input:
+    set val(name), file(fasta) from ch_fasta_sizes
+
+    output:
+    set val(name), file("*.sizes") into ch_chrom_sizes
+    file "*.version" into ch_samtools_version
+
+    script:
+    """
+    samtools faidx $fasta
+    cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
+    samtools --version &> samtools.version
+    """
+}
+
+
+
+ch_chrom_sizes.println()
+
+
+
+
+
+
 //
 // if (params.skip_alignment) {
 //
