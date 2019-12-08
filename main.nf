@@ -484,8 +484,9 @@ process FastQC {
     """
 }
 
-// Get unique list of all fasta files
 if (!params.skip_alignment) {
+
+    // Get unique list of all fasta files
     ch_fastq_index
         .map { it -> [ it[2].toString(), it[2] ] }  // [str(fasta), fasta]
         .filter { it[1] }
@@ -493,350 +494,282 @@ if (!params.skip_alignment) {
         .into { ch_fasta_sizes;
                 ch_fasta_index;
                 ch_fasta_align }
-} //else {
-  //     ch_samtools_version = Channel.empty()
-  //     ch_minimap2_version = Channel.empty()
-  //     ch_graphmap2_version = Channel.empty()
-  //     ch_bedtools_version = Channel.empty()
-  //     ch_sortbam_stats_mqc = Channel.empty()
-//}
+
+    /*
+     * STEP 6 - Make chromosome sizes file
+     */
+    process GetChromSizes {
+        tag "$fasta"
+
+        input:
+        set val(name), file(fasta) from ch_fasta_sizes
+
+        output:
+        set val(name), file("*.sizes") into ch_chrom_sizes
+        file "*.version" into ch_samtools_version
+
+        script:
+        """
+        samtools faidx $fasta
+        cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
+        samtools --version &> samtools.version
+        """
+    }
+
+    /*
+     * STEP 7 - Create genome/transcriptome index
+     */
+    if (params.aligner == 'minimap2') {
+        process MiniMap2Index {
+            tag "$fasta"
+            label 'process_medium'
+
+            input:
+            set val(name), file(fasta) from ch_fasta_index
+
+            output:
+            set val(name), file("*.mmi") into ch_index
+            file "*.version" into ch_minimap2_version
+
+            script:
+            minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
+            kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+            stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+            """
+            minimap2 $minimap_preset $kmer $stranded -t $task.cpus -d ${fasta}.mmi $fasta
+            minimap2 --version &> minimap2.version
+            """
+        }
+    } else {
+        // TODO pipeline: Create graphmap2 index with GTF instead
+        // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
+        process GraphMap2Index {
+          tag "$fasta"
+          label 'process_medium'
+
+          input:
+          set val(name), file(fasta) from ch_fasta_index
+
+          output:
+          set val(name), file("*.gmidx") into ch_index
+          file "*.version" into ch_graphmap2_version
+
+          script:
+          graphmap2_preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
+          """
+          graphmap2 align $graphmap2_preset -t $task.cpus -I -r $fasta
+          echo \$(graphmap2 2>&1) > graphmap2.version
+          """
+        }
+    }
+
+    // Convert genome_fasta to string from file to use cross()
+    ch_fastq_align
+        .map { it -> [ it[0].toString(), it[1], it[2] ] }
+        .set { ch_fastq_align }
+
+    // Create channels = [genome_fasta, index, sizes, sample, fastq]
+    ch_fasta_align
+        .join(ch_index)
+        .join(ch_chrom_sizes)
+        .cross(ch_fastq_align)
+        .flatten()
+        .collate(7)
+        .map { it -> [ it[1], it[2], it[3], it[5], it[6] ] }
+        .set { ch_fastq_align }
+
+    /*
+     * STEP 8 - Align fastq files
+     */
+    if (params.aligner == 'minimap2') {
+
+        process MiniMap2Align {
+            tag "$sample"
+            label 'process_medium'
+            if (params.save_align_intermeds) {
+                publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+                    saveAs: { filename ->
+                                  if (filename.endsWith(".sam")) filename
+                            }
+            }
+
+            input:
+            set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
+
+            output:
+            set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
+
+            script:
+            minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
+            kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+            stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+            """
+            minimap2 $minimap_preset $kmer $stranded -t $task.cpus $index $fastq > ${sample}.sam
+            """
+        }
+    } else {
+        process GraphMap2Align {
+            tag "$sample"
+            label 'process_medium'
+            if (params.save_align_intermeds) {
+                publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+                    saveAs: { filename ->
+                                  if (filename.endsWith(".sam")) filename
+                            }
+            }
+
+            input:
+            set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
+
+            output:
+            set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
+
+            script:
+            graphmap2_preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
+            """
+            graphmap2 align $graphmap2_preset -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
+            """
+        }
+    }
+} else {
+    ch_minimap2_version = Channel.empty()
+    ch_graphmap2_version = Channel.empty()
+}
 
 /*
- * STEP 6 - Make chromosome sizes file
+ * STEP 9 - Coordinate sort BAM files
  */
-process GetChromSizes {
-    tag "$fasta"
+process SortBAM {
+    tag "$sample"
+    label 'process_medium'
+    publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+        saveAs: { filename ->
+                      if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
+                      else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
+                      else if (filename.endsWith(".stats")) "samtools_stats/$filename"
+                      else if (filename.endsWith(".sorted.bam")) filename
+                      else if (filename.endsWith(".sorted.bam.bai")) filename
+                      else null
+                }
 
     when:
     !params.skip_alignment
 
     input:
-    set val(name), file(fasta) from ch_fasta_sizes
+    set file(fasta), file(sizes), val(sample), file(sam) from ch_align_sam
 
     output:
-    set val(name), file("*.sizes") into ch_chrom_sizes
-    file "*.version" into ch_samtools_version
+    set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bed12,
+                                                                                   ch_sortbam_bedgraph
+    file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
     script:
     """
-    samtools faidx $fasta
-    cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
-    samtools --version &> samtools.version
+    samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
+    samtools sort -@ $task.cpus -o ${sample}.sorted.bam -T $sample ${sample}.bam
+    samtools index ${sample}.sorted.bam
+    samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
+    samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
+    samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
     """
 }
 
+/*
+ * STEP 10 - Convert BAM to BEDGraph
+ */
+process BAMToBedGraph {
+    tag "$sample"
+    label 'process_medium'
 
+    when:
+    !params.skip_alignment && !params.skip_bigwig
 
-ch_chrom_sizes.println()
+    input:
+    set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bedgraph
 
+    output:
+    set file(fasta), file(sizes), val(sample), file("*.bedGraph") into ch_bedgraph
+    file "*.version" into ch_bedtools_version
 
+    script:
+    """
+    genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
+    bedtools --version > bedtools.version
+    """
+}
 
+/*
+ * STEP 11 - Convert BEDGraph to BigWig
+ */
+process BedGraphToBigWig {
+    tag "$sample"
+    label 'process_medium'
+    publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
+        saveAs: { filename ->
+                      if (filename.endsWith(".bw")) filename
+                }
+    when:
+    !params.skip_alignment && !params.skip_bigwig
 
+    input:
+    set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
 
+    output:
+    set file(fasta), file(sizes), val(sample), file("*.bw") into ch_bigwig
 
-//
-// if (params.skip_alignment) {
-//
-//     ch_samtools_version = Channel.empty()
-//     ch_minimap2_version = Channel.empty()
-//     ch_graphmap2_version = Channel.empty()
-//     ch_bedtools_version = Channel.empty()
-//     ch_sortbam_stats_mqc = Channel.empty()
-//
-// } else {
-//
-//     // // Get unique list of all genome fasta files
-//     // ch_fastq_index
-//     //     .map { get_reference(it) }
-//     //     .filter { it[1] != null }
-//     //     .unique()
-//     //     .into { ch_fasta_sizes;
-//     //             ch_fasta_index }
-//
-//     // GET UNIQUE LIST OF CHROM SIZES BASED ON REFERENCE GENOME NAME AND NOT ENTIRE LIST
-//     // GENERATE SEPARATE CHANNEL TO CREATE MINIMAP INDICES AND GTF2BED PROCESS
-//
-//
-//     /*
-//      * STEP 6 - Make chromosome sizes file
-//      */
-//     process GetChromSizes {
-//         tag "$fasta"
-//
-//         input:
-//         set val(name), file(fasta), file(gtf), val(is_transcript_fasta) from ch_fasta_sizes
-//
-//         output:
-//         set val(name), file("*.sizes") into ch_chrom_sizes
-//         file "*.version" into ch_samtools_version
-//
-//         script:
-//         """
-//         samtools faidx $fasta
-//         cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
-//         samtools --version &> samtools.version
-//         """
-//     }
-//     // USE TRANSCRIPTOME OVER GENOME IF FASTA
-//     // IF GTF IS PROVIDED THEN USE THAT TO CREATE BED12
-//
-// }
-// //
-// //     /*
-// //      * STEP 7 - Create genome index
-// //      */
-// //     if (params.aligner == 'minimap2') {
-// //
-// //         process MiniMap2Index {
-// //           tag "$fasta"
-// //           label 'process_medium'
-// //
-// //           input:
-// //           set val(name), file(fasta) from ch_fasta_index
-// //
-// //           output:
-// //           set val(name), file("*.mmi") into ch_index
-// //           file "*.version" into ch_minimap2_version
-// //
-// //           script:
-// //           minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
-// //           kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-// //           stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-// //           """
-// //           minimap2 $minimap_preset $kmer $stranded -t $task.cpus -d ${fasta}.mmi $fasta
-// //           minimap2 --version &> minimap2.version
-// //           """
-// //         }
-// //         ch_graphmap2_version = Channel.empty()
-// //
-// //     } else if (params.aligner == 'graphmap2') {
-// //
-// //         // TODO pipeline: Create graphmap2 index with GTF instead
-// //         // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
-// //         process GraphMap2Index {
-// //           tag "$fasta"
-// //           label 'process_medium'
-// //
-// //           input:
-// //           set val(name), file(fasta) from ch_fasta_index
-// //
-// //           output:
-// //           set val(name), file("*.gmidx") into ch_index
-// //           file "*.version" into ch_graphmap2_version
-// //
-// //           script:
-// //           graphmap2_preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
-// //           """
-// //           graphmap2 align $graphmap2_preset -t $task.cpus -I -r $fasta
-// //           echo \$(graphmap2 2>&1) > graphmap2.version
-// //           """
-// //         }
-// //         ch_minimap2_version = Channel.empty()
-// //     }
-// //     //
-// //     // // Convert genome_fasta to string from file to use cross()
-// //     // ch_fastq_align
-// //     //     .map { it -> [ it[0].toString(), it[1], it[2] ] }
-// //     //     .set { ch_fastq_align }
-// //     //
-// //     // // Create channels = [genome_fasta, index, sizes, sample, fastq]
-// //     // ch_fasta_align
-// //     //     .join(ch_index)
-// //     //     .join(ch_chrom_sizes)
-// //     //     .cross(ch_fastq_align)
-// //     //     .flatten()
-// //     //     .collate(7)
-// //     //     .map { it -> [ it[1], it[2], it[3], it[5], it[6] ] }
-// //     //     .set { ch_fastq_align }
-// //     //
-// //     // /*
-// //     //  * STEP 8 - Align fastq files
-// //     //  */
-// //     // if (params.aligner == 'minimap2') {
-// //     //
-// //     //     process MiniMap2Align {
-// //     //         tag "$sample"
-// //     //         label 'process_medium'
-// //     //         if (params.save_align_intermeds) {
-// //     //             publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-// //     //                 saveAs: { filename ->
-// //     //                               if (filename.endsWith(".sam")) filename
-// //     //                         }
-// //     //         }
-// //     //
-// //     //         input:
-// //     //         set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
-// //     //
-// //     //         output:
-// //     //         set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
-// //     //
-// //     //         script:
-// //     //         minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
-// //     //         kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-// //     //         stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-// //     //         """
-// //     //         minimap2 $minimap_preset $kmer $stranded -t $task.cpus $index $fastq > ${sample}.sam
-// //     //         """
-// //     //     }
-// //     //
-// //     // } else if (params.aligner == 'graphmap2') {
-// //     //
-// //     //     process GraphMap2Align {
-// //     //         tag "$sample"
-// //     //         label 'process_medium'
-// //     //         if (params.save_align_intermeds) {
-// //     //             publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-// //     //                 saveAs: { filename ->
-// //     //                               if (filename.endsWith(".sam")) filename
-// //     //                         }
-// //     //         }
-// //     //
-// //     //         input:
-// //     //         set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
-// //     //
-// //     //         output:
-// //     //         set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
-// //     //
-// //     //         script:
-// //     //         graphmap2_preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
-// //     //         """
-// //     //         graphmap2 align $graphmap2_preset -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
-// //     //         """
-// //     //     }
-// //     // }
-// //     //
-// //     // /*
-// //     //  * STEP 9 - Coordinate sort BAM files
-// //     //  */
-// //     // process SortBAM {
-// //     //     tag "$sample"
-// //     //     label 'process_medium'
-// //     //     publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-// //     //         saveAs: { filename ->
-// //     //                       if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
-// //     //                       else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
-// //     //                       else if (filename.endsWith(".stats")) "samtools_stats/$filename"
-// //     //                       else if (filename.endsWith(".sorted.bam")) filename
-// //     //                       else if (filename.endsWith(".sorted.bam.bai")) filename
-// //     //                       else null
-// //     //                 }
-// //     //
-// //     //     input:
-// //     //     set file(fasta), file(sizes), val(sample), file(sam) from ch_align_sam
-// //     //
-// //     //     output:
-// //     //     set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bed12,
-// //     //                                                                                    ch_sortbam_bedgraph
-// //     //     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
-// //     //
-// //     //     script:
-// //     //     """
-// //     //     samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
-// //     //     samtools sort -@ $task.cpus -o ${sample}.sorted.bam -T $sample ${sample}.bam
-// //     //     samtools index ${sample}.sorted.bam
-// //     //     samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
-// //     //     samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
-// //     //     samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
-// //     //     """
-// //     // }
-// //     //
-// //     // /*
-// //     //  * STEP 10 - Convert BAM to BEDGraph
-// //     //  */
-// //     // process BAMToBedGraph {
-// //     //     tag "$sample"
-// //     //     label 'process_medium'
-// //     //
-// //     //     when:
-// //     //     !params.skip_bigwig
-// //     //
-// //     //     input:
-// //     //     set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bedgraph
-// //     //
-// //     //     output:
-// //     //     set file(fasta), file(sizes), val(sample), file("*.bedGraph") into ch_bedgraph
-// //     //     file "*.version" into ch_bedtools_version
-// //     //
-// //     //     script:
-// //     //     """
-// //     //     genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
-// //     //     bedtools --version > bedtools.version
-// //     //     """
-// //     // }
-// //     //
-// //     // /*
-// //     //  * STEP 11 - Convert BEDGraph to BigWig
-// //     //  */
-// //     // process BedGraphToBigWig {
-// //     //     tag "$sample"
-// //     //     label 'process_medium'
-// //     //     publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
-// //     //         saveAs: { filename ->
-// //     //                       if (filename.endsWith(".bw")) filename
-// //     //                 }
-// //     //     when:
-// //     //     !params.skip_bigwig
-// //     //
-// //     //     input:
-// //     //     set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
-// //     //
-// //     //     output:
-// //     //     set file(fasta), file(sizes), val(sample), file("*.bw") into ch_bigwig
-// //     //
-// //     //     script:
-// //     //     """
-// //     //     bedGraphToBigWig $bedgraph $sizes ${sample}.bw
-// //     //     """
-// //     // }
-// //     //
-// //     // /*
-// //     //  * STEP 12 - Convert BAM to BED12
-// //     //  */
-// //     // process BAMToBed12 {
-// //     //     tag "$sample"
-// //     //     label 'process_medium'
-// //     //
-// //     //     when:
-// //     //     !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
-// //     //
-// //     //     input:
-// //     //     set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
-// //     //
-// //     //     output:
-// //     //     set file(fasta), file(sizes), val(sample), file("*.bed12") into ch_bed12
-// //     //
-// //     //     script:
-// //     //     """
-// //     //     bedtools bamtobed -bed12 -cigar -i ${bam[0]} | sort -k1,1 -k2,2n > ${sample}.bed12
-// //     //     """
-// //     // }
-// //     //
-// //     // /*
-// //     //  * STEP 13 - Convert BED12 to BigBED
-// //     //  */
-// //     // process Bed12ToBigBed {
-// //     //     tag "$sample"
-// //     //     label 'process_medium'
-// //     //     publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
-// //     //         saveAs: { filename ->
-// //     //                       if (filename.endsWith(".bb")) filename
-// //     //                 }
-// //     //     when:
-// //     //     !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
-// //     //
-// //     //     input:
-// //     //     set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
-// //     //
-// //     //     output:
-// //     //     set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
-// //     //
-// //     //     script:
-// //     //     """
-// //     //     bedToBigBed $bed12 $sizes ${sample}.bb
-// //     //     """
-// //     // }
-// // }
-// // //
+    script:
+    """
+    bedGraphToBigWig $bedgraph $sizes ${sample}.bw
+    """
+}
+
+/*
+ * STEP 12 - Convert BAM to BED12
+ */
+process BAMToBed12 {
+    tag "$sample"
+    label 'process_medium'
+
+    when:
+    !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
+
+    input:
+    set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
+
+    output:
+    set file(fasta), file(sizes), val(sample), file("*.bed12") into ch_bed12
+
+    script:
+    """
+    bedtools bamtobed -bed12 -cigar -i ${bam[0]} | sort -k1,1 -k2,2n > ${sample}.bed12
+    """
+}
+
+/*
+ * STEP 13 - Convert BED12 to BigBED
+ */
+process Bed12ToBigBed {
+    tag "$sample"
+    label 'process_medium'
+    publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
+        saveAs: { filename ->
+                      if (filename.endsWith(".bb")) filename
+                }
+    when:
+    !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
+
+    input:
+    set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
+
+    output:
+    set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
+
+    script:
+    """
+    bedToBigBed $bed12 $sizes ${sample}.bb
+    """
+}
+
 /*
  * STEP 14 - Output Description HTML
  */
@@ -875,10 +808,10 @@ process get_software_versions {
     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
     file nanoplot from ch_nanoplot_version.first().ifEmpty([])
     file fastqc from ch_fastqc_version.first().ifEmpty([])
-    //file samtools from ch_samtools_version.first().ifEmpty([])
-    //file minimap2 from ch_minimap2_version.first().ifEmpty([])
-    //file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
-    //file bedtools from ch_bedtools_version.first().ifEmpty([])
+    file samtools from ch_samtools_version.first().ifEmpty([])
+    file minimap2 from ch_minimap2_version.first().ifEmpty([])
+    file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
+    file bedtools from ch_bedtools_version.first().ifEmpty([])
     file rmarkdown from ch_rmarkdown_version.collect()
 
     output:
@@ -893,24 +826,24 @@ process get_software_versions {
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
-// // //
-// // // def create_workflow_summary(summary) {
-// // //     def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
-// // //     yaml_file.text  = """
-// // //     id: 'nf-core-nanoseq-summary'
-// // //     description: " - this information is collected when the pipeline is started."
-// // //     section_name: 'nf-core/nanoseq Workflow Summary'
-// // //     section_href: 'https://github.com/nf-core/nanoseq'
-// // //     plot_type: 'html'
-// // //     data: |
-// // //         <dl class=\"dl-horizontal\">
-// // // ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }.join("\n")}
-// // //         </dl>
-// // //     """.stripIndent()
-// // //
-// // //    return yaml_file
-// // // }
-// // //
+
+def create_workflow_summary(summary) {
+    def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
+    yaml_file.text  = """
+    id: 'nf-core-nanoseq-summary'
+    description: " - this information is collected when the pipeline is started."
+    section_name: 'nf-core/nanoseq Workflow Summary'
+    section_href: 'https://github.com/nf-core/nanoseq'
+    plot_type: 'html'
+    data: |
+        <dl class=\"dl-horizontal\">
+${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }.join("\n")}
+        </dl>
+    """.stripIndent()
+
+   return yaml_file
+}
+
 // // // /*
 // // //  * STEP 15 - MultiQC
 // // //  */
