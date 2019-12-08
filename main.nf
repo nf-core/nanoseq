@@ -92,7 +92,7 @@ def ch_guppy_model = Channel.empty()
 def ch_guppy_config = Channel.empty()
 if (!params.skip_basecalling) {
 
-    // TODO nf-core: Add in a check to see if running offline
+    // TODO pipeline: Add in a check to see if running offline
     // Pre-download test-dataset to get files for '--run_dir' parameter
     // Nextflow is unable to recursively download directories via HTTPS
     if (workflow.profile.contains('test')) {
@@ -355,6 +355,7 @@ if (!params.skip_basecalling) {
         .join(ch_sample_info, by: 1) // join on barcode
         .map { it -> [ it[2], it[1], it[3], it[4], it[5] ] }
         .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
                 ch_fastq_index;
                 ch_fastq_align }
 
@@ -366,6 +367,7 @@ if (!params.skip_basecalling) {
         .map { get_sample_info(it, params.genomes) }
         .map { it -> [ it[0], it[1], it[3], it[4], it[5] ] }
         .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
                 ch_fastq_index;
                 ch_fastq_align }
 
@@ -428,11 +430,6 @@ process NanoPlotSummary {
 /*
  * STEP 4 - FastQ QC using NanoPlot
  */
-ch_fastq_nanoplot
-    .map { it -> [ it[0], it[1] ] }  // [sample, fastq]
-    .into { ch_fastq_nanoplot;
-            ch_fastq_fastqc }
-
 process NanoPlotFastQ {
     tag "$sample"
     label 'process_low'
@@ -445,7 +442,7 @@ process NanoPlotFastQ {
     !params.skip_qc && !params.skip_nanoplot
 
     input:
-    set val(sample), file(fastq) from ch_fastq_nanoplot
+    set val(sample), file(fastq) from ch_fastq_nanoplot.map { ch -> [ ch[0], ch[1] ] }
 
     output:
     file "*.{png,html,txt,log}"
@@ -473,7 +470,7 @@ process FastQC {
     !params.skip_qc && !params.skip_fastqc
 
     input:
-    set val(sample), file(fastq) from ch_fastq_fastqc
+    set val(sample), file(fastq) from ch_fastq_fastqc.map { ch -> [ ch[0], ch[1] ] }
 
     output:
     file "*.{zip,html}" into ch_fastqc_mqc
@@ -487,22 +484,35 @@ process FastQC {
     """
 }
 
+// TODO pipeline: What if this channel is empty?
+// Get unique list of all fasta files
+ch_fastq_index
+    .map { it -> [ it[2].toString(), it[2] ] }  // [str(fasta), fasta]
+    .filter { it[1] }
+    .unique()
+    .into { ch_fasta_sizes;
+            ch_fasta_index;
+            ch_fasta_align }
 
+// /*
+//  * STEP 6 - Make chromosome sizes file
+//  */
+// process GetChromSizes {
+//     tag "$fasta"
 //
-// // Function to resolve fasta and gtf file if using iGenomes
-// def get_reference(ArrayList channel) {
+//     input:
+//     set val(name), file(fasta), file(gtf), val(is_transcript_fasta) from ch_fasta_sizes
 //
-//     def is_gtf = false
-//     def is_transcript_fasta = false
-//     (sample, fastq, genome_fasta, transcript_fasta, transcript_gtf) = channel
-//     if (transcript_fasta != null) {
-//         genome_fasta = transcript_fasta
-//         is_transcript_fasta = true
-//     }
+//     output:
+//     set val(name), file("*.sizes") into ch_chrom_sizes
+//     file "*.version" into ch_samtools_version
 //
-//     if (genome_fasta != null) {
-//         return [ genome_fasta, transcript_gtf, is_transcript_fasta ]
-//     }
+//     script:
+//     """
+//     samtools faidx $fasta
+//     cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
+//     samtools --version &> samtools.version
+//     """
 // }
 //
 // if (params.skip_alignment) {
@@ -581,7 +591,7 @@ process FastQC {
 // //
 // //     } else if (params.aligner == 'graphmap2') {
 // //
-// //         // TODO nf-core: Create graphmap2 index with GTF instead
+// //         // TODO pipeline: Create graphmap2 index with GTF instead
 // //         // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
 // //         process GraphMap2Index {
 // //           tag "$fasta"
@@ -943,7 +953,6 @@ process get_software_versions {
 // // //     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
 // // //     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
 // // //
-// // //     // TODO nf-core: If not using MultiQC, strip out this code (including params.max_multiqc_email_size)
 // // //     // On success try attach the multiqc report
 // // //     def mqc_report = null
 // // //     try {
