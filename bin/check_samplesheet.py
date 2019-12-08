@@ -93,8 +93,8 @@ while True:
                     sys.exit(1)
 
         ## CHECK TRANSCRIPTOME ENTRIES
-        use_transcriptome = '0'
-        transcript_gtf = ''
+        gtf = ''
+        is_transcripts = '0'
         if transcriptome:
 
             if transcriptome.find(' ') != -1:
@@ -106,15 +106,15 @@ while True:
                 sys.exit(1)
 
             if transcriptome[-4:] == '.gtf':
-                transcript_gtf = transcriptome
+                gtf = transcriptome
                 if not genome:
                     print("{}: If genome isnt provided, transcriptome must be in fasta format for mapping!\nLine: '{}'".format(ERROR_STR,line.strip()))
                     sys.exit(1)
             else:
+                is_transcripts = '1'
                 genome = transcriptome
-            use_transcriptome = '1'
-
-        outLines.append([sample,fastq,barcode,genome,transcript_gtf,use_transcriptome])
+                
+        outLines.append([sample,fastq,barcode,genome,gtf,is_transcripts])
     else:
         fin.close()
         break
@@ -128,7 +128,7 @@ if args.SKIP_DEMULTIPLEXING:
 
 ## WRITE TO FILE
 fout = open(args.DESIGN_FILE_OUT,'w')
-fout.write(','.join(['sample', 'fastq', 'barcode', 'genome', 'transcript_fasta', 'transcript_gtf']) + '\n')
+fout.write(','.join(['sample', 'fastq', 'barcode', 'genome', 'gtf', 'is_transcripts']) + '\n')
 for line in outLines:
     fout.write(','.join(line) + '\n')
 fout.close()
