@@ -425,222 +425,69 @@ process NanoPlotSummary {
     """
 }
 
+/*
+ * STEP 4 - FastQ QC using NanoPlot
+ */
+ch_fastq_nanoplot
+    .map { it -> [ it[0], it[1] ] }  // [sample, fastq]
+    .into { ch_fastq_nanoplot;
+            ch_fastq_fastqc }
 
-// if (params.skip_basecalling) {
-//
-//     ch_guppy_version = Channel.empty()
-//     ch_pycoqc_version = Channel.empty()
-//
-//     // Create channels = [sample, fastq, fasta, gtf, is_transcripts]
-//     ch_samplesheet_reformat
-//         .splitCsv(header:true, sep:',')
-//         .map { get_sample_info(it, params.genomes) }
-//         .map { it -> [ it[0], it[1], it[3], it[4], it[5] ] }
-//         .into { ch_fastq_nanoplot;
-//                 ch_fastq_index;
-//                 ch_fastq_align }
-// } else {
-//
-//     // Create channels = [sample, barcode, fasta, gtf, is_transcripts]
-//     ch_samplesheet_reformat
-//         .splitCsv(header:true, sep:',')
-//         .map { get_sample_info(it, params.genomes) }
-//         .map { it -> [ it[0], it[2], it[3], it[4], it[5] ] }
-//         .into { ch_sample_info;
-//                 ch_sample_name }
-//
-// }
-// ch_sample_name.println()
+process NanoPlotFastQ {
+    tag "$sample"
+    label 'process_low'
+    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
 
-//     // Get sample name for single sample when --skip_demultiplexing
-//     ch_sample_name
-//         .first()
-//         .map { it[0] }
-//         .set { ch_sample_name }
-//
-//     /*
-//      * STEP 1 - Basecalling and demultipexing using Guppy
-//      */
-//     process Guppy {
-//         tag "$run_dir"
-//         label 'process_high'
-//         publishDir path: "${params.outdir}/guppy", mode: 'copy',
-//             saveAs: { filename ->
-//                           if (!filename.endsWith(".version")) filename
-//                     }
-//
-//         input:
-//         file run_dir from ch_run_dir
-//         val name from ch_sample_name
-//         file guppy_config from ch_guppy_config.ifEmpty([])
-//         file guppy_model from ch_guppy_model.ifEmpty([])
-//
-//         output:
-//         file "fastq/*.fastq.gz" into ch_guppy_fastq
-//         file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
-//                                       ch_guppy_nanoplot_summary
-//         file "basecalling/*"
-//         file "*.version" into ch_guppy_version
-//
-//         script:
-//         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
-//         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
-//         def config = "--flowcell $params.flowcell --kit $params.kit"
-//         if (params.guppy_config) config = file(params.guppy_config).exists() ? "--config ./$guppy_config" : "--config $params.guppy_config"
-//         def model = ""
-//         if (params.guppy_model) model = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
-//         """
-//         guppy_basecaller \\
-//             --input_path $run_dir \\
-//             --save_path ./basecalling \\
-//             --records_per_fastq 0 \\
-//             --compress_fastq \\
-//             $barcode_kit \\
-//             $proc_options \\
-//             $config \\
-//             $model
-//
-//         guppy_basecaller --version &> guppy.version
-//
-//         ## Concatenate fastq files
-//         mkdir fastq
-//         cd basecalling
-//         if [ "\$(find . -type d -name "barcode*" )" != "" ]
-//         then
-//             for dir in barcode*/
-//             do
-//                 dir=\${dir%*/}
-//                 cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
-//             done
-//         else
-//             cat *.fastq.gz > ../fastq/${name}.fastq.gz
-//         fi
-//         """
-//     }
-//
-//     /*
-//      * STEP 2 - QC using PycoQC
-//      */
-//     process PycoQC {
-//         tag "$summary_txt"
-//         label 'process_low'
-//         publishDir "${params.outdir}/pycoqc", mode: 'copy',
-//             saveAs: { filename ->
-//                           if (!filename.endsWith(".version")) filename
-//                     }
-//
-//         when:
-//         !params.skip_qc && !params.skip_pycoqc
-//
-//         input:
-//         file summary_txt from ch_guppy_pycoqc_summary
-//
-//         output:
-//         file "*.html"
-//         file "*.version" into ch_pycoqc_version
-//
-//         script:
-//         """
-//         pycoQC -f $summary_txt -o pycoQC_output.html
-//         pycoQC --version &> pycoqc.version
-//         """
-//     }
-//
-//     /*
-//      * STEP 3 - QC using NanoPlot
-//      */
-//     process NanoPlotSummary {
-//         tag "$summary_txt"
-//         label 'process_low'
-//         publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
-//
-//         when:
-//         !params.skip_qc && !params.skip_nanoplot
-//
-//         input:
-//         file summary_txt from ch_guppy_nanoplot_summary
-//
-//         output:
-//         file "*.{png,html,txt,log}"
-//
-//         script:
-//         """
-//         NanoPlot -t $task.cpus --summary $summary_txt
-//         """
-//     }
-//
-//     // Create channels = [sample, fastq, genome_fasta, transcript_fasta, transcript_gtf]
-//     ch_guppy_fastq
-//         .flatten()
-//         .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
-//         .join(ch_sample_info, by: 1) // join on barcode
-//         .map { it -> [ it[2], it[1], it[3], it[4], it[5] ] }
-//         .into { ch_fastq_nanoplot;
-//                 ch_fastq_index;
-//                 ch_fastq_align }
-// }
-//
-// /*
-//  * STEP 4 - FastQ QC using NanoPlot
-//  */
-// ch_fastq_nanoplot
-//     .map { it -> [ it[0], it[1] ] }
-//     .into { ch_fastq_nanoplot;
-//             ch_fastq_fastqc }
-//
-// process NanoPlotFastQ {
-//     tag "$sample"
-//     label 'process_low'
-//     publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (!filename.endsWith(".version")) filename
-//                 }
-//
-//     when:
-//     !params.skip_qc && !params.skip_nanoplot
-//
-//     input:
-//     set val(sample), file(fastq) from ch_fastq_nanoplot
-//
-//     output:
-//     file "*.{png,html,txt,log}"
-//     file "*.version" into ch_nanoplot_version
-//
-//     script:
-//     """
-//     NanoPlot -t $task.cpus --fastq $fastq
-//     NanoPlot --version &> nanoplot.version
-//     """
-// }
-//
-// /*
-//  * STEP 5 - FastQ QC using FastQC
-//  */
-// process FastQC {
-//     tag "$sample"
-//     label 'process_medium'
-//     publishDir "${params.outdir}/fastqc", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (!filename.endsWith(".version")) filename
-//                 }
-//
-//     when:
-//     !params.skip_qc && !params.skip_fastqc
-//
-//     input:
-//     set val(sample), file(fastq) from ch_fastq_fastqc
-//
-//     output:
-//     file "*.{zip,html}" into ch_fastqc_mqc
-//     file "*.version" into ch_fastqc_version
-//
-//     script:
-//     """
-//     [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
-//     fastqc -q -t $task.cpus ${sample}.fastq.gz
-//     fastqc --version > fastqc.version
-//     """
-// }
+    when:
+    !params.skip_qc && !params.skip_nanoplot
+
+    input:
+    set val(sample), file(fastq) from ch_fastq_nanoplot
+
+    output:
+    file "*.{png,html,txt,log}"
+    file "*.version" into ch_nanoplot_version
+
+    script:
+    """
+    NanoPlot -t $task.cpus --fastq $fastq
+    NanoPlot --version &> nanoplot.version
+    """
+}
+
+/*
+ * STEP 5 - FastQ QC using FastQC
+ */
+process FastQC {
+    tag "$sample"
+    label 'process_medium'
+    publishDir "${params.outdir}/fastqc", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    when:
+    !params.skip_qc && !params.skip_fastqc
+
+    input:
+    set val(sample), file(fastq) from ch_fastq_fastqc
+
+    output:
+    file "*.{zip,html}" into ch_fastqc_mqc
+    file "*.version" into ch_fastqc_version
+
+    script:
+    """
+    [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
+    fastqc -q -t $task.cpus ${sample}.fastq.gz
+    fastqc --version > fastqc.version
+    """
+}
+
+
 //
 // // Function to resolve fasta and gtf file if using iGenomes
 // def get_reference(ArrayList channel) {
@@ -960,29 +807,29 @@ process NanoPlotSummary {
 // //     // }
 // // }
 // // //
-// // // /*
-// // //  * STEP 14 - Output Description HTML
-// // //  */
-// // // process output_documentation {
-// // //     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-// // //         saveAs: { filename ->
-// // //                       if (!filename.endsWith(".version")) filename
-// // //                 }
-// // //
-// // //     input:
-// // //     file output_docs from ch_output_docs
-// // //
-// // //     output:
-// // //     file "results_description.html"
-// // //     file "*.version" into ch_rmarkdown_version
-// // //
-// // //     script:
-// // //     """
-// // //     markdown_to_html.r $output_docs results_description.html
-// // //     Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='rmarkdown.version')"
-// // //     """
-// // // }
-// // //
+/*
+ * STEP 14 - Output Description HTML
+ */
+process output_documentation {
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    input:
+    file output_docs from ch_output_docs
+
+    output:
+    file "results_description.html"
+    file "*.version" into ch_rmarkdown_version
+
+    script:
+    """
+    markdown_to_html.r $output_docs results_description.html
+    Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='rmarkdown.version')"
+    """
+}
+
 /*
  * Parse software version numbers
  */
@@ -998,10 +845,10 @@ process get_software_versions {
     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
     file nanoplot from ch_nanoplot_version.first().ifEmpty([])
     file fastqc from ch_fastqc_version.first().ifEmpty([])
-    file samtools from ch_samtools_version.first().ifEmpty([])
-    file minimap2 from ch_minimap2_version.first().ifEmpty([])
-    file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
-    file bedtools from ch_bedtools_version.first().ifEmpty([])
+    //file samtools from ch_samtools_version.first().ifEmpty([])
+    //file minimap2 from ch_minimap2_version.first().ifEmpty([])
+    //file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
+    //file bedtools from ch_bedtools_version.first().ifEmpty([])
     file rmarkdown from ch_rmarkdown_version.collect()
 
     output:
