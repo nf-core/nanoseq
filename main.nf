@@ -538,54 +538,54 @@ if (!params.skip_alignment) {
     //     """
     // }
 
-    /*
-     * STEP 8 - Create genome/transcriptome index
-     */
-    if (params.aligner == 'minimap2') {
-        process MiniMap2Index {
-            tag "$fasta"
-            label 'process_medium'
-
-            input:
-            set val(name), file(fasta) from ch_fasta_index
-
-            output:
-            set val(name), file("*.mmi") into ch_index
-            file "*.version" into ch_minimap2_version
-
-            script:
-            //preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
-            kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-            stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-            //junctions = bed ? "--junc-bed $bed" : ""
-            """
-            minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
-            minimap2 --version &> minimap2.version
-            """
-        }
-    } else {
-        // TODO pipeline: Create graphmap2 index with GTF instead
-        // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
-        process GraphMap2Index {
-          tag "$fasta"
-          label 'process_medium'
-
-          input:
-          set val(name), file(fasta) from ch_fasta_index
-
-          output:
-          set val(name), file("*.gmidx") into ch_index
-          file "*.version" into ch_graphmap2_version
-
-          script:
-          preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
-          //junctions = gtf ? "--gtf $gtf" : ""
-          """
-          graphmap2 align $preset $gtf -t $task.cpus -I -r $fasta
-          echo \$(graphmap2 2>&1) > graphmap2.version
-          """
-        }
-    }
+    // /*
+    //  * STEP 8 - Create genome/transcriptome index
+    //  */
+    // if (params.aligner == 'minimap2') {
+    //     process MiniMap2Index {
+    //         tag "$fasta"
+    //         label 'process_medium'
+    //
+    //         input:
+    //         set val(name), file(fasta) from ch_fasta_index
+    //
+    //         output:
+    //         set val(name), file("*.mmi") into ch_index
+    //         file "*.version" into ch_minimap2_version
+    //
+    //         script:
+    //         //preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
+    //         kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+    //         stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+    //         //junctions = bed ? "--junc-bed $bed" : ""
+    //         """
+    //         minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
+    //         minimap2 --version &> minimap2.version
+    //         """
+    //     }
+    // } else {
+    //     // TODO pipeline: Create graphmap2 index with GTF instead
+    //     // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
+    //     process GraphMap2Index {
+    //       tag "$fasta"
+    //       label 'process_medium'
+    //
+    //       input:
+    //       set val(name), file(fasta) from ch_fasta_index
+    //
+    //       output:
+    //       set val(name), file("*.gmidx") into ch_index
+    //       file "*.version" into ch_graphmap2_version
+    //
+    //       script:
+    //       preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
+    //       //junctions = gtf ? "--gtf $gtf" : ""
+    //       """
+    //       graphmap2 align $preset $gtf -t $task.cpus -I -r $fasta
+    //       echo \$(graphmap2 2>&1) > graphmap2.version
+    //       """
+    //     }
+    // }
 
 //     // Convert genome_fasta to string from file to use cross()
 //     ch_fastq_align
