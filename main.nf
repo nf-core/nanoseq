@@ -250,51 +250,37 @@ process CheckSampleSheet {
 }
 
 // Function to resolve fasta and gtf file if using iGenomes
-// Returns [sample, fastq, barcode, fasta, gtf]
+// Returns [sample, fastq, barcode, fasta, gtf, is_transcripts]
 def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
     // Resolve fasta and gtf file if using iGenomes
-    def genome_fasta = null
-    def gtf = null
+    def fasta = false
+    def gtf = false
     if (sample.genome) {
         if (genomeMap.containsKey(sample.genome)) {
-            genome_fasta = file(genomeMap[sample.genome].fasta, checkIfExists: true)
+            fasta = file(genomeMap[sample.genome].fasta, checkIfExists: true)
             gtf = file(genomeMap[sample.genome].gtf, checkIfExists: true)
         } else {
-            genome_fasta = file(sample.genome, checkIfExists: true)
+            fasta = file(sample.genome, checkIfExists: true)
         }
     }
 
     // Check if fastq and gtf file exists
     fastq = sample.fastq ? file(sample.fastq, checkIfExists: true) : null
-    transcript_fasta = sample.transcript_fasta ? file(sample.transcript_fasta, checkIfExists: true) : null
-    transcript_gtf = sample.transcript_gtf ? file(sample.transcript_gtf, checkIfExists: true) : gtf
+    gtf = sample.gtf ? file(sample.gtf, checkIfExists: true) : gtf
 
-    return [ sample.sample, fastq, sample.barcode, genome_fasta, transcript_fasta, transcript_gtf ]
+    return [ sample.sample, fastq, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean() ]
 }
 
-if (params.skip_basecalling) {
+if (!params.skip_basecalling) {
 
-    ch_guppy_version = Channel.empty()
-    ch_pycoqc_version = Channel.empty()
-
-    // Create channels = [sample, fastq, genome_fasta, transcript_fasta, transcript_gtf]
-    ch_samplesheet_reformat
-        .splitCsv(header:true, sep:',')
-        .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[0], it[1], it[3], it[4], it[5] ] }
-        .into { ch_fastq_nanoplot;
-                ch_fastq_index;
-                ch_fastq_align }
-} else {
-
-    // Create channels = [sample, barcode, genome_fasta, transcript_fasta, transcript_gtf]
+    // Create channels = [sample, barcode, fasta, gtf, is_transcripts]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
         .map { it -> [ it[0], it[2], it[3], it[4], it[5] ] }
         .into { ch_sample_info;
-               ch_sample_name }
+                ch_sample_name }
 
     // Get sample name for single sample when --skip_demultiplexing
     ch_sample_name
@@ -362,58 +348,7 @@ if (params.skip_basecalling) {
         """
     }
 
-    /*
-     * STEP 2 - QC using PycoQC
-     */
-    process PycoQC {
-        tag "$summary_txt"
-        label 'process_low'
-        publishDir "${params.outdir}/pycoqc", mode: 'copy',
-            saveAs: { filename ->
-                          if (!filename.endsWith(".version")) filename
-                    }
-
-        when:
-        !params.skip_qc && !params.skip_pycoqc
-
-        input:
-        file summary_txt from ch_guppy_pycoqc_summary
-
-        output:
-        file "*.html"
-        file "*.version" into ch_pycoqc_version
-
-        script:
-        """
-        pycoQC -f $summary_txt -o pycoQC_output.html
-        pycoQC --version &> pycoqc.version
-        """
-    }
-
-    /*
-     * STEP 3 - QC using NanoPlot
-     */
-    process NanoPlotSummary {
-        tag "$summary_txt"
-        label 'process_low'
-        publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
-
-        when:
-        !params.skip_qc && !params.skip_nanoplot
-
-        input:
-        file summary_txt from ch_guppy_nanoplot_summary
-
-        output:
-        file "*.{png,html,txt,log}"
-
-        script:
-        """
-        NanoPlot -t $task.cpus --summary $summary_txt
-        """
-    }
-
-    // Create channels = [sample, fastq, genome_fasta, transcript_fasta, transcript_gtf]
+    // Create channels = [sample, fastq, fasta, gtf, is_transcripts]
     ch_guppy_fastq
         .flatten()
         .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
@@ -422,132 +357,353 @@ if (params.skip_basecalling) {
         .into { ch_fastq_nanoplot;
                 ch_fastq_index;
                 ch_fastq_align }
-}
-
-/*
- * STEP 4 - FastQ QC using NanoPlot
- */
-ch_fastq_nanoplot
-    .map { it -> [ it[0], it[1] ] }
-    .into { ch_fastq_nanoplot;
-            ch_fastq_fastqc }
-
-process NanoPlotFastQ {
-    tag "$sample"
-    label 'process_low'
-    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
-
-    when:
-    !params.skip_qc && !params.skip_nanoplot
-
-    input:
-    set val(sample), file(fastq) from ch_fastq_nanoplot
-
-    output:
-    file "*.{png,html,txt,log}"
-    file "*.version" into ch_nanoplot_version
-
-    script:
-    """
-    NanoPlot -t $task.cpus --fastq $fastq
-    NanoPlot --version &> nanoplot.version
-    """
-}
-
-/*
- * STEP 5 - FastQ QC using FastQC
- */
-process FastQC {
-    tag "$sample"
-    label 'process_medium'
-    publishDir "${params.outdir}/fastqc", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
-
-    when:
-    !params.skip_qc && !params.skip_fastqc
-
-    input:
-    set val(sample), file(fastq) from ch_fastq_fastqc
-
-    output:
-    file "*.{zip,html}" into ch_fastqc_mqc
-    file "*.version" into ch_fastqc_version
-
-    script:
-    """
-    [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
-    fastqc -q -t $task.cpus ${sample}.fastq.gz
-    fastqc --version > fastqc.version
-    """
-}
-
-// Function to resolve fasta and gtf file if using iGenomes
-def get_reference(ArrayList channel) {
-
-    def is_gtf = false
-    def is_transcript_fasta = false
-    (sample, fastq, genome_fasta, transcript_fasta, transcript_gtf) = channel
-    if (transcript_fasta != null) {
-        genome_fasta = transcript_fasta
-        is_transcript_fasta = true
-    }
-
-    if (genome_fasta != null) {
-        return [ genome_fasta, transcript_gtf, is_transcript_fasta ]
-    }
-}
-
-if (params.skip_alignment) {
-
-    ch_samtools_version = Channel.empty()
-    ch_minimap2_version = Channel.empty()
-    ch_graphmap2_version = Channel.empty()
-    ch_bedtools_version = Channel.empty()
-    ch_sortbam_stats_mqc = Channel.empty()
 
 } else {
 
-    // // Get unique list of all genome fasta files
-    // ch_fastq_index
-    //     .map { get_reference(it) }
-    //     .filter { it[1] != null }
-    //     .unique()
-    //     .into { ch_fasta_sizes;
-    //             ch_fasta_index }
+    // Create channels = [sample, fastq, fasta, gtf, is_transcripts]
+    ch_samplesheet_reformat
+        .splitCsv(header:true, sep:',')
+        .map { get_sample_info(it, params.genomes) }
+        .map { it -> [ it[0], it[1], it[3], it[4], it[5] ] }
+        .into { ch_fastq_nanoplot;
+                ch_fastq_index;
+                ch_fastq_align }
 
-    // GET UNIQUE LIST OF CHROM SIZES BASED ON REFERENCE GENOME NAME AND NOT ENTIRE LIST
-    // GENERATE SEPARATE CHANNEL TO CREATE MINIMAP INDICES AND GTF2BED PROCESS
-
-
-    /*
-     * STEP 6 - Make chromosome sizes file
-     */
-    process GetChromSizes {
-        tag "$fasta"
-
-        input:
-        set val(name), file(fasta), file(gtf), val(is_transcript_fasta) from ch_fasta_sizes
-
-        output:
-        set val(name), file("*.sizes") into ch_chrom_sizes
-        file "*.version" into ch_samtools_version
-
-        script:
-        """
-        samtools faidx $fasta
-        cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
-        samtools --version &> samtools.version
-        """
-    }
-    // USE TRANSCRIPTOME OVER GENOME IF FASTA
-    // IF GTF IS PROVIDED THEN USE THAT TO CREATE BED12
-
+    ch_guppy_version = Channel.empty()
+    ch_guppy_pycoqc_summary = Channel.empty()
+    ch_guppy_nanoplot_summary = Channel.empty()
 }
+
+/*
+ * STEP 2 - QC using PycoQC
+ */
+process PycoQC {
+    tag "$summary_txt"
+    label 'process_low'
+    publishDir "${params.outdir}/pycoqc", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    when:
+    !params.skip_basecalling && !params.skip_qc && !params.skip_pycoqc
+
+    input:
+    file summary_txt from ch_guppy_pycoqc_summary
+
+    output:
+    file "*.html"
+    file "*.version" into ch_pycoqc_version
+
+    script:
+    """
+    pycoQC -f $summary_txt -o pycoQC_output.html
+    pycoQC --version &> pycoqc.version
+    """
+}
+
+/*
+ * STEP 3 - QC using NanoPlot
+ */
+process NanoPlotSummary {
+    tag "$summary_txt"
+    label 'process_low'
+    publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
+
+    when:
+    !params.skip_basecalling && !params.skip_qc && !params.skip_nanoplot
+
+    input:
+    file summary_txt from ch_guppy_nanoplot_summary
+
+    output:
+    file "*.{png,html,txt,log}"
+
+    script:
+    """
+    NanoPlot -t $task.cpus --summary $summary_txt
+    """
+}
+
+
+// if (params.skip_basecalling) {
+//
+//     ch_guppy_version = Channel.empty()
+//     ch_pycoqc_version = Channel.empty()
+//
+//     // Create channels = [sample, fastq, fasta, gtf, is_transcripts]
+//     ch_samplesheet_reformat
+//         .splitCsv(header:true, sep:',')
+//         .map { get_sample_info(it, params.genomes) }
+//         .map { it -> [ it[0], it[1], it[3], it[4], it[5] ] }
+//         .into { ch_fastq_nanoplot;
+//                 ch_fastq_index;
+//                 ch_fastq_align }
+// } else {
+//
+//     // Create channels = [sample, barcode, fasta, gtf, is_transcripts]
+//     ch_samplesheet_reformat
+//         .splitCsv(header:true, sep:',')
+//         .map { get_sample_info(it, params.genomes) }
+//         .map { it -> [ it[0], it[2], it[3], it[4], it[5] ] }
+//         .into { ch_sample_info;
+//                 ch_sample_name }
+//
+// }
+// ch_sample_name.println()
+
+//     // Get sample name for single sample when --skip_demultiplexing
+//     ch_sample_name
+//         .first()
+//         .map { it[0] }
+//         .set { ch_sample_name }
+//
+//     /*
+//      * STEP 1 - Basecalling and demultipexing using Guppy
+//      */
+//     process Guppy {
+//         tag "$run_dir"
+//         label 'process_high'
+//         publishDir path: "${params.outdir}/guppy", mode: 'copy',
+//             saveAs: { filename ->
+//                           if (!filename.endsWith(".version")) filename
+//                     }
+//
+//         input:
+//         file run_dir from ch_run_dir
+//         val name from ch_sample_name
+//         file guppy_config from ch_guppy_config.ifEmpty([])
+//         file guppy_model from ch_guppy_model.ifEmpty([])
+//
+//         output:
+//         file "fastq/*.fastq.gz" into ch_guppy_fastq
+//         file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
+//                                       ch_guppy_nanoplot_summary
+//         file "basecalling/*"
+//         file "*.version" into ch_guppy_version
+//
+//         script:
+//         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
+//         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+//         def config = "--flowcell $params.flowcell --kit $params.kit"
+//         if (params.guppy_config) config = file(params.guppy_config).exists() ? "--config ./$guppy_config" : "--config $params.guppy_config"
+//         def model = ""
+//         if (params.guppy_model) model = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
+//         """
+//         guppy_basecaller \\
+//             --input_path $run_dir \\
+//             --save_path ./basecalling \\
+//             --records_per_fastq 0 \\
+//             --compress_fastq \\
+//             $barcode_kit \\
+//             $proc_options \\
+//             $config \\
+//             $model
+//
+//         guppy_basecaller --version &> guppy.version
+//
+//         ## Concatenate fastq files
+//         mkdir fastq
+//         cd basecalling
+//         if [ "\$(find . -type d -name "barcode*" )" != "" ]
+//         then
+//             for dir in barcode*/
+//             do
+//                 dir=\${dir%*/}
+//                 cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
+//             done
+//         else
+//             cat *.fastq.gz > ../fastq/${name}.fastq.gz
+//         fi
+//         """
+//     }
+//
+//     /*
+//      * STEP 2 - QC using PycoQC
+//      */
+//     process PycoQC {
+//         tag "$summary_txt"
+//         label 'process_low'
+//         publishDir "${params.outdir}/pycoqc", mode: 'copy',
+//             saveAs: { filename ->
+//                           if (!filename.endsWith(".version")) filename
+//                     }
+//
+//         when:
+//         !params.skip_qc && !params.skip_pycoqc
+//
+//         input:
+//         file summary_txt from ch_guppy_pycoqc_summary
+//
+//         output:
+//         file "*.html"
+//         file "*.version" into ch_pycoqc_version
+//
+//         script:
+//         """
+//         pycoQC -f $summary_txt -o pycoQC_output.html
+//         pycoQC --version &> pycoqc.version
+//         """
+//     }
+//
+//     /*
+//      * STEP 3 - QC using NanoPlot
+//      */
+//     process NanoPlotSummary {
+//         tag "$summary_txt"
+//         label 'process_low'
+//         publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
+//
+//         when:
+//         !params.skip_qc && !params.skip_nanoplot
+//
+//         input:
+//         file summary_txt from ch_guppy_nanoplot_summary
+//
+//         output:
+//         file "*.{png,html,txt,log}"
+//
+//         script:
+//         """
+//         NanoPlot -t $task.cpus --summary $summary_txt
+//         """
+//     }
+//
+//     // Create channels = [sample, fastq, genome_fasta, transcript_fasta, transcript_gtf]
+//     ch_guppy_fastq
+//         .flatten()
+//         .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
+//         .join(ch_sample_info, by: 1) // join on barcode
+//         .map { it -> [ it[2], it[1], it[3], it[4], it[5] ] }
+//         .into { ch_fastq_nanoplot;
+//                 ch_fastq_index;
+//                 ch_fastq_align }
+// }
+//
+// /*
+//  * STEP 4 - FastQ QC using NanoPlot
+//  */
+// ch_fastq_nanoplot
+//     .map { it -> [ it[0], it[1] ] }
+//     .into { ch_fastq_nanoplot;
+//             ch_fastq_fastqc }
+//
+// process NanoPlotFastQ {
+//     tag "$sample"
+//     label 'process_low'
+//     publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
+//         saveAs: { filename ->
+//                       if (!filename.endsWith(".version")) filename
+//                 }
+//
+//     when:
+//     !params.skip_qc && !params.skip_nanoplot
+//
+//     input:
+//     set val(sample), file(fastq) from ch_fastq_nanoplot
+//
+//     output:
+//     file "*.{png,html,txt,log}"
+//     file "*.version" into ch_nanoplot_version
+//
+//     script:
+//     """
+//     NanoPlot -t $task.cpus --fastq $fastq
+//     NanoPlot --version &> nanoplot.version
+//     """
+// }
+//
+// /*
+//  * STEP 5 - FastQ QC using FastQC
+//  */
+// process FastQC {
+//     tag "$sample"
+//     label 'process_medium'
+//     publishDir "${params.outdir}/fastqc", mode: 'copy',
+//         saveAs: { filename ->
+//                       if (!filename.endsWith(".version")) filename
+//                 }
+//
+//     when:
+//     !params.skip_qc && !params.skip_fastqc
+//
+//     input:
+//     set val(sample), file(fastq) from ch_fastq_fastqc
+//
+//     output:
+//     file "*.{zip,html}" into ch_fastqc_mqc
+//     file "*.version" into ch_fastqc_version
+//
+//     script:
+//     """
+//     [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
+//     fastqc -q -t $task.cpus ${sample}.fastq.gz
+//     fastqc --version > fastqc.version
+//     """
+// }
+//
+// // Function to resolve fasta and gtf file if using iGenomes
+// def get_reference(ArrayList channel) {
+//
+//     def is_gtf = false
+//     def is_transcript_fasta = false
+//     (sample, fastq, genome_fasta, transcript_fasta, transcript_gtf) = channel
+//     if (transcript_fasta != null) {
+//         genome_fasta = transcript_fasta
+//         is_transcript_fasta = true
+//     }
+//
+//     if (genome_fasta != null) {
+//         return [ genome_fasta, transcript_gtf, is_transcript_fasta ]
+//     }
+// }
+//
+// if (params.skip_alignment) {
+//
+//     ch_samtools_version = Channel.empty()
+//     ch_minimap2_version = Channel.empty()
+//     ch_graphmap2_version = Channel.empty()
+//     ch_bedtools_version = Channel.empty()
+//     ch_sortbam_stats_mqc = Channel.empty()
+//
+// } else {
+//
+//     // // Get unique list of all genome fasta files
+//     // ch_fastq_index
+//     //     .map { get_reference(it) }
+//     //     .filter { it[1] != null }
+//     //     .unique()
+//     //     .into { ch_fasta_sizes;
+//     //             ch_fasta_index }
+//
+//     // GET UNIQUE LIST OF CHROM SIZES BASED ON REFERENCE GENOME NAME AND NOT ENTIRE LIST
+//     // GENERATE SEPARATE CHANNEL TO CREATE MINIMAP INDICES AND GTF2BED PROCESS
+//
+//
+//     /*
+//      * STEP 6 - Make chromosome sizes file
+//      */
+//     process GetChromSizes {
+//         tag "$fasta"
+//
+//         input:
+//         set val(name), file(fasta), file(gtf), val(is_transcript_fasta) from ch_fasta_sizes
+//
+//         output:
+//         set val(name), file("*.sizes") into ch_chrom_sizes
+//         file "*.version" into ch_samtools_version
+//
+//         script:
+//         """
+//         samtools faidx $fasta
+//         cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
+//         samtools --version &> samtools.version
+//         """
+//     }
+//     // USE TRANSCRIPTOME OVER GENOME IF FASTA
+//     // IF GTF IS PROVIDED THEN USE THAT TO CREATE BED12
+//
+// }
 // //
 // //     /*
 // //      * STEP 7 - Create genome index
@@ -827,39 +983,39 @@ if (params.skip_alignment) {
 // // //     """
 // // // }
 // // //
-// // // /*
-// // //  * Parse software version numbers
-// // //  */
-// // // process get_software_versions {
-// // //     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-// // //         saveAs: { filename ->
-// // //                       if (filename.indexOf(".csv") > 0) filename
-// // //                       else null
-// // //                 }
-// // //
-// // //     input:
-// // //     file guppy from ch_guppy_version.collect().ifEmpty([])
-// // //     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-// // //     file nanoplot from ch_nanoplot_version.first().ifEmpty([])
-// // //     file fastqc from ch_fastqc_version.first().ifEmpty([])
-// // //     file samtools from ch_samtools_version.first().ifEmpty([])
-// // //     file minimap2 from ch_minimap2_version.first().ifEmpty([])
-// // //     file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
-// // //     file bedtools from ch_bedtools_version.first().ifEmpty([])
-// // //     file rmarkdown from ch_rmarkdown_version.collect()
-// // //
-// // //     output:
-// // //     file 'software_versions_mqc.yaml' into software_versions_yaml
-// // //     file "software_versions.csv"
-// // //
-// // //     script:
-// // //     """
-// // //     echo $workflow.manifest.version > pipeline.version
-// // //     echo $workflow.nextflow.version > nextflow.version
-// // //     multiqc --version &> multiqc.version
-// // //     scrape_software_versions.py &> software_versions_mqc.yaml
-// // //     """
-// // // }
+/*
+ * Parse software version numbers
+ */
+process get_software_versions {
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+        saveAs: { filename ->
+                      if (filename.indexOf(".csv") > 0) filename
+                      else null
+                }
+
+    input:
+    file guppy from ch_guppy_version.collect().ifEmpty([])
+    file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
+    file nanoplot from ch_nanoplot_version.first().ifEmpty([])
+    file fastqc from ch_fastqc_version.first().ifEmpty([])
+    file samtools from ch_samtools_version.first().ifEmpty([])
+    file minimap2 from ch_minimap2_version.first().ifEmpty([])
+    file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
+    file bedtools from ch_bedtools_version.first().ifEmpty([])
+    file rmarkdown from ch_rmarkdown_version.collect()
+
+    output:
+    file 'software_versions_mqc.yaml' into software_versions_yaml
+    file "software_versions.csv"
+
+    script:
+    """
+    echo $workflow.manifest.version > pipeline.version
+    echo $workflow.nextflow.version > nextflow.version
+    multiqc --version &> multiqc.version
+    scrape_software_versions.py &> software_versions_mqc.yaml
+    """
+}
 // // //
 // // // def create_workflow_summary(summary) {
 // // //     def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
