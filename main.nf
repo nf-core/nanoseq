@@ -559,143 +559,125 @@ if (!params.skip_alignment) {
         .cross(ch_fastq_index) { it -> it[-1] }
         .flatten()
         .collate(9)
-        .map { it -> [ it[5], it[6], it[0], it[1], it[7], it[8] ]} // [ fasta, gtf, sizes, bed, is_transcripts, annotation_str ]
+        .map { it -> [ it[5], it[0], it[6], it[1], it[7], it[8] ]} // [ fasta, sizes, gtf, bed, is_transcripts, annotation_str ]
         .unique()
         .set { ch_fasta_index }
-//     //
-//     // /*
-//     //  * STEP 8 - Create genome/transcriptome index
-//     //  */
-//     // if (params.aligner == 'minimap2') {
-//     //     process MiniMap2Index {
-//     //         tag "$fasta"
-//     //         label 'process_medium'
-//     //
-//     //         input:
-//     //         set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts) from ch_fasta_index
-//     //
-//     //         output:
-//     //         set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), file("*.mmi") into ch_index
-//     //         file "*.version" into ch_minimap2_version
-//     //
-//     //         script:
-//     //         preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
-//     //         kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-//     //         stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-//     //         // TODO pipeline: Should be staging this file properly as an input
-//     //         junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
-//     //         """
-//     //         minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
-//     //         minimap2 --version &> minimap2.version
-//     //         """
-//     //     }
-//     // } else {
-//     //     process GraphMap2Index {
-//     //       tag "$fasta"
-//     //       label 'process_high'
-//     //
-//     //       input:
-//     //       set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts) from ch_fasta_index
-//     //
-//     //       output:
-//     //       set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), file("*.gmidx") into ch_index
-//     //       file "*.version" into ch_graphmap2_version
-//     //
-//     //       script:
-//     //       preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
-//     //       junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
-//     //       """
-//     //       graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
-//     //       echo \$(graphmap2 2>&1) > graphmap2.version
-//     //       """
-//     //     }
-//     // }
-//     //
-//     // ch_index
-//     //     .map { it -> [ it[0].toString(), it[1].toString(), it[2], it[3], it[4], it[5] ] }
-//     //     .set { ch_index }
-//     // ch_index.println()
-//     //
-//     // // Convert genome_fasta to string from file to use cross()
-//     // ch_fastq_align
-//     //     .filter{ it[2] }
-//     //     .map { it -> [ it[2].toString(), it[3].toString(), it[0], it[1] ] }
-//     //     .join(ch_index, by: [0,1])
-//     //     .set { ch_fastq_align }
-//     // ch_fastq_align.println()
-//     //
-//     // //ch_index.println()
-//     //
-//     // // // Create channels = [ fasta, index, sizes, sample, fastq]
-//     // // ch_fasta_align
-//     // //     .join(ch_index)
-//     // //     .join(ch_chrom_sizes)
-//     // //     .cross(ch_fastq_align)
-//     // //     .flatten()
-//     // //     .collate(7)
-//     // //     .map { it -> [ it[1], it[2], it[3], it[5], it[6] ] }
-//     // //     .set { ch_fastq_align }
-// }
-//
-//     /*
-//      * STEP 9 - Align fastq files
-//      */
-//     if (params.aligner == 'minimap2') {
-//         process MiniMap2Align {
-//             tag "$sample"
-//             label 'process_medium'
-//             if (params.save_align_intermeds) {
-//                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-//                     saveAs: { filename ->
-//                                   if (filename.endsWith(".sam")) filename
-//                             }
-//             }
-//
-//             input:
-//             set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), file(index) from ch_index
-//
-//             output:
-//             set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), val(sample), file("*.sam") into ch_align_sam
-//
-//             script:
-//             preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
-//             kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-//             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-//             // TODO pipeline: Should be staging this file properly as an input
-//             junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
-//             """
-//             minimap2 $preset $kmer $stranded $junctions -t $task.cpus $index $fastq > ${sample}.sam
-//             """
-//         }
-//     } else {
-//         process GraphMap2Align {
-//             tag "$sample"
-//             label 'process_medium'
-//             if (params.save_align_intermeds) {
-//                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-//                     saveAs: { filename ->
-//                                   if (filename.endsWith(".sam")) filename
-//                             }
-//             }
-//
-//             input:
-//             set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), file(index) from ch_index
-//
-//             output:
-//             set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
-//
-//             script:
-//             preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
-//             junctions = gtf ? "--gtf $gtf" : ""
-//             """
-//             graphmap2 align $preset $gtf -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
-//             """
-//         }
-//     }
-// } else {
-//     ch_samtools_version = Channel.empty()
-//     ch_minimap2_version = Channel.empty()
-//     ch_graphmap2_version = Channel.empty()
+
+    /*
+     * STEP 8 - Create genome/transcriptome index
+     */
+    if (params.aligner == 'minimap2') {
+        process MiniMap2Index {
+            tag "$fasta"
+            label 'process_medium'
+
+            input:
+            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
+
+            output:
+            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.mmi"), val(annotation_str) into ch_index
+            file "*.version" into ch_minimap2_version
+
+            script:
+            preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
+            kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+            stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+            // TODO pipeline: Should be staging this file properly as an input
+            junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
+            """
+            minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
+            minimap2 --version &> minimap2.version
+            """
+        }
+    } else {
+        process GraphMap2Index {
+          tag "$fasta"
+          label 'process_high'
+
+          input:
+          set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
+
+          output:
+          set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.gmidx"), val(annotation_str) into ch_index
+          file "*.version" into ch_graphmap2_version
+
+          script:
+          preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
+          junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
+          """
+          graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
+          echo \$(graphmap2 2>&1) > graphmap2.version
+          """
+        }
+    }
+
+    ch_index
+        .cross(ch_fastq_align) { it -> it[-1] }
+        .flatten()
+        .collate(13)
+        .map { it -> [ it[7], it[8], it[0], it[1], it[2], it[3], it[4], it[5] ]} // [ sample, fastq, fasta, sizes, gtf, bed, is_transcripts, index ]
+        .set { ch_fastq_align }
+
+    /*
+     * STEP 9 - Align fastq files
+     */
+    if (params.aligner == 'minimap2') {
+        process MiniMap2Align {
+            tag "$sample"
+            label 'process_medium'
+            if (params.save_align_intermeds) {
+                publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+                    saveAs: { filename ->
+                                  if (filename.endsWith(".sam")) filename
+                            }
+            }
+
+            input:
+            set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), file(index) from ch_index
+
+            output:
+            set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), val(sample), file("*.sam") into ch_align_sam
+
+            script:
+            preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
+            kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+            stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+            // TODO pipeline: Should be staging this file properly as an input
+            junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
+            """
+            minimap2 $preset $kmer $stranded $junctions -t $task.cpus $index $fastq > ${sample}.sam
+            """
+        }
+    } else {
+        process GraphMap2Align {
+            tag "$sample"
+            label 'process_medium'
+            if (params.save_align_intermeds) {
+                publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+                    saveAs: { filename ->
+                                  if (filename.endsWith(".sam")) filename
+                            }
+            }
+
+            input:
+            set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), file(index) from ch_index
+
+            output:
+            set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
+
+            script:
+            preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
+            junctions = gtf ? "--gtf $gtf" : ""
+            """
+            graphmap2 align $preset $gtf -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
+            """
+        }
+    }
+} else {
+    ch_samtools_version = Channel.empty()
+    ch_minimap2_version = Channel.empty()
+    ch_graphmap2_version = Channel.empty()
+}
 
 // /*
 //  * STEP 10 - Coordinate sort BAM files
