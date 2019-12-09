@@ -578,7 +578,6 @@ if (!params.skip_alignment) {
         .map { it -> [ file(it[4]), file(it[5]), it[6], it[2], it[7] ] } // [ fasta, gtf, sizes, bed, is_transcripts ]
         .set { ch_fasta_index }
 
-    // TUNE MINIMAP2 AND GRAPHMAP2 PARAMETERS BASED ON WHETHER GTF FILE IS PROVIDED
     /*
      * STEP 8 - Create genome/transcriptome index
      */
@@ -591,45 +590,41 @@ if (!params.skip_alignment) {
             set file(fasta), file(gtf), file(sizes), file(bed), val(is_transcripts) from ch_fasta_index
 
             output:
-            set val(fasta), file("*.mmi") into ch_index
+            set file(fasta), file(gtf), file(sizes), file(bed), val(is_transcripts), file("*.mmi") into ch_index
             file "*.version" into ch_minimap2_version
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
             kmer = (params.protocol == 'directRNA') ? "-k14" : ""
             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-            junctions = bed ? "--junc-bed $bed" : ""
+            junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed $bed" : ""
             """
             minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
             minimap2 --version &> minimap2.version
             """
         }
+    } else {
+        process GraphMap2Index {
+          tag "$fasta"
+          label 'process_medium'
+
+          input:
+          set file(fasta), file(gtf), file(sizes), file(bed), val(is_transcripts) from ch_fasta_index
+
+          output:
+          set file(fasta), file(gtf), file(sizes), file(bed), val(is_transcripts), file("*.gmidx") into ch_index
+          file "*.version" into ch_graphmap2_version
+
+          script:
+          preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
+          junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf $gtf" : ""
+          """
+          graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
+          echo \$(graphmap2 2>&1) > graphmap2.version
+          """
+        }
     }
 }
-    // } else {
-    //     // TODO pipeline: Create graphmap2 index with GTF instead
-    //     // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
-    //     process GraphMap2Index {
-    //       tag "$fasta"
-    //       label 'process_medium'
-    //
-    //       input:
-    //       set val(name), file(fasta) from ch_fasta_index
-    //
-    //       output:
-    //       set val(name), file("*.gmidx") into ch_index
-    //       file "*.version" into ch_graphmap2_version
-    //
-    //       script:
-    //       preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
-    //       //junctions = gtf ? "--gtf $gtf" : ""
-    //       """
-    //       graphmap2 align $preset $gtf -t $task.cpus -I -r $fasta
-    //       echo \$(graphmap2 2>&1) > graphmap2.version
-    //       """
-    //     }
-    // }
-
 //     // Convert genome_fasta to string from file to use cross()
 //     ch_fastq_align
 //         .map { it -> [ it[0].toString(), it[1], it[2] ] }
@@ -650,31 +645,6 @@ if (!params.skip_alignment) {
 //      */
 //     if (params.aligner == 'minimap2') {
 //
-//         process MiniMap2Align {
-//             tag "$sample"
-//             label 'process_medium'
-//             if (params.save_align_intermeds) {
-//                 publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-//                     saveAs: { filename ->
-//                                   if (filename.endsWith(".sam")) filename
-//                             }
-//             }
-//
-//             input:
-//             set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
-//
-//             output:
-//             set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
-//
-//             script:
-//             //preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
-//             kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-//             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-//             //junctions = bed ? "--junc-bed $bed" : ""
-//             """
-//             minimap2 $preset $kmer $stranded $junctions -t $task.cpus $index $fastq > ${sample}.sam
-//             """
-//         }
 //     } else {
 //         process GraphMap2Align {
 //             tag "$sample"
