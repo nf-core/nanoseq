@@ -637,7 +637,7 @@ if (!params.skip_alignment) {
 
 
             output:
-            set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.sam") into ch_align_sam
+            set val(sample), file(sizes), val(is_transcripts), file("*.sam") into ch_align_sam
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -664,7 +664,7 @@ if (!params.skip_alignment) {
             set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
 
             output:
-            set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.sam") into ch_align_sam
+            set val(sample), file(sizes), val(is_transcripts), file("*.sam") into ch_align_sam
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -700,11 +700,11 @@ process SortBAM {
     !params.skip_alignment
 
     input:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(sam) from ch_align_sam
+    set val(sample), file(sizes), val(is_transcripts), file(sam) from ch_align_sam
 
     output:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
-                                                                                                                            ch_sortbam_bed12
+    set val(sample), file(sizes), val(is_transcripts), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
+                                                                                           ch_sortbam_bed12
 
     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
@@ -730,10 +730,10 @@ process BAMToBedGraph {
     !params.skip_alignment && !params.skip_bigwig
 
     input:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(bam) from ch_sortbam_bedgraph
+    set val(sample), file(sizes), val(is_transcripts), file(bam) from ch_sortbam_bedgraph
 
     output:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bedGraph") into ch_bedgraph
+    set val(sample), file(sizes), val(is_transcripts), file("*.bedGraph") into ch_bedgraph
     file "*.version" into ch_bedtools_version
 
     script:
@@ -750,18 +750,16 @@ process BAMToBedGraph {
 process BedGraphToBigWig {
     tag "$sample"
     label 'process_medium'
-    publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
-        saveAs: { filename ->
-                      if (filename.endsWith(".bigWig")) filename
-                }
+    publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy'
+
     when:
     !params.skip_alignment && !params.skip_bigwig
 
     input:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(bedgraph) from ch_bedgraph
+    set val(sample), file(sizes), val(is_transcripts), file(bedgraph) from ch_bedgraph
 
     output:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bigWig") into ch_bigwig
+    set val(sample), file(sizes), val(is_transcripts), file("*.bigWig") into ch_bigwig
 
     script:
     """
@@ -780,10 +778,10 @@ process BAMToBed12 {
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     input:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(bam) from ch_sortbam_bed12
+    set val(sample), file(sizes), val(is_transcripts), file(bam) from ch_sortbam_bed12
 
     output:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bed12") into ch_bed12
+    set val(sample), file(sizes), val(is_transcripts), file("*.bed12") into ch_bed12
 
     script:
     """
@@ -803,10 +801,10 @@ process Bed12ToBigBed {
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     input:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(bed12) from ch_bed12
+    set val(sample), file(sizes), val(is_transcripts), file(bed12) from ch_bed12
 
     output:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bigBed") into ch_bigbed
+    set val(sample), file(sizes), val(is_transcripts), file("*.bigBed") into ch_bigbed
 
     script:
     """
