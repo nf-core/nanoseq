@@ -761,7 +761,7 @@ process BedGraphToBigWig {
     set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(bedgraph) from ch_bedgraph
 
     output:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bw") from ch_bigwig
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bw") into ch_bigwig
 
     script:
     """
@@ -780,17 +780,17 @@ process BAMToBed12 {
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     input:
-    set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(bam) from ch_sortbam_bed12
 
     output:
-    set file(fasta), file(sizes), val(sample), file("*.bed12") into ch_bed12
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bed12") into ch_bed12
 
     script:
     """
     bedtools bamtobed -bed12 -cigar -i ${bam[0]} | sort -k1,1 -k2,2n > ${sample}.bed12
     """
 }
-//
+
 // /*
 //  * STEP 14 - Convert BED12 to BigBED
 //  */
