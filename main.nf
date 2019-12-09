@@ -616,7 +616,7 @@ if (!params.skip_alignment) {
         .flatten()
         .collate(13)
         .map { it -> [ it[7], it[8], it[0], it[1], it[2], it[3], it[4], it[5] ]} // [ sample, fastq, fasta, sizes, gtf, bed, is_transcripts, index ]
-        .set { ch_fastq_align }
+        .set { ch_index }
 
     /*
      * STEP 9 - Align fastq files
@@ -633,10 +633,11 @@ if (!params.skip_alignment) {
             }
 
             input:
-            set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), file(index) from ch_index
+            set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
+
 
             output:
-            set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), val(sample), file("*.sam") into ch_align_sam
+            set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.sam") into ch_align_sam
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -660,16 +661,16 @@ if (!params.skip_alignment) {
             }
 
             input:
-            set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), file(index) from ch_index
+            set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
 
             output:
-            set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
+            set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.sam") into ch_align_sam
 
             script:
-            preset = (params.protocol == 'DNA') ? "" : "-x rnaseq"
-            junctions = gtf ? "--gtf $gtf" : ""
+            preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
+            junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
             """
-            graphmap2 align $preset $gtf -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
+            graphmap2 align $preset $junctions -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
             """
         }
     }
