@@ -547,51 +547,65 @@ if (!params.skip_alignment) {
     // Convert genome_fasta and gtf to string from file to use cross()
     ch_fastq_index
         .filter { it[2] }
-        .map { it -> [ it[3].toString(), it[2].toString(), it[4] ] } // [ str(gtf), str(fasta), is_transcripts ]
+        .map { it -> [ it[2].toString(), it[3].toString(), it[4] ] } // [ str(fasta), str(gtf), is_transcripts ]
         .unique()
-        .set { ch_fastq_index }
-    ch_fastq_index.println()
+        .into { ch_cross_sizes;
+                ch_cross_gtf }
 
-    ch_gtf_bed
-        .cross(ch_fastq_index)
+    // TODO pipeline: Need to test all possible permutations of this to make sure its working
+    ch_chrom_sizes
+        .cross(ch_cross_sizes)
         .flatten()
         .collate(5)
-        .map { it -> [ it[3], it[0], it[1], it[4] ] } // [ str(gtf), str(fasta), sizes, is_transcripts ]
-        .set { ch_gtf_bed }
-    ch_gtf_bed.println()
+        .map { it -> [ it[0], it[3], it[1], it[4] ] } // [ fasta, gtf, sizes, is_transcripts ]
+        .set { ch_chrom_sizes }
 
-    // ch_gtf_bed
-    //     .cross(ch_chrom_sizes)
-    //     .flatten()
-    //     .collate(6)
-    //     .println()
+    ch_cross_gtf
+        .map { it -> [ it[1], it[0], it[2] ] } // [ gtf, fasta, is_transcripts ]
+        .set { ch_cross_gtf }
+
+    ch_gtf_bed
+        .cross(ch_cross_gtf)
+        .flatten()
+        .collate(5)
+        .map { it -> [ it[3], it[0], it[1], it[4] ] } // [ fasta, gtf, bed, is_transcripts ]
+        .set { ch_gtf_bed }
+
+    ch_gtf_bed
+        .cross(ch_chrom_sizes)
+        .flatten()
+        .collate(8)
+        .map { it -> [ file(it[4]), file(it[5]), it[6], it[2], it[7] ] } // [ fasta, gtf, sizes, bed, is_transcripts ]
+        .set { ch_fasta_index }
 
     // TUNE MINIMAP2 AND GRAPHMAP2 PARAMETERS BASED ON WHETHER GTF FILE IS PROVIDED
-    // /*
-    //  * STEP 8 - Create genome/transcriptome index
-    //  */
-    // if (params.aligner == 'minimap2') {
-    //     process MiniMap2Index {
-    //         tag "$fasta"
-    //         label 'process_medium'
-    //
-    //         input:
-    //         set val(name), file(fasta) from ch_fasta_index
-    //
-    //         output:
-    //         set val(name), file("*.mmi") into ch_index
-    //         file "*.version" into ch_minimap2_version
-    //
-    //         script:
-    //         //preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
-    //         kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-    //         stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-    //         //junctions = bed ? "--junc-bed $bed" : ""
-    //         """
-    //         minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
-    //         minimap2 --version &> minimap2.version
-    //         """
-    //     }
+    /*
+     * STEP 8 - Create genome/transcriptome index
+     */
+    if (params.aligner == 'minimap2') {
+        process MiniMap2Index {
+            tag "$fasta"
+            label 'process_medium'
+
+            input:
+            set file(fasta), file(gtf), file(sizes), file(bed), val(is_transcripts) from ch_fasta_index
+
+            output:
+            set val(fasta), file("*.mmi") into ch_index
+            file "*.version" into ch_minimap2_version
+
+            script:
+            preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
+            kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+            stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+            junctions = bed ? "--junc-bed $bed" : ""
+            """
+            minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
+            minimap2 --version &> minimap2.version
+            """
+        }
+    }
+}
     // } else {
     //     // TODO pipeline: Create graphmap2 index with GTF instead
     //     // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
@@ -690,7 +704,6 @@ if (!params.skip_alignment) {
 //     ch_samtools_version = Channel.empty()
 //     ch_minimap2_version = Channel.empty()
 //     ch_graphmap2_version = Channel.empty()
-}
 
 // /*
 //  * STEP 10 - Coordinate sort BAM files
