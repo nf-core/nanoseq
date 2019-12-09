@@ -356,7 +356,8 @@ if (!params.skip_basecalling) {
         .map { it -> [ it[2], it[1], it[3], it[4], it[5] ] }
         .into { ch_fastq_nanoplot;
                 ch_fastq_fastqc;
-                ch_fastq_index;
+                ch_fastq_sizes;
+                ch_fastq_gtf;
                 ch_fastq_align }
 
 } else {
@@ -368,7 +369,8 @@ if (!params.skip_basecalling) {
         .map { it -> [ it[0], it[1], it[3], it[4], it[5] ] }
         .into { ch_fastq_nanoplot;
                 ch_fastq_fastqc;
-                ch_fastq_index;
+                ch_fastq_sizes;
+                ch_fastq_gtf;
                 ch_fastq_align }
 
     ch_guppy_version = Channel.empty()
@@ -487,16 +489,11 @@ process FastQC {
 if (!params.skip_alignment) {
 
     // Get unique list of all fasta files
-    ch_fastq_index
+    ch_fastq_sizes
         .map { it -> [ it[2].toString(), it[2] ] }  // [str(fasta), fasta]
         .filter { it[1] }
         .unique()
-        .into { ch_fasta_sizes;
-                ch_fasta_index;
-                ch_fasta_align }
-
-    // DO SOMETHING SIMILAR FOR GTF CHANNELS WHERE YOU GET UNIQUE LIST? OR JUST DO GTF2BED EACH TIME?
-    // TUNE MINIMAP2 AND GRAPHMAP2 PARAMETERS BASED ON WHETHER GTF FILE IS PROVIDED
+        .set { ch_fastq_sizes }
 
     /*
      * STEP 6 - Make chromosome sizes file
@@ -505,7 +502,7 @@ if (!params.skip_alignment) {
         tag "$fasta"
 
         input:
-        set val(name), file(fasta) from ch_fasta_sizes
+        set val(name), file(fasta) from ch_fastq_sizes
 
         output:
         set val(name), file("*.sizes") into ch_chrom_sizes
@@ -519,24 +516,32 @@ if (!params.skip_alignment) {
         """
     }
 
+    // Get unique list of all gtf files
+    ch_fastq_gtf
+        .map { it -> [ it[3].toString(), it[3] ] }  // [str(gtf), gtf]
+        .filter { it[1] }
+        .unique()
+        .set { ch_fastq_gtf }
+
     /*
      * STEP 7 - Convert GTF to BED12
      */
-    // process GTF2BED {
-    //     tag "$gtf"
-    //     label 'process_low'
-    //
-    //     input:
-    //     file gtf from ch_gtf
-    //
-    //     output:
-    //     file "*.bed" into ch_gene_bed
-    //
-    //     script: // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
-    //     """
-    //     gtf2bed $gtf > ${gtf.baseName}.bed
-    //     """
-    // }
+    process GTFToBED {
+        tag "$gtf"
+        label 'process_low'
+
+        input:
+        set val(name), file(gtf) from ch_fastq_gtf
+
+        output:
+        set val(name), file("*.bed") into ch_gtf_bed
+
+        script: // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
+        """
+        gtf2bed $gtf > ${gtf.baseName}.bed
+        """
+    }
+    // TUNE MINIMAP2 AND GRAPHMAP2 PARAMETERS BASED ON WHETHER GTF FILE IS PROVIDED
 
     // /*
     //  * STEP 8 - Create genome/transcriptome index
@@ -836,7 +841,7 @@ process get_software_versions {
     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
     file nanoplot from ch_nanoplot_version.first().ifEmpty([])
     file fastqc from ch_fastqc_version.first().ifEmpty([])
-    file samtools from ch_samtools_version.first().ifEmpty([])
+    //file samtools from ch_samtools_version.first().ifEmpty([])
     //file minimap2 from ch_minimap2_version.first().ifEmpty([])
     //file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
     //file bedtools from ch_bedtools_version.first().ifEmpty([])
