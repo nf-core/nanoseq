@@ -687,8 +687,9 @@ if (params.skip_alignment) {
         file "*.version" into ch_bedtools_version
 
         script:
+        split = (params.protocol == 'DNA') ? "" : "-split"
         """
-        genomeCoverageBed -split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
+        genomeCoverageBed $split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
         bedtools --version > bedtools.version
         """
     }
