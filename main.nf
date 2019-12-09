@@ -752,7 +752,7 @@ process BedGraphToBigWig {
     label 'process_medium'
     publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
         saveAs: { filename ->
-                      if (filename.endsWith(".bw")) filename
+                      if (filename.endsWith(".bigWig")) filename
                 }
     when:
     !params.skip_alignment && !params.skip_bigwig
@@ -761,11 +761,11 @@ process BedGraphToBigWig {
     set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(bedgraph) from ch_bedgraph
 
     output:
-    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bw") into ch_bigwig
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bigWig") into ch_bigwig
 
     script:
     """
-    bedGraphToBigWig $bedgraph $sizes ${sample}.bw
+    bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
     """
 }
 
@@ -791,30 +791,28 @@ process BAMToBed12 {
     """
 }
 
-// /*
-//  * STEP 14 - Convert BED12 to BigBED
-//  */
-// process Bed12ToBigBed {
-//     tag "$sample"
-//     label 'process_medium'
-//     publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (filename.endsWith(".bb")) filename
-//                 }
-//     when:
-//     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
-//
-//     input:
-//     set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
-//
-//     output:
-//     set file(fasta), file(sizes), val(sample), file("*.bb") into ch_bigbed
-//
-//     script:
-//     """
-//     bedToBigBed $bed12 $sizes ${sample}.bb
-//     """
-// }
+/*
+ * STEP 14 - Convert BED12 to BigBED
+ */
+process Bed12ToBigBed {
+    tag "$sample"
+    label 'process_medium'
+    publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy'
+
+    when:
+    !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
+
+    input:
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(bed12) from ch_bed12
+
+    output:
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bigBed") into ch_bigbed
+
+    script:
+    """
+    bedToBigBed $bed12 $sizes ${sample}.bigBed
+    """
+}
 
 // /*
 //  * STEP 15 - Output Description HTML
