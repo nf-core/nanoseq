@@ -250,7 +250,7 @@ process CheckSampleSheet {
 }
 
 // Function to resolve fasta and gtf file if using iGenomes
-// Returns [ sample, fastq, barcode, fasta, gtf, is_transcripts ]
+// Returns [ sample, fastq, barcode, fasta, gtf, is_transcripts, annotation_str ]
 def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
     // Resolve fasta and gtf file if using iGenomes
@@ -488,15 +488,6 @@ process FastQC {
     """
 }
 
-// def fix_channel(ArrayList ch) {
-//
-//     if (ch.size() == 7) {
-//         return [ file(ch[0]), file(ch[1]), ch[2], ch[5], ch[6] ]  // [ fasta, gtf, bed, sizes, is_transcripts ]
-//     } else if (ch.size == 5) {
-//         return [ file(ch[0]), false, false, ch[3], ch[4] ]
-//     }
-// }
-
 if (!params.skip_alignment) {
 
     // Get unique list of all fasta files
@@ -582,13 +573,14 @@ if (!params.skip_alignment) {
             preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
             kmer = (params.protocol == 'directRNA') ? "-k14" : ""
             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-            // TODO pipeline: Should be staging this file properly as an input
+            // TODO pipeline: Should be staging bed file properly as an input
             junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
             """
             minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
             minimap2 --version &> minimap2.version
             """
         }
+        ch_graphmap2_version = Channel.empty()
     } else {
         process GraphMap2Index {
           tag "$fasta"
@@ -603,12 +595,14 @@ if (!params.skip_alignment) {
 
           script:
           preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
+          // TODO pipeline: Should be staging gtf file properly as an input
           junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
           """
           graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
           echo \$(graphmap2 2>&1) > graphmap2.version
           """
         }
+        ch_minimap2_version = Channel.empty()
     }
 
     ch_index
@@ -643,7 +637,7 @@ if (!params.skip_alignment) {
             preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
             kmer = (params.protocol == 'directRNA') ? "-k14" : ""
             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-            // TODO pipeline: Should be staging this file properly as an input
+            // TODO pipeline: Should be staging bed file properly as an input
             junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
             """
             minimap2 $preset $kmer $stranded $junctions -t $task.cpus $index $fastq > ${sample}.sam
@@ -668,6 +662,7 @@ if (!params.skip_alignment) {
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
+            // TODO pipeline: Should be staging gtf file properly as an input
             junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
             """
             graphmap2 align $preset $junctions -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
