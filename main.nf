@@ -637,7 +637,7 @@ if (!params.skip_alignment) {
 
 
             output:
-            set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.sam") into ch_align_sam
+            set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.sam") into ch_align_sam
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -664,7 +664,7 @@ if (!params.skip_alignment) {
             set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
 
             output:
-            set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.sam") into ch_align_sam
+            set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.sam") into ch_align_sam
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -680,115 +680,116 @@ if (!params.skip_alignment) {
     ch_graphmap2_version = Channel.empty()
 }
 
-// /*
-//  * STEP 10 - Coordinate sort BAM files
-//  */
-// process SortBAM {
-//     tag "$sample"
-//     label 'process_medium'
-//     publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
-//                       else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
-//                       else if (filename.endsWith(".stats")) "samtools_stats/$filename"
-//                       else if (filename.endsWith(".sorted.bam")) filename
-//                       else if (filename.endsWith(".sorted.bam.bai")) filename
-//                       else null
-//                 }
-//
-//     when:
-//     !params.skip_alignment
-//
-//     input:
-//     set file(fasta), file(sizes), val(sample), file(sam) from ch_align_sam
-//
-//     output:
-//     set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bed12,
-//                                                                                    ch_sortbam_bedgraph
-//     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
-//
-//     script:
-//     """
-//     samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
-//     samtools sort -@ $task.cpus -o ${sample}.sorted.bam -T $sample ${sample}.bam
-//     samtools index ${sample}.sorted.bam
-//     samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
-//     samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
-//     samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
-//     """
-// }
-//
-// /*
-//  * STEP 11 - Convert BAM to BEDGraph
-//  */
-// process BAMToBedGraph {
-//     tag "$sample"
-//     label 'process_medium'
-//
-//     when:
-//     !params.skip_alignment && !params.skip_bigwig
-//
-//     input:
-//     set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bedgraph
-//
-//     output:
-//     set file(fasta), file(sizes), val(sample), file("*.bedGraph") into ch_bedgraph
-//     file "*.version" into ch_bedtools_version
-//
-//     script:
-//     split = (params.protocol == 'DNA') ? "" : "-split"
-//     """
-//     genomeCoverageBed $split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
-//     bedtools --version > bedtools.version
-//     """
-// }
-//
-// /*
-//  * STEP 12 - Convert BEDGraph to BigWig
-//  */
-// process BedGraphToBigWig {
-//     tag "$sample"
-//     label 'process_medium'
-//     publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
-//         saveAs: { filename ->
-//                       if (filename.endsWith(".bw")) filename
-//                 }
-//     when:
-//     !params.skip_alignment && !params.skip_bigwig
-//
-//     input:
-//     set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
-//
-//     output:
-//     set file(fasta), file(sizes), val(sample), file("*.bw") into ch_bigwig
-//
-//     script:
-//     """
-//     bedGraphToBigWig $bedgraph $sizes ${sample}.bw
-//     """
-// }
-//
-// /*
-//  * STEP 13 - Convert BAM to BED12
-//  */
-// process BAMToBed12 {
-//     tag "$sample"
-//     label 'process_medium'
-//
-//     when:
-//     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
-//
-//     input:
-//     set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
-//
-//     output:
-//     set file(fasta), file(sizes), val(sample), file("*.bed12") into ch_bed12
-//
-//     script:
-//     """
-//     bedtools bamtobed -bed12 -cigar -i ${bam[0]} | sort -k1,1 -k2,2n > ${sample}.bed12
-//     """
-// }
+/*
+ * STEP 10 - Coordinate sort BAM files
+ */
+process SortBAM {
+    tag "$sample"
+    label 'process_medium'
+    publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+        saveAs: { filename ->
+                      if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
+                      else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
+                      else if (filename.endsWith(".stats")) "samtools_stats/$filename"
+                      else if (filename.endsWith(".sorted.bam")) filename
+                      else if (filename.endsWith(".sorted.bam.bai")) filename
+                      else null
+                }
+
+    when:
+    !params.skip_alignment
+
+    input:
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(sam) from ch_align_sam
+
+    output:
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
+                                                                                                                            ch_sortbam_bed12
+
+    file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
+
+    script:
+    """
+    samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
+    samtools sort -@ $task.cpus -o ${sample}.sorted.bam -T $sample ${sample}.bam
+    samtools index ${sample}.sorted.bam
+    samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
+    samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
+    samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
+    """
+}
+
+/*
+ * STEP 11 - Convert BAM to BEDGraph
+ */
+process BAMToBedGraph {
+    tag "$sample"
+    label 'process_medium'
+
+    when:
+    !params.skip_alignment && !params.skip_bigwig
+
+    input:
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(bam) from ch_sortbam_bedgraph
+
+    output:
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bedGraph") into ch_bedgraph
+    file "*.version" into ch_bedtools_version
+
+    script:
+    split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
+    """
+    genomeCoverageBed $split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
+    bedtools --version > bedtools.version
+    """
+}
+
+/*
+ * STEP 12 - Convert BEDGraph to BigWig
+ */
+process BedGraphToBigWig {
+    tag "$sample"
+    label 'process_medium'
+    publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
+        saveAs: { filename ->
+                      if (filename.endsWith(".bw")) filename
+                }
+    when:
+    !params.skip_alignment && !params.skip_bigwig
+
+    input:
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(bedgraph) from ch_bedgraph
+
+    output:
+    set val(sample), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.bw") from ch_bigwig
+
+    script:
+    """
+    bedGraphToBigWig $bedgraph $sizes ${sample}.bw
+    """
+}
+
+/*
+ * STEP 13 - Convert BAM to BED12
+ */
+process BAMToBed12 {
+    tag "$sample"
+    label 'process_medium'
+
+    when:
+    !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
+
+    input:
+    set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
+
+    output:
+    set file(fasta), file(sizes), val(sample), file("*.bed12") into ch_bed12
+
+    script:
+    """
+    bedtools bamtobed -bed12 -cigar -i ${bam[0]} | sort -k1,1 -k2,2n > ${sample}.bed12
+    """
+}
 //
 // /*
 //  * STEP 14 - Convert BED12 to BigBED
