@@ -488,12 +488,21 @@ process FastQC {
     """
 }
 
+def fix_channel(ArrayList ch) {
+
+    if (ch.size() == 7) {
+        return [ file(ch[0]), file(ch[1]), ch[2], ch[5], ch[6] ]  // [ fasta, gtf, bed, sizes, is_transcripts ]
+    } else if (ch.size == 5) {
+        return [ file(ch[0]), null, null, ch[3], ch[4] ]
+    }
+}
+
 if (!params.skip_alignment) {
 
     // Get unique list of all fasta files
     ch_fastq_sizes
+        .filter { it[2] }
         .map { it -> [ it[2].toString(), it[2] ] }  // [ str(fasta), fasta ]
-        .filter { it[1] }
         .unique()
         .set { ch_fastq_sizes }
 
@@ -520,8 +529,8 @@ if (!params.skip_alignment) {
 
     // Get unique list of all gtf files
     ch_fastq_gtf
+        .filter { it[3] }
         .map { it -> [ it[3].toString(), it[3] ] }  // [ str(gtf), gtf ]
-        .filter { it[1] }
         .unique()
         .set { ch_fastq_gtf }
 
@@ -544,7 +553,7 @@ if (!params.skip_alignment) {
         """
     }
 
-    // Convert genome_fasta and gtf to string from file to use cross()
+    // Convert fasta and gtf to string from file to use cross()
     ch_fastq_index
         .filter { it[2] }
         .map { it -> [ it[2].toString(), it[3].toString(), it[4] ] } // [ str(fasta), str(gtf), is_transcripts ]
@@ -572,11 +581,9 @@ if (!params.skip_alignment) {
         .set { ch_gtf_bed }
 
     ch_gtf_bed
-        .cross(ch_chrom_sizes)
-        .flatten()
-        .collate(8)
-        .map { it -> [ file(it[4]), file(it[5]), it[6], it[2], it[7] ] } // [ fasta, gtf, sizes, bed, is_transcripts ]
-        .set { ch_fasta_index }
+        .join(ch_chrom_sizes, remainder:true)
+        .map { fix_channel(it) }  // // [ fasta, gtf, bed, sizes, is_transcripts ]
+        .set {ch_fasta_index }
 
     /*
      * STEP 8 - Create genome/transcriptome index
@@ -587,17 +594,18 @@ if (!params.skip_alignment) {
             label 'process_medium'
 
             input:
-            set file(fasta), file(gtf), file(sizes), file(bed), val(is_transcripts) from ch_fasta_index
+            set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts) from ch_fasta_index
 
             output:
-            set file(fasta), file(gtf), file(sizes), file(bed), val(is_transcripts), file("*.mmi") into ch_index
+            set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), file("*.mmi") into ch_index
             file "*.version" into ch_minimap2_version
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
             kmer = (params.protocol == 'directRNA') ? "-k14" : ""
             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-            junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed $bed" : ""
+            // TODO pipeline: Should be staging this file properly as an input
+            junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
             """
             minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
             minimap2 --version &> minimap2.version
@@ -606,39 +614,40 @@ if (!params.skip_alignment) {
     } else {
         process GraphMap2Index {
           tag "$fasta"
-          label 'process_medium'
+          label 'process_high'
 
           input:
-          set file(fasta), file(gtf), file(sizes), file(bed), val(is_transcripts) from ch_fasta_index
+          set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts) from ch_fasta_index
 
           output:
-          set file(fasta), file(gtf), file(sizes), file(bed), val(is_transcripts), file("*.gmidx") into ch_index
+          set file(fasta), val(gtf), val(bed), file(sizes), val(is_transcripts), file("*.gmidx") into ch_index
           file "*.version" into ch_graphmap2_version
 
           script:
           preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
-          junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf $gtf" : ""
+          junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
           """
           graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
           echo \$(graphmap2 2>&1) > graphmap2.version
           """
         }
     }
+    
+    // // Convert genome_fasta to string from file to use cross()
+    // ch_fastq_align
+    //     .map { it -> [ it[2].toString(),  , it[0], it[1] ] }
+    //     .set { ch_fastq_align }
+
+    // // Create channels = [genome_fasta, index, sizes, sample, fastq]
+    // ch_fasta_align
+    //     .join(ch_index)
+    //     .join(ch_chrom_sizes)
+    //     .cross(ch_fastq_align)
+    //     .flatten()
+    //     .collate(7)
+    //     .map { it -> [ it[1], it[2], it[3], it[5], it[6] ] }
+    //     .set { ch_fastq_align }
 }
-//     // Convert genome_fasta to string from file to use cross()
-//     ch_fastq_align
-//         .map { it -> [ it[0].toString(), it[1], it[2] ] }
-//         .set { ch_fastq_align }
-//
-//     // Create channels = [genome_fasta, index, sizes, sample, fastq]
-//     ch_fasta_align
-//         .join(ch_index)
-//         .join(ch_chrom_sizes)
-//         .cross(ch_fastq_align)
-//         .flatten()
-//         .collate(7)
-//         .map { it -> [ it[1], it[2], it[3], it[5], it[6] ] }
-//         .set { ch_fastq_align }
 //
 //     /*
 //      * STEP 9 - Align fastq files
