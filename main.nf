@@ -250,7 +250,7 @@ process CheckSampleSheet {
 }
 
 // Function to resolve fasta and gtf file if using iGenomes
-// Returns [sample, fastq, barcode, fasta, gtf, is_transcripts]
+// Returns [ sample, fastq, barcode, fasta, gtf, is_transcripts ]
 def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
     // Resolve fasta and gtf file if using iGenomes
@@ -274,7 +274,7 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
 if (!params.skip_basecalling) {
 
-    // Create channels = [sample, barcode, fasta, gtf, is_transcripts]
+    // Create channels = [ sample, barcode, fasta, gtf, is_transcripts ]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
@@ -348,7 +348,7 @@ if (!params.skip_basecalling) {
         """
     }
 
-    // Create channels = [sample, fastq, fasta, gtf, is_transcripts]
+    // Create channels = [ sample, fastq, fasta, gtf, is_transcripts ]
     ch_guppy_fastq
         .flatten()
         .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
@@ -358,11 +358,12 @@ if (!params.skip_basecalling) {
                 ch_fastq_fastqc;
                 ch_fastq_sizes;
                 ch_fastq_gtf;
+                ch_fastq_index;
                 ch_fastq_align }
 
 } else {
 
-    // Create channels = [sample, fastq, fasta, gtf, is_transcripts]
+    // Create channels = [ sample, fastq, fasta, gtf, is_transcripts ]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
@@ -371,6 +372,7 @@ if (!params.skip_basecalling) {
                 ch_fastq_fastqc;
                 ch_fastq_sizes;
                 ch_fastq_gtf;
+                ch_fastq_index;
                 ch_fastq_align }
 
     ch_guppy_version = Channel.empty()
@@ -490,7 +492,7 @@ if (!params.skip_alignment) {
 
     // Get unique list of all fasta files
     ch_fastq_sizes
-        .map { it -> [ it[2].toString(), it[2] ] }  // [str(fasta), fasta]
+        .map { it -> [ it[2].toString(), it[2] ] }  // [ str(fasta), fasta ]
         .filter { it[1] }
         .unique()
         .set { ch_fastq_sizes }
@@ -518,7 +520,7 @@ if (!params.skip_alignment) {
 
     // Get unique list of all gtf files
     ch_fastq_gtf
-        .map { it -> [ it[3].toString(), it[3] ] }  // [str(gtf), gtf]
+        .map { it -> [ it[3].toString(), it[3] ] }  // [ str(gtf), gtf ]
         .filter { it[1] }
         .unique()
         .set { ch_fastq_gtf }
@@ -541,8 +543,30 @@ if (!params.skip_alignment) {
         gtf2bed $gtf > ${gtf.baseName}.bed
         """
     }
-    // TUNE MINIMAP2 AND GRAPHMAP2 PARAMETERS BASED ON WHETHER GTF FILE IS PROVIDED
 
+    // Convert genome_fasta and gtf to string from file to use cross()
+    ch_fastq_index
+        .filter { it[2] }
+        .map { it -> [ it[3].toString(), it[2].toString(), it[4] ] } // [ str(gtf), str(fasta), is_transcripts ]
+        .unique()
+        .set { ch_fastq_index }
+    ch_fastq_index.println()
+
+    ch_gtf_bed
+        .cross(ch_fastq_index)
+        .flatten()
+        .collate(5)
+        .map { it -> [ it[3], it[0], it[1], it[4] ] } // [ str(gtf), str(fasta), sizes, is_transcripts ]
+        .set { ch_gtf_bed }
+    ch_gtf_bed.println()
+
+    // ch_gtf_bed
+    //     .cross(ch_chrom_sizes)
+    //     .flatten()
+    //     .collate(6)
+    //     .println()
+
+    // TUNE MINIMAP2 AND GRAPHMAP2 PARAMETERS BASED ON WHETHER GTF FILE IS PROVIDED
     // /*
     //  * STEP 8 - Create genome/transcriptome index
     //  */
@@ -803,62 +827,62 @@ if (!params.skip_alignment) {
 //     """
 // }
 
-/*
- * STEP 15 - Output Description HTML
- */
-process output_documentation {
-    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
+// /*
+//  * STEP 15 - Output Description HTML
+//  */
+// process output_documentation {
+//     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+//         saveAs: { filename ->
+//                       if (!filename.endsWith(".version")) filename
+//                 }
+//
+//     input:
+//     file output_docs from ch_output_docs
+//
+//     output:
+//     file "results_description.html"
+//     file "*.version" into ch_rmarkdown_version
+//
+//     script:
+//     """
+//     markdown_to_html.r $output_docs results_description.html
+//     Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='rmarkdown.version')"
+//     """
+// }
 
-    input:
-    file output_docs from ch_output_docs
-
-    output:
-    file "results_description.html"
-    file "*.version" into ch_rmarkdown_version
-
-    script:
-    """
-    markdown_to_html.r $output_docs results_description.html
-    Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='rmarkdown.version')"
-    """
-}
-
-/*
- * Parse software version numbers
- */
-process get_software_versions {
-    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-        saveAs: { filename ->
-                      if (filename.indexOf(".csv") > 0) filename
-                      else null
-                }
-
-    input:
-    file guppy from ch_guppy_version.collect().ifEmpty([])
-    file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    file nanoplot from ch_nanoplot_version.first().ifEmpty([])
-    file fastqc from ch_fastqc_version.first().ifEmpty([])
-    //file samtools from ch_samtools_version.first().ifEmpty([])
-    //file minimap2 from ch_minimap2_version.first().ifEmpty([])
-    //file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
-    //file bedtools from ch_bedtools_version.first().ifEmpty([])
-    file rmarkdown from ch_rmarkdown_version.collect()
-
-    output:
-    file 'software_versions_mqc.yaml' into software_versions_yaml
-    file "software_versions.csv"
-
-    script:
-    """
-    echo $workflow.manifest.version > pipeline.version
-    echo $workflow.nextflow.version > nextflow.version
-    multiqc --version &> multiqc.version
-    scrape_software_versions.py &> software_versions_mqc.yaml
-    """
-}
+// /*
+//  * Parse software version numbers
+//  */
+// process get_software_versions {
+//     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
+//         saveAs: { filename ->
+//                       if (filename.indexOf(".csv") > 0) filename
+//                       else null
+//                 }
+//
+//     input:
+//     file guppy from ch_guppy_version.collect().ifEmpty([])
+//     file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
+//     file nanoplot from ch_nanoplot_version.first().ifEmpty([])
+//     file fastqc from ch_fastqc_version.first().ifEmpty([])
+//     //file samtools from ch_samtools_version.first().ifEmpty([])
+//     //file minimap2 from ch_minimap2_version.first().ifEmpty([])
+//     //file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
+//     //file bedtools from ch_bedtools_version.first().ifEmpty([])
+//     file rmarkdown from ch_rmarkdown_version.collect()
+//
+//     output:
+//     file 'software_versions_mqc.yaml' into software_versions_yaml
+//     file "software_versions.csv"
+//
+//     script:
+//     """
+//     echo $workflow.manifest.version > pipeline.version
+//     echo $workflow.nextflow.version > nextflow.version
+//     multiqc --version &> multiqc.version
+//     scrape_software_versions.py &> software_versions_mqc.yaml
+//     """
+// }
 
 def create_workflow_summary(summary) {
     def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
