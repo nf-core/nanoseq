@@ -101,7 +101,7 @@ while True:
                 print("{}: Transcriptome field contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
 
-            if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-9:] != '.fasta.gz' and transcriptome[-6:] != '.fa.gz' and transcriptome[-4:] != '.gtf' and and transcriptome[-7:] != '.gtf.gz':
+            if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-9:] != '.fasta.gz' and transcriptome[-6:] != '.fa.gz' and transcriptome[-4:] != '.gtf' and transcriptome[-7:] != '.gtf.gz':
                 print("{}: Transcriptome field incorrect extension (has to be '.fasta', '.fa', '.fasta.gz', '.fa.gz', '.gtf' or '.gtf.gz')!\nLine: '{}'".format(ERROR_STR,line.strip()))
                 sys.exit(1)
 
