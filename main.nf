@@ -583,24 +583,24 @@ if (!params.skip_alignment) {
         ch_graphmap2_version = Channel.empty()
     } else {
         process GraphMap2Index {
-          tag "$fasta"
-          label 'process_high'
+            tag "$fasta"
+            label 'process_high'
 
-          input:
-          set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
+            input:
+            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
 
-          output:
-          set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.gmidx"), val(annotation_str) into ch_index
-          file "*.version" into ch_graphmap2_version
+            output:
+            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.gmidx"), val(annotation_str) into ch_index
+            file "*.version" into ch_graphmap2_version
 
-          script:
-          preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
-          // TODO pipeline: Should be staging gtf file properly as an input
-          junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
-          """
-          graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
-          echo \$(graphmap2 2>&1) > graphmap2.version
-          """
+            script:
+            preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
+            // TODO pipeline: Should be staging gtf file properly as an input
+            junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
+            """
+            graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
+            echo \$(graphmap2 2>&1) > graphmap2.version
+            """
         }
         ch_minimap2_version = Channel.empty()
     }
