@@ -673,6 +673,7 @@ if (!params.skip_alignment) {
     ch_samtools_version = Channel.empty()
     ch_minimap2_version = Channel.empty()
     ch_graphmap2_version = Channel.empty()
+    ch_align_sam = Channel.empty()
 }
 
 /*
