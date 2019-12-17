@@ -15,6 +15,7 @@ jobs:
       - name: Install Nextflow
         run: |
           export NXF_VER=${{ matrix.nxf_ver }}
+          export NXF_ANSI_LOG=false
           wget -qO- get.nextflow.io | bash
           sudo mv nextflow /usr/local/bin/
       #- name: Pull image (Cant pull standard single image for this pipeline as we are using individual BioContainers)
@@ -22,16 +23,16 @@ jobs:
       #    docker pull nfcore/nanoseq:dev && docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
       - name: Default test
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -ansi-log false -profile test,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker
       - name: Graphmap2 alignment
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -ansi-log false -profile test,docker --aligner graphmap2
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --aligner graphmap2
       - name: Non-barcoded test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -ansi-log false -profile test_nonbc,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test_nonbc,docker
       - name: Skip alignment
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -ansi-log false -profile test_nonbc,docker --skip_alignment
+          nextflow run ${GITHUB_WORKSPACE} -profile test_nonbc,docker --skip_alignment
       - name: Skip QC
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -ansi-log false -profile test_nonbc,docker --skip_alignment --skip_qc
+          nextflow run ${GITHUB_WORKSPACE} -profile test_nonbc,docker --skip_alignment --skip_qc
