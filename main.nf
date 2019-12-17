@@ -74,6 +74,7 @@ def helpMessage() {
     AWSBatch
       --awsqueue [str]                The AWSBatch JobQueue that needs to be set when running on AWSBatch
       --awsregion [str]               The AWS Region for your AWS Batch job to run on (Default: 'eu-west-1')
+      --awscli [str]                  Path to the AWS CLI tool
     """.stripIndent()
 }
 
@@ -207,9 +208,10 @@ summary['Launch dir']             = workflow.launchDir
 summary['Working dir']            = workflow.workDir
 summary['Script dir']             = workflow.projectDir
 summary['User']                   = workflow.userName
-if (workflow.profile == 'awsbatch') {
+if (workflow.profile.contains('awsbatch')) {
     summary['AWS Region']         = params.awsregion
     summary['AWS Queue']          = params.awsqueue
+    summary['AWS CLI']            = params.awscli
 }
 summary['Config Profile'] = workflow.profile
 if (params.config_profile_description) summary['Config Description'] = params.config_profile_description

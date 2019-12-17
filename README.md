@@ -1,6 +1,8 @@
 # ![nfcore/nanoseq](docs/images/nf-core-nanoseq_logo.png)
 
 [![Build Status](https://travis-ci.com/nf-core/nanoseq.svg?branch=master)](https://travis-ci.com/nf-core/nanoseq)
+[![GitHub Actions CI Status](https://github.com/nf-core/nanoseq/workflows/nf-core%20CI/badge.svg)](https://github.com/nf-core/nanoseq/actions)
+[![GitHub Actions Linting Status](https://github.com/nf-core/nanoseq/workflows/nf-core%20linting/badge.svg)](https://github.com/nf-core/nanoseq/actions)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A519.10.0-brightgreen.svg)](https://www.nextflow.io/)
 
 ## Introduction
