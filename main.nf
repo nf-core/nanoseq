@@ -37,7 +37,8 @@ def helpMessage() {
       --flowcell [str]                Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
       --kit [str]                     Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
       --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
-      --guppy_config [file]           Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
+      --guppy_config [file/str]       Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
+      --guppy_model [file/str]        Custom basecalling model file (JSON) to use for Guppy basecalling, such as the output from Taiyaki (Default: false)
       --guppy_gpu [bool]              Whether to perform basecalling with Guppy in GPU mode (Default: false)
       --guppy_gpu_runners [int]       Number of '--gpu_runners_per_device' used for guppy when using '--guppy_gpu' (Default: 6)
       --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (Default: 1)
@@ -48,7 +49,7 @@ def helpMessage() {
 
     Alignment
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
-      --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap) (Default: 'minimap2')
+      --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap2) (Default: 'minimap2')
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
@@ -73,6 +74,7 @@ def helpMessage() {
     AWSBatch
       --awsqueue [str]                The AWSBatch JobQueue that needs to be set when running on AWSBatch
       --awsregion [str]               The AWS Region for your AWS Batch job to run on (Default: 'eu-west-1')
+      --awscli [str]                  Path to the AWS CLI tool
     """.stripIndent()
 }
 
@@ -87,9 +89,11 @@ if (params.help) {
  */
 if (params.input) { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 
+def ch_guppy_model = Channel.empty()
+def ch_guppy_config = Channel.empty()
 if (!params.skip_basecalling) {
 
-    // TODO nf-core: Add in a check to see if running offline
+    // TODO pipeline: Add in a check to see if running offline
     // Pre-download test-dataset to get files for '--run_dir' parameter
     // Nextflow is unable to recursively download directories via HTTPS
     if (workflow.profile.contains('test')) {
@@ -105,12 +109,24 @@ if (!params.skip_basecalling) {
             """
         }
     } else {
-        if (params.run_dir)         { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
-        if (!params.guppy_config)   {
-            if (!params.flowcell)   { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
-            if (!params.kit)        { exit 1, "Please specify a valid kit identifier for basecalling!" }
-       }
+        if (params.run_dir) { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
     }
+
+    // Need to stage guppy_config properly depending on whether its a file or string
+    if (!params.guppy_config) {
+        if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
+        if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!" }
+    } else if (file(params.guppy_config).exists()) {
+        ch_guppy_config = Channel.fromPath(params.guppy_config)
+    }
+
+    // Need to stage guppy_model properly depending on whether its a file or string
+    if (params.guppy_model) {
+        if (file(params.guppy_model).exists()) {
+            ch_guppy_model = Channel.fromPath(params.guppy_model)
+        }
+    }
+
 } else {
     // Cannot demultiplex without performing basecalling
     // Skip demultiplexing if barcode kit isnt provided
@@ -120,8 +136,8 @@ if (!params.skip_basecalling) {
 }
 
 if (!params.skip_alignment) {
-    if (params.aligner != 'minimap2' && params.aligner != 'graphmap') {
-        exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap'"
+    if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
+        exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap2'"
     }
     if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
       exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
@@ -166,6 +182,7 @@ if (!params.skip_basecalling) {
     summary['Kit ID']             = params.kit ?: 'Not required'
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Guppy Config File']  = params.guppy_config ?: 'Unspecified'
+    summary['Guppy Model File']   = params.guppy_model ?:'Unspecified'
     summary['Guppy GPU Mode']     = params.guppy_gpu ? 'Yes' : 'No'
     summary['Guppy GPU Runners']  = params.guppy_gpu_runners
     summary['Guppy CPU Threads']  = params.guppy_cpu_threads
@@ -191,9 +208,10 @@ summary['Launch dir']             = workflow.launchDir
 summary['Working dir']            = workflow.workDir
 summary['Script dir']             = workflow.projectDir
 summary['User']                   = workflow.userName
-if (workflow.profile == 'awsbatch') {
+if (workflow.profile.contains('awsbatch')) {
     summary['AWS Region']         = params.awsregion
     summary['AWS Queue']          = params.awsqueue
+    summary['AWS CLI']            = params.awscli
 }
 summary['Config Profile'] = workflow.profile
 if (params.config_profile_description) summary['Config Description'] = params.config_profile_description
@@ -233,46 +251,43 @@ process CheckSampleSheet {
     """
 }
 
-// Function to see if fasta file exists in iGenomes
-def get_fasta(genome, genomeMap) {
-    def fasta = null
-    if (genome) {
-        if (genomeMap.containsKey(genome)) {
-            fasta = file(genomeMap[genome].fasta, checkIfExists: true)
+// Function to resolve fasta and gtf file if using iGenomes
+// Returns [ sample, fastq, barcode, fasta, gtf, is_transcripts, annotation_str ]
+def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
+
+    // Resolve fasta and gtf file if using iGenomes
+    def fasta = false
+    def gtf = false
+    if (sample.genome) {
+        if (genomeMap.containsKey(sample.genome)) {
+            fasta = file(genomeMap[sample.genome].fasta, checkIfExists: true)
+            gtf = file(genomeMap[sample.genome].gtf, checkIfExists: true)
         } else {
-            fasta = file(genome, checkIfExists: true)
+            fasta = file(sample.genome, checkIfExists: true)
         }
     }
-    return fasta
+
+    // Check if fastq and gtf file exists
+    fastq = sample.fastq ? file(sample.fastq, checkIfExists: true) : null
+    gtf = sample.gtf ? file(sample.gtf, checkIfExists: true) : gtf
+
+    return [ sample.sample, fastq, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString() ]
 }
 
-if (params.skip_basecalling) {
+if (!params.skip_basecalling) {
 
-    ch_guppy_version = Channel.empty()
-    ch_pycoqc_version = Channel.empty()
-
-    // Create channels = [genome_fasta, sample, fastq]
+    // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
-        .map { row -> [ get_fasta(row.genome, params.genomes), row.sample, file(row.fastq, checkIfExists: true) ] }
-        .into { ch_fastq_nanoplot;
-                ch_fastq_fastqc;
-                ch_fastq_index;
-                ch_fastq_align }
-
-} else {
-
-    // Create channels = [genome_fasta, barcode, sample]
-    ch_samplesheet_reformat
-        .splitCsv(header:true, sep:',')
-        .map { row -> [ get_fasta(row.genome, params.genomes), row.barcode, row.sample ] }
+        .map { get_sample_info(it, params.genomes) }
+        .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
         .into { ch_sample_info;
                 ch_sample_name }
 
     // Get sample name for single sample when --skip_demultiplexing
     ch_sample_name
         .first()
-        .map { it[-1] }
+        .map { it[0] }
         .set { ch_sample_name }
 
     /*
@@ -289,6 +304,8 @@ if (params.skip_basecalling) {
         input:
         file run_dir from ch_run_dir
         val name from ch_sample_name
+        file guppy_config from ch_guppy_config.ifEmpty([])
+        file guppy_model from ch_guppy_model.ifEmpty([])
 
         output:
         file "fastq/*.fastq.gz" into ch_guppy_fastq
@@ -299,8 +316,11 @@ if (params.skip_basecalling) {
 
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
-        config = params.guppy_config ? "--config $params.guppy_config" : "--flowcell $params.flowcell --kit $params.kit"
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
+        def config = "--flowcell $params.flowcell --kit $params.kit"
+        if (params.guppy_config) config = file(params.guppy_config).exists() ? "--config ./$guppy_config" : "--config $params.guppy_config"
+        def model = ""
+        if (params.guppy_model) model = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
         """
         guppy_basecaller \\
             --input_path $run_dir \\
@@ -308,8 +328,10 @@ if (params.skip_basecalling) {
             --records_per_fastq 0 \\
             --compress_fastq \\
             $barcode_kit \\
+            $proc_options \\
             $config \\
-            $proc_options
+            $model
+
         guppy_basecaller --version &> guppy.version
 
         ## Concatenate fastq files
@@ -328,67 +350,87 @@ if (params.skip_basecalling) {
         """
     }
 
-    /*
-     * STEP 2 - QC using PycoQC
-     */
-    process PycoQC {
-        tag "$summary_txt"
-        label 'process_low'
-        publishDir "${params.outdir}/pycoqc", mode: 'copy',
-            saveAs: { filename ->
-                          if (!filename.endsWith(".version")) filename
-                    }
-
-        when:
-        !params.skip_qc && !params.skip_pycoqc
-
-        input:
-        file summary_txt from ch_guppy_pycoqc_summary
-
-        output:
-        file "*.html"
-        file "*.version" into ch_pycoqc_version
-
-        script:
-        """
-        pycoQC -f $summary_txt -o pycoQC_output.html
-        pycoQC --version &> pycoqc.version
-        """
-    }
-
-    /*
-     * STEP 3 - QC using NanoPlot
-     */
-    process NanoPlotSummary {
-        tag "$summary_txt"
-        label 'process_low'
-        publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
-
-        when:
-        !params.skip_qc && !params.skip_nanoplot
-
-        input:
-        file summary_txt from ch_guppy_nanoplot_summary
-
-        output:
-        file "*.{png,html,txt,log}"
-
-        script:
-        """
-        NanoPlot -t $task.cpus --summary $summary_txt
-        """
-    }
-
-    // Create channels = [genome_fasta, sample, fastq]
+    // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
     ch_guppy_fastq
         .flatten()
         .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
         .join(ch_sample_info, by: 1) // join on barcode
-        .map { it -> [ it[2], it[3], it[1] ] }
+        .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
         .into { ch_fastq_nanoplot;
                 ch_fastq_fastqc;
+                ch_fastq_sizes;
+                ch_fastq_gtf;
                 ch_fastq_index;
                 ch_fastq_align }
+
+} else {
+
+    // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
+    ch_samplesheet_reformat
+        .splitCsv(header:true, sep:',')
+        .map { get_sample_info(it, params.genomes) }
+        .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
+        .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
+                ch_fastq_sizes;
+                ch_fastq_gtf;
+                ch_fastq_index;
+                ch_fastq_align }
+
+    ch_guppy_version = Channel.empty()
+    ch_guppy_pycoqc_summary = Channel.empty()
+    ch_guppy_nanoplot_summary = Channel.empty()
+}
+
+/*
+ * STEP 2 - QC using PycoQC
+ */
+process PycoQC {
+    tag "$summary_txt"
+    label 'process_low'
+    publishDir "${params.outdir}/pycoqc", mode: 'copy',
+        saveAs: { filename ->
+                      if (!filename.endsWith(".version")) filename
+                }
+
+    when:
+    !params.skip_basecalling && !params.skip_qc && !params.skip_pycoqc
+
+    input:
+    file summary_txt from ch_guppy_pycoqc_summary
+
+    output:
+    file "*.html"
+    file "*.version" into ch_pycoqc_version
+
+    script:
+    """
+    pycoQC -f $summary_txt -o pycoQC_output.html
+    pycoQC --version &> pycoqc.version
+    """
+}
+
+/*
+ * STEP 3 - QC using NanoPlot
+ */
+process NanoPlotSummary {
+    tag "$summary_txt"
+    label 'process_low'
+    publishDir "${params.outdir}/nanoplot/summary", mode: 'copy'
+
+    when:
+    !params.skip_basecalling && !params.skip_qc && !params.skip_nanoplot
+
+    input:
+    file summary_txt from ch_guppy_nanoplot_summary
+
+    output:
+    file "*.{png,html,txt,log}"
+
+    script:
+    """
+    NanoPlot -t $task.cpus --summary $summary_txt
+    """
 }
 
 /*
@@ -406,7 +448,7 @@ process NanoPlotFastQ {
     !params.skip_qc && !params.skip_nanoplot
 
     input:
-    set val(fasta), val(sample), file(fastq) from ch_fastq_nanoplot
+    set val(sample), file(fastq) from ch_fastq_nanoplot.map { ch -> [ ch[0], ch[1] ] }
 
     output:
     file "*.{png,html,txt,log}"
@@ -434,7 +476,7 @@ process FastQC {
     !params.skip_qc && !params.skip_fastqc
 
     input:
-    set val(fasta), val(sample), file(fastq) from ch_fastq_fastqc
+    set val(sample), file(fastq) from ch_fastq_fastqc.map { ch -> [ ch[0], ch[1] ] }
 
     output:
     file "*.{zip,html}" into ch_fastqc_mqc
@@ -448,24 +490,14 @@ process FastQC {
     """
 }
 
-if (params.skip_alignment) {
+if (!params.skip_alignment) {
 
-    ch_samtools_version = Channel.empty()
-    ch_minimap2_version = Channel.empty()
-    ch_graphmap_version = Channel.empty()
-    ch_bedtools_version = Channel.empty()
-    ch_sortbam_stats_mqc = Channel.empty()
-
-} else {
-
-    // Get unique list of all genome fasta files
-    ch_fastq_index
-        .map { it -> [ it[0].toString(), it[0] ] }  // [str(genome_fasta), genome_fasta]
-        .filter { it[1] != null }
+    // Get unique list of all fasta files
+    ch_fastq_sizes
+        .filter { it[2] }
+        .map { it -> [ it[2], it[-1].toString() ] }  // [ fasta, annotation_str ]
         .unique()
-        .into { ch_fasta_sizes;
-                ch_fasta_index;
-                ch_fasta_align }
+        .set { ch_fastq_sizes }
 
     /*
      * STEP 6 - Make chromosome sizes file
@@ -474,10 +506,10 @@ if (params.skip_alignment) {
         tag "$fasta"
 
         input:
-        set val(name), file(fasta) from ch_fasta_sizes
+        set file(fasta), val(name) from ch_fastq_sizes
 
         output:
-        set val(name), file("*.sizes") into ch_chrom_sizes
+        set file("*.sizes"), val(name) into ch_chrom_sizes
         file "*.version" into ch_samtools_version
 
         script:
@@ -488,77 +520,104 @@ if (params.skip_alignment) {
         """
     }
 
+    // Get unique list of all gtf files
+    ch_fastq_gtf
+        .filter { it[3] }
+        .map { it -> [ it[3], it[-1] ] }  // [ gtf, annotation_str ]
+        .unique()
+        .set { ch_fastq_gtf }
+
     /*
-     * STEP 7 - Create genome index
+     * STEP 7 - Convert GTF to BED12
+     */
+    process GTFToBED {
+        tag "$gtf"
+        label 'process_low'
+
+        input:
+        set file(gtf), val(name) from ch_fastq_gtf
+
+        output:
+        set file("*.bed"), val(name) into ch_gtf_bed
+
+        script: // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
+        """
+        gtf2bed $gtf > ${gtf.baseName}.bed
+        """
+    }
+
+    ch_chrom_sizes
+        .join(ch_gtf_bed, by: 1, remainder:true)
+        .map { it -> [ it[1], it[2], it[0] ] }
+        .cross(ch_fastq_index) { it -> it[-1] }
+        .flatten()
+        .collate(9)
+        .map { it -> [ it[5], it[0], it[6], it[1], it[7], it[8] ]} // [ fasta, sizes, gtf, bed, is_transcripts, annotation_str ]
+        .unique()
+        .set { ch_fasta_index }
+
+    /*
+     * STEP 8 - Create genome/transcriptome index
      */
     if (params.aligner == 'minimap2') {
-
         process MiniMap2Index {
-          tag "$fasta"
-          label 'process_medium'
+            tag "$fasta"
+            label 'process_medium'
 
-          input:
-          set val(name), file(fasta) from ch_fasta_index
+            input:
+            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
 
-          output:
-          set val(name), file("*.mmi") into ch_index
-          file "*.version" into ch_minimap2_version
+            output:
+            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.mmi"), val(annotation_str) into ch_index
+            file "*.version" into ch_minimap2_version
 
-          script:
-          minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
-          kmer = (params.protocol == 'directRNA') ? "-k14" : ""
-          stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-          """
-          minimap2 $minimap_preset $kmer $stranded -t $task.cpus -d ${fasta}.mmi $fasta
-          minimap2 --version &> minimap2.version
-          """
+            script:
+            preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
+            kmer = (params.protocol == 'directRNA') ? "-k14" : ""
+            stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+            // TODO pipeline: Should be staging bed file properly as an input
+            junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
+            """
+            minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
+            minimap2 --version &> minimap2.version
+            """
         }
-        ch_graphmap_version = Channel.empty()
+        ch_graphmap2_version = Channel.empty()
+    } else {
+        process GraphMap2Index {
+            tag "$fasta"
+            label 'process_high'
 
-    } else if (params.aligner == 'graphmap') {
+            input:
+            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
 
-        // TODO nf-core: Create graphmap index with GTF instead
-        // gtf = (params.protocol == 'directRNA' && params.gtf) ? "--gtf $gtf" : ""
-        process GraphMapIndex {
-          tag "$fasta"
-          label 'process_medium'
+            output:
+            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.gmidx"), val(annotation_str) into ch_index
+            file "*.version" into ch_graphmap2_version
 
-          input:
-          set val(name), file(fasta) from ch_fasta_index
-
-          output:
-          set val(name), file("*.gmidx") into ch_index
-          file "*.version" into ch_graphmap_version
-
-          script:
-          """
-          graphmap align -t $task.cpus -I -r $fasta
-          echo \$(graphmap 2>&1) > graphmap.version
-          """
+            script:
+            preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
+            // TODO pipeline: Should be staging gtf file properly as an input
+            junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
+            """
+            graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
+            echo \$(graphmap2 2>&1) > graphmap2.version
+            """
         }
         ch_minimap2_version = Channel.empty()
     }
 
-    // Convert genome_fasta to string from file to use cross()
-    ch_fastq_align
-        .map { it -> [ it[0].toString(), it[1], it[2] ] }
-        .set { ch_fastq_align }
-
-    // Create channels = [genome_fasta, index, sizes, sample, fastq]
-    ch_fasta_align
-        .join(ch_index)
-        .join(ch_chrom_sizes)
-        .cross(ch_fastq_align)
+    ch_index
+        .cross(ch_fastq_align) { it -> it[-1] }
         .flatten()
-        .collate(7)
-        .map { it -> [ it[1], it[2], it[3], it[5], it[6] ] }
-        .set { ch_fastq_align }
+        .collate(13)
+        .map { it -> [ it[7], it[8], it[0], it[1], it[2], it[3], it[4], it[5] ]} // [ sample, fastq, fasta, sizes, gtf, bed, is_transcripts, index ]
+        .set { ch_index }
 
     /*
-     * STEP 8 - Align fastq files
+     * STEP 9 - Align fastq files
      */
     if (params.aligner == 'minimap2') {
-
         process MiniMap2Align {
             tag "$sample"
             label 'process_medium'
@@ -570,23 +629,24 @@ if (params.skip_alignment) {
             }
 
             input:
-            set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
+            set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
+
 
             output:
-            set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
+            set val(sample), file(sizes), val(is_transcripts), file("*.sam") into ch_align_sam
 
             script:
-            minimap_preset = (params.protocol == 'DNA') ? "-ax map-ont" : "-ax splice"
+            preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
             kmer = (params.protocol == 'directRNA') ? "-k14" : ""
             stranded = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
+            // TODO pipeline: Should be staging bed file properly as an input
+            junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
             """
-            minimap2 $minimap_preset $kmer $stranded -t $task.cpus $index $fastq > ${sample}.sam
+            minimap2 $preset $kmer $stranded $junctions -t $task.cpus $index $fastq > ${sample}.sam
             """
         }
-
-    } else if (params.aligner == 'graphmap') {
-
-        process GraphMapAlign {
+    } else {
+        process GraphMap2Align {
             tag "$sample"
             label 'process_medium'
             if (params.save_align_intermeds) {
@@ -597,152 +657,161 @@ if (params.skip_alignment) {
             }
 
             input:
-            set file(fasta), file(index), file(sizes), val(sample), file(fastq) from ch_fastq_align
+            set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
 
             output:
-            set file(fasta), file(sizes), val(sample), file("*.sam") into ch_align_sam
+            set val(sample), file(sizes), val(is_transcripts), file("*.sam") into ch_align_sam
 
             script:
+            preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
+            // TODO pipeline: Should be staging gtf file properly as an input
+            junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
             """
-            graphmap align -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
+            graphmap2 align $preset $junctions -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
             """
         }
     }
-
-    /*
-     * STEP 9 - Coordinate sort BAM files
-     */
-    process SortBAM {
-        tag "$sample"
-        label 'process_medium'
-        publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
-            saveAs: { filename ->
-                          if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
-                          else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
-                          else if (filename.endsWith(".stats")) "samtools_stats/$filename"
-                          else if (filename.endsWith(".sorted.bam")) filename
-                          else if (filename.endsWith(".sorted.bam.bai")) filename
-                          else null
-                    }
-
-        input:
-        set file(fasta), file(sizes), val(sample), file(sam) from ch_align_sam
-
-        output:
-        set file(fasta), file(sizes), val(sample), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bed12,
-                                                                                       ch_sortbam_bedgraph
-        file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
-
-        script:
-        """
-        samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
-        samtools sort -@ $task.cpus -o ${sample}.sorted.bam -T $sample ${sample}.bam
-        samtools index ${sample}.sorted.bam
-        samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
-        samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
-        samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
-        """
-    }
-
-    /*
-     * STEP 10 - Convert BAM to BEDGraph
-     */
-    process BAMToBedGraph {
-        tag "$sample"
-        label 'process_medium'
-
-        when:
-        !params.skip_bigwig
-
-        input:
-        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bedgraph
-
-        output:
-        set file(fasta), file(sizes), val(sample), file("*.bedGraph") into ch_bedgraph
-        file "*.version" into ch_bedtools_version
-
-        script:
-        """
-        genomeCoverageBed -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
-        bedtools --version > bedtools.version
-        """
-    }
-
-    /*
-     * STEP 11 - Convert BEDGraph to BigWig
-     */
-    process BedGraphToBigWig {
-        tag "$sample"
-        label 'process_medium'
-        publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy',
-            saveAs: { filename ->
-                          if (filename.endsWith(".bigWig")) filename
-                    }
-        when:
-        !params.skip_bigwig
-
-        input:
-        set file(fasta), file(sizes), val(sample), file(bedgraph) from ch_bedgraph
-
-        output:
-        set file(fasta), file(sizes), val(sample), file("*.bigWig") into ch_bigwig
-
-        script:
-        """
-        bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
-        """
-    }
-
-    /*
-     * STEP 12 - Convert BAM to BED12
-     */
-    process BAMToBed12 {
-        tag "$sample"
-        label 'process_medium'
-
-        when:
-        !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
-
-        input:
-        set file(fasta), file(sizes), val(sample), file(bam) from ch_sortbam_bed12
-
-        output:
-        set file(fasta), file(sizes), val(sample), file("*.bed12") into ch_bed12
-
-        script:
-        """
-        bedtools bamtobed -bed12 -cigar -i ${bam[0]} | sort -k1,1 -k2,2n > ${sample}.bed12
-        """
-    }
-
-    /*
-     * STEP 13 - Convert BED12 to BigBED
-     */
-    process Bed12ToBigBed {
-        tag "$sample"
-        label 'process_medium'
-        publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy',
-            saveAs: { filename ->
-                          if (filename.endsWith(".bigBed")) filename
-                    }
-        when:
-        !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
-
-        input:
-        set file(fasta), file(sizes), val(sample), file(bed12) from ch_bed12
-
-        output:
-        set file(fasta), file(sizes), val(sample), file("*.bigBed") into ch_bigbed
-
-        script:
-        """
-        bedToBigBed $bed12 $sizes ${sample}.bigBed
-        """
-    }
+} else {
+    ch_samtools_version = Channel.empty()
+    ch_minimap2_version = Channel.empty()
+    ch_graphmap2_version = Channel.empty()
+    ch_align_sam = Channel.empty()
 }
 
 /*
- * STEP 14 - Output Description HTML
+ * STEP 10 - Coordinate sort BAM files
+ */
+process SortBAM {
+    tag "$sample"
+    label 'process_medium'
+    publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
+        saveAs: { filename ->
+                      if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
+                      else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
+                      else if (filename.endsWith(".stats")) "samtools_stats/$filename"
+                      else if (filename.endsWith(".sorted.bam")) filename
+                      else if (filename.endsWith(".sorted.bam.bai")) filename
+                      else null
+                }
+
+    when:
+    !params.skip_alignment
+
+    input:
+    set val(sample), file(sizes), val(is_transcripts), file(sam) from ch_align_sam
+
+    output:
+    set val(sample), file(sizes), val(is_transcripts), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
+                                                                                           ch_sortbam_bed12
+
+    file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
+
+    script:
+    """
+    samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
+    samtools sort -@ $task.cpus -o ${sample}.sorted.bam -T $sample ${sample}.bam
+    samtools index ${sample}.sorted.bam
+    samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
+    samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
+    samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
+    """
+}
+
+/*
+ * STEP 11 - Convert BAM to BEDGraph
+ */
+process BAMToBedGraph {
+    tag "$sample"
+    label 'process_medium'
+
+    when:
+    !params.skip_alignment && !params.skip_bigwig
+
+    input:
+    set val(sample), file(sizes), val(is_transcripts), file(bam) from ch_sortbam_bedgraph
+
+    output:
+    set val(sample), file(sizes), val(is_transcripts), file("*.bedGraph") into ch_bedgraph
+    file "*.version" into ch_bedtools_version
+
+    script:
+    split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
+    """
+    genomeCoverageBed $split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
+    bedtools --version > bedtools.version
+    """
+}
+
+/*
+ * STEP 12 - Convert BEDGraph to BigWig
+ */
+process BedGraphToBigWig {
+    tag "$sample"
+    label 'process_medium'
+    publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: 'copy'
+
+    when:
+    !params.skip_alignment && !params.skip_bigwig
+
+    input:
+    set val(sample), file(sizes), val(is_transcripts), file(bedgraph) from ch_bedgraph
+
+    output:
+    set val(sample), file(sizes), val(is_transcripts), file("*.bigWig") into ch_bigwig
+
+    script:
+    """
+    bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
+    """
+}
+
+/*
+ * STEP 13 - Convert BAM to BED12
+ */
+process BAMToBed12 {
+    tag "$sample"
+    label 'process_medium'
+
+    when:
+    !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
+
+    input:
+    set val(sample), file(sizes), val(is_transcripts), file(bam) from ch_sortbam_bed12
+
+    output:
+    set val(sample), file(sizes), val(is_transcripts), file("*.bed12") into ch_bed12
+
+    script:
+    """
+    bedtools bamtobed -bed12 -cigar -i ${bam[0]} | sort -k1,1 -k2,2n > ${sample}.bed12
+    """
+}
+
+/*
+ * STEP 14 - Convert BED12 to BigBED
+ */
+process Bed12ToBigBed {
+    tag "$sample"
+    label 'process_medium'
+    publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: 'copy'
+
+    when:
+    !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
+
+    input:
+    set val(sample), file(sizes), val(is_transcripts), file(bed12) from ch_bed12
+
+    output:
+    set val(sample), file(sizes), val(is_transcripts), file("*.bigBed") into ch_bigbed
+
+    script:
+    """
+    bedToBigBed $bed12 $sizes ${sample}.bigBed
+    """
+}
+
+/*
+ * STEP 15 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
@@ -781,7 +850,7 @@ process get_software_versions {
     file fastqc from ch_fastqc_version.first().ifEmpty([])
     file samtools from ch_samtools_version.first().ifEmpty([])
     file minimap2 from ch_minimap2_version.first().ifEmpty([])
-    file graphmap from ch_graphmap_version.first().ifEmpty([])
+    file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
     file bedtools from ch_bedtools_version.first().ifEmpty([])
     file rmarkdown from ch_rmarkdown_version.collect()
 
@@ -877,7 +946,6 @@ workflow.onComplete {
     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
 
-    // TODO nf-core: If not using MultiQC, strip out this code (including params.max_multiqc_email_size)
     // On success try attach the multiqc report
     def mqc_report = null
     try {
