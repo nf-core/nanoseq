@@ -46,6 +46,8 @@ def helpMessage() {
       --gpu_cluster_options [str]     Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
       --skip_basecalling [bool]       Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]    Skip demultiplexing with Guppy (Default: false)
+      --qcat_min_score [int]          Minimum scores of '--min-score' used for qcat (Default: 60)
+      --qcat_detect_middle            Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
 
     Alignment
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
@@ -135,6 +137,38 @@ if (!params.skip_basecalling) {
     }
 }
 
+if (!params.skip_demultiplexing && params.skip_basecalling) {
+
+
+    if (workflow.profile.contains('test')) {
+        process GetTestData {
+
+            output:
+            file "test-datasets/fastq/$barcoded/" into ch_run_dir
+
+            script:
+            barcoded = workflow.profile.contains('test_nonbc') ? "nonbarcoded" : "barcoded"
+            """
+            git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
+            """
+        }
+    } else {
+        if (params.run_dir) { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
+    }
+
+} else {
+    // Skip demultiplexing if barcode kit isnt provided
+    if (!params.barcode_kit) {
+        params.skip_demultiplexing = true
+        def qcatBarcodeKitList = ["Auto","PBC096","RBK004","NBD104/NBD114","PBK004/LWB001","RBK001","RAB204","VMK001","PBC001","NBD114","NBD103/NBD104","DUAL","RPB004/RLB001"]
+
+        if (!{assert qcatBarcodeKitList.contains(params.barcode_kit)}) {
+        exit 1, "Invalid barcode kit option for qcat: ${params.barcode_kit}. Valid options: ${qcatBarcodeKitList}"
+        }
+    }
+}
+
+
 if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap2'"
@@ -188,6 +222,11 @@ if (!params.skip_basecalling) {
     summary['Guppy CPU Threads']  = params.guppy_cpu_threads
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
+}
+if(!params.skip_demultiplexing && params.skip_basecalling) {
+    summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
+    summary['Qcat min score']     = params.qcat_min_score ?: '60'
+    summary['Qcat detect middle']     = params.qcat_detect_middle ? 'Yes': 'No'
 }
 summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
 if (!params.skip_alignment) {
@@ -380,6 +419,105 @@ if (!params.skip_basecalling) {
     ch_guppy_version = Channel.empty()
     ch_guppy_pycoqc_summary = Channel.empty()
     ch_guppy_nanoplot_summary = Channel.empty()
+}
+
+// Do this step when un-demultiplexed fastq file is provided 
+if (!params.skip_demultiplexing && params.skip_basecalling) {
+
+    // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
+    ch_samplesheet_reformat
+        .splitCsv(header:true, sep:',')
+        .map { get_sample_info(it, params.genomes) }
+        .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
+        .into { ch_sample_info;
+                ch_sample_name }
+
+    // Get sample name for single sample when --skip_demultiplexing
+    ch_sample_name
+        .first()
+        .map { it[0] }
+        .set { ch_sample_name }
+
+    /*
+     * STEP 1.1 - Demultipexing using qcat 
+     */
+    
+    process Qcat {
+        tag "$run_dir"
+        label 'process_medium'
+        publishDir path: "${params.outdir}/qcat", mode: 'copy',
+            saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                    }
+
+        input:
+        file run_dir from ch_run_dir
+        val name from ch_sample_name
+
+
+        output:
+        file "fastq/*.fastq" into ch_qcat_fastq
+        file "*.version" into ch_qcat_version
+
+        script:
+        barcode_kit = params.barcode_kit ? "--kit $params.barcode_kit" : ""
+        min_score = params.qcat_min_score ? "--min-score $params.qcat_min_score" : ""
+        detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
+         """
+        cat \\
+             $run_dir/*.fastq \\
+            | qcat  \\
+            -b ./demultiplexing \\
+            $barcode_kit \\
+            $min_score \\
+            $detect_middle
+        qcat --version &> qcat.version
+        ## Concatenate fastq files
+        mkdir fastq
+        cd demultiplexing
+        if [ "\$(find . -type d -name "barcode*" )" != "" ]
+        then
+            for dir in barcode*/
+            do
+                dir=\${dir%*/}
+                cat \$dir/*.fastq | gzip > ../fastq/\$dir_misorunclassified.fastq.gz
+            done
+        else
+            cat *.fastq.gz | gzip > ../fastq/${name}.fastq.gz
+        fi
+        """
+    }
+
+    // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
+    ch_qcat_fastq
+        .flatten()
+        .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
+        .join(ch_sample_info, by: 1) // join on barcode
+        .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
+        .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
+                ch_fastq_sizes;
+                ch_fastq_gtf;
+                ch_fastq_index;
+                ch_fastq_align }
+
+} else {
+
+    // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
+    ch_samplesheet_reformat
+        .splitCsv(header:true, sep:',')
+        .map { get_sample_info(it, params.genomes) }
+        .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
+        .into { ch_fastq_nanoplot;
+                ch_fastq_fastqc;
+                ch_fastq_sizes;
+                ch_fastq_gtf;
+                ch_fastq_index;
+                ch_fastq_align }
+
+    ch_qcat_version = Channel.empty()
+    ch_qcat_pycoqc_summary = Channel.empty()
+    ch_qcat_nanoplot_summary = Channel.empty()
 }
 
 /*
