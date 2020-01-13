@@ -140,30 +140,20 @@ if (!params.skip_basecalling) {
 if (!params.skip_demultiplexing && params.skip_basecalling) {
 
 
-    if (workflow.profile.contains('test')) {
-        process GetTestData {
-
-            output:
-            file "test-datasets/fastq/$barcoded/" into ch_run_dir
-
-            script:
-            barcoded = workflow.profile.contains('test_nonbc') ? "nonbarcoded" : "barcoded"
-            """
-            git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
-            """
-        }
-    } else {
+    
         if (params.run_dir) { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
-    }
+    
 
 } else {
     // Skip demultiplexing if barcode kit isnt provided
     if (!params.barcode_kit) {
         params.skip_demultiplexing = true
+       
+    }else{
         def qcatBarcodeKitList = ["Auto","PBC096","RBK004","NBD104/NBD114","PBK004/LWB001","RBK001","RAB204","VMK001","PBC001","NBD114","NBD103/NBD104","DUAL","RPB004/RLB001"]
 
-        if (!{assert qcatBarcodeKitList.contains(params.barcode_kit)}) {
-        exit 1, "Invalid barcode kit option for qcat: ${params.barcode_kit}. Valid options: ${qcatBarcodeKitList}"
+        if (!(qcatBarcodeKitList.contains(params.barcode_kit))) {
+              exit 1, "Invalid barcode kit option for qcat: ${params.barcode_kit}. Valid options: ${qcatBarcodeKitList}"
         }
     }
 }
@@ -429,14 +419,8 @@ if (!params.skip_demultiplexing && params.skip_basecalling) {
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
         .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
-        .into { ch_sample_info;
-                ch_sample_name }
+        .set { ch_sample_info}
 
-    // Get sample name for single sample when --skip_demultiplexing
-    ch_sample_name
-        .first()
-        .map { it[0] }
-        .set { ch_sample_name }
 
     /*
      * STEP 1.1 - Demultipexing using qcat 
@@ -452,46 +436,49 @@ if (!params.skip_demultiplexing && params.skip_basecalling) {
 
         input:
         file run_dir from ch_run_dir
-        val name from ch_sample_name
-
+        
+        
 
         output:
-        file "fastq/*.fastq" into ch_qcat_fastq
+        file "fastq/*.fastq.gz" into ch_qcat_fastq
         file "*.version" into ch_qcat_version
 
         script:
         barcode_kit = params.barcode_kit ? "--kit $params.barcode_kit" : ""
         min_score = params.qcat_min_score ? "--min-score $params.qcat_min_score" : ""
         detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
-         """
-        cat \\
-             $run_dir/*.fastq \\
-            | qcat  \\
-            -b ./demultiplexing \\
+        """
+        
+        qcat  \\
+            -f $run_dir \\
+            -b ./fastq \\
             $barcode_kit \\
             $min_score \\
             $detect_middle
         qcat --version &> qcat.version
+        
+         
         ## Concatenate fastq files
-        mkdir fastq
-        cd demultiplexing
-        if [ "\$(find . -type d -name "barcode*" )" != "" ]
+        cd fastq
+        if [ "\$(find . -type f -name "barcode*" )" != "" ]
         then
-            for dir in barcode*/
-            do
-                dir=\${dir%*/}
-                cat \$dir/*.fastq | gzip > ../fastq/\$dir_misorunclassified.fastq.gz
-            done
-        else
-            cat *.fastq.gz | gzip > ../fastq/${name}.fastq.gz
-        fi
+           
+           for file in *  
+           do
+               file=\${file%*}
+               gzip \$file 
+           done
+       fi
+     
         """
     }
-
+    
+   
+     
     // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
     ch_qcat_fastq
         .flatten()
-        .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
+        .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.'))] } // [barcode001.fastq, barcode001]
         .join(ch_sample_info, by: 1) // join on barcode
         .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
         .into { ch_fastq_nanoplot;
