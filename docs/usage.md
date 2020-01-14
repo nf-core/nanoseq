@@ -141,14 +141,17 @@ Sample1,,1,mm10
 Sample2,,2,mm10
 Sample3,,3,hg19
 Sample4,,4,/path/to/local/reference/genome.fa
+
 ```
->When multiplexed fastq file is provided where demultiplexing is required without basecalling, the sample sheet can also be specified using this format. But you will need to specify the fastq file in `--run_dir ` instead of just the directory in this case.
+
+> When multiplexed fastq file is provided where demultiplexing is required without basecalling, the sample sheet can also be specified using this format. But you will need to specify the fastq file in `--run_dir` instead of just the directory in this case.
 
 #### With basecalling but not demultiplexing
 
 ```bash
 sample,fastq,barcode,genome
 Sample1,,1,mm10
+
 ```
 
 > You will have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
@@ -162,12 +165,11 @@ Sample2,SAM101A2.fastq.gz,,mm10
 Sample3,SAM101A3.fastq.gz,,hg19
 Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
 
-
 ```
+
 > You will have to specify the `--skip_basecalling` parameter if you wish to bypass the basecalling and demultiplexing steps.
 
-
-| Column   | Description                                                                                                                |
+| Column   | Description                                                                                                               |
 |----------|----------------------------------------------------------------------------------------------------------------------------|
 | `sample` | Sample name without spaces.                                                                                                |
 | `fastq`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
@@ -254,6 +256,7 @@ Skip demultiplexing with Guppy or with qcat
 Specify the minimum quality score for qcat (e.g., '--qcat_min_score 0') (default: 60, max: 100, min: 0) 
 
 ### `--qcat_detect_middle`
+
 Search adapthers in the whole read
 
 ## Alignment
