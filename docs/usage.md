@@ -198,20 +198,20 @@ Kit used to perform the sequencing e.g. `SQK-LSK109`. Not required if `--guppy_c
 
 Barcode kit used to perform the sequencing e.g. `SQK-PBK004`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the barcoding kit that can be recognised by `qcat`.
 
-| `qcat` barcode kit specifications | description                                                                    |  
-|-----------------------------------|--------------------------------------------------------------------------------|
-| `Auto`                            | Auto detect barcoding kit                                                      | 
-| `RBK001`                          | Rapid barcoding kit                                                            | 
-| `RBK004`                          | Rapid barcoding kit v4                                                         | 
-| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                        | 
-| `NBD114`                          | Native barcoding kit with barcodes 13-24                                       | 
-| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                        | 
-| `PBC001`                          | PCR barcoding kits with 12 barcodes                                            | 
-| `PBC096`                          | PCR barcoding kits with 96 barcodes                                            | 
-| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit  | 
-| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                 | 
-| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                              | 
-| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                          | 
+| `qcat` barcode kit specifications | description                                                                   | 
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `Auto`                            | Auto detect barcoding kit                                                     |
+| `RBK001`                          | Rapid barcoding kit                                                           |
+| `RBK004`                          | Rapid barcoding kit v4                                                        |
+| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |
+| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |
+| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |
+| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |
+| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |
+| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |
+| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |
+| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |
+| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |
 
 ### `--guppy_config`
 
@@ -252,7 +252,7 @@ Skip demultiplexing with Guppy or with qcat
 
 ### `--qcat_min_score`
 
-Specify the minimum quality score for qcat (e.g., '--qcat_min_score 0') (default: 60, max: 100, min: 0) 
+Specify the minimum quality score for qcat (e.g., '--qcat_min_score 0', default: 60, max: 100, min: 0)
 
 ### `--qcat_detect_middle`
 
