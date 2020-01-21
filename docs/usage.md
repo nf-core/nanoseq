@@ -213,7 +213,6 @@ Barcode kit used to perform the sequencing e.g. `SQK-PBK004`. When `--skip_basec
 | `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                              | 
 | `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                          | 
 
-
 ### `--guppy_config`
 
 Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with `--flowcell` and `--kit`.
