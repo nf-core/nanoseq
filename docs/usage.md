@@ -198,7 +198,7 @@ Kit used to perform the sequencing e.g. `SQK-LSK109`. Not required if `--guppy_c
 
 Barcode kit used to perform the sequencing e.g. `SQK-PBK004`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the barcoding kit that can be recognised by `qcat`.
 
-| `qcat` barcode kit specifications | description                                                                   | 
+| `qcat` barcode kit specifications | description                                                                   |
 |-----------------------------------|-------------------------------------------------------------------------------|
 | `Auto`                            | Auto detect barcoding kit                                                     |
 | `RBK001`                          | Rapid barcoding kit                                                           |
