@@ -414,7 +414,8 @@ if (!params.skip_basecalling) {
 }
 
 // Do this step when un-demultiplexed fastq file is provided 
-if (!params.skip_demultiplexing && params.skip_basecalling) {
+if (params.skip_basecalling) {
+if (!params.skip_demultiplexing) {
 
     // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
     ch_samplesheet_reformat
@@ -507,6 +508,8 @@ if (!params.skip_demultiplexing && params.skip_basecalling) {
     ch_qcat_version = Channel.empty()
     ch_qcat_pycoqc_summary = Channel.empty()
     ch_qcat_nanoplot_summary = Channel.empty()
+}
+
 }
 
 /*
