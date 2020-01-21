@@ -150,10 +150,12 @@ if (!params.skip_demultiplexing && params.skip_basecalling) {
         params.skip_demultiplexing = true
        
     }else{
+     if(!params.skip_demultiplexing && params.skip_basecalling){
         def qcatBarcodeKitList = ["Auto","PBC096","RBK004","NBD104/NBD114","PBK004/LWB001","RBK001","RAB204","VMK001","PBC001","NBD114","NBD103/NBD104","DUAL","RPB004/RLB001"]
 
         if (!(qcatBarcodeKitList.contains(params.barcode_kit))) {
               exit 1, "Invalid barcode kit option for qcat: ${params.barcode_kit}. Valid options: ${qcatBarcodeKitList}"
+           }
         }
     }
 }
