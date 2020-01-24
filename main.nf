@@ -380,6 +380,8 @@ if (!params.skip_basecalling) {
                 ch_fastq_gtf;
                 ch_fastq_index;
                 ch_fastq_align }
+                
+    ch_qcat_version = Channel.empty()
 
 } else {
     if (!params.skip_demultiplexing) {
