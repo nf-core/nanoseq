@@ -130,36 +130,19 @@ if (!params.skip_basecalling) {
     }
 
 } else {
-    // Cannot demultiplex without performing basecalling
-    // Skip demultiplexing if barcode kit isnt provided
-    if (!params.barcode_kit) {
-        params.skip_demultiplexing = true
-    }
-}
+    if (!params.skip_demultiplexing) {
+        def qcatBarcodeKitList = ['Auto', 'PBC096', 'RBK004', 'NBD104/NBD114',
+                                  'PBK004/LWB001', 'RBK001', 'RAB204', 'VMK001',
+                                  'PBC001', 'NBD114', 'NBD103/NBD104', 'DUAL', 'RPB004/RLB001']
 
-if (!params.skip_demultiplexing && params.skip_basecalling) {
-
-
-
-        if (params.run_dir) { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
-
-
-} else {
-    // Skip demultiplexing if barcode kit isnt provided
-    if (!params.barcode_kit) {
-        params.skip_demultiplexing = true
-
-    }else{
-     if(!params.skip_demultiplexing && params.skip_basecalling){
-        def qcatBarcodeKitList = ["Auto","PBC096","RBK004","NBD104/NBD114","PBK004/LWB001","RBK001","RAB204","VMK001","PBC001","NBD114","NBD103/NBD104","DUAL","RPB004/RLB001"]
-
-        if (!(qcatBarcodeKitList.contains(params.barcode_kit))) {
-              exit 1, "Invalid barcode kit option for qcat: ${params.barcode_kit}. Valid options: ${qcatBarcodeKitList}"
-           }
+        if (params.barcode_kit && qcatBarcodeKitList.contains(params.barcode_kit)) {
+            //if (params.run_dir) { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
+            def a = '1'
+        } else {
+            exit 1, "Please provide a barcode kit to demultiplex with qcat. Valid options: ${qcatBarcodeKitList}"
         }
     }
 }
-
 
 if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
@@ -215,7 +198,7 @@ if (!params.skip_basecalling) {
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
 }
-if (!params.skip_demultiplexing && params.skip_basecalling) {
+if (params.skip_basecalling && !params.skip_demultiplexing) {
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Qcat Min Score']     = params.qcat_min_score
     summary['Qcat Detect Middle'] = params.qcat_detect_middle ? 'Yes': 'No'
@@ -228,7 +211,7 @@ if (!params.skip_alignment) {
 summary['Skip BigBed']            = params.skip_bigbed ? 'Yes' : 'No'
 summary['Skip BigWig']            = params.skip_bigwig ? 'Yes' : 'No'
 summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
-summary['Skip pycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
+summary['Skip PycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
 summary['Skip NanoPlot']          = params.skip_nanoplot ? 'Yes' : 'No'
 summary['Skip FastQC']            = params.skip_fastqc ? 'Yes' : 'No'
 summary['Skip MultiQC']           = params.skip_multiqc ? 'Yes' : 'No'
@@ -413,104 +396,102 @@ if (!params.skip_basecalling) {
     ch_guppy_nanoplot_summary = Channel.empty()
 }
 
-// Do this step when un-demultiplexed fastq file is provided
-if (params.skip_basecalling) {
-if (!params.skip_demultiplexing) {
-
-    // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
-    ch_samplesheet_reformat
-        .splitCsv(header:true, sep:',')
-        .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
-        .set { ch_sample_info}
-
-
-    /*
-     * STEP 1.1 - Demultipexing using qcat
-     */
-
-    process Qcat {
-        tag "$run_dir"
-        label 'process_medium'
-        publishDir path: "${params.outdir}/qcat", mode: 'copy',
-            saveAs: { filename ->
-                          if (!filename.endsWith(".version")) filename
-                    }
-
-        input:
-        file run_dir from ch_run_dir
-
-
-
-        output:
-        file "fastq/*.fastq.gz" into ch_qcat_fastq
-        file "*.version" into ch_qcat_version
-
-        script:
-        barcode_kit = params.barcode_kit ? "--kit $params.barcode_kit" : ""
-        min_score = params.qcat_min_score ? "--min-score $params.qcat_min_score" : ""
-        detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
-        """
-
-        qcat  \\
-            -f $run_dir \\
-            -b ./fastq \\
-            $barcode_kit \\
-            $min_score \\
-            $detect_middle
-        qcat --version &> qcat.version
-
-
-        ## Concatenate fastq files
-        cd fastq
-        if [ "\$(find . -type f -name "barcode*" )" != "" ]
-        then
-
-           for file in *
-           do
-               file=\${file%*}
-               gzip \$file
-           done
-       fi
-
-        """
-    }
-
-
-
-    // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
-    ch_qcat_fastq
-        .flatten()
-        .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.'))] } // [barcode001.fastq, barcode001]
-        .join(ch_sample_info, by: 1) // join on barcode
-        .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
-        .into { ch_fastq_nanoplot;
-                ch_fastq_fastqc;
-                ch_fastq_sizes;
-                ch_fastq_gtf;
-                ch_fastq_index;
-                ch_fastq_align }
-
-} else {
-
-    // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
-    ch_samplesheet_reformat
-        .splitCsv(header:true, sep:',')
-        .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
-        .into { ch_fastq_nanoplot;
-                ch_fastq_fastqc;
-                ch_fastq_sizes;
-                ch_fastq_gtf;
-                ch_fastq_index;
-                ch_fastq_align }
-
-    ch_qcat_version = Channel.empty()
-    ch_qcat_pycoqc_summary = Channel.empty()
-    ch_qcat_nanoplot_summary = Channel.empty()
-}
-
-}
+// // Do this step when un-demultiplexed fastq file is provided
+// if (params.skip_basecalling) {
+// if (!params.skip_demultiplexing) {
+//
+//     // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
+//     ch_samplesheet_reformat
+//         .splitCsv(header:true, sep:',')
+//         .map { get_sample_info(it, params.genomes) }
+//         .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
+//         .set { ch_sample_info}
+//
+//
+//     /*
+//      * STEP 1.1 - Demultipexing using qcat
+//      */
+//
+//     process Qcat {
+//         tag "$run_dir"
+//         label 'process_medium'
+//         publishDir path: "${params.outdir}/qcat", mode: 'copy',
+//             saveAs: { filename ->
+//                           if (!filename.endsWith(".version")) filename
+//                     }
+//
+//         input:
+//         file run_dir from ch_run_dir
+//
+//
+//
+//         output:
+//         file "fastq/*.fastq.gz" into ch_qcat_fastq
+//         file "*.version" into ch_qcat_version
+//
+//         script:
+//         barcode_kit = params.barcode_kit ? "--kit $params.barcode_kit" : ""
+//         min_score = params.qcat_min_score ? "--min-score $params.qcat_min_score" : ""
+//         detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
+//         """
+//
+//         qcat  \\
+//             -f $run_dir \\
+//             -b ./fastq \\
+//             $barcode_kit \\
+//             $min_score \\
+//             $detect_middle
+//         qcat --version &> qcat.version
+//
+//
+//         ## Concatenate fastq files
+//         cd fastq
+//         if [ "\$(find . -type f -name "barcode*" )" != "" ]
+//         then
+//
+//            for file in *
+//            do
+//                file=\${file%*}
+//                gzip \$file
+//            done
+//        fi
+//
+//         """
+//     }
+//
+//
+//
+//     // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
+//     ch_qcat_fastq
+//         .flatten()
+//         .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.'))] } // [barcode001.fastq, barcode001]
+//         .join(ch_sample_info, by: 1) // join on barcode
+//         .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
+//         .into { ch_fastq_nanoplot;
+//                 ch_fastq_fastqc;
+//                 ch_fastq_sizes;
+//                 ch_fastq_gtf;
+//                 ch_fastq_index;
+//                 ch_fastq_align }
+//
+// } else {
+//
+//     // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
+//     ch_samplesheet_reformat
+//         .splitCsv(header:true, sep:',')
+//         .map { get_sample_info(it, params.genomes) }
+//         .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
+//         .into { ch_fastq_nanoplot;
+//                 ch_fastq_fastqc;
+//                 ch_fastq_sizes;
+//                 ch_fastq_gtf;
+//                 ch_fastq_index;
+//                 ch_fastq_align }
+//
+//     ch_qcat_version = Channel.empty()
+// }
+//
+// }
 
 /*
  * STEP 2 - QC using PycoQC
