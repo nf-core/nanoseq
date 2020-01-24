@@ -44,11 +44,11 @@ def helpMessage() {
       --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (Default: 1)
       --gpu_device [str]              Basecalling device specified to Guppy in GPU mode using '--device' (Default: 'auto')
       --gpu_cluster_options [str]     Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
+      --qcat_min_score [int]          Minimum scores of '--min-score' used for qcat (Default: 60)
+      --qcat_detect_middle [bool]     Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
       --skip_basecalling [bool]       Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]    Skip demultiplexing with Guppy (Default: false)
-      --qcat_min_score [int]          Minimum scores of '--min-score' used for qcat (Default: 60)
-      --qcat_detect_middle            Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
-
+      
     Alignment
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
       --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap2) (Default: 'minimap2')
@@ -140,15 +140,15 @@ if (!params.skip_basecalling) {
 if (!params.skip_demultiplexing && params.skip_basecalling) {
 
 
-    
+
         if (params.run_dir) { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
-    
+
 
 } else {
     // Skip demultiplexing if barcode kit isnt provided
     if (!params.barcode_kit) {
         params.skip_demultiplexing = true
-       
+
     }else{
      if(!params.skip_demultiplexing && params.skip_basecalling){
         def qcatBarcodeKitList = ["Auto","PBC096","RBK004","NBD104/NBD114","PBK004/LWB001","RBK001","RAB204","VMK001","PBC001","NBD114","NBD103/NBD104","DUAL","RPB004/RLB001"]
@@ -413,7 +413,7 @@ if (!params.skip_basecalling) {
     ch_guppy_nanoplot_summary = Channel.empty()
 }
 
-// Do this step when un-demultiplexed fastq file is provided 
+// Do this step when un-demultiplexed fastq file is provided
 if (params.skip_basecalling) {
 if (!params.skip_demultiplexing) {
 
@@ -426,9 +426,9 @@ if (!params.skip_demultiplexing) {
 
 
     /*
-     * STEP 1.1 - Demultipexing using qcat 
+     * STEP 1.1 - Demultipexing using qcat
      */
-    
+
     process Qcat {
         tag "$run_dir"
         label 'process_medium'
@@ -439,8 +439,8 @@ if (!params.skip_demultiplexing) {
 
         input:
         file run_dir from ch_run_dir
-        
-        
+
+
 
         output:
         file "fastq/*.fastq.gz" into ch_qcat_fastq
@@ -451,7 +451,7 @@ if (!params.skip_demultiplexing) {
         min_score = params.qcat_min_score ? "--min-score $params.qcat_min_score" : ""
         detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
         """
-        
+
         qcat  \\
             -f $run_dir \\
             -b ./fastq \\
@@ -459,25 +459,25 @@ if (!params.skip_demultiplexing) {
             $min_score \\
             $detect_middle
         qcat --version &> qcat.version
-        
-         
+
+
         ## Concatenate fastq files
         cd fastq
         if [ "\$(find . -type f -name "barcode*" )" != "" ]
         then
-           
-           for file in *  
+
+           for file in *
            do
                file=\${file%*}
-               gzip \$file 
+               gzip \$file
            done
        fi
-     
+
         """
     }
-    
-   
-     
+
+
+
     // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
     ch_qcat_fastq
         .flatten()
