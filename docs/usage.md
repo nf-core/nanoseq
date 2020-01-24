@@ -184,7 +184,7 @@ Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
 ### `--run_dir`
 
-Path to Nanopore run directory e.g. `fastq_pass/`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the path to fastq file e.g. `fastq/multiplexed_sample.fastq`
+Path to Nanopore run directory e.g. `fastq_pass/`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the path to fastq file e.g. `fastq/multiplexed_sample.fastq.gz`
 
 ### `--flowcell`
 
@@ -242,6 +242,14 @@ Basecalling device specified to Guppy in GPU mode using `--device` (default: 'au
 
 Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
 
+### `--qcat_min_score`
+
+Specify the minimum quality score for `qcat` in the range 0-100 (default: 60)
+
+### `--qcat_detect_middle`
+
+Search for adapters in the whole read by applying the '--detect-middle' parameter in `qcat` (default: false)
+
 ### `--skip_basecalling`
 
 Skip basecalling with Guppy
@@ -249,14 +257,6 @@ Skip basecalling with Guppy
 ### `--skip_demultiplexing`
 
 Skip demultiplexing with Guppy or with qcat
-
-### `--qcat_min_score`
-
-Specify the minimum quality score for qcat (e.g., '--qcat_min_score 0', default: 60, max: 100, min: 0)
-
-### `--qcat_detect_middle`
-
-Search adapthers in the whole read
 
 ## Alignment
 
