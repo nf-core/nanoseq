@@ -48,7 +48,7 @@ def helpMessage() {
       --qcat_detect_middle [bool]     Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
       --skip_basecalling [bool]       Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]    Skip demultiplexing with Guppy (Default: false)
-      
+
     Alignment
       --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
       --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap2) (Default: 'minimap2')
@@ -215,10 +215,10 @@ if (!params.skip_basecalling) {
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
 }
-if(!params.skip_demultiplexing && params.skip_basecalling) {
+if (!params.skip_demultiplexing && params.skip_basecalling) {
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
-    summary['Qcat min score']     = params.qcat_min_score ?: '60'
-    summary['Qcat detect middle']     = params.qcat_detect_middle ? 'Yes': 'No'
+    summary['Qcat Min Score']     = params.qcat_min_score
+    summary['Qcat Detect Middle'] = params.qcat_detect_middle ? 'Yes': 'No'
 }
 summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
 if (!params.skip_alignment) {
