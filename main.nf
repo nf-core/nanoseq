@@ -50,8 +50,8 @@ def helpMessage() {
       --skip_demultiplexing [bool]    Skip demultiplexing with Guppy (Default: false)
 
     Alignment
-      --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
       --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap2) (Default: 'minimap2')
+      --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
