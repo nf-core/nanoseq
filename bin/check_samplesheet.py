@@ -24,9 +24,6 @@ argParser = argparse.ArgumentParser(description=Description, epilog=Epilog)
 ## REQUIRED PARAMETERS
 argParser.add_argument('DESIGN_FILE_IN', help="Input design file.")
 argParser.add_argument('DESIGN_FILE_OUT', help="Output design file.")
-
-## OPTIONAL PARAMETERS
-argParser.add_argument('-sd', '--skip_demultiplexing', dest="SKIP_DEMULTIPLEXING", help="Whether demultipexing is to be performed (default: False).",action='store_true')
 args = argParser.parse_args()
 
 ############################################
@@ -118,13 +115,6 @@ while True:
     else:
         fin.close()
         break
-
-if args.SKIP_DEMULTIPLEXING:
-    if len(outLines) != 1:
-        print("{}: Only a single-line can be specified in samplesheet without barcode information!".format(ERROR_STR))
-        sys.exit(1)
-    ## USE SAMPLE NAME AS BARCODE WHEN NOT DEMULTIPLEXING
-    outLines[0][2] = outLines[0][0]
 
 ## WRITE TO FILE
 fout = open(args.DESIGN_FILE_OUT,'w')

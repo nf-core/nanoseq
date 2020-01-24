@@ -260,12 +260,8 @@ process CheckSampleSheet {
     file "*.csv" into ch_samplesheet_reformat
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
-    demultiplex = params.skip_demultiplexing ? '--skip_demultiplexing' : ''
     """
-    check_samplesheet.py \\
-        $samplesheet \\
-        samplesheet_reformat.csv \\
-        $demultiplex
+    check_samplesheet.py $samplesheet samplesheet_reformat.csv
     """
 }
 
@@ -380,7 +376,7 @@ if (!params.skip_basecalling) {
                 ch_fastq_gtf;
                 ch_fastq_index;
                 ch_fastq_align }
-                
+
     ch_qcat_version = Channel.empty()
 
 } else {
