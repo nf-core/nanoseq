@@ -207,18 +207,18 @@ if (params.skip_basecalling && !params.skip_demultiplexing) {
     summary['Qcat Min Score']     = params.qcat_min_score
     summary['Qcat Detect Middle'] = params.qcat_detect_middle ? 'Yes': 'No'
 }
-summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
 if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
 }
-summary['Skip BigBed']            = params.skip_bigbed ? 'Yes' : 'No'
-summary['Skip BigWig']            = params.skip_bigwig ? 'Yes' : 'No'
-summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
-summary['Skip PycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
-summary['Skip NanoPlot']          = params.skip_nanoplot ? 'Yes' : 'No'
-summary['Skip FastQC']            = params.skip_fastqc ? 'Yes' : 'No'
-summary['Skip MultiQC']           = params.skip_multiqc ? 'Yes' : 'No'
+if (params.skip_alignment) summary['Skip Alignment'] = 'Yes'
+if (params.skip_bigbed)    summary['Skip BigBed']    = 'Yes'
+if (params.skip_bigwig)    summary['Skip BigWig']    = 'Yes'
+if (params.skip_qc)        summary['Skip QC']        = 'Yes'
+if (params.skip_pycoqc)    summary['Skip PycoQC']    = 'Yes'
+if (params.skip_nanoplot)  summary['Skip NanoPlot']  = 'Yes'
+if (params.skip_fastqc)    summary['Skip FastQC']    = 'Yes'
+if (params.skip_multiqc)   summary['Skip MultiQC']   = 'Yes'
 summary['Max Resources']          = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']             = params.outdir
