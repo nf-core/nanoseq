@@ -42,7 +42,7 @@ iv. Start running your own analysis!
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol DNA \
-    --run_dir ./fast5/ \
+    --input_path ./fast5/ \
     --flowcell FLO-MIN106 \
     --kit SQK-LSK109 \
     --barcode_kit SQK-PBK004 \
