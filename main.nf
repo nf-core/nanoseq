@@ -20,7 +20,7 @@ def helpMessage() {
       nextflow run nf-core/nanoseq \
           --input samplesheet.csv \
           --protocol DNA \
-          --run_dir ./fast5/ \
+          --input_path ./fast5/ \
           --flowcell FLO-MIN106 \
           --kit SQK-LSK109 \
           --barcode_kit SQK-PBK004 \
@@ -33,7 +33,7 @@ def helpMessage() {
                                       Available: docker, singularity, awsbatch, test and more.
 
     Basecalling/Demultiplexing
-      --run_dir [file]                Path to Nanopore run directory (e.g. fastq_pass/)
+      --input_path [file]             Path to Nanopore run directory (e.g. fastq_pass/) or a basecalled fastq file that requires demultiplexing
       --flowcell [str]                Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
       --kit [str]                     Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
       --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
@@ -96,13 +96,13 @@ def ch_guppy_config = Channel.empty()
 if (!params.skip_basecalling) {
 
     // TODO pipeline: Add in a check to see if running offline
-    // Pre-download test-dataset to get files for '--run_dir' parameter
+    // Pre-download test-dataset to get files for '--input_path' parameter
     // Nextflow is unable to recursively download directories via HTTPS
     if (workflow.profile.contains('test')) {
         process GetTestData {
 
             output:
-            file "test-datasets/fast5/$barcoded/" into ch_run_dir
+            file "test-datasets/fast5/$barcoded/" into ch_input_path
 
             script:
             barcoded = workflow.profile.contains('test_nonbc') ? "nonbarcoded" : "barcoded"
@@ -111,7 +111,7 @@ if (!params.skip_basecalling) {
             """
         }
     } else {
-        if (params.run_dir) { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
+        if (params.input_path) { ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true) } else { exit 1, "Please specify a valid run directory to perform basecalling!" }
     }
 
     // Need to stage guppy_config properly depending on whether its a file or string
@@ -140,8 +140,7 @@ if (!params.skip_basecalling) {
                                   'RPB004/RLB001', 'PBK004/LWB001', 'RAB204', 'VMK001', 'DUAL']
 
         if (params.barcode_kit && qcatBarcodeKitList.contains(params.barcode_kit)) {
-            //if (params.run_dir) { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
-            def a = '1'
+            if (params.input_path) { ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true) } else { exit 1, "Please specify a valid input fastq file to perform demultiplexing!" }
         } else {
             exit 1, "Please provide a barcode kit to demultiplex with qcat. Valid options: ${qcatBarcodeKitList}"
         }
@@ -190,7 +189,7 @@ summary['Stranded']               = (params.stranded || params.protocol == 'dire
 summary['Skip Basecalling']       = params.skip_basecalling ? 'Yes' : 'No'
 summary['Skip Demultiplexing']    = params.skip_demultiplexing ? 'Yes' : 'No'
 if (!params.skip_basecalling) {
-    summary['Run Dir']            = params.run_dir
+    summary['Run Dir']            = params.input_path
     summary['Flowcell ID']        = params.flowcell ?: 'Not required'
     summary['Kit ID']             = params.kit ?: 'Not required'
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
@@ -203,6 +202,7 @@ if (!params.skip_basecalling) {
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
 }
 if (params.skip_basecalling && !params.skip_demultiplexing) {
+    summary['Input FastQ File']   = params.input_path
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Qcat Min Score']     = params.qcat_min_score
     summary['Qcat Detect Middle'] = params.qcat_detect_middle ? 'Yes': 'No'
@@ -292,15 +292,15 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     return [ sample.sample, fastq, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString() ]
 }
 
-if (!params.skip_basecalling) {
+// Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
+ch_samplesheet_reformat
+    .splitCsv(header:true, sep:',')
+    .map { get_sample_info(it, params.genomes) }
+    .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
+    .into { ch_sample_info;
+            ch_sample_name }
 
-    // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
-    ch_samplesheet_reformat
-        .splitCsv(header:true, sep:',')
-        .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
-        .into { ch_sample_info;
-                ch_sample_name }
+if (!params.skip_basecalling) {
 
     // Get sample name for single sample when --skip_demultiplexing
     ch_sample_name
@@ -312,7 +312,7 @@ if (!params.skip_basecalling) {
      * STEP 1 - Basecalling and demultipexing using Guppy
      */
     process Guppy {
-        tag "$run_dir"
+        tag "$input_path"
         label 'process_high'
         publishDir path: "${params.outdir}/guppy", mode: 'copy',
             saveAs: { filename ->
@@ -320,13 +320,13 @@ if (!params.skip_basecalling) {
                     }
 
         input:
-        file run_dir from ch_run_dir
+        file input_path from ch_input_path
         val name from ch_sample_name
         file guppy_config from ch_guppy_config.ifEmpty([])
         file guppy_model from ch_guppy_model.ifEmpty([])
 
         output:
-        file "fastq/*.fastq.gz" into ch_guppy_fastq
+        file "fastq/*.fastq.gz" into ch_fastq
         file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
                                       ch_guppy_nanoplot_summary
         file "basecalling/*"
@@ -341,7 +341,7 @@ if (!params.skip_basecalling) {
         if (params.guppy_model) model = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
         """
         guppy_basecaller \\
-            --input_path $run_dir \\
+            --input_path $input_path \\
             --save_path ./basecalling \\
             --records_per_fastq 0 \\
             --compress_fastq \\
@@ -369,7 +369,7 @@ if (!params.skip_basecalling) {
     }
 
     // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
-    ch_guppy_fastq
+    ch_fastq
         .flatten()
         .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
         .join(ch_sample_info, by: 1) // join on barcode
@@ -384,18 +384,11 @@ if (!params.skip_basecalling) {
 } else {
     if (!params.skip_demultiplexing) {
 
-        // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
-        ch_samplesheet_reformat
-            .splitCsv(header:true, sep:',')
-            .map { get_sample_info(it, params.genomes) }
-            .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
-            .into { ch_sample_info}
-
         /*
          * STEP 1 - Demultipexing using qcat
          */
         process Qcat {
-            //tag "$run_dir"
+            tag "$input_path"
             label 'process_medium'
             publishDir path: "${params.outdir}/qcat", mode: 'copy',
                 saveAs: { filename ->
@@ -403,17 +396,17 @@ if (!params.skip_basecalling) {
                         }
 
             input:
-            //file run_dir from ch_run_dir
+            file input_path from ch_input_path
 
             output:
-            file "fastq/*.fastq.gz" into ch_qcat_fastq
+            file "fastq/*.fastq.gz" into ch_fastq
             file "*.version" into ch_qcat_version
 
             script:
             detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
             """
             qcat  \\
-                -f $run_dir \\
+                -f $input_path \\
                 -b ./fastq \\
                 --kit $params.barcode_kit \\
                 --min-score $params.min_score \\
@@ -434,7 +427,7 @@ if (!params.skip_basecalling) {
         }
 
         // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
-        ch_qcat_fastq
+        ch_fastq
             .flatten()
             .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.'))] } // [barcode001.fastq, barcode001]
             .join(ch_sample_info, by: 1) // join on barcode
