@@ -25,6 +25,8 @@
   * [`--guppy_cpu_threads`](#--guppy_cpu_threads)
   * [`--gpu_device`](#--gpu_device)
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
+  * [`--qcat_min_score`](#--qcat_min_score)
+  * [`--qcat_detect_middle`](#--qcat_detect_middle)
   * [`--skip_basecalling`](#--skip_basecalling)
   * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
