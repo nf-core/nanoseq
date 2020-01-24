@@ -14,7 +14,7 @@
   * [`--input`](#--input)
   * [`--protocol`](#--protocol)
 * [Basecalling](#basecalling)
-  * [`--run_dir`](#--run_dir)
+  * [`--input_path`](#--input_path)
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
@@ -77,7 +77,7 @@ A typical command for running the pipeline is as follows:
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol DNA \
-    --run_dir ./fast5/ \
+    --input_path ./fast5/ \
     --flowcell FLO-MIN106 \
     --kit SQK-LSK109 \
     --barcode_kit SQK-PBK004 \
@@ -144,7 +144,7 @@ Sample4,,4,/path/to/local/reference/genome.fa
 
 ```
 
-> When multiplexed fastq file is provided where demultiplexing is required without basecalling, the sample sheet can also be specified using this format. But you will need to specify the fastq file in `--run_dir` instead of just the directory in this case.
+> When multiplexed fastq file is provided where demultiplexing is required without basecalling, the sample sheet can also be specified using this format. But you will need to specify the fastq file in `--input_path` instead of just the directory in this case.
 
 #### With basecalling but not demultiplexing
 
@@ -182,7 +182,7 @@ Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
 ## Basecalling
 
-### `--run_dir`
+### `--input_path`
 
 Path to Nanopore run directory e.g. `fastq_pass/`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the path to fastq file e.g. `fastq/multiplexed_sample.fastq.gz`
 
