@@ -6,7 +6,7 @@ on: [push, pull_request]
 jobs:
   test:
     env:
-      NXF_VER: '{% raw %}${{ matrix.nxf_ver }}{% endraw %}'
+      NXF_VER: ${{ matrix.nxf_ver }}
       NXF_ANSI_LOG: false
     runs-on: ubuntu-18.04
     strategy:
@@ -19,7 +19,7 @@ jobs:
         run: |
           wget -qO- get.nextflow.io | bash
           sudo mv nextflow /usr/local/bin/
-      #- name: Pull image (Cant pull standard single image for this pipeline as we are using individual BioContainers)
+      #- name: Pull image
       #  run: |
       #    docker pull nfcore/nanoseq:dev && docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
       - name: Basecall and demultiplex (minimap2)
