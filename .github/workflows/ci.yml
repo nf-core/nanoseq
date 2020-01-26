@@ -31,9 +31,9 @@ jobs:
       - name: Basecall and no demultiplexing (minimap2)
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_bc_nodx,docker
-      #- name: No Basecalling and demultiplexing (minimap2)
-      #  run: |
-      #    nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_dx,docker
+      - name: No Basecalling and demultiplexing (minimap2)
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_dx,docker
       - name: No Basecalling and no demultiplexing (minimap2)
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_nodx,docker
