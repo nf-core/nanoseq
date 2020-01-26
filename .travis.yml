@@ -45,8 +45,8 @@ script:
   - nextflow run ${TRAVIS_BUILD_DIR} -ansi-log false -profile test,docker --aligner graphmap2
   # Basecall and no demultiplexing (minimap2)
   - nextflow run ${TRAVIS_BUILD_DIR} -ansi-log false -profile test_bc_nodx,docker
-  ## No Basecalling and demultiplexing (minimap2)
-  ##- nextflow run ${TRAVIS_BUILD_DIR} -ansi-log false -profile test_nobc_dx,docker
+  # No Basecalling and demultiplexing (minimap2)
+  - nextflow run ${TRAVIS_BUILD_DIR} -ansi-log false -profile test_nobc_dx,docker
   # No Basecalling and no demultiplexing (minimap2)
   - nextflow run ${TRAVIS_BUILD_DIR} -ansi-log false -profile test_nobc_nodx,docker
   # No Basecalling and no demultiplexing (minimap2, skip_alignment)
