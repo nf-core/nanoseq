@@ -403,24 +403,25 @@ if (!params.skip_basecalling) {
             script:
             detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
             """
+            ## Unzip fastq file
+            ## qcat doesnt support zipped files yet
+            FILE=$input_path
+            if [[ \$FILE == *.gz ]]
+            then
+                zcat $input_path > unzipped.fastq
+                FILE=unzipped.fastq
+            fi
+
             qcat  \\
-                -f $input_path \\
+                -f \$FILE \\
                 -b ./fastq \\
                 --kit $params.barcode_kit \\
-                --min-score $params.min_score \\
+                --min-score $params.qcat_min_score \\
                 $detect_middle
             qcat --version &> qcat.version
 
-            ## Concatenate fastq files
-            cd fastq
-            if [ "\$(find . -type f -name "barcode*" )" != "" ]
-            then
-                for file in *
-                do
-                    file=\${file%*}
-                    gzip \$file
-                done
-            fi
+            ## Zip fastq files
+            gzip fastq/*
             """
         }
 
