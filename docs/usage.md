@@ -14,7 +14,7 @@
   * [`--input`](#--input)
   * [`--protocol`](#--protocol)
 * [Basecalling](#basecalling)
-  * [`--run_dir`](#--run_dir)
+  * [`--input_path`](#--input_path)
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
@@ -25,11 +25,13 @@
   * [`--guppy_cpu_threads`](#--guppy_cpu_threads)
   * [`--gpu_device`](#--gpu_device)
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
+  * [`--qcat_min_score`](#--qcat_min_score)
+  * [`--qcat_detect_middle`](#--qcat_detect_middle)
   * [`--skip_basecalling`](#--skip_basecalling)
   * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
-  * [`--stranded`](#--stranded)
   * [`--aligner`](#--aligner)
+  * [`--stranded`](#--stranded)
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
 * [Coverage tracks](#coverage-tracks)
@@ -77,7 +79,7 @@ A typical command for running the pipeline is as follows:
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol DNA \
-    --run_dir ./fast5/ \
+    --input_path ./fast5/ \
     --flowcell FLO-MIN106 \
     --kit SQK-LSK109 \
     --barcode_kit SQK-PBK004 \
@@ -144,7 +146,7 @@ Sample4,,4,/path/to/local/reference/genome.fa
 
 ```
 
-> When multiplexed fastq file is provided where demultiplexing is required without basecalling, the sample sheet can also be specified using this format. But you will need to specify the fastq file in `--run_dir` instead of just the directory in this case.
+> When multiplexed fastq file is provided where demultiplexing is required without basecalling, the sample sheet can also be specified using this format. But you will need to specify the fastq file in `--input_path` instead of just the directory in this case.
 
 #### With basecalling but not demultiplexing
 
@@ -182,9 +184,9 @@ Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
 ## Basecalling
 
-### `--run_dir`
+### `--input_path`
 
-Path to Nanopore run directory e.g. `fastq_pass/`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the path to fastq file e.g. `fastq/multiplexed_sample.fastq`
+Path to Nanopore run directory e.g. `fastq_pass/`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the path to fastq file e.g. `fastq/multiplexed_sample.fastq.gz`
 
 ### `--flowcell`
 
@@ -242,6 +244,14 @@ Basecalling device specified to Guppy in GPU mode using `--device` (default: 'au
 
 Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
 
+### `--qcat_min_score`
+
+Specify the minimum quality score for `qcat` in the range 0-100 (default: 60)
+
+### `--qcat_detect_middle`
+
+Search for adapters in the whole read by applying the '--detect-middle' parameter in `qcat` (default: false)
+
 ### `--skip_basecalling`
 
 Skip basecalling with Guppy
@@ -249,14 +259,6 @@ Skip basecalling with Guppy
 ### `--skip_demultiplexing`
 
 Skip demultiplexing with Guppy or with qcat
-
-### `--qcat_min_score`
-
-Specify the minimum quality score for qcat (e.g., '--qcat_min_score 0', default: 60, max: 100, min: 0)
-
-### `--qcat_detect_middle`
-
-Search adapthers in the whole read
 
 ## Alignment
 

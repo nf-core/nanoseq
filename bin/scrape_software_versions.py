@@ -9,6 +9,7 @@ regexes = {
     'nf-core/nanoseq': ['pipeline.version', r"(\S+)"],
     'Nextflow': ['nextflow.version', r"(\S+)"],
     'guppy': ['guppy.version', r"Version (\S+)"],
+    'qcat': ['qcat.version',  r"qcat (\S+)"],
     'pycoQC': ['pycoqc.version', r"pycoQC v(\S+)"],
     'NanoPlot': ['nanoplot.version', r"NanoPlot (\S+)"],
     'FastQC': ['fastqc.version', r"FastQC v(\S+)"],
@@ -17,12 +18,14 @@ regexes = {
     'Samtools': ['samtools.version', r"samtools (\S+)"],
     'BEDTools': ['v_bedtools.txt', r"bedtools v(\S+)"],
     'rmarkdown': ['rmarkdown.version', r"(\S+)"],
-    'MultiQC': ['multiqc.version', r"multiqc, version (\S+)"],
+    'MultiQC': ['multiqc.version', r"multiqc, version (\S+)"]
 }
+
 results = OrderedDict()
 results['nf-core/nanoseq'] = '<span style="color:#999999;\">N/A</span>'
 results['Nextflow'] = '<span style="color:#999999;\">N/A</span>'
 results['guppy'] = '<span style="color:#999999;\">N/A</span>'
+results['qcat'] = '<span style="color:#999999;\">N/A</span>'
 results['pycoQC'] = '<span style="color:#999999;\">N/A</span>'
 results['NanoPlot'] = '<span style="color:#999999;\">N/A</span>'
 results['FastQC'] = '<span style="color:#999999;\">N/A</span>'
