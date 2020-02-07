@@ -2,8 +2,6 @@
 
 ## Table of contents
 
-<!-- Install Atom plugin markdown-toc-auto for this ToC to auto-update on save -->
-<!-- TOC START min:2 max:3 link:true asterisk:true update:true -->
 * [Table of contents](#table-of-contents)
 * [Introduction](#introduction)
 * [Running the pipeline](#running-the-pipeline)
@@ -14,7 +12,7 @@
   * [`--input`](#--input)
   * [`--protocol`](#--protocol)
 * [Basecalling](#basecalling)
-  * [`--run_dir`](#--run_dir)
+  * [`--input_path`](#--input_path)
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
@@ -25,11 +23,13 @@
   * [`--guppy_cpu_threads`](#--guppy_cpu_threads)
   * [`--gpu_device`](#--gpu_device)
   * [`--gpu_cluster_options`](#--gpu_cluster_options)
+  * [`--qcat_min_score`](#--qcat_min_score)
+  * [`--qcat_detect_middle`](#--qcat_detect_middle)
   * [`--skip_basecalling`](#--skip_basecalling)
   * [`--skip_demultiplexing`](#--skip_demultiplexing)
 * [Alignments](#alignments)
-  * [`--stranded`](#--stranded)
   * [`--aligner`](#--aligner)
+  * [`--stranded`](#--stranded)
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
 * [Coverage tracks](#coverage-tracks)
@@ -71,13 +71,13 @@ NXF_OPTS='-Xms1g -Xmx4g'
 
 ## Running the pipeline
 
-A typical command for running the pipeline is as follows:
+The typical command for running the pipeline is as follows:
 
 ```bash
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol DNA \
-    --run_dir ./fast5/ \
+    --input_path ./fast5/ \
     --flowcell FLO-MIN106 \
     --kit SQK-LSK109 \
     --barcode_kit SQK-PBK004 \
@@ -115,9 +115,16 @@ This version number will be logged in reports when you run the pipeline, so that
 
 ### `-profile`
 
-Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments. Note that multiple profiles can be loaded, for example: `-profile docker` - the order of arguments is important!
+Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments.
 
-If `-profile` is not specified at all the pipeline will be run locally and expects all software to be installed and available on the `PATH`.
+Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity, Conda) - see below.
+
+The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to see if your system is available in these configs please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
+
+Note that multiple profiles can be loaded, for example: `-profile test,docker` - the order of arguments is important!
+They are loaded in sequence, so later profiles can overwrite earlier profiles.
+
+If `-profile` is not specified, the pipeline will run locally and expect all software to be installed and available on the `PATH`. This is _not_ recommended.
 
 * `docker`
   * A generic configuration profile to be used with [Docker](http://docker.com/)
@@ -141,13 +148,17 @@ Sample1,,1,mm10
 Sample2,,2,mm10
 Sample3,,3,hg19
 Sample4,,4,/path/to/local/reference/genome.fa
+
 ```
+
+> When multiplexed fastq file is provided where demultiplexing is required without basecalling, the sample sheet can also be specified using this format. But you will need to specify the fastq file in `--input_path` instead of just the directory in this case.
 
 #### With basecalling but not demultiplexing
 
 ```bash
 sample,fastq,barcode,genome
 Sample1,,1,mm10
+
 ```
 
 > You will have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
@@ -161,11 +172,11 @@ Sample2,SAM101A2.fastq.gz,,mm10
 Sample3,SAM101A3.fastq.gz,,hg19
 Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
 
-> You will have to specify the `--skip_basecalling` parameter if you wish to bypass the basecalling and demultiplexing steps.
-
 ```
 
-| Column   | Description                                                                                                                |
+> You will have to specify the `--skip_basecalling` parameter if you wish to bypass the basecalling and demultiplexing steps.
+
+| Column   | Description                                                                                                               |
 |----------|----------------------------------------------------------------------------------------------------------------------------|
 | `sample` | Sample name without spaces.                                                                                                |
 | `fastq`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
@@ -178,9 +189,9 @@ Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
 ## Basecalling
 
-### `--run_dir`
+### `--input_path`
 
-Path to Nanopore run directory e.g. `fastq_pass/`
+Path to Nanopore run directory e.g. `fastq_pass/`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the path to fastq file e.g. `fastq/multiplexed_sample.fastq.gz`
 
 ### `--flowcell`
 
@@ -192,7 +203,22 @@ Kit used to perform the sequencing e.g. `SQK-LSK109`. Not required if `--guppy_c
 
 ### `--barcode_kit`
 
-Barcode kit used to perform the sequencing e.g. `SQK-PBK004`
+Barcode kit used to perform the sequencing e.g. `SQK-PBK004`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the barcoding kit that can be recognised by `qcat`.
+
+| `qcat` barcode kit specifications | description                                                                   |
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `Auto`                            | Auto detect barcoding kit                                                     |
+| `RBK001`                          | Rapid barcoding kit                                                           |
+| `RBK004`                          | Rapid barcoding kit v4                                                        |
+| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |
+| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |
+| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |
+| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |
+| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |
+| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |
+| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |
+| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |
+| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |
 
 ### `--guppy_config`
 
@@ -223,13 +249,21 @@ Basecalling device specified to Guppy in GPU mode using `--device` (default: 'au
 
 Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
 
+### `--qcat_min_score`
+
+Specify the minimum quality score for `qcat` in the range 0-100 (default: 60)
+
+### `--qcat_detect_middle`
+
+Search for adapters in the whole read by applying the '--detect-middle' parameter in `qcat` (default: false)
+
 ### `--skip_basecalling`
 
 Skip basecalling with Guppy
 
 ### `--skip_demultiplexing`
 
-Skip demultiplexing with Guppy
+Skip demultiplexing with Guppy or with qcat
 
 ## Alignment
 
@@ -290,7 +324,7 @@ Wherever process-specific requirements are set in the pipeline, the default valu
 
 If you are likely to be running `nf-core` pipelines regularly it may be a good idea to request that your custom config file is uploaded to the `nf-core/configs` git repository. Before you do this please can you test that the config file works with your pipeline of choice using the `-c` parameter (see definition below). You can then create a pull request to the `nf-core/configs` repository with the addition of your config file, associated documentation file (see examples in [`nf-core/configs/docs`](https://github.com/nf-core/configs/tree/master/docs)), and amending [`nfcore_custom.config`](https://github.com/nf-core/configs/blob/master/nfcore_custom.config) to include your custom profile.
 
-If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack/).
+If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack).
 
 ## AWS Batch specific parameters
 
@@ -302,7 +336,7 @@ The JobQueue that you intend to use on AWS Batch.
 
 ### `--awsregion`
 
-The AWS region to run your job in. Default is set to `eu-west-1` but can be adjusted to your needs.
+The AWS region in which to run your job. Default is set to `eu-west-1` but can be adjusted to your needs.
 
 ### `--awscli`
 
@@ -328,7 +362,7 @@ This works exactly as with `--email`, except emails are only sent if the workflo
 
 ### `--max_multiqc_email_size`
 
-Theshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB).
+Threshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB).
 
 ### `-name`
 
@@ -356,7 +390,7 @@ Note - you can use this to override pipeline defaults.
 
 ### `--custom_config_version`
 
-Provide git commit id for custom Institutional configs hosted at `nf-core/configs`. This was implemented for reproducibility purposes. Default is set to `master`.
+Provide git commit id for custom Institutional configs hosted at `nf-core/configs`. This was implemented for reproducibility purposes. Default: `master`.
 
 ```bash
 ## Download and use config file with following git commid id

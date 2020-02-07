@@ -20,7 +20,7 @@ def helpMessage() {
       nextflow run nf-core/nanoseq \
           --input samplesheet.csv \
           --protocol DNA \
-          --run_dir ./fast5/ \
+          --input_path ./fast5/ \
           --flowcell FLO-MIN106 \
           --kit SQK-LSK109 \
           --barcode_kit SQK-PBK004 \
@@ -33,7 +33,7 @@ def helpMessage() {
                                       Available: docker, singularity, awsbatch, test and more.
 
     Basecalling/Demultiplexing
-      --run_dir [file]                Path to Nanopore run directory (e.g. fastq_pass/)
+      --input_path [file]             Path to Nanopore run directory (e.g. fastq_pass/) or a basecalled fastq file that requires demultiplexing
       --flowcell [str]                Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
       --kit [str]                     Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
       --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
@@ -44,12 +44,14 @@ def helpMessage() {
       --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (Default: 1)
       --gpu_device [str]              Basecalling device specified to Guppy in GPU mode using '--device' (Default: 'auto')
       --gpu_cluster_options [str]     Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
+      --qcat_min_score [int]          Minimum scores of '--min-score' used for qcat (Default: 60)
+      --qcat_detect_middle [bool]     Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
       --skip_basecalling [bool]       Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]    Skip demultiplexing with Guppy (Default: false)
 
     Alignment
-      --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
       --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap2) (Default: 'minimap2')
+      --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
       --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
@@ -94,13 +96,13 @@ def ch_guppy_config = Channel.empty()
 if (!params.skip_basecalling) {
 
     // TODO pipeline: Add in a check to see if running offline
-    // Pre-download test-dataset to get files for '--run_dir' parameter
+    // Pre-download test-dataset to get files for '--input_path' parameter
     // Nextflow is unable to recursively download directories via HTTPS
     if (workflow.profile.contains('test')) {
         process GetTestData {
 
             output:
-            file "test-datasets/fast5/$barcoded/" into ch_run_dir
+            file "test-datasets/fast5/$barcoded/" into ch_input_path
 
             script:
             barcoded = workflow.profile.contains('test_nonbc') ? "nonbarcoded" : "barcoded"
@@ -109,7 +111,7 @@ if (!params.skip_basecalling) {
             """
         }
     } else {
-        if (params.run_dir) { ch_run_dir = Channel.fromPath(params.run_dir, checkIfExists: true) } else { exit 1, "Please specify a valid run directory!" }
+        if (params.input_path) { ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true) } else { exit 1, "Please specify a valid run directory to perform basecalling!" }
     }
 
     // Need to stage guppy_config properly depending on whether its a file or string
@@ -128,10 +130,20 @@ if (!params.skip_basecalling) {
     }
 
 } else {
-    // Cannot demultiplex without performing basecalling
-    // Skip demultiplexing if barcode kit isnt provided
-    if (!params.barcode_kit) {
-        params.skip_demultiplexing = true
+    if (!params.skip_demultiplexing) {
+        if (!params.barcode_kit) {
+            params.barcode_kit = 'Auto'
+        }
+
+        def qcatBarcodeKitList = ['Auto', 'RBK001', 'RBK004', 'NBD103/NBD104',
+                                  'NBD114', 'NBD104/NBD114', 'PBC001', 'PBC096',
+                                  'RPB004/RLB001', 'PBK004/LWB001', 'RAB204', 'VMK001', 'DUAL']
+
+        if (params.barcode_kit && qcatBarcodeKitList.contains(params.barcode_kit)) {
+            if (params.input_path) { ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true) } else { exit 1, "Please specify a valid input fastq file to perform demultiplexing!" }
+        } else {
+            exit 1, "Please provide a barcode kit to demultiplex with qcat. Valid options: ${qcatBarcodeKitList}"
+        }
     }
 }
 
@@ -177,7 +189,7 @@ summary['Stranded']               = (params.stranded || params.protocol == 'dire
 summary['Skip Basecalling']       = params.skip_basecalling ? 'Yes' : 'No'
 summary['Skip Demultiplexing']    = params.skip_demultiplexing ? 'Yes' : 'No'
 if (!params.skip_basecalling) {
-    summary['Run Dir']            = params.run_dir
+    summary['Run Dir']            = params.input_path
     summary['Flowcell ID']        = params.flowcell ?: 'Not required'
     summary['Kit ID']             = params.kit ?: 'Not required'
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
@@ -189,18 +201,24 @@ if (!params.skip_basecalling) {
     summary['Guppy GPU Device']   = params.gpu_device ?: 'Unspecified'
     summary['Guppy GPU Options']  = params.gpu_cluster_options ?: 'Unspecified'
 }
-summary['Skip Alignment']         = params.skip_alignment ? 'Yes' : 'No'
+if (params.skip_basecalling && !params.skip_demultiplexing) {
+    summary['Input FastQ File']   = params.input_path
+    summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
+    summary['Qcat Min Score']     = params.qcat_min_score
+    summary['Qcat Detect Middle'] = params.qcat_detect_middle ? 'Yes': 'No'
+}
 if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
 }
-summary['Skip BigBed']            = params.skip_bigbed ? 'Yes' : 'No'
-summary['Skip BigWig']            = params.skip_bigwig ? 'Yes' : 'No'
-summary['Skip QC']                = params.skip_qc ? 'Yes' : 'No'
-summary['Skip pycoQC']            = params.skip_pycoqc ? 'Yes' : 'No'
-summary['Skip NanoPlot']          = params.skip_nanoplot ? 'Yes' : 'No'
-summary['Skip FastQC']            = params.skip_fastqc ? 'Yes' : 'No'
-summary['Skip MultiQC']           = params.skip_multiqc ? 'Yes' : 'No'
+if (params.skip_alignment) summary['Skip Alignment'] = 'Yes'
+if (params.skip_bigbed)    summary['Skip BigBed']    = 'Yes'
+if (params.skip_bigwig)    summary['Skip BigWig']    = 'Yes'
+if (params.skip_qc)        summary['Skip QC']        = 'Yes'
+if (params.skip_pycoqc)    summary['Skip PycoQC']    = 'Yes'
+if (params.skip_nanoplot)  summary['Skip NanoPlot']  = 'Yes'
+if (params.skip_fastqc)    summary['Skip FastQC']    = 'Yes'
+if (params.skip_multiqc)   summary['Skip MultiQC']   = 'Yes'
 summary['Max Resources']          = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']             = params.outdir
@@ -242,12 +260,8 @@ process CheckSampleSheet {
     file "*.csv" into ch_samplesheet_reformat
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
-    demultiplex = params.skip_demultiplexing ? '--skip_demultiplexing' : ''
     """
-    check_samplesheet.py \\
-        $samplesheet \\
-        samplesheet_reformat.csv \\
-        $demultiplex
+    check_samplesheet.py $samplesheet samplesheet_reformat.csv
     """
 }
 
@@ -274,15 +288,15 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     return [ sample.sample, fastq, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString() ]
 }
 
-if (!params.skip_basecalling) {
+// Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
+ch_samplesheet_reformat
+    .splitCsv(header:true, sep:',')
+    .map { get_sample_info(it, params.genomes) }
+    .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
+    .into { ch_sample_info;
+            ch_sample_name }
 
-    // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
-    ch_samplesheet_reformat
-        .splitCsv(header:true, sep:',')
-        .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
-        .into { ch_sample_info;
-                ch_sample_name }
+if (!params.skip_basecalling) {
 
     // Get sample name for single sample when --skip_demultiplexing
     ch_sample_name
@@ -294,7 +308,7 @@ if (!params.skip_basecalling) {
      * STEP 1 - Basecalling and demultipexing using Guppy
      */
     process Guppy {
-        tag "$run_dir"
+        tag "$input_path"
         label 'process_high'
         publishDir path: "${params.outdir}/guppy", mode: 'copy',
             saveAs: { filename ->
@@ -302,17 +316,17 @@ if (!params.skip_basecalling) {
                     }
 
         input:
-        file run_dir from ch_run_dir
+        file input_path from ch_input_path
         val name from ch_sample_name
         file guppy_config from ch_guppy_config.ifEmpty([])
         file guppy_model from ch_guppy_model.ifEmpty([])
 
         output:
-        file "fastq/*.fastq.gz" into ch_guppy_fastq
+        file "fastq/*.fastq.gz" into ch_fastq
         file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
                                       ch_guppy_nanoplot_summary
         file "basecalling/*"
-        file "*.version" into ch_guppy_version
+        file "v_guppy.txt" into ch_guppy_version
 
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
@@ -323,7 +337,7 @@ if (!params.skip_basecalling) {
         if (params.guppy_model) model = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
         """
         guppy_basecaller \\
-            --input_path $run_dir \\
+            --input_path $input_path \\
             --save_path ./basecalling \\
             --records_per_fastq 0 \\
             --compress_fastq \\
@@ -332,7 +346,7 @@ if (!params.skip_basecalling) {
             $config \\
             $model
 
-        guppy_basecaller --version &> guppy.version
+        guppy_basecaller --version &> v_guppy.txt
 
         ## Concatenate fastq files
         mkdir fastq
@@ -351,7 +365,7 @@ if (!params.skip_basecalling) {
     }
 
     // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
-    ch_guppy_fastq
+    ch_fastq
         .flatten()
         .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
         .join(ch_sample_info, by: 1) // join on barcode
@@ -364,19 +378,71 @@ if (!params.skip_basecalling) {
                 ch_fastq_align }
 
 } else {
+    if (!params.skip_demultiplexing) {
 
-    // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
-    ch_samplesheet_reformat
-        .splitCsv(header:true, sep:',')
-        .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
-        .into { ch_fastq_nanoplot;
-                ch_fastq_fastqc;
-                ch_fastq_sizes;
-                ch_fastq_gtf;
-                ch_fastq_index;
-                ch_fastq_align }
+        /*
+         * STEP 1 - Demultipexing using qcat
+         */
+        process Qcat {
+            tag "$input_path"
+            label 'process_medium'
+            publishDir path: "${params.outdir}/qcat", mode: 'copy'
 
+            input:
+            file input_path from ch_input_path
+
+            output:
+            file "fastq/*.fastq.gz" into ch_fastq
+
+            script:
+            detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
+            """
+            ## Unzip fastq file
+            ## qcat doesnt support zipped files yet
+            FILE=$input_path
+            if [[ \$FILE == *.gz ]]
+            then
+                zcat $input_path > unzipped.fastq
+                FILE=unzipped.fastq
+            fi
+
+            qcat  \\
+                -f \$FILE \\
+                -b ./fastq \\
+                --kit $params.barcode_kit \\
+                --min-score $params.qcat_min_score \\
+                $detect_middle
+
+            ## Zip fastq files
+            pigz -p $task.cpus fastq/*
+            """
+        }
+
+        // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
+        ch_fastq
+            .flatten()
+            .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.'))] } // [barcode001.fastq, barcode001]
+            .join(ch_sample_info, by: 1) // join on barcode
+            .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
+            .into { ch_fastq_nanoplot;
+                    ch_fastq_fastqc;
+                    ch_fastq_sizes;
+                    ch_fastq_gtf;
+                    ch_fastq_index;
+                    ch_fastq_align }
+    } else {
+        // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
+        ch_samplesheet_reformat
+            .splitCsv(header:true, sep:',')
+            .map { get_sample_info(it, params.genomes) }
+            .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
+            .into { ch_fastq_nanoplot;
+                    ch_fastq_fastqc;
+                    ch_fastq_sizes;
+                    ch_fastq_gtf;
+                    ch_fastq_index;
+                    ch_fastq_align }
+    }
     ch_guppy_version = Channel.empty()
     ch_guppy_pycoqc_summary = Channel.empty()
     ch_guppy_nanoplot_summary = Channel.empty()
@@ -388,10 +454,7 @@ if (!params.skip_basecalling) {
 process PycoQC {
     tag "$summary_txt"
     label 'process_low'
-    publishDir "${params.outdir}/pycoqc", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
+    publishDir "${params.outdir}/pycoqc", mode: 'copy'
 
     when:
     !params.skip_basecalling && !params.skip_qc && !params.skip_pycoqc
@@ -401,12 +464,10 @@ process PycoQC {
 
     output:
     file "*.html"
-    file "*.version" into ch_pycoqc_version
 
     script:
     """
     pycoQC -f $summary_txt -o pycoQC_output.html
-    pycoQC --version &> pycoqc.version
     """
 }
 
@@ -439,10 +500,7 @@ process NanoPlotSummary {
 process NanoPlotFastQ {
     tag "$sample"
     label 'process_low'
-    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
+    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy'
 
     when:
     !params.skip_qc && !params.skip_nanoplot
@@ -452,12 +510,10 @@ process NanoPlotFastQ {
 
     output:
     file "*.{png,html,txt,log}"
-    file "*.version" into ch_nanoplot_version
 
     script:
     """
     NanoPlot -t $task.cpus --fastq $fastq
-    NanoPlot --version &> nanoplot.version
     """
 }
 
@@ -467,10 +523,7 @@ process NanoPlotFastQ {
 process FastQC {
     tag "$sample"
     label 'process_medium'
-    publishDir "${params.outdir}/fastqc", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
+    publishDir "${params.outdir}/fastqc", mode: 'copy'
 
     when:
     !params.skip_qc && !params.skip_fastqc
@@ -480,13 +533,11 @@ process FastQC {
 
     output:
     file "*.{zip,html}" into ch_fastqc_mqc
-    file "*.version" into ch_fastqc_version
 
     script:
     """
     [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
     fastqc -q -t $task.cpus ${sample}.fastq.gz
-    fastqc --version > fastqc.version
     """
 }
 
@@ -510,13 +561,11 @@ if (!params.skip_alignment) {
 
         output:
         set file("*.sizes"), val(name) into ch_chrom_sizes
-        file "*.version" into ch_samtools_version
 
         script:
         """
         samtools faidx $fasta
         cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
-        samtools --version &> samtools.version
         """
     }
 
@@ -569,7 +618,6 @@ if (!params.skip_alignment) {
 
             output:
             set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.mmi"), val(annotation_str) into ch_index
-            file "*.version" into ch_minimap2_version
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -579,10 +627,8 @@ if (!params.skip_alignment) {
             junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
             """
             minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
-            minimap2 --version &> minimap2.version
             """
         }
-        ch_graphmap2_version = Channel.empty()
     } else {
         process GraphMap2Index {
             tag "$fasta"
@@ -593,7 +639,6 @@ if (!params.skip_alignment) {
 
             output:
             set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.gmidx"), val(annotation_str) into ch_index
-            file "*.version" into ch_graphmap2_version
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -601,10 +646,8 @@ if (!params.skip_alignment) {
             junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
             """
             graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
-            echo \$(graphmap2 2>&1) > graphmap2.version
             """
         }
-        ch_minimap2_version = Channel.empty()
     }
 
     ch_index
@@ -672,9 +715,6 @@ if (!params.skip_alignment) {
         }
     }
 } else {
-    ch_samtools_version = Channel.empty()
-    ch_minimap2_version = Channel.empty()
-    ch_graphmap2_version = Channel.empty()
     ch_align_sam = Channel.empty()
 }
 
@@ -732,13 +772,11 @@ process BAMToBedGraph {
 
     output:
     set val(sample), file(sizes), val(is_transcripts), file("*.bedGraph") into ch_bedgraph
-    file "*.version" into ch_bedtools_version
 
     script:
     split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
     """
     genomeCoverageBed $split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
-    bedtools --version > bedtools.version
     """
 }
 
@@ -814,22 +852,17 @@ process Bed12ToBigBed {
  * STEP 15 - Output Description HTML
  */
 process output_documentation {
-    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
     input:
     file output_docs from ch_output_docs
 
     output:
     file "results_description.html"
-    file "*.version" into ch_rmarkdown_version
 
     script:
     """
-    markdown_to_html.r $output_docs results_description.html
-    Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='rmarkdown.version')"
+    markdown_to_html.py $output_docs -o results_description.html
     """
 }
 
@@ -845,14 +878,6 @@ process get_software_versions {
 
     input:
     file guppy from ch_guppy_version.collect().ifEmpty([])
-    file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    file nanoplot from ch_nanoplot_version.first().ifEmpty([])
-    file fastqc from ch_fastqc_version.first().ifEmpty([])
-    file samtools from ch_samtools_version.first().ifEmpty([])
-    file minimap2 from ch_minimap2_version.first().ifEmpty([])
-    file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
-    file bedtools from ch_bedtools_version.first().ifEmpty([])
-    file rmarkdown from ch_rmarkdown_version.collect()
 
     output:
     file 'software_versions_mqc.yaml' into software_versions_yaml
@@ -860,9 +885,17 @@ process get_software_versions {
 
     script:
     """
-    echo $workflow.manifest.version > pipeline.version
-    echo $workflow.nextflow.version > nextflow.version
-    multiqc --version &> multiqc.version
+    echo $workflow.manifest.version > v_pipeline.txt
+    echo $workflow.nextflow.version > v_nextflow.txt
+    qcat --version &> v_qcat.txt
+    NanoPlot --version &> v_nanoplot.txt
+    pycoQC --version &> v_pycoqc.txt
+    fastqc --version > v_fastqc.txt
+    minimap2 --version &> v_minimap2.txt
+    echo \$(graphmap2 2>&1) > v_graphmap2.txt
+    samtools --version > v_samtools.txt
+    bedtools --version > v_bedtools.txt
+    multiqc --version > v_multiqc.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
@@ -1007,37 +1040,37 @@ workflow.onComplete {
     def output_tf = new File(output_d, "pipeline_report.txt")
     output_tf.withWriter { w -> w << email_txt }
 
-    c_reset = params.monochrome_logs ? '' : "\033[0m";
-    c_purple = params.monochrome_logs ? '' : "\033[0;35m";
     c_green = params.monochrome_logs ? '' : "\033[0;32m";
+    c_purple = params.monochrome_logs ? '' : "\033[0;35m";
     c_red = params.monochrome_logs ? '' : "\033[0;31m";
+    c_reset = params.monochrome_logs ? '' : "\033[0m";
 
     if (workflow.stats.ignoredCount > 0 && workflow.success) {
-        log.info "${c_purple}Warning, pipeline completed, but with errored process(es) ${c_reset}"
-        log.info "${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCount} ${c_reset}"
-        log.info "${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCount} ${c_reset}"
+        log.info "-${c_purple}Warning, pipeline completed, but with errored process(es) ${c_reset}-"
+        log.info "-${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCount} ${c_reset}-"
+        log.info "-${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCount} ${c_reset}-"
     }
 
     if (workflow.success) {
-        log.info "${c_purple}[nf-core/nanoseq]${c_green} Pipeline completed successfully${c_reset}"
+        log.info "-${c_purple}[nf-core/nanoseq]${c_green} Pipeline completed successfully${c_reset}-"
     } else {
         checkHostname()
-        log.info "${c_purple}[nf-core/nanoseq]${c_red} Pipeline completed with errors${c_reset}"
+        log.info "-${c_purple}[nf-core/nanoseq]${c_red} Pipeline completed with errors${c_reset}-"
     }
 
 }
 
 def nfcoreHeader() {
     // Log colors ANSI codes
-    c_reset = params.monochrome_logs ? '' : "\033[0m";
-    c_dim = params.monochrome_logs ? '' : "\033[2m";
     c_black = params.monochrome_logs ? '' : "\033[0;30m";
-    c_green = params.monochrome_logs ? '' : "\033[0;32m";
-    c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
     c_blue = params.monochrome_logs ? '' : "\033[0;34m";
-    c_purple = params.monochrome_logs ? '' : "\033[0;35m";
     c_cyan = params.monochrome_logs ? '' : "\033[0;36m";
+    c_dim = params.monochrome_logs ? '' : "\033[2m";
+    c_green = params.monochrome_logs ? '' : "\033[0;32m";
+    c_purple = params.monochrome_logs ? '' : "\033[0;35m";
+    c_reset = params.monochrome_logs ? '' : "\033[0m";
     c_white = params.monochrome_logs ? '' : "\033[0;37m";
+    c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
 
     return """    -${c_dim}--------------------------------------------------${c_reset}-
                                             ${c_green},--.${c_black}/${c_green},-.${c_reset}

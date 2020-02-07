@@ -6,23 +6,25 @@ import re
 
 # TODO nf-core: Add additional regexes for new tools in process get_software_versions
 regexes = {
-    'nf-core/nanoseq': ['pipeline.version', r"(\S+)"],
-    'Nextflow': ['nextflow.version', r"(\S+)"],
-    'guppy': ['guppy.version', r"Version (\S+)"],
-    'pycoQC': ['pycoqc.version', r"pycoQC v(\S+)"],
-    'NanoPlot': ['nanoplot.version', r"NanoPlot (\S+)"],
-    'FastQC': ['fastqc.version', r"FastQC v(\S+)"],
-    'GraphMap2': ['graphmap2.version', r"Version: v(\S+)"],
-    'minimap2': ['minimap2.version', r"(\S+)"],
-    'Samtools': ['samtools.version', r"samtools (\S+)"],
+    'nf-core/nanoseq': ['v_pipeline.txt', r"(\S+)"],
+    'Nextflow': ['v_nextflow.txt', r"(\S+)"],
+    'guppy': ['v_guppy.txt', r"Version (\S+)"],
+    'qcat': ['v_qcat.txt',  r"qcat (\S+)"],
+    'pycoQC': ['v_pycoqc.txt', r"pycoQC v(\S+)"],
+    'NanoPlot': ['v_nanoplot.txt', r"NanoPlot (\S+)"],
+    'FastQC': ['v_fastqc.txt', r"FastQC v(\S+)"],
+    'GraphMap2': ['v_graphmap2.txt', r"Version: v(\S+)"],
+    'minimap2': ['v_minimap2.txt', r"(\S+)"],
+    'Samtools': ['v_samtools.txt', r"samtools (\S+)"],
     'BEDTools': ['v_bedtools.txt', r"bedtools v(\S+)"],
-    'rmarkdown': ['rmarkdown.version', r"(\S+)"],
-    'MultiQC': ['multiqc.version', r"multiqc, version (\S+)"],
+    'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"]
 }
+
 results = OrderedDict()
 results['nf-core/nanoseq'] = '<span style="color:#999999;\">N/A</span>'
 results['Nextflow'] = '<span style="color:#999999;\">N/A</span>'
 results['guppy'] = '<span style="color:#999999;\">N/A</span>'
+results['qcat'] = '<span style="color:#999999;\">N/A</span>'
 results['pycoQC'] = '<span style="color:#999999;\">N/A</span>'
 results['NanoPlot'] = '<span style="color:#999999;\">N/A</span>'
 results['FastQC'] = '<span style="color:#999999;\">N/A</span>'
@@ -30,7 +32,6 @@ results['GraphMap2'] = '<span style="color:#999999;\">N/A</span>'
 results['minimap2'] = '<span style="color:#999999;\">N/A</span>'
 results['Samtools'] = '<span style="color:#999999;\">N/A</span>'
 results['BEDTools'] = '<span style="color:#999999;\">N/A</span>'
-results['rmarkdown'] = '<span style="color:#999999;\">N/A</span>'
 results['MultiQC'] = '<span style="color:#999999;\">N/A</span>'
 
 # Search each file using its regex
