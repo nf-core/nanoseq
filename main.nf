@@ -326,7 +326,7 @@ if (!params.skip_basecalling) {
         file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
                                       ch_guppy_nanoplot_summary
         file "basecalling/*"
-        file "*.version" into ch_guppy_version
+        file "v_guppy.txt" into ch_guppy_version
 
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
@@ -346,7 +346,7 @@ if (!params.skip_basecalling) {
             $config \\
             $model
 
-        guppy_basecaller --version &> guppy.version
+        guppy_basecaller --version &> v_guppy.txt
 
         ## Concatenate fastq files
         mkdir fastq
@@ -377,8 +377,6 @@ if (!params.skip_basecalling) {
                 ch_fastq_index;
                 ch_fastq_align }
 
-    ch_qcat_version = Channel.empty()
-
 } else {
     if (!params.skip_demultiplexing) {
 
@@ -388,17 +386,13 @@ if (!params.skip_basecalling) {
         process Qcat {
             tag "$input_path"
             label 'process_medium'
-            publishDir path: "${params.outdir}/qcat", mode: 'copy',
-                saveAs: { filename ->
-                              if (!filename.endsWith(".version")) filename
-                        }
+            publishDir path: "${params.outdir}/qcat", mode: 'copy'
 
             input:
             file input_path from ch_input_path
 
             output:
             file "fastq/*.fastq.gz" into ch_fastq
-            file "*.version" into ch_qcat_version
 
             script:
             detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
@@ -418,10 +412,9 @@ if (!params.skip_basecalling) {
                 --kit $params.barcode_kit \\
                 --min-score $params.qcat_min_score \\
                 $detect_middle
-            qcat --version &> qcat.version
 
             ## Zip fastq files
-            gzip fastq/*
+            pigz -p $task.cpus fastq/*
             """
         }
 
@@ -449,8 +442,6 @@ if (!params.skip_basecalling) {
                     ch_fastq_gtf;
                     ch_fastq_index;
                     ch_fastq_align }
-
-        ch_qcat_version = Channel.empty()
     }
     ch_guppy_version = Channel.empty()
     ch_guppy_pycoqc_summary = Channel.empty()
@@ -463,10 +454,7 @@ if (!params.skip_basecalling) {
 process PycoQC {
     tag "$summary_txt"
     label 'process_low'
-    publishDir "${params.outdir}/pycoqc", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
+    publishDir "${params.outdir}/pycoqc", mode: 'copy'
 
     when:
     !params.skip_basecalling && !params.skip_qc && !params.skip_pycoqc
@@ -476,12 +464,10 @@ process PycoQC {
 
     output:
     file "*.html"
-    file "*.version" into ch_pycoqc_version
 
     script:
     """
     pycoQC -f $summary_txt -o pycoQC_output.html
-    pycoQC --version &> pycoqc.version
     """
 }
 
@@ -514,10 +500,7 @@ process NanoPlotSummary {
 process NanoPlotFastQ {
     tag "$sample"
     label 'process_low'
-    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
+    publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: 'copy'
 
     when:
     !params.skip_qc && !params.skip_nanoplot
@@ -527,12 +510,10 @@ process NanoPlotFastQ {
 
     output:
     file "*.{png,html,txt,log}"
-    file "*.version" into ch_nanoplot_version
 
     script:
     """
     NanoPlot -t $task.cpus --fastq $fastq
-    NanoPlot --version &> nanoplot.version
     """
 }
 
@@ -542,10 +523,7 @@ process NanoPlotFastQ {
 process FastQC {
     tag "$sample"
     label 'process_medium'
-    publishDir "${params.outdir}/fastqc", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
+    publishDir "${params.outdir}/fastqc", mode: 'copy'
 
     when:
     !params.skip_qc && !params.skip_fastqc
@@ -555,13 +533,11 @@ process FastQC {
 
     output:
     file "*.{zip,html}" into ch_fastqc_mqc
-    file "*.version" into ch_fastqc_version
 
     script:
     """
     [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
     fastqc -q -t $task.cpus ${sample}.fastq.gz
-    fastqc --version > fastqc.version
     """
 }
 
@@ -585,13 +561,11 @@ if (!params.skip_alignment) {
 
         output:
         set file("*.sizes"), val(name) into ch_chrom_sizes
-        file "*.version" into ch_samtools_version
 
         script:
         """
         samtools faidx $fasta
         cut -f 1,2 ${fasta}.fai > ${fasta}.sizes
-        samtools --version &> samtools.version
         """
     }
 
@@ -644,7 +618,6 @@ if (!params.skip_alignment) {
 
             output:
             set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.mmi"), val(annotation_str) into ch_index
-            file "*.version" into ch_minimap2_version
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -654,10 +627,8 @@ if (!params.skip_alignment) {
             junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
             """
             minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
-            minimap2 --version &> minimap2.version
             """
         }
-        ch_graphmap2_version = Channel.empty()
     } else {
         process GraphMap2Index {
             tag "$fasta"
@@ -668,7 +639,6 @@ if (!params.skip_alignment) {
 
             output:
             set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.gmidx"), val(annotation_str) into ch_index
-            file "*.version" into ch_graphmap2_version
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -676,10 +646,8 @@ if (!params.skip_alignment) {
             junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
             """
             graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
-            echo \$(graphmap2 2>&1) > graphmap2.version
             """
         }
-        ch_minimap2_version = Channel.empty()
     }
 
     ch_index
@@ -747,9 +715,6 @@ if (!params.skip_alignment) {
         }
     }
 } else {
-    ch_samtools_version = Channel.empty()
-    ch_minimap2_version = Channel.empty()
-    ch_graphmap2_version = Channel.empty()
     ch_align_sam = Channel.empty()
 }
 
@@ -807,13 +772,11 @@ process BAMToBedGraph {
 
     output:
     set val(sample), file(sizes), val(is_transcripts), file("*.bedGraph") into ch_bedgraph
-    file "*.version" into ch_bedtools_version
 
     script:
     split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
     """
     genomeCoverageBed $split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
-    bedtools --version > bedtools.version
     """
 }
 
@@ -889,22 +852,17 @@ process Bed12ToBigBed {
  * STEP 15 - Output Description HTML
  */
 process output_documentation {
-    publishDir "${params.outdir}/pipeline_info", mode: 'copy',
-        saveAs: { filename ->
-                      if (!filename.endsWith(".version")) filename
-                }
+    publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
     input:
     file output_docs from ch_output_docs
 
     output:
     file "results_description.html"
-    file "*.version" into ch_rmarkdown_version
 
     script:
     """
-    markdown_to_html.r $output_docs results_description.html
-    Rscript -e "library(markdown); write(x=as.character(packageVersion('markdown')), file='rmarkdown.version')"
+    markdown_to_html.py $output_docs -o results_description.html
     """
 }
 
@@ -920,15 +878,6 @@ process get_software_versions {
 
     input:
     file guppy from ch_guppy_version.collect().ifEmpty([])
-    file qcat from ch_qcat_version.collect().ifEmpty([])
-    file pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    file nanoplot from ch_nanoplot_version.first().ifEmpty([])
-    file fastqc from ch_fastqc_version.first().ifEmpty([])
-    file samtools from ch_samtools_version.first().ifEmpty([])
-    file minimap2 from ch_minimap2_version.first().ifEmpty([])
-    file graphmap2 from ch_graphmap2_version.first().ifEmpty([])
-    file bedtools from ch_bedtools_version.first().ifEmpty([])
-    file rmarkdown from ch_rmarkdown_version.collect()
 
     output:
     file 'software_versions_mqc.yaml' into software_versions_yaml
@@ -936,9 +885,17 @@ process get_software_versions {
 
     script:
     """
-    echo $workflow.manifest.version > pipeline.version
-    echo $workflow.nextflow.version > nextflow.version
-    multiqc --version &> multiqc.version
+    echo $workflow.manifest.version > v_pipeline.txt
+    echo $workflow.nextflow.version > v_nextflow.txt
+    qcat --version &> v_qcat.txt
+    NanoPlot --version &> v_nanoplot.txt
+    pycoQC --version &> v_pycoqc.txt
+    fastqc --version > v_fastqc.txt
+    minimap2 --version &> v_minimap2.txt
+    echo \$(graphmap2 2>&1) > v_graphmap2.txt
+    samtools --version > v_samtools.txt
+    bedtools --version > v_bedtools.txt
+    multiqc --version > v_multiqc.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
