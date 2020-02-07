@@ -22,8 +22,24 @@ jobs:
       - name: Pull docker image
         run: |
           docker pull nfcore/nanoseq:dev && docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
-      - name: Run pipeline with test data
+      - name: Basecall and demultiplex (minimap2)
         run: |
-          # TODO nf-core: You can customise CI pipeline run tests as required
-          # (eg. adding multiple test runs with different parameters)
-          nextflow run ${GITHUB_WORKSPACE} -profile test,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --aligner minimap2
+      - name: Basecall and demultiplex (graphmap2)
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --aligner graphmap2
+      - name: Basecall and no demultiplexing (minimap2)
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test_bc_nodx,docker
+      - name: No Basecalling and demultiplexing (minimap2)
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_dx,docker
+      - name: No Basecalling and no demultiplexing (minimap2)
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_nodx,docker
+      - name: No Basecalling and no demultiplexing (minimap2, skip_alignment)
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_nodx,docker --skip_alignment
+      - name: No Basecalling and no demultiplexing (minimap2, skip_alignment, skip_qc)
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_nodx,docker --skip_alignment --skip_qc
