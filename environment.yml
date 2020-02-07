@@ -7,8 +7,18 @@ channels:
   - defaults
 dependencies:
   - conda-forge::python=3.7.3
-  # TODO nf-core: Add required software dependencies here
-  - bioconda::fastqc=0.11.8
-  - bioconda::multiqc=1.7
   - conda-forge::r-markdown=1.1
   - conda-forge::r-base=3.6.1
+  #- conda-forge::perl:5.22.0.1
+
+  - bioconda::fastqc=0.11.8
+  - bioconda::multiqc=1.8
+  - bioconda::qcat:1.1.0
+  - bioconda::pycoqc:2.2.4
+  - bioconda::nanoplot:1.28.1
+  - bioconda::samtools:1.9
+  - bioconda::minimap2:2.17
+  - bioconda::graphmap:0.6.3
+  - bioconda::bedtools:2.29.0
+  - bioconda::ucsc-bedgraphtobigwig:357--h35c10e6
+  - bioconda::ucsc-bedtobigbed:357--h35c10e6
