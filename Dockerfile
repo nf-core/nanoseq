@@ -1,4 +1,4 @@
-FROM nfcore/base:1.7
+FROM nfcore/base:1.8
 LABEL authors="Chelsea Sawyer" \
       description="Docker image containing all software requirements for the nf-core/nanoseq pipeline"
 
