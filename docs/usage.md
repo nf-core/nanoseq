@@ -341,11 +341,11 @@ Search for adapters in the whole read by applying the '--detect-middle' paramete
 
 ### `--skip_basecalling`
 
-Skip basecalling with Guppy
+Skip basecalling with Guppy.
 
 ### `--skip_demultiplexing`
 
-Skip demultiplexing with Guppy/qcat
+Skip demultiplexing with Guppy/qcat.
 
 ## Alignment
 
