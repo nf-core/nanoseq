@@ -138,32 +138,85 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 
 ### `--input`
 
-You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without demultiplexing.
+You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns and a header row:
 
-#### With basecalling and demultiplexing
+| Column          | Description                                                                                                                |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------|
+| `sample`        | Sample name without spaces.                                                                                                |
+| `fastq`         | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
+| `barcode`       | Barcode identifier attributed to that sample during multiplexing. Has to be an integer.                                    |
+| `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
+| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz". |
+
+#### Providing a reference genome/transcriptome
+
+Each sample in your `--input` sample sheet can be mapped to its own reference genome or transcriptome. Please see below for additional details required to fill in the `genome` and `transcriptome` columns appropriately:
+
+* If both `genome` and `transcriptome` are not specified then the mapping will be skipped for that sample.
+* If both `genome` and `transcriptome` are specified as local fasta files then the transcriptome will be preferentially used for mapping.
+* If `genome` is specified as a local fasta file and `transcriptome` is left blank then mapping will be performed relative to the genome.
+* If `genome` is specified as an AWS iGenomes key then the `transcriptome` column can be blank. The associated gtf file for the `transcriptome` will be automatically obtained in order to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+* If `genome` is specified as a local fasta file and `transcriptome` is a specified as a local gtf file then both of these will be used to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+* If `genome` isnt specified and `transcriptome` is provided as a fasta file then mapping will be performed relative to the transcriptome.
+
+#### Skip basecalling/demultiplexing
+
+As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without basecalling/demultiplexing.
+
+##### With basecalling and demultiplexing
+
+###### Example `samplesheet.csv`
 
 ```bash
 sample,fastq,barcode,genome,transcriptome
-Sample1,,1,mm10
-Sample2,,2,mm10
-Sample3,,3,hg19
-Sample4,,4,/path/to/local/reference/genome.fa
-
+Sample1,,1,mm10,
+Sample2,,2,hg19,
+Sample3,,3,/path/to/local/reference/genome.fa,
+Sample4,,4,,/path/to/local/reference/transcriptome.fa
+Sample5,,5,/path/to/local/reference/genome.fa,/path/to/local/reference/transcriptome.gtf
+Sample6,,6,,
 ```
 
-> When multiplexed fastq file is provided where demultiplexing is required without basecalling, the sample sheet can also be specified using this format. But you will need to specify the fastq file in `--input_path` instead of just the directory in this case.
-
-#### With basecalling but not demultiplexing
+###### Example command
 
 ```bash
-sample,fastq,barcode,genome
-Sample1,,1,mm10
-
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-DCS109 \
+    --barcode_kit EXP-NBD103 \
+    -profile <docker/singularity/institute>
 ```
 
-> You will have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
+##### With basecalling but not demultiplexing
 
-#### Without both basecalling and demultiplexing
+###### Example `samplesheet.csv`
+
+> Only a single sample can be specified if you would like to skip demultiplexing
+
+```bash
+sample,fastq,barcode,genome,transcriptome
+Sample1,,1,/path/to/local/reference/genome.fa,
+```
+
+###### Example command
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-DCS108 \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
+
+##### Without both basecalling and demultiplexing
+
+###### Example `samplesheet.csv`
 
 ```bash
 sample,fastq,barcode,genome
@@ -174,26 +227,16 @@ Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
 
 ```
 
-> You will have to specify the `--skip_basecalling` parameter if you wish to bypass the basecalling and demultiplexing steps.
+###### Example command
 
-| Column          | Description                                                                                                                |
-|-----------------|----------------------------------------------------------------------------------------------------------------------------|
-| `sample`        | Sample name without spaces.                                                                                                |
-| `fastq`         | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
-| `barcode`       | Barcode identifier attributed to that sample when multiplexing samples in integer format.                                  |
-| `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available on [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) (see [iGenomes config file](../conf/igenomes.config)). Must have the extension ".fasta" or ".fasta.gz", ".fa" or ".fa.gz". |
-| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension .fasta" or ".fasta.gz", ".fa", ".fa.gz", ".gtf", ".gtf.gz". |
-
-#### Providing a reference genome/transcriptome
-
-Each sample in your `--input` sample sheet can be mapped to its own reference genome or transcriptome. Please see below for additional details to see how to fill in the `genome` and `transcriptome` columns appropriately:
-
-* If both `genome` and `transcriptome` are not specified then the mapping will be skipped for that sample.
-* If both `genome` and `transcriptome` are specified as local fasta files then the transcriptome will be preferentially used for mapping.
-* If `genome` is specified as a local fasta file and `transcriptome` is left blank then mapping will be performed relative to the genome.
-* If `genome` is specified as an AWS iGenomes key then the `transcriptome` column can be blank. The associated gtf file for the `transcriptome` will be automatically obtained in order to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
-* If `genome` is specified as a local fasta file and `transcriptome` is a specified as a local gtf file then both of these will be used to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
-* If `genome` isnt specified and `transcriptome` is then mapping will be performed relative to the transcriptome only if it is provided as a fasta file.
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
 
 ### `--protocol`
 
