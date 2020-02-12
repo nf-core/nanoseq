@@ -28,7 +28,7 @@ def helpMessage() {
 
     Mandatory arguments
       --input [file]                  Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
-      --protocol [str]                Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA"
+      --protocol [str]                Specifies the type of sequencing i.e. "DNA", "cDNA" or "directRNA"
       -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
                                       Available: docker, singularity, awsbatch, test and more.
 
