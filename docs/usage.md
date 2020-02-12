@@ -11,7 +11,7 @@
   * [`-profile`](#-profile)
   * [`--input`](#--input)
   * [`--protocol`](#--protocol)
-* [Basecalling/Demultiplexing](#basecalling-demultiplexing)
+* [Basecalling and demultiplexing](#basecalling-and-demultiplexing)
   * [`--input_path`](#--input_path)
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
@@ -267,11 +267,11 @@ nextflow run nf-core/nanoseq \
 
 Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
+## Basecalling and demultiplexing
+
 ### `--input_path`
 
 Path to Nanopore run directory (e.g. `fastq_pass/`) or a basecalled fastq file that requires demultiplexing. The latter can only be provided in conjunction with the `--skip_basecalling` parameter.
-
-## Basecalling/Demultiplexing
 
 ### `--flowcell`
 
