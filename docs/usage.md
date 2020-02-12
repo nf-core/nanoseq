@@ -11,7 +11,7 @@
   * [`-profile`](#-profile)
   * [`--input`](#--input)
   * [`--protocol`](#--protocol)
-* [Basecalling](#basecalling)
+* [Basecalling/Demultiplexing](#basecalling-demultiplexing)
   * [`--input_path`](#--input_path)
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
@@ -267,23 +267,25 @@ nextflow run nf-core/nanoseq \
 
 Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
-## Basecalling
-
 ### `--input_path`
 
-Path to Nanopore run directory e.g. `fastq_pass/`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the path to fastq file e.g. `fastq/multiplexed_sample.fastq.gz`
+Path to Nanopore run directory (e.g. `fastq_pass/`) or a basecalled fastq file that requires demultiplexing. The latter can only be provided in conjunction with the `--skip_basecalling` parameter.
+
+## Basecalling/Demultiplexing
 
 ### `--flowcell`
 
-Flowcell used to perform the sequencing e.g. `FLO-MIN106`. Not required if `--guppy_config` is specified.
+Flowcell used to perform the sequencing e.g. "FLO-MIN106". Not required if `--guppy_config` is specified.
 
 ### `--kit`
 
-Kit used to perform the sequencing e.g. `SQK-LSK109`. Not required if `--guppy_config` is specified.
+Kit used to perform the sequencing e.g. "SQK-LSK109". Not required if `--guppy_config` is specified.
 
 ### `--barcode_kit`
 
-Barcode kit used to perform the sequencing e.g. `SQK-PBK004`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the barcoding kit that can be recognised by `qcat`.
+Barcode kit used to perform the sequencing e.g. "SQK-PBK004".
+
+If you would like to skip the basecalling (`--skip_basecalling`) but still perform the demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):
 
 | `qcat` barcode kit specifications | description                                                                   |
 |-----------------------------------|-------------------------------------------------------------------------------|
@@ -302,40 +304,40 @@ Barcode kit used to perform the sequencing e.g. `SQK-PBK004`. When `--skip_basec
 
 ### `--guppy_config`
 
-Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with `--flowcell` and `--kit`.
-This can be a local file (i.e. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data` directory of Guppy.
+Config file used for basecalling that will be passed to Guppy via the "--config" parameter. Cannot be used in conjunction with `--flowcell` and `--kit`.
+This can be a local file (i.e. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data/` directory of Guppy.
 
 ### `--guppy_model`
 
-Custom basecalling model file (`json`) to pass to Guppy for basecalling with the `--model` parameter. Custom basecalling models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki). This can also be a string specifying a model stored in the `/opt/ont/guppy/data` directory of Guppy.
+Custom basecalling model file in `json` format that will be passed to Guppy via the "--model" parameter. Custom basecalling models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki). This can also be a string specifying a model stored in the `/opt/ont/guppy/data` directory of Guppy.
 
 ### `--guppy_gpu`
 
-Whether to demultiplex with Guppy in GPU mode.
+Whether to demultiplex with Guppy in GPU mode (default: false).
 
 ### `--guppy_gpu_runners`
 
-Number of '--gpu_runners_per_device' used for guppy when using `--guppy_gpu` (default: 6)
+Number of "--gpu_runners_per_device" used for Guppy when using `--guppy_gpu` (default: 6).
 
 ### `--guppy_cpu_threads`
 
-Number of '--cpu_threads_per_caller' used for guppy when using `--guppy_gpu` (default: 1)
+Number of "--cpu_threads_per_caller" used for Guppy when using `--guppy_gpu` (default: 1).
 
 ### `--gpu_device`
 
-Basecalling device specified to Guppy in GPU mode using `--device` (default: 'auto')
+Basecalling device specified to Guppy in GPU mode using "--device" (default: 'auto').
 
 ### `--gpu_cluster_options`
 
-Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
+Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').
 
 ### `--qcat_min_score`
 
-Specify the minimum quality score for `qcat` in the range 0-100 (default: 60)
+Specify the minimum quality score for qcat in the range 0-100 (default: 60).
 
 ### `--qcat_detect_middle`
 
-Search for adapters in the whole read by applying the '--detect-middle' parameter in `qcat` (default: false)
+Search for adapters in the whole read by applying the '--detect-middle' parameter in qcat (default: false).
 
 ### `--skip_basecalling`
 
@@ -343,13 +345,13 @@ Skip basecalling with Guppy
 
 ### `--skip_demultiplexing`
 
-Skip demultiplexing with Guppy or with qcat
+Skip demultiplexing with Guppy/qcat
 
 ## Alignment
 
 ### `--stranded`
 
-Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
+Specifies if the data is strand-specific. Automatically activated when using `--protocol directRNA` (default: false).
 
 When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap2`:
 
@@ -362,15 +364,15 @@ When using `--protocol`/`--stranded` the following command-line arguments will b
 
 ### `--aligner`
 
-Specifies the aligner to use (available are: `graphmap2` or `minimap2`)
+Specifies the aligner to use i.e. `graphmap2` or `minimap2`.
 
 ### `--save_align_intermeds`
 
-Save the `.sam` files from the alignment step - not done by default
+Save the `.sam` files from the alignment step - not done by default.
 
 ### `--skip_alignment`
 
-Skip alignment and subsequent process
+Skip alignment and downstream processes.
 
 ## Coverage tracks
 
