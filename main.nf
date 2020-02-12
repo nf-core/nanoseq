@@ -40,8 +40,8 @@ def helpMessage() {
       --guppy_config [file/str]       Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
       --guppy_model [file/str]        Custom basecalling model file (JSON) to use for Guppy basecalling, such as the output from Taiyaki (Default: false)
       --guppy_gpu [bool]              Whether to perform basecalling with Guppy in GPU mode (Default: false)
-      --guppy_gpu_runners [int]       Number of '--gpu_runners_per_device' used for guppy when using '--guppy_gpu' (Default: 6)
-      --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for guppy when using '--guppy_gpu' (Default: 1)
+      --guppy_gpu_runners [int]       Number of '--gpu_runners_per_device' used for Guppy when using '--guppy_gpu' (Default: 6)
+      --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for Guppy when using '--guppy_gpu' (Default: 1)
       --gpu_device [str]              Basecalling device specified to Guppy in GPU mode using '--device' (Default: 'auto')
       --gpu_cluster_options [str]     Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
       --qcat_min_score [int]          Minimum scores of '--min-score' used for qcat (Default: 60)
@@ -51,8 +51,8 @@ def helpMessage() {
 
     Alignment
       --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap2) (Default: 'minimap2')
-      --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (Default: false)
-      --save_align_intermeds [bool]   Save the .sam files from the alignment step (Default: false)
+      --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using '--protocol directRNA' (Default: false)
+      --save_align_intermeds [bool]   Save the '.sam' files from the alignment step (Default: false)
       --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
 
     Coverage tracks
