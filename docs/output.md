@@ -2,28 +2,30 @@
 
 This document describes the output produced by the pipeline. Most of the plots are taken from the MultiQC report, which summarises results at the end of the pipeline.
 
-<!-- TODO nf-core: Write this documentation describing your workflow's output -->
-
 ## Pipeline overview
 
-The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
+The pipeline is built using [Nextflow](https://www.nextflow.io/). See [`main README.md`](../README.md) for a condensed overview of the steps in the pipeline, and the bioinformatics tools used at each step.
 
-* [Guppy](#guppy) - demultiplexing of Nanopore data
-* [PycoQC](#pycoqc) - read quality control
-* [NanoPlot](#nanoplot) - read quality control
-* [GraphMap2](#graphmap2) - mapping for long reads
-* [MiniMap2](#minimap2) - mapping for long reads
-* [SortBam](#sortbam) - coordinate sort BAM files using SAMtools
-* [bedtools](#bedtools) - create bigWig and bigBed files
-* [MultiQC](#multiqc) - aggregate report, describing results of the alignment
+See [Oxford NanoPore website](https://nanoporetech.com/) for more information regarding the sequencing technology, protocol, and for an extensive list of resources.
 
-## Demultiplexing
+The directories listed below will be created in the output directory after the pipeline has finished. All paths are relative to the top-level results directory.
+
+## Basecalling and demultiplexing
 
 *Documentation*:  
-[Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
+[Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis), [qcat](https://github.com/nanoporetech/qcat)
 
 *Description*:  
+The pipeline has been written to deal with the various scenarios where you would like to include/exclude the basecalling and demultiplexing steps. This will be dependent on what type of input data you would like to provide the pipeline. Additionally, if you would like to align your samples to a reference genome there are various options for providing this information. Please see [`usage.md`](usage.md#--input) for more details about the format of the input samplesheet, associated commands and how to provide reference genome data.
+
+Guppy will be used to basecall and demultiplex the data. However, if you have a pre-basecalled fastq file then qcat will be used to perform the demultiplexing if you provide the `--skip_basecalling` parameter. If you would like to skip both of these steps entirely then you can provide `--skip_basecalling --skip_demultiplexing` when running the pipeline. As a result, the structure of the output folder will depend on which steps you have chosen to run in the pipeline.
+
+Assuming you would like to perform both basecalling and demultiplexing the 
+
+
 Guppy will demultiplex and barcode the data given from an ONT device. The flowcell, kit and barcode kit must be given in the command line if demultiplexing needed. This step can by bypassed using the `--skip_demultiplexing` parameter when initiating the pipeline. The output folders will be separated into the barcodes from the kit used and unclassified. The output in each barcode folder is then merged into one fastq file for easier downstream processing.
+Pipeline provides various parameters to customise these parameters.
+Guppy can also use GPU resources if you have them available
 
 *Output directories*:
 
