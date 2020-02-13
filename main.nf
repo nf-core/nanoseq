@@ -312,7 +312,7 @@ if (!params.skip_basecalling) {
         label 'process_high'
         publishDir path: "${params.outdir}/guppy", mode: 'copy',
             saveAs: { filename ->
-                          if (!filename.endsWith(".version")) filename
+                          if (!filename.endsWith("guppy.txt")) filename
                     }
 
         input:
