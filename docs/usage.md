@@ -11,7 +11,7 @@
   * [`-profile`](#-profile)
   * [`--input`](#--input)
   * [`--protocol`](#--protocol)
-* [Basecalling](#basecalling)
+* [Basecalling and demultiplexing](#basecalling-and-demultiplexing)
   * [`--input_path`](#--input_path)
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
@@ -138,72 +138,154 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 
 ### `--input`
 
-You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 4 columns, and a header row. As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without demultiplexing.
+You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns and a header row:
 
-#### With basecalling and demultiplexing
+| Column          | Description                                                                                                                |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------|
+| `sample`        | Sample name without spaces.                                                                                                |
+| `fastq`         | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
+| `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                      |
+| `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
+| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz". |
+
+#### Specifying a reference genome/transcriptome
+
+Each sample in the sample sheet can be mapped to its own reference genome or transcriptome. Please see below for additional details required to fill in the `genome` and `transcriptome` columns appropriately:
+
+* If both `genome` and `transcriptome` are not specified then the mapping will be skipped for that sample.
+* If both `genome` and `transcriptome` are specified as local fasta files then the transcriptome will be preferentially used for mapping.
+* If `genome` is specified as a local fasta file and `transcriptome` is left blank then mapping will be performed relative to the genome.
+* If `genome` isnt specified and `transcriptome` is provided as a fasta file then mapping will be performed relative to the transcriptome.
+* If `genome` is specified as an AWS iGenomes key then the `transcriptome` column can be blank. The associated gtf file for the `transcriptome` will be automatically obtained in order to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+* If `genome` is specified as a local fasta file and `transcriptome` is a specified as a local gtf file then both of these will be used to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+
+#### Skip basecalling/demultiplexing
+
+As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without basecalling/demultiplexing.
+
+##### With basecalling and demultiplexing
+
+###### Example `samplesheet.csv`
 
 ```bash
-sample,fastq,barcode,genome
-Sample1,,1,mm10
-Sample2,,2,mm10
-Sample3,,3,hg19
-Sample4,,4,/path/to/local/reference/genome.fa
-
+sample,fastq,barcode,genome,transcriptome
+Sample1,,1,mm10,
+Sample2,,2,hg19,
+Sample3,,3,/path/to/local/genome.fa,
+Sample4,,4,,/path/to/local/transcriptome.fa
+Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+Sample6,,6,,
 ```
 
-> When multiplexed fastq file is provided where demultiplexing is required without basecalling, the sample sheet can also be specified using this format. But you will need to specify the fastq file in `--input_path` instead of just the directory in this case.
-
-#### With basecalling but not demultiplexing
+###### Example command
 
 ```bash
-sample,fastq,barcode,genome
-Sample1,,1,mm10
-
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-DCS109 \
+    --barcode_kit EXP-NBD103 \
+    -profile <docker/singularity/institute>
 ```
 
-> You will have to specify the `--skip_demultiplexing` parameter if you wish to bypass the demultiplexing step.
+##### With basecalling but not demultiplexing
 
-#### Without both basecalling and demultiplexing
+###### Example `samplesheet.csv`
 
 ```bash
-sample,fastq,barcode,genome
+sample,fastq,barcode,genome,transcriptome
+Sample1,,1,/path/to/local/genome.fa,
+```
+
+> Only a single sample can be specified if you would like to skip demultiplexing
+
+###### Example command
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-DCS108 \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
+
+##### With demultiplexing but not basecalling
+
+###### Example `samplesheet.csv`
+
+```bash
+sample,fastq,barcode,genome,transcriptome
+Sample1,,1,mm10,
+Sample2,,2,hg19,
+Sample3,,3,/path/to/local/genome.fa,
+Sample4,,4,,/path/to/local/transcriptome.fa
+Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+Sample6,,6,,
+```
+
+###### Example command
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --input_path ./undemultiplexed.fastq.gz \
+    --barcode_kit 'NBD103/NBD104' \
+    --skip_basecalling \
+    -profile <docker/singularity/institute>
+```
+
+##### Without both basecalling and demultiplexing
+
+###### Example `samplesheet.csv`
+
+```bash
+sample,fastq,barcode,genome,transcriptome
 Sample1,SAM101A1.fastq.gz,,mm10
-Sample2,SAM101A2.fastq.gz,,mm10
-Sample3,SAM101A3.fastq.gz,,hg19
-Sample4,SAM101A4.fastq.gz,,/path/to/local/reference/genome.fa
-
+Sample2,SAM101A2.fastq.gz,,hg19
+Sample3,SAM101A3.fastq.gz,/path/to/local/genome.fa,
+Sample4,SAM101A4.fastq.gz,,
 ```
 
-> You will have to specify the `--skip_basecalling` parameter if you wish to bypass the basecalling and demultiplexing steps.
+###### Example command
 
-| Column   | Description                                                                                                               |
-|----------|----------------------------------------------------------------------------------------------------------------------------|
-| `sample` | Sample name without spaces.                                                                                                |
-| `fastq`  | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
-| `barcode`| Barcode identifier attributed to that sample when multiplexing samples in integer format.                                  |
-| `genome` | Genome fasta for alignment. This can either be a local path, or the appropriate key for a genome available on [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) (see [iGenomes config file](../conf/igenomes.config)). If unspecified then the alignment step will be skipped for that sample. |
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
 
 ### `--protocol`
 
 Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
 
-## Basecalling
+## Basecalling and demultiplexing
 
 ### `--input_path`
 
-Path to Nanopore run directory e.g. `fastq_pass/`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the path to fastq file e.g. `fastq/multiplexed_sample.fastq.gz`
+Path to Nanopore run directory (e.g. `fastq_pass/`) or a basecalled fastq file that requires demultiplexing. The latter can only be provided in conjunction with the `--skip_basecalling` parameter.
 
 ### `--flowcell`
 
-Flowcell used to perform the sequencing e.g. `FLO-MIN106`. Not required if `--guppy_config` is specified.
+Flowcell used to perform the sequencing e.g. "FLO-MIN106". Not required if `--guppy_config` is specified.
 
 ### `--kit`
 
-Kit used to perform the sequencing e.g. `SQK-LSK109`. Not required if `--guppy_config` is specified.
+Kit used to perform the sequencing e.g. "SQK-LSK109". Not required if `--guppy_config` is specified.
 
 ### `--barcode_kit`
 
-Barcode kit used to perform the sequencing e.g. `SQK-PBK004`. When `--skip_basecalling` is specified but not `--skip_demultiplexing`, please specify the barcoding kit that can be recognised by `qcat`.
+Barcode kit used to perform the sequencing e.g. "SQK-PBK004".
+
+If you would like to skip the basecalling (`--skip_basecalling`) but still perform the demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):
 
 | `qcat` barcode kit specifications | description                                                                   |
 |-----------------------------------|-------------------------------------------------------------------------------|
@@ -222,54 +304,54 @@ Barcode kit used to perform the sequencing e.g. `SQK-PBK004`. When `--skip_basec
 
 ### `--guppy_config`
 
-Guppy config file used for basecalling passed with the `--config` parameter. Cannot be used in conjunction with `--flowcell` and `--kit`.
-This can be a local file (i.e. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data` directory of Guppy.
+Config file used for basecalling that will be passed to Guppy via the "--config" parameter. Cannot be used in conjunction with `--flowcell` and `--kit`.
+This can be a local file (i.e. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data/` directory of Guppy.
 
 ### `--guppy_model`
 
-Custom basecalling model file (`json`) to pass to Guppy for basecalling with the `--model` parameter. Custom basecalling models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki). This can also be a string specifying a model stored in the `/opt/ont/guppy/data` directory of Guppy.
+Custom basecalling model file in `json` format that will be passed to Guppy via the "--model" parameter. Custom basecalling models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki). This can also be a string specifying a model stored in the `/opt/ont/guppy/data` directory of Guppy.
 
 ### `--guppy_gpu`
 
-Whether to demultiplex with Guppy in GPU mode.
+Whether to demultiplex with Guppy in GPU mode (default: false).
 
 ### `--guppy_gpu_runners`
 
-Number of '--gpu_runners_per_device' used for guppy when using `--guppy_gpu` (default: 6)
+Number of "--gpu_runners_per_device" used for Guppy when using `--guppy_gpu` (default: 6).
 
 ### `--guppy_cpu_threads`
 
-Number of '--cpu_threads_per_caller' used for guppy when using `--guppy_gpu` (default: 1)
+Number of "--cpu_threads_per_caller" used for Guppy when using `--guppy_gpu` (default: 1).
 
 ### `--gpu_device`
 
-Basecalling device specified to Guppy in GPU mode using `--device` (default: 'auto')
+Basecalling device specified to Guppy in GPU mode using "--device" (default: 'auto').
 
 ### `--gpu_cluster_options`
 
-Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
+Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').
 
 ### `--qcat_min_score`
 
-Specify the minimum quality score for `qcat` in the range 0-100 (default: 60)
+Specify the minimum quality score for qcat in the range 0-100 (default: 60).
 
 ### `--qcat_detect_middle`
 
-Search for adapters in the whole read by applying the '--detect-middle' parameter in `qcat` (default: false)
+Search for adapters in the whole read by applying the '--detect-middle' parameter in qcat (default: false).
 
 ### `--skip_basecalling`
 
-Skip basecalling with Guppy
+Skip basecalling with Guppy.
 
 ### `--skip_demultiplexing`
 
-Skip demultiplexing with Guppy or with qcat
+Skip demultiplexing with Guppy/qcat.
 
 ## Alignment
 
 ### `--stranded`
 
-Specifies if the data is strand-specific. Automatically activated when using --protocol directRNA (default: false)
+Specifies if the data is strand-specific. Automatically activated when using `--protocol directRNA` (default: false).
 
 When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap2`:
 
@@ -282,15 +364,15 @@ When using `--protocol`/`--stranded` the following command-line arguments will b
 
 ### `--aligner`
 
-Specifies the aligner to use (available are: `graphmap2` or `minimap2`)
+Specifies the aligner to use i.e. `graphmap2` or `minimap2`.
 
 ### `--save_align_intermeds`
 
-Save the `.sam` files from the alignment step - not done by default
+Save the `.sam` files from the alignment step - not done by default.
 
 ### `--skip_alignment`
 
-Skip alignment and subsequent process
+Skip alignment and downstream processes.
 
 ## Coverage tracks
 
