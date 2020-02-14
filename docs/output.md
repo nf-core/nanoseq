@@ -73,62 +73,65 @@ FastQC gives general quality metrics about your reads. It provides information a
 *Output directories*:
 
 * `nanoplot/fastq/<SAMPLE>/`
-  Per sample `*.html` files for QC metrics and individual `*.png` image files for plots.
+  Per-sample `*.html` files for QC metrics and individual `*.png` image files for plots.
 * `fastqc/`  
   FastQC `*.html` and `*.zip` files.  
 
 ## Alignment
 
 *Documentation*:  
-[GraphMap2](https://github.com/lbcb-sci/graphmap2), [MiniMap2](https://github.com/lh3/minimap2), [SortBam](http://www.htslib.org/doc/samtools.html)
+[GraphMap2](https://github.com/lbcb-sci/graphmap2), [MiniMap2](https://github.com/lh3/minimap2), [SAMtools](http://samtools.sourceforge.net/)
 
 *Description*:  
-The FastQ reads are mapped to the given reference assembly provided using either GraphMap2 or Minimap2 and then sorted and indexed using SAMtools or these processes can be bypassed using the `--skip_alignment` parameter.
+Reads are mapped to a user-defined genome or transcriptome using either GraphMap2 or Minimap2, and the resulting BAM files are sorted and indexed. If the same reference is specified multiple times in the input samplesheet then the aligner index will only be built once for re-use across all samples. You can skip the alignment and downstream processes by providing the `--skip_alignment` parameter.
 
-The files resulting from the alignment with graphmap2 or minimap2 of individual libraries are not saved by default so this directory will not be present in your results. You can override this behaviour with the use of the `--save_align_intermeds` flag in which case it will contain the coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+The initial SAM alignment files created by GraphMap2 or Minimap2 are not saved by default to be more efficient with storage space. You can override this behaviour with the use of the `--save_align_intermeds` flag.
 
 ![MultiQC - SAMtools stats plot](images/mqc_samtools_stats_plot.png)
 
 *Output directories*:
 
-* `graphmap2/`
-  If the `--aligner graphmap2` parameter is used, the sorted and indexed bam files will be output here.
-* `minimap2/`
-  If the `--aligner minimap2` parameter is used, the sorted and indexed bam files will be output here.
-* `<ALIGNER>/samtools_stats/`
-  `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files using SAMtools.
+* `<ALIGNER>/`  
+  Per-sample coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+* `<ALIGNER>/samtools_stats/`  
+  SAMtools `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
 
-## bigWig and bigBed
+## Coverage tracks
 
 *Documentation*:
-[`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/), [`bedToBigBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)
+[BEDTools](https://bedtools.readthedocs.io/en/latest/), [bedGraphToBigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html#Ex3), [`bedToBigBed`](https://genome.ucsc.edu/goldenPath/help/bigBed.html#Ex2)
 
 *Description*:
-Creation of bigWig and bigBed coverage tracks for visualisation. This can be bypassed by setting the parameters `--skip_bigwig` and/or `--skip_bigbed`.
+The [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html) format is in an indexed binary format useful for displaying dense, continuous data in Genome Browsers such as the [UCSC](https://genome.ucsc.edu/cgi-bin/hgTracks) and [IGV](http://software.broadinstitute.org/software/igv/). This mitigates the need to load the much larger BAM files for data visualisation purposes which will be slower and result in memory issues. The bigWig format is also supported by various bioinformatics software for downstream processing such as meta-profile plotting.
+
+[bigBed](https://genome.ucsc.edu/goldenPath/help/bigBed.html) are more useful for displaying distribution of reads across exon intervals as is typically observed for RNA-seq data. Therefore, these files will only be generated if `--protocol directRNA` or `--protocol cDNA` are defined.
+
+The creation of these files can be bypassed by setting the parameters `--skip_bigwig`/`--skip_bigbed`.
 
 *Output directories*:
 
 * `<ALIGNER>/bigwig/`  
-  The bigWig files will be output here.
-* `<ALIGNER>/bigbed/`  
-  The bigbed files will be output here.
+  Per-sample `*.bigWig` files.
+* `<ALIGNER>/bigbed/`
+  Per-sample `*.bigBed` files.
 
 ## MultiQC
 
-[MultiQC](http://multiqc.info) is a visualisation tool that generates a single HTML report summarising all samples in your project. Most of the pipeline QC results are visualised in the report and further statistics are available in within the report data directory.
+*Documentation*:
+[MultiQC](https://multiqc.info/docs/)
 
-The pipeline has special steps which allow the software versions used to be reported in the MultiQC output for future traceability.
+*Description*:
+MultiQC is a visualisation tool that generates a single HTML report summarising all samples in your project. Most of the pipeline QC results are visualised in the report and further statistics are available within the report data directory.  
+
+Results generated by MultiQC for this pipeline collate QC from FastQC, samtools flagstat, samtools idxstats and samtools stats.
+
+The pipeline has special steps which also allow the software versions to be reported in the MultiQC output for future traceability. For more information about how to use MultiQC reports, see <http://multiqc.info>.
 
 *Output directories*:
-
-* `multiqc/Project_multiqc_report.html`  
-  MultiQC report - a standalone HTML file that can be viewed in your web browser
-* `multiqc/multiqc_data/`  
-  Directory containing parsed statistics from the different tools used in the pipeline
-* `multiqc/multiqc_plots/`
-  Directory containing the image files of the graphs included in MultiQC
-
-For more information about how to use MultiQC reports, see [http://multiqc.info](http://multiqc.info)
+* `multiqc/`  
+  * `multiqc_report.html` - a standalone HTML file that can be viewed in your web browser.
+  * `multiqc_data/` - directory containing parsed statistics from the different tools used in the pipeline.
+  * `multiqc_plots/` - directory containing static images from the report in various formats.
 
 ## Pipeline information
 
@@ -144,5 +147,4 @@ Nextflow provides excellent functionality for generating various reports relevan
   * Reports generated by the pipeline - `pipeline_report.html`, `pipeline_report.txt` and `software_versions.csv`.
   * Reports generated by Nextflow - `execution_report.html`, `execution_timeline.html`, `execution_trace.txt` and `pipeline_dag.svg`.
   * Reformatted samplesheet files used as input to the pipeline - `samplesheet_reformat.csv`.
-* `Documentation/`  
-  Documentation for interpretation of results in HTML format - `results_description.html`.
+  * Documentation for interpretation of results in HTML format - `results_description.html`.
