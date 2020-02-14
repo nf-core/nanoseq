@@ -117,7 +117,7 @@ The creation of these files can be bypassed by setting the parameters `--skip_bi
 
 ## MultiQC
 
-*Documentation*:
+*Documentation*:  
 [MultiQC](https://multiqc.info/docs/)
 
 *Description*:  
