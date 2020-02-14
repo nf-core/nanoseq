@@ -53,24 +53,29 @@ PycoQC and NanoPlot compute metrics and generate QC plots using the sequencing s
 
 *Output directories*:
 
-* `pycoQC/`  
-  An .html file output is produced that includes a run summary and graphical representation of distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time, output over experiment time, read quality over experiment time, readlength over experiment time, and percentage of reads per barcode.
+* `pycoqc/pycoQC_output.html`  
+  `*.html` file that includes a run summary and graphical representation of various QC metrics including distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time and percentage of reads per barcode.  
 * `nanoplot/summary/`  
-  An output of .png files of metric plots and an html summary file of overall run.
+  `*.html` files for QC metrics and individual `*.png` image files for plots.
 
-## FastQ Quality Control
+## FastQ QC
 
 *Documentation*:  
-[NanoPlot](https://github.com/wdecoster/NanoPlot)
+[NanoPlot](https://github.com/wdecoster/NanoPlot), [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/)
 
 *Description*:  
 NanoPlot give general quality metrics about the fastq output per barcode from Guppy. It provides information about the quality score distribution across your reads, read lengths and other general stats.
+
 ![Nanoplot - Read quality vs read length](images/nanoplot_readlengthquality.png)
+
+FastQC gives general quality metrics about your reads. It provides information about the quality score distribution across your reads, the per base sequence content (%A/C/G/T). You get information about adapter contamination and other overrepresented sequences.  
 
 *Output directories*:
 
-* `nanoplot/fastq/`
-  An output of QC metric plots in individual .png files and in one html file summarizing the output.
+* `nanoplot/fastq/<SAMPLE>/`
+  Per sample `*.html` files for QC metrics and individual `*.png` image files for plots.
+* `fastqc/`  
+  FastQC `*.html` and `*.zip` files.  
 
 ## Alignment
 
