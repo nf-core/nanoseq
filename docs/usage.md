@@ -9,12 +9,31 @@
   * [Reproducibility](#reproducibility)
 * [Main arguments](#main-arguments)
   * [`-profile`](#-profile)
-  * [`--reads`](#--reads)
-  * [`--single_end`](#--single_end)
-* [Reference genomes](#reference-genomes)
-  * [`--genome` (using iGenomes)](#--genome-using-igenomes)
-  * [`--fasta`](#--fasta)
-  * [`--igenomes_ignore`](#--igenomes_ignore)
+  * [`--input`](#--input)
+  * [`--protocol`](#--protocol)
+* [Basecalling and demultiplexing](#basecalling-and-demultiplexing)
+  * [`--input_path`](#--input_path)
+  * [`--flowcell`](#--flowcell)
+  * [`--kit`](#--kit)
+  * [`--barcode_kit`](#--barcode_kit)
+  * [`--guppy_config`](#--guppy_config)
+  * [`--guppy_model`](#--guppy_model)
+  * [`--guppy_gpu`](#--guppy_gpu)
+  * [`--guppy_gpu_runners`](#--guppy_gpu_runners)
+  * [`--guppy_cpu_threads`](#--guppy_cpu_threads)
+  * [`--gpu_device`](#--gpu_device)
+  * [`--gpu_cluster_options`](#--gpu_cluster_options)
+  * [`--qcat_min_score`](#--qcat_min_score)
+  * [`--qcat_detect_middle`](#--qcat_detect_middle)
+  * [`--skip_basecalling`](#--skip_basecalling)
+  * [`--skip_demultiplexing`](#--skip_demultiplexing)
+* [Alignments](#alignments)
+  * [`--aligner`](#--aligner)
+  * [`--stranded`](#--stranded)
+  * [`--save_align_intermeds`](#--save_align_intermeds)
+  * [`--skip_alignment`](#--skip_alignment)
+* [Coverage tracks](#coverage-tracks)
+* [Skipping QC steps](#skipping-qc-steps)
 * [Job resources](#job-resources)
   * [Automatic resubmission](#automatic-resubmission)
   * [Custom resource requests](#custom-resource-requests)
@@ -38,6 +57,7 @@
   * [`--plaintext_email`](#--plaintext_email)
   * [`--monochrome_logs`](#--monochrome_logs)
   * [`--multiqc_config`](#--multiqc_config)
+<!-- TOC END -->
 
 ## Introduction
 
@@ -49,14 +69,19 @@ It is recommended to limit the Nextflow Java virtual machines memory. We recomme
 NXF_OPTS='-Xms1g -Xmx4g'
 ```
 
-<!-- TODO nf-core: Document required command line parameters to run the pipeline-->
-
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/nanoseq --reads '*_R{1,2}.fastq.gz' -profile docker
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-LSK109 \
+    --barcode_kit SQK-PBK004 \
+    -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -117,85 +142,263 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
   * A profile with a complete configuration for automated testing
   * Includes links to test data so needs no other parameters
 
-<!-- TODO nf-core: Document required command line parameters -->
+### `--input`
 
-### `--reads`
+You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns and a header row:
 
-Use this to specify the location of your input FastQ files. For example:
+| Column          | Description                                                                                                                |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------|
+| `sample`        | Sample name without spaces.                                                                                                |
+| `fastq`         | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
+| `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                      |
+| `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
+| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz". |
 
-```bash
---reads 'path/to/data/sample_*_{1,2}.fastq'
-```
+#### Specifying a reference genome/transcriptome
 
-Please note the following requirements:
+Each sample in the sample sheet can be mapped to its own reference genome or transcriptome. Please see below for additional details required to fill in the `genome` and `transcriptome` columns appropriately:
 
-1. The path must be enclosed in quotes
-2. The path must have at least one `*` wildcard character
-3. When using the pipeline with paired end data, the path must use `{1,2}` notation to specify read pairs.
+* If both `genome` and `transcriptome` are not specified then the mapping will be skipped for that sample.
+* If both `genome` and `transcriptome` are specified as local fasta files then the transcriptome will be preferentially used for mapping.
+* If `genome` is specified as a local fasta file and `transcriptome` is left blank then mapping will be performed relative to the genome.
+* If `genome` isnt specified and `transcriptome` is provided as a fasta file then mapping will be performed relative to the transcriptome.
+* If `genome` is specified as an AWS iGenomes key then the `transcriptome` column can be blank. The associated gtf file for the `transcriptome` will be automatically obtained in order to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+* If `genome` is specified as a local fasta file and `transcriptome` is a specified as a local gtf file then both of these will be used to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
 
-If left unspecified, a default pattern is used: `data/*{1,2}.fastq.gz`
+#### Skip basecalling/demultiplexing
 
-### `--single_end`
+As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without basecalling/demultiplexing.
 
-By default, the pipeline expects paired-end data. If you have single-end data, you need to specify `--single_end` on the command line when you launch the pipeline. A normal glob pattern, enclosed in quotation marks, can then be used for `--reads`. For example:
+##### With basecalling and demultiplexing
 
-```bash
---single_end --reads '*.fastq'
-```
-
-It is not possible to run a mixture of single-end and paired-end files in one run.
-
-## Reference genomes
-
-The pipeline config files come bundled with paths to the illumina iGenomes reference index files. If running with docker or AWS, the configuration is set up to use the [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) resource.
-
-### `--genome` (using iGenomes)
-
-There are 31 different species supported in the iGenomes references. To run the pipeline, you must specify which to use with the `--genome` flag.
-
-You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
-
-* Human
-  * `--genome GRCh37`
-* Mouse
-  * `--genome GRCm38`
-* _Drosophila_
-  * `--genome BDGP6`
-* _S. cerevisiae_
-  * `--genome 'R64-1-1'`
-
-> There are numerous others - check the config file for more.
-
-Note that you can use the same configuration setup to save sets of reference files for your own use, even if they are not part of the iGenomes resource. See the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for instructions on where to save such a file.
-
-The syntax for this reference configuration is as follows:
-
-<!-- TODO nf-core: Update reference genome example according to what is needed -->
-
-```nextflow
-params {
-  genomes {
-    'GRCh37' {
-      fasta   = '<path to the genome fasta file>' // Used if no star index given
-    }
-    // Any number of additional genomes, key is used with --genome
-  }
-}
-```
-
-<!-- TODO nf-core: Describe reference path flags -->
-
-### `--fasta`
-
-If you prefer, you can specify the full path to your reference genome when you run the pipeline:
+###### Example `samplesheet.csv`
 
 ```bash
---fasta '[path to Fasta reference]'
+sample,fastq,barcode,genome,transcriptome
+Sample1,,1,mm10,
+Sample2,,2,hg19,
+Sample3,,3,/path/to/local/genome.fa,
+Sample4,,4,,/path/to/local/transcriptome.fa
+Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+Sample6,,6,,
 ```
 
-### `--igenomes_ignore`
+###### Example command
 
-Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`.
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-DCS109 \
+    --barcode_kit EXP-NBD103 \
+    -profile <docker/singularity/institute>
+```
+
+##### With basecalling but not demultiplexing
+
+###### Example `samplesheet.csv`
+
+```bash
+sample,fastq,barcode,genome,transcriptome
+Sample1,,1,/path/to/local/genome.fa,
+```
+
+> Only a single sample can be specified if you would like to skip demultiplexing
+
+###### Example command
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-DCS108 \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
+
+##### With demultiplexing but not basecalling
+
+###### Example `samplesheet.csv`
+
+```bash
+sample,fastq,barcode,genome,transcriptome
+Sample1,,1,mm10,
+Sample2,,2,hg19,
+Sample3,,3,/path/to/local/genome.fa,
+Sample4,,4,,/path/to/local/transcriptome.fa
+Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+Sample6,,6,,
+```
+
+###### Example command
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --input_path ./undemultiplexed.fastq.gz \
+    --barcode_kit 'NBD103/NBD104' \
+    --skip_basecalling \
+    -profile <docker/singularity/institute>
+```
+
+##### Without both basecalling and demultiplexing
+
+###### Example `samplesheet.csv`
+
+```bash
+sample,fastq,barcode,genome,transcriptome
+Sample1,SAM101A1.fastq.gz,,mm10
+Sample2,SAM101A2.fastq.gz,,hg19
+Sample3,SAM101A3.fastq.gz,/path/to/local/genome.fa,
+Sample4,SAM101A4.fastq.gz,,
+```
+
+###### Example command
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
+
+### `--protocol`
+
+Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
+
+## Basecalling and demultiplexing
+
+### `--input_path`
+
+Path to Nanopore run directory (e.g. `fastq_pass/`) or a basecalled fastq file that requires demultiplexing. The latter can only be provided in conjunction with the `--skip_basecalling` parameter.
+
+### `--flowcell`
+
+Flowcell used to perform the sequencing e.g. "FLO-MIN106". Not required if `--guppy_config` is specified.
+
+### `--kit`
+
+Kit used to perform the sequencing e.g. "SQK-LSK109". Not required if `--guppy_config` is specified.
+
+### `--barcode_kit`
+
+Barcode kit used to perform the sequencing e.g. "SQK-PBK004".
+
+If you would like to skip the basecalling (`--skip_basecalling`) but still perform the demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):
+
+| `qcat` barcode kit specifications | description                                                                   |
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `Auto`                            | Auto detect barcoding kit                                                     |
+| `RBK001`                          | Rapid barcoding kit                                                           |
+| `RBK004`                          | Rapid barcoding kit v4                                                        |
+| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |
+| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |
+| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |
+| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |
+| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |
+| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |
+| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |
+| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |
+| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |
+
+### `--guppy_config`
+
+Config file used for basecalling that will be passed to Guppy via the "--config" parameter. Cannot be used in conjunction with `--flowcell` and `--kit`.
+This can be a local file (i.e. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data/` directory of Guppy.
+
+### `--guppy_model`
+
+Custom basecalling model file in `json` format that will be passed to Guppy via the "--model" parameter. Custom basecalling models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki). This can also be a string specifying a model stored in the `/opt/ont/guppy/data` directory of Guppy.
+
+### `--guppy_gpu`
+
+Whether to demultiplex with Guppy in GPU mode (default: false).
+
+### `--guppy_gpu_runners`
+
+Number of "--gpu_runners_per_device" used for Guppy when using `--guppy_gpu` (default: 6).
+
+### `--guppy_cpu_threads`
+
+Number of "--cpu_threads_per_caller" used for Guppy when using `--guppy_gpu` (default: 1).
+
+### `--gpu_device`
+
+Basecalling device specified to Guppy in GPU mode using "--device" (default: 'auto').
+
+### `--gpu_cluster_options`
+
+Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').
+
+### `--qcat_min_score`
+
+Specify the minimum quality score for qcat in the range 0-100 (default: 60).
+
+### `--qcat_detect_middle`
+
+Search for adapters in the whole read by applying the '--detect-middle' parameter in qcat (default: false).
+
+### `--skip_basecalling`
+
+Skip basecalling with Guppy.
+
+### `--skip_demultiplexing`
+
+Skip demultiplexing with Guppy/qcat.
+
+## Alignment
+
+### `--stranded`
+
+Specifies if the data is strand-specific. Automatically activated when using `--protocol directRNA` (default: false).
+
+When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap2`:
+
+| `nanoseq` input              | `minimap2` presets  | `graphmap2` presets |
+|------------------------------|---------------------|--------------------|
+| `--protocol DNA`             | -ax map-ont         | no presets         |
+| `--protocol cDNA`            | -ax splice          | -x rnaseq          |
+| `--protocol directRNA`       | -ax splice -uf -k14 | -x rnaseq          |
+| `--protocol cDNA --stranded` | -ax splice -uf      | -x rnaseq          |
+
+### `--aligner`
+
+Specifies the aligner to use i.e. `graphmap2` or `minimap2`.
+
+### `--save_align_intermeds`
+
+Save the `.sam` files from the alignment step - not done by default.
+
+### `--skip_alignment`
+
+Skip alignment and downstream processes.
+
+## Coverage tracks
+
+| Step                    | Description                            |
+|-------------------------|----------------------------------------|
+| `--skip_bigwig`         | Skip BigWig file generation            |
+| `--skip_bigbed`         | Skip BigBed file generation            |
+
+## Skipping QC steps
+
+The pipeline contains a number of quality control steps. Sometimes, it may not be desirable to run all of them if time and compute resources are limited.
+The following options make this easy:
+
+| Step                    | Description                          |
+|-------------------------|--------------------------------------|
+| `--skip_qc`             | Skip all QC steps apart from MultiQC |
+| `--skip_pycoqc`         | Skip pycoQC                          |
+| `--skip_nanoplot`       | Skip NanoPlot                        |
+| `--skip_fastqc`         | Skip FastQC                          |
+| `--skip_multiqc`        | Skip MultiQC                         |
 
 ## Job resources
 
