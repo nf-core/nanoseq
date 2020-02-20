@@ -157,7 +157,8 @@ if (!params.skip_alignment) {
 }
 
 // Stage config files
-ch_multiqc_config = file(params.multiqc_config, checkIfExists: true)
+ch_multiqc_config = file("$baseDir/assets/multiqc_config.yaml", checkIfExists: true)
+ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config, checkIfExists: true) : Channel.empty()
 ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 
 // Has the run name been specified by the user?
@@ -900,9 +901,10 @@ process get_software_versions {
     """
 }
 
-def create_workflow_summary(summary) {
-    def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
-    yaml_file.text  = """
+Channel.from(summary.collect{ [it.key, it.value] })
+    .map { k,v -> "<dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }
+    .reduce { a, b -> return [a, b].join("\n            ") }
+    .map { x -> """
     id: 'nf-core-nanoseq-summary'
     description: " - this information is collected when the pipeline is started."
     section_name: 'nf-core/nanoseq Workflow Summary'
@@ -910,12 +912,10 @@ def create_workflow_summary(summary) {
     plot_type: 'html'
     data: |
         <dl class=\"dl-horizontal\">
-${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }.join("\n")}
+            $x
         </dl>
-    """.stripIndent()
-
-   return yaml_file
-}
+    """.stripIndent() }
+    .set { ch_workflow_summary }
 
 /*
  * STEP 15 - MultiQC
@@ -927,11 +927,12 @@ process MultiQC {
     !params.skip_multiqc
 
     input:
-    file multiqc_config from ch_multiqc_config
+    file (multiqc_config) from ch_multiqc_config
+    file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
     file ('samtools/*')  from ch_sortbam_stats_mqc.collect().ifEmpty([])
     file ('fastqc/*')  from ch_fastqc_mqc.collect().ifEmpty([])
     file ('software_versions/*') from software_versions_yaml.collect()
-    file ('workflow_summary/*') from create_workflow_summary(summary)
+    file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
     output:
     file "*multiqc_report.html" into ch_multiqc_report
@@ -941,8 +942,9 @@ process MultiQC {
     script:
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
+    custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
     """
-    multiqc . -f $rtitle $rfilename --config $multiqc_config -m custom_content -m fastqc -m samtools
+    multiqc . -f $rtitle $rfilename $custom_config_file -m custom_content -m fastqc -m samtools
     """
 }
 
