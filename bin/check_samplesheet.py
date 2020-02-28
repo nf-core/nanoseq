@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 
-###########################################################################
-###########################################################################
-## Created on August 28th 2019 to check nf-core/nanoseq samplesheet file
-###########################################################################
-###########################################################################
-
 import os
 import sys
 import argparse
@@ -20,8 +14,10 @@ def parse_args(args=None):
 
     return parser.parse_args(args)
 
+
 def print_error(error,line):
     print("ERROR: Please check samplesheet -> {}\nLine: '{}'".format(error,line.strip()))
+
 
 def check_samplesheet(FileIn,FileOut):
     HEADER = ['sample', 'fastq', 'barcode', 'genome', 'transcriptome']
