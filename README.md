@@ -51,7 +51,7 @@ nextflow run nf-core/nanoseq \
     -profile <docker/singularity/institute>
 ```
 
-See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
+See [usage docs](docs/usage.md) for all of the available options when running the pipeline. An example input samplesheet for performing basecalling and demultiplexing can be found [here](assets/samplesheet.csv).
 
 ## Documentation
 
