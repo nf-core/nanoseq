@@ -777,7 +777,7 @@ process BAMToBedGraph {
     script:
     split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
     """
-    genomeCoverageBed $split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
+    bedtools genomecov $split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n >  ${sample}.bedGraph
     """
 }
 
