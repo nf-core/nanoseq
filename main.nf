@@ -95,10 +95,9 @@ def ch_guppy_model = Channel.empty()
 def ch_guppy_config = Channel.empty()
 if (!params.skip_basecalling) {
 
-    // TODO pipeline: Add in a check to see if running offline
     // Pre-download test-dataset to get files for '--input_path' parameter
     // Nextflow is unable to recursively download directories via HTTPS
-    if (workflow.profile.contains('test')) {
+    if (workflow.profile.contains('test') && !NXF_OFFLINE) {
         process GetTestData {
 
             output:
