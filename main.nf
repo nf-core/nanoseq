@@ -91,23 +91,37 @@ if (params.help) {
  */
 if (params.input) { ch_input = file(params.input, checkIfExists: true) } else { exit 1, "Samplesheet file not specified!" }
 
+// Function to check if running offline
+def isOffline() {
+    try {
+        return NXF_OFFLINE as Boolean
+    }
+    catch( Exception e ) {
+        return false
+    }
+}
+
 def ch_guppy_model = Channel.empty()
 def ch_guppy_config = Channel.empty()
 if (!params.skip_basecalling) {
 
     // Pre-download test-dataset to get files for '--input_path' parameter
     // Nextflow is unable to recursively download directories via HTTPS
-    if (workflow.profile.contains('test') && !NXF_OFFLINE) {
-        process GetTestData {
+    if (workflow.profile.contains('test')) {
+        if (!isOffline()) {
+            process GetTestData {
 
-            output:
-            file "test-datasets/fast5/$barcoded/" into ch_input_path
+                output:
+                file "test-datasets/fast5/$barcoded/" into ch_input_path
 
-            script:
-            barcoded = workflow.profile.contains('test_nonbc') ? "nonbarcoded" : "barcoded"
-            """
-            git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
-            """
+                script:
+                barcoded = workflow.profile.contains('test_nonbc') ? "nonbarcoded" : "barcoded"
+                """
+                git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
+                """
+            }
+        } else {
+            exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
         }
     } else {
         if (params.input_path) { ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true) } else { exit 1, "Please specify a valid run directory to perform basecalling!" }
