@@ -58,7 +58,7 @@ If you have a pre-basecalled fastq file then *qcat* will be used to perform the 
 * `nanoplot/summary/`  
   `*.html` files for QC metrics and individual `*.png` image files for plots.
 
-## FastQ QC
+## Read QC
 
 *Documentation*:  
 [NanoPlot](https://github.com/wdecoster/NanoPlot), [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/)
