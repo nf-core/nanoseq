@@ -22,7 +22,7 @@ jobs:
       - name: Pull docker image
         run: |
           docker pull nfcore/nanoseq:dev
-          docker tag nfcore/nanoseq:dev nfcore/nanoseq:1.0.0
+          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
       - name: Basecall and demultiplex (minimap2)
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test,docker --aligner minimap2
