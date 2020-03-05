@@ -21,7 +21,8 @@ jobs:
           sudo mv nextflow /usr/local/bin/
       - name: Pull docker image
         run: |
-          docker pull nfcore/nanoseq:dev && docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
+          docker pull nfcore/nanoseq:dev
+          docker tag nfcore/nanoseq:dev nfcore/nanoseq:1.0.0
       - name: Basecall and demultiplex (minimap2)
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test,docker --aligner minimap2
