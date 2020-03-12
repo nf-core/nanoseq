@@ -5,6 +5,7 @@
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A519.10.0-brightgreen.svg)](https://www.nextflow.io/)
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg)](http://bioconda.github.io/)
 [![Docker](https://img.shields.io/docker/automated/nfcore/nanoseq.svg)](https://hub.docker.com/r/nfcore/nanoseq)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3697959.svg)](https://doi.org/10.5281/zenodo.3697959)
 
 ## Introduction
 
