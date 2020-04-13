@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### `Fixed`
 
-* Added `--runtime=nvidia` to Docker `runOptions` when using GPU e.g. [see here](https://github.com/mozilla/DeepSpeech/issues/2138#issuecomment-497228519)
+* Added `--gpus all` to Docker `runOptions` when using GPU [see here](https://github.com/docker/compose/issues/6691#issuecomment-514429646)
 
 ### `Dependencies`
 
