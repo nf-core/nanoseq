@@ -23,24 +23,63 @@ jobs:
         run: |
           docker pull nfcore/nanoseq:dev
           docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
+      - name: Run pipeline with test data
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker
+
+
+
+
+
+
+name: nf-core CI
+# This workflow is triggered on pushes and PRs to the repository.
+# It runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
+on: [push, pull_request]
+
+jobs:
+  test:
+    env:
+      NXF_VER: ${{ matrix.nxf_ver }}
+      NXF_ANSI_LOG: false
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        nxf_ver: ['19.10.0', '']
+        parameters: ['', --aligner graphmap2]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Nextflow
+        run: |
+          wget -qO- get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+      - name: Pull docker image
+        run: |
+          docker pull nfcore/nanoseq:dev
+          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
       - name: Basecall and demultiplex (minimap2)
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --aligner minimap2
-      - name: Basecall and demultiplex (graphmap2)
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker ${{ matrix.parameters }}
+
+  profile:
+    env:
+      NXF_VER: '19.10.0'
+      NXF_ANSI_LOG: false
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        profiles: [test_bc_nodx, test_nobc_dx, test_nobc_nodx]
+        parameters: ['', --skip_alignment, --skip_qc]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Nextflow
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --aligner graphmap2
-      - name: Basecall and no demultiplexing (minimap2)
+          wget -qO- get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+      - name: Pull docker image
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_bc_nodx,docker
-      - name: No Basecalling and demultiplexing (minimap2)
+          docker pull nfcore/atacseq:dev
+          docker tag nfcore/atacseq:dev nfcore/atacseq:1.2.0
+      - name: Run pipeline with various options
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_dx,docker
-      - name: No Basecalling and no demultiplexing (minimap2)
-        run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_nodx,docker
-      - name: No Basecalling and no demultiplexing (minimap2, skip_alignment)
-        run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_nodx,docker --skip_alignment
-      - name: No Basecalling and no demultiplexing (minimap2, skip_alignment, skip_qc)
-        run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_nobc_nodx,docker --skip_alignment --skip_qc
+          nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profiles }},docker ${{ matrix.parameters }}
