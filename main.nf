@@ -939,7 +939,7 @@ if (!params.skip_transcriptquant) {
             set val(name), file(bam) into ch_txome_feature_count
             file annot into ch_annot
             file("*.version") into ch_stringtie_version
-            val "${params.outdir}/stringtie2" into ch_stringtie_outputs
+            val "${params.outdir}/${params.transcriptquant}" into ch_stringtie_outputs
             file "*.out.gtf"
 
             script:
