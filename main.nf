@@ -65,6 +65,11 @@ def helpMessage() {
       --skip_nanoplot [bool]          Skip NanoPlot (Default: false)
       --skip_fastqc [bool]            Skip FastQC (Default: false)
       --skip_multiqc [bool]           Skip MultiQC (Default: false)
+     
+    Transcript Quantification
+      --transcriptquant [str]         Specifies the transcript quantification method to use (available are: bambu or stringtie). Only available when protocol is cDNA or directRNA.
+      --skip_transcriptquant [bool]   Skip transcript quantification and subsequent process (Default: false)
+      
 
     Other
       --outdir [file]                 The output directory where the results will be saved (Default: '/results')
@@ -169,6 +174,15 @@ if (!params.skip_alignment) {
     }
 }
 
+if (!params.skip_transcriptquant) {
+    if (params.transcriptquant != 'bambu' && params.transcriptquant != 'stringtie') {
+        exit 1, "Invalid transcript quantification option: ${params.transcriptquant}. Valid options: 'bambu', 'stringtie'"
+    }
+    if (params.protocol != 'cDNA' && params.protocol != 'directRNA') {
+        exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'cDNA', 'directRNA'"
+    }
+}
+
 // Stage config files
 ch_multiqc_config = file("$baseDir/assets/multiqc_config.yaml", checkIfExists: true)
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config, checkIfExists: true) : Channel.empty()
@@ -225,6 +239,9 @@ if (params.skip_basecalling && !params.skip_demultiplexing) {
 if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
+}
+if (!params.skip_transcirptquant && params.protocol != 'DNA') {
+    summary['Transcript Quantification']    = params.transcriptquant
 }
 if (params.skip_alignment) summary['Skip Alignment'] = 'Yes'
 if (params.skip_bigbed)    summary['Skip BigBed']    = 'Yes'
@@ -309,7 +326,8 @@ ch_samplesheet_reformat
     .map { get_sample_info(it, params.genomes) }
     .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
     .into { ch_sample_info;
-            ch_sample_name }
+            ch_sample_name;
+            ch_transquant_info}
 
 if (!params.skip_basecalling) {
 
@@ -863,8 +881,121 @@ process Bed12ToBigBed {
     """
 }
 
+if (!params.skip_transcriptquant) {
+
+    /*
+     * STEP 15 - Transcript Quantification
+     */
+    if (params.transcriptquant == 'bambu') {
+        params.Bambuscript= "$baseDir/bin/runBambu.R"
+        ch_Bambuscript = Channel.fromPath("$params.Bambuscript", checkIfExists:true)
+        process Bambu {
+            tag "$sample"
+            label 'process_medium'
+            publishDir "${params.outdir}/${params.transcriptquant}", mode: 'copy',
+               saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                        }
+
+            input:
+            set  file(genomeseq), file(annot) from ch_bambu_input
+            file bamdir from ch_bamdir
+            file Bambuscript from ch_Bambuscript
+
+
+            output:
+            file "Bambu" into ch_deseq2_in, ch_dexseq_in
+
+            script:
+            """
+            Rscript --vanilla $Bambuscript $bamdir Bambu/ $task.cpus $annot $genomeseq 
+            """
+        }
+    } else {
+        process StringTie2 {
+            tag "$sample"
+            label 'process_medium'
+            publishDir "${params.outdir}/${params.transcriptquant}", mode: 'copy',
+               saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                        }
+
+            input:
+            set val(name), file(bam), val(genomeseq), file(annot) from ch_txome_reconstruction
+
+            output:
+            set val(name), file(bam) into ch_txome_feature_count
+            file annot into ch_annot
+            file("*.version") into ch_stringtie_version
+            val "${params.outdir}/stringtie2" into ch_stringtie_outputs
+            file "*.out.gtf"
+
+            script:
+            """
+            stringtie -L -G $annot -o ${name}.out.gtf $bam
+            stringtie --version &> stringtie.version
+            """
+        }
+        
+        ch_stringtie_outputs
+        .unique()
+        .set {ch_stringtie_dir}
+        ch_annot
+        .unique()
+        .set{ch_annotation}
+
+        process StringTie2Merge {
+            tag "$sample"
+            label 'process_medium'
+            publishDir "${params.outdir}/${params.transcriptquant}", mode: 'copy',
+               saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                        }
+
+            input:
+            val stringtie_dir from ch_stringtie_dir
+            file annot from ch_annotation
+
+            output:
+            file "merged.combined.gtf" into ch_merged_gtf
+
+            script:
+            """
+            ls -d -1 $PWD/$stringtie_dir/*.out.gtf > gtf_list.txt
+            stringtie --merge gtf_list.txt -G $annot -o merged.combined.gtf
+            """
+        }
+        
+        process FeatureCounts {
+            tag "$sample"
+            label 'process_medium'
+            publishDir "${params.outdir}/${params.transcriptquant}", mode: 'copy',
+               saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                        }
+
+            input:
+            file annot from ch_merged_gtf
+            file bamdir from ch_bamdir_fc
+
+            output:
+            file("*.version") into ch_feat_counts_version
+            file "featureCounts_transcript" into ch_deseq2_indir, ch_dexseq_indir 
+
+            script:
+            """
+            mkdir featureCounts_transcript
+            featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o featureCounts_transcript/counts_transcript.txt $bamdir/*.bam 2>> featureCounts_transcript/counts_transcript.log
+            featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o featureCounts_transcript/counts_gene.txt $bamdir/*.bam 2>> featureCounts_transcript/counts_gene.log
+            featureCounts -v &> featureCounts.version
+            """
+        } 
+    }
+    
+}
+
 /*
- * STEP 15 - Output Description HTML
+ * STEP 16 - Output Description HTML
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
