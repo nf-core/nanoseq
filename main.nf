@@ -890,7 +890,7 @@ if (!params.skip_transcriptquant) {
     if (params.transcriptquant == 'bambu') {
         ch_transquant_info
            .map {it -> [it[2],it[3]]}
-           .set { ch_bambu_in }
+           .set { ch_bambu_input }
            
         params.Bambuscript= "$baseDir/bin/runBambu.R"
         ch_Bambuscript = Channel.fromPath("$params.Bambuscript", checkIfExists:true)
