@@ -762,8 +762,8 @@ process SortBAM {
                       if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
                       else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
                       else if (filename.endsWith(".stats")) "samtools_stats/$filename"
-                      else if (filename.endsWith(".sorted.bam")) filename
-                      else if (filename.endsWith(".sorted.bam.bai")) filename
+                      else if (filename.endsWith(".sorted.bam")) "bam/$filename"
+                      else if (filename.endsWith(".sorted.bam.bai")) "bam_index/$filename"
                       else null
                 }
 
@@ -776,7 +776,8 @@ process SortBAM {
     output:
     set val(sample), file(sizes), val(is_transcripts), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
                                                                                            ch_sortbam_bed12
-
+    set val(sample), file("*.sorted.bam") into ch_sortbam_stringtie
+    val "${params.outdir}/${params.aligner}/bam/" into ch_bamdir, ch_bamdir_fc
     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
     script:
@@ -887,6 +888,10 @@ if (!params.skip_transcriptquant) {
      * STEP 15 - Transcript Quantification
      */
     if (params.transcriptquant == 'bambu') {
+        ch_transquant_info
+           .map {it -> [it[2],it[3]]}
+           .set { ch_bambu_in }
+           
         params.Bambuscript= "$baseDir/bin/runBambu.R"
         ch_Bambuscript = Channel.fromPath("$params.Bambuscript", checkIfExists:true)
         process Bambu {
@@ -912,6 +917,13 @@ if (!params.skip_transcriptquant) {
             """
         }
     } else {
+        ch_transquant_info
+           .map {it -> [it[0],it[2], it[3]]}
+           .set{ch_fasta_gtf}
+        ch_fasta_gtf
+           .join(ch_sortbam_stringtie)
+           .set{ch_txome_reconstruction}
+           
         process StringTie2 {
             tag "$sample"
             label 'process_medium'
@@ -921,7 +933,7 @@ if (!params.skip_transcriptquant) {
                         }
 
             input:
-            set val(name), file(bam), val(genomeseq), file(annot) from ch_txome_reconstruction
+            set val(name), val(genomeseq), file(annot), file(bam) from ch_txome_reconstruction
 
             output:
             set val(name), file(bam) into ch_txome_feature_count
