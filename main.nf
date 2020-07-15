@@ -240,7 +240,7 @@ if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
 }
-if (!params.skip_transcirptquant && params.protocol != 'DNA') {
+if (!params.skip_transcriptquant && params.protocol != 'DNA') {
     summary['Transcript Quantification']    = params.transcriptquant
 }
 if (params.skip_alignment) summary['Skip Alignment'] = 'Yes'
