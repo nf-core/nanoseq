@@ -32,6 +32,9 @@
   * [`--stranded`](#--stranded)
   * [`--save_align_intermeds`](#--save_align_intermeds)
   * [`--skip_alignment`](#--skip_alignment)
+* [Transcript Quantification](#transcript-quantification)
+  * [`--transcriptquant`](#--transcriptquant)
+  * [`--skip_transcriptquant`](#--skip_transcriptquant)
 * [Coverage tracks](#coverage-tracks)
 * [Skipping QC steps](#skipping-qc-steps)
 * [Job resources](#job-resources)
@@ -353,7 +356,7 @@ Skip basecalling with Guppy.
 
 Skip demultiplexing with Guppy/qcat.
 
-## Alignment
+## Alignments
 
 ### `--stranded`
 
@@ -379,6 +382,16 @@ Save the `.sam` files from the alignment step - not done by default.
 ### `--skip_alignment`
 
 Skip alignment and downstream processes.
+
+## Transcript Quantification
+
+### `--transcriptquant`
+
+Specifies the transcript quantification method to use i.e. `bambu` or `stringtie`.
+
+### `--skip_transcriptquant`
+
+Skip transcript quantification processes.
 
 ## Coverage tracks
 
