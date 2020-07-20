@@ -777,7 +777,7 @@ process SortBAM {
     set val(sample), file(sizes), val(is_transcripts), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
                                                                                            ch_sortbam_bed12
     set val(sample), file("*.sorted.bam") into ch_sortbam_stringtie
-    val "${params.outdir}/${params.aligner}/bam/" into ch_bamdir, ch_bamdir_fc
+    val "$PWD/${params.outdir}/${params.aligner}/bam" into ch_bamdir, ch_bamdir_fc
     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
     script:
@@ -904,7 +904,7 @@ if (!params.skip_transcriptquant) {
 
             input:
             set  file(genomeseq), file(annot) from ch_bambu_input
-            file bamdir from ch_bamdir
+            val bamdir from ch_bamdir
             file Bambuscript from ch_Bambuscript
 
 
@@ -988,7 +988,7 @@ if (!params.skip_transcriptquant) {
 
             input:
             file annot from ch_merged_gtf
-            file bamdir from ch_bamdir_fc
+            val bamdir from ch_bamdir_fc
 
             output:
             file("*.version") into ch_feat_counts_version
