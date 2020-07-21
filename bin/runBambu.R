@@ -1,5 +1,18 @@
 #!/usr/bin/env Rscript
 
+if (!requireNamespace("BSgenome", quietly = TRUE)){
+  
+  
+  
+  install.packages("BiocManager", repos='http://cran.us.r-project.org')
+  
+  BiocManager::install("BSgenome",update = FALSE, ask= FALSE)
+  
+  
+  
+  
+  
+}
 ##install bambu if bambu is not installed
 ##load bambu
 library(bambu)
