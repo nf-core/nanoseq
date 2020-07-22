@@ -291,6 +291,7 @@ nextflow run nf-core/nanoseq \
     --protocol cDNA \
     --skip_basecalling \
     --skip_demultiplexing \
+    --skip_qc \
     --skip_alignment \
     -profile <docker/singularity/institute>
 ```
