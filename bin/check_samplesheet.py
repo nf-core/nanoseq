@@ -61,6 +61,7 @@ def check_samplesheet(FileIn,FileOut):
 
             ## CHECK FASTQ ENTRIES
             if sample_path:
+                dir_path = '/'.join(sample_path.split('/')[:-1])
                 if sample_path[-9:] != '.fastq.gz' and sample_path[-6:] != '.fq.gz' and sample_path[-4:] != ".bam":
                     print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz' or '.bam'!",line)
                     sys.exit(1)
@@ -98,14 +99,14 @@ def check_samplesheet(FileIn,FileOut):
                     is_transcripts = '1'
                     genome = transcriptome
 
-            outLines.append([sample,sample_path,barcode,genome,gtf,is_transcripts])
+            outLines.append([sample,sample_path,barcode,genome,gtf,is_transcripts,dir_path])
         else:
             fin.close()
             break
 
     ## WRITE TO FILE
     fout = open(FileOut,'w')
-    fout.write(','.join(['sample', 'sample_path', 'barcode', 'genome', 'gtf', 'is_transcripts']) + '\n')
+    fout.write(','.join(['sample', 'sample_path', 'barcode', 'genome', 'gtf', 'is_transcripts','dir_path']) + '\n')
     for line in outLines:
         fout.write(','.join(line) + '\n')
     fout.close()
