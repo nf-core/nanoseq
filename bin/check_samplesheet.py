@@ -20,7 +20,7 @@ def print_error(error,line):
 
 
 def check_samplesheet(FileIn,FileOut):
-    HEADER = ['sample', 'fastq', 'barcode', 'genome', 'transcriptome']
+    HEADER = ['sample', 'sample_path', 'barcode', 'genome', 'transcriptome']
 
     ## CHECK HEADER
     fin = open(FileIn,'r')
@@ -42,7 +42,7 @@ def check_samplesheet(FileIn,FileOut):
                 sys.exit(1)
 
             ## CHECK SAMPLE ID ENTRIES
-            sample,fastq,barcode,genome,transcriptome = lspl
+            sample,sample_path,barcode,genome,transcriptome = lspl
             if sample:
                 if sample.find(' ') != -1:
                     print_error("Sample entry contains spaces!",line)
@@ -60,9 +60,9 @@ def check_samplesheet(FileIn,FileOut):
                     barcode = 'barcode%s' % (barcode.zfill(2))
 
             ## CHECK FASTQ ENTRIES
-            if fastq:
-                if fastq[-9:] != '.fastq.gz' and fastq[-6:] != '.fq.gz':
-                    print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz'!",line)
+            if sample_path:
+                if sample_path[-9:] != '.fastq.gz' and sample_path[-6:] != '.fq.gz' and sample_path[-4:] != ".bam":
+                    print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz' or '.bam'!",line)
                     sys.exit(1)
 
             ## CHECK GENOME ENTRIES
@@ -98,14 +98,14 @@ def check_samplesheet(FileIn,FileOut):
                     is_transcripts = '1'
                     genome = transcriptome
 
-            outLines.append([sample,fastq,barcode,genome,gtf,is_transcripts])
+            outLines.append([sample,sample_path,barcode,genome,gtf,is_transcripts])
         else:
             fin.close()
             break
 
     ## WRITE TO FILE
     fout = open(FileOut,'w')
-    fout.write(','.join(['sample', 'fastq', 'barcode', 'genome', 'gtf', 'is_transcripts']) + '\n')
+    fout.write(','.join(['sample', 'sample_path', 'barcode', 'genome', 'gtf', 'is_transcripts']) + '\n')
     for line in outLines:
         fout.write(','.join(line) + '\n')
     fout.close()
