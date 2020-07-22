@@ -314,10 +314,10 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     }
 
     // Check if fastq and gtf file exists
-    fastq = sample.fastq ? file(sample.fastq, checkIfExists: true) : null
+    sample_path = sample.sample_path ? file(sample.sample_path, checkIfExists: true) : null
     gtf = sample.gtf ? file(sample.gtf, checkIfExists: true) : gtf
 
-    return [ sample.sample, fastq, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString() ]
+    return [ sample.sample, sample_path, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString(), sample.dir_path ]
 }
 
 // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
@@ -464,6 +464,7 @@ if (!params.skip_basecalling) {
                     ch_fastq_index;
                     ch_fastq_align }
     } else {
+       if (!params.skip_alignment) {
         // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
         ch_samplesheet_reformat
             .splitCsv(header:true, sep:',')
@@ -475,6 +476,10 @@ if (!params.skip_basecalling) {
                     ch_fastq_gtf;
                     ch_fastq_index;
                     ch_fastq_align }
+       } else {
+         ch_fastq_nanoplot = Channel.empty()
+         ch_fastq_fastqc = Channel.empty()
+         }
     }
     ch_guppy_version = Channel.empty()
     ch_guppy_pycoqc_summary = Channel.empty()
@@ -747,14 +752,10 @@ if (!params.skip_alignment) {
             """
         }
     }
-} else {
-    ch_align_sam = Channel.empty()
-}
-
-/*
- * STEP 10 - Coordinate sort BAM files
- */
-process SortBAM {
+  /*
+   * STEP 10 - Coordinate sort BAM files
+   */
+  process SortBAM {
     tag "$sample"
     label 'process_medium'
     publishDir path: "${params.outdir}/${params.aligner}", mode: 'copy',
@@ -767,9 +768,6 @@ process SortBAM {
                       else null
                 }
 
-    when:
-    !params.skip_alignment
-
     input:
     set val(sample), file(sizes), val(is_transcripts), file(sam) from ch_align_sam
 
@@ -777,7 +775,7 @@ process SortBAM {
     set val(sample), file(sizes), val(is_transcripts), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
                                                                                            ch_sortbam_bed12
     set val(sample), file("*.sorted.bam") into ch_sortbam_stringtie
-    val "$PWD/${params.outdir}/${params.aligner}/bam" into ch_bamdir, ch_bamdir_fc
+    val "${params.outdir}/${params.aligner}/bam" into ch_bamdir, ch_bamdir_fc
     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
     script:
@@ -789,6 +787,22 @@ process SortBAM {
     samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
     samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
     """
+  }
+} else {
+    ch_sortbam_bedgraph = Channel.empty()
+    ch_sortbam_bed12 = Channel.empty()
+    ch_sortbam_stats_mqc = Channel.empty()
+    ch_samplesheet_reformat
+        .splitCsv(header:true, sep:',')
+        .map { get_sample_info(it, params.genomes) }
+        .map { it -> [ it[0], it[1], it[7] ] }
+        .into {ch_sortbam_stringtie;
+              ch_get_bamdir}
+    ch_get_bamdir
+        .map {it -> it[2]}
+        .unique()
+        .into {ch_bamdir;
+               ch_bamdir_fc}
 }
 
 /*
@@ -913,7 +927,7 @@ if (!params.skip_transcriptquant) {
 
             script:
             """
-            Rscript --vanilla $Bambuscript $bamdir Bambu/ $task.cpus $annot $genomeseq 
+            Rscript --vanilla $Bambuscript $PWD/$bamdir Bambu/ $task.cpus $annot $genomeseq 
             """
         }
     } else {
@@ -933,7 +947,7 @@ if (!params.skip_transcriptquant) {
                         }
 
             input:
-            set val(name), val(genomeseq), file(annot), file(bam) from ch_txome_reconstruction
+            set val(name), val(genomeseq), file(annot), file(bam), val(dir_path) from ch_txome_reconstruction
 
             output:
             set val(name), file(bam) into ch_txome_feature_count
@@ -997,8 +1011,8 @@ if (!params.skip_transcriptquant) {
             script:
             """
             mkdir featureCounts_transcript
-            featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o featureCounts_transcript/counts_transcript.txt $bamdir/*.bam 2>> featureCounts_transcript/counts_transcript.log
-            featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o featureCounts_transcript/counts_gene.txt $bamdir/*.bam 2>> featureCounts_transcript/counts_gene.log
+            featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o featureCounts_transcript/counts_transcript.txt $PWD/$bamdir/*.bam 2>> featureCounts_transcript/counts_transcript.log
+            featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o featureCounts_transcript/counts_gene.txt $PWD/$bamdir/*.bam 2>> featureCounts_transcript/counts_gene.log
             featureCounts -v &> featureCounts.version
             """
         } 
