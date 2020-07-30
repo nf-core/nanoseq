@@ -908,7 +908,7 @@ if (!params.skip_transcriptquant) {
 
             input:
             set  file(genomeseq), file(annot) from ch_bambu_input
-            val bamdir from ch_bamdir
+            val bams from ch_bamlist.collect()
             file Bambuscript from ch_Bambuscript
 
 
@@ -917,7 +917,7 @@ if (!params.skip_transcriptquant) {
 
             script:
             """
-            Rscript --vanilla $Bambuscript $bamdir Bambu/ $task.cpus $annot $genomeseq 
+            Rscript --vanilla $Bambuscript --input=$bams --tag=Bambu/ --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq 
             """
         }
     } else {
