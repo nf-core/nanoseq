@@ -16,6 +16,7 @@
   * [`--flowcell`](#--flowcell)
   * [`--kit`](#--kit)
   * [`--barcode_kit`](#--barcode_kit)
+  * [`--barcode_both_ends`](#--barcode_both_ends)
   * [`--guppy_config`](#--guppy_config)
   * [`--guppy_model`](#--guppy_model)
   * [`--guppy_gpu`](#--guppy_gpu)
@@ -307,6 +308,10 @@ If you would like to skip the basecalling (`--skip_basecalling`) but still perfo
 | `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |
 | `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |
 | `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |
+
+### `--barcode_both_ends`
+
+Require barcode on both ends for Guppy basecaller (Default: false).
 
 ### `--guppy_config`
 
