@@ -6,3 +6,5 @@ results/
 tests/
 testing/
 *.pyc
+*.Rproj
+.Rproj.user
