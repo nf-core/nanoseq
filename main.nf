@@ -279,7 +279,8 @@ process CheckSampleSheet {
     file samplesheet from ch_input
 
     output:
-    file "*.csv" into ch_samplesheet_reformat
+    file "*reformat.csv" into ch_samplesheet_reformat
+    file "total_conditions.csv" into ch_sample_condition
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
     """
@@ -318,6 +319,12 @@ ch_samplesheet_reformat
     .into { ch_sample_info;
             ch_sample_name;
             ch_transquant_info}
+
+ch_sample_condition
+    .splitCsv(header:false, sep:',')
+    .map {it -> it.size()}
+    .into { ch_deseq2_num_condition;
+            ch_dexseq_num_condition}
 
 if (!params.skip_basecalling) {
 
@@ -913,7 +920,8 @@ if (!params.skip_transcriptquant) {
 
 
             output:
-            file "Bambu" into ch_deseq2_in, ch_dexseq_in
+            file "*gene.txt" into ch_deseq2_in
+            file "*transcript.txt" into ch_dexseq_in
 
             script:
             """
@@ -986,7 +994,7 @@ if (!params.skip_transcriptquant) {
             label 'process_medium'
             publishDir "${params.outdir}/${params.transcriptquant}", mode: 'copy',
                saveAs: { filename ->
-                          if (!filename.endsWith(".version")) filename
+                          if (!filename.endsWith(".version")) "featureCounts/$filename"
                         }
 
             input:
@@ -995,18 +1003,78 @@ if (!params.skip_transcriptquant) {
 
             output:
             file("*.version") into ch_feat_counts_version
-            file "featureCounts_transcript" into ch_deseq2_indir, ch_dexseq_indir 
+            file "*gene.txt" into ch_deseq2_in
+            file "*transcript.txt" into ch_dexseq_in
+            file "*.log"
 
             script:
             """
-            mkdir featureCounts_transcript
-            featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o featureCounts_transcript/counts_transcript.txt $bams 2>> featureCounts_transcript/counts_transcript.log
-            featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o featureCounts_transcript/counts_gene.txt $bams 2>> featureCounts_transcript/counts_gene.log
+            featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o counts_transcript.txt $bams 2>> counts_transcript.log
+            featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o counts_gene.txt $bams 2>> counts_gene.log
             featureCounts -v &> featureCounts.version
             """
         } 
     }
-    
+    /*
+     * STEP 3 - DESeq2
+     */
+    params.DEscript= "$baseDir/bin/runDESeq2.R"
+    ch_DEscript = Channel.fromPath("$params.DEscript", checkIfExists:true)
+
+    process DESeq2 {
+      publishDir "${params.outdir}/DESeq2", mode: 'copy',
+            saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                    }
+
+      input:
+      file sampleinfo from ch_samplesheet_reformat
+      file DESeq2script from ch_DEscript
+      file inpath from ch_deseq2_in
+      val num_condition from ch_deseq2_num_condition
+      val transcriptquant from params.transcriptquant
+
+      output:
+      file "*.txt" into ch_DEout
+ 
+      when:
+      num_condition >= 2
+
+      script:
+      """
+      Rscript --vanilla $DESeq2script $transcriptquant $inpath $sampleinfo 
+      """
+    }
+    /*
+     * STEP 4 - DEXseq
+     */
+    params.DEXscript= "$baseDir/bin/runDEXseq.R"
+    ch_DEXscript = Channel.fromPath("$params.DEXscript", checkIfExists:true)
+
+    process DEXseq {
+      publishDir "${params.outdir}/DEXseq", mode: 'copy',
+            saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                    }
+
+      input:
+      file sampleinfo from ch_samplesheet_reformat
+      file DEXscript from ch_DEXscript
+      val inpath from ch_dexseq_in
+      val num_condition from ch_dexseq_num_condition
+      val transcriptquant from params.transcriptquant
+
+      output:
+      file "*.txt" into ch_DEXout
+
+      when:
+      num_condition >= 2
+
+      script:
+      """
+      Rscript --vanilla $DEXscript $transcriptquant $inpath $sampleinfo
+      """
+    }
 }
 
 /*
