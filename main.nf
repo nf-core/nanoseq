@@ -308,7 +308,7 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     sample_path = sample.sample_path ? file(sample.sample_path, checkIfExists: true) : null
     gtf = sample.gtf ? file(sample.gtf, checkIfExists: true) : gtf
 
-    return [ sample.sample, sample_path, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString(), sample.dir_path ]
+    return [ sample.sample, sample_path, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString() ]
 }
 
 // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
@@ -769,7 +769,6 @@ if (!params.skip_alignment) {
                                                                                            ch_sortbam_bed12
     set val(sample), file("*.sorted.bam") into ch_sortbam_stringtie
     file "*.sorted.bam" into ch_bamlist
-    val "${params.outdir}/${params.aligner}/bam" into ch_bamdir
     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
     script:
@@ -789,14 +788,9 @@ if (!params.skip_alignment) {
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[0], it[1], it[7] ] }
+        .map { it -> [ it[0], it[1]] }
         .into {ch_sortbam_stringtie;
-              ch_get_bamdir;
               ch_get_bams}
-    ch_get_bamdir
-        .map {it -> it[2]}
-        .unique()
-        .set {ch_bamdir}
     ch_get_bams
         .map {it -> it[1]}
         .set{ch_bamlist}
@@ -915,7 +909,7 @@ if (!params.skip_transcriptquant) {
 
             input:
             set  file(genomeseq), file(annot) from ch_bambu_input
-            val bams from ch_bamlist.collect()
+            file bams from ch_bamlist.collect()
             file Bambuscript from ch_Bambuscript
 
 
@@ -945,7 +939,7 @@ if (!params.skip_transcriptquant) {
                         }
 
             input:
-            set val(name), val(genomeseq), file(annot), file(bam), val(dir_path) from ch_txome_reconstruction
+            set val(name), val(genomeseq), file(annot), file(bam) from ch_txome_reconstruction
 
             output:
             set val(name), file(bam) into ch_txome_feature_count
