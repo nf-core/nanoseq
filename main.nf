@@ -920,12 +920,12 @@ if (!params.skip_transcriptquant) {
 
 
             output:
-            file "*gene.txt" into ch_deseq2_in
-            file "*transcript.txt" into ch_dexseq_in
+            file "counts_gene.txt" into ch_deseq2_in
+            file "counts_transcript.txt" into ch_dexseq_in
 
             script:
             """
-            Rscript --vanilla $Bambuscript --input=$bams --tag=Bambu/ --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq 
+            Rscript --vanilla $Bambuscript --input=$bams --tag=. --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq --gene_output=count_gene.txt --transcript_output=count_transcript.txt
             """
         }
     } else {
