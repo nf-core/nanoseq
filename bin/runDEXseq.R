@@ -1,20 +1,8 @@
 #!/usr/bin/env Rscript
 
-if (!requireNamespace("BiocManager", quietly = TRUE)){
-    install.packages("BiocManager", repos='http://cran.us.r-project.org')
- }
-if (!require("DRIMSeq")){
-    BiocManager::install("DRIMSeq",update = FALSE, ask= FALSE)
-    library(DRIMSeq)
-}
-if (!require("DEXSeq")){
-    BiocManager::install("DEXSeq",update = FALSE, ask= FALSE)
-    library(DEXSeq)
-}
-if (!require("stageR")){
-    BiocManager::install("stageR",update = FALSE, ask= FALSE)
-    library(stageR)
-}
+library(DRIMSeq)
+library(DEXSeq)
+library(stageR)
 
 
 args = commandArgs(trailingOnly=TRUE)
@@ -32,9 +20,9 @@ if (transcriptquant == "stringtie"){
   colnames(count.matrix)[2:length(colnames(count.matrix))] <- unlist(lapply(strsplit(colnames(count.matrix)[2:length(colnames(count.matrix))],"\\."),"[[",1))
 
 }
-
 if (transcriptquant == "bambu"){
   count.matrix <- data.frame(read.table(path,sep="\t",header=T))
+  colnames(count.matrix) <- unlist(lapply(strsplit(colnames(count.matrix),"\\."),"[[",1))
 }
 colnames(count.matrix)[1] <- "feature_id"
 colnames(count.matrix)[2] <- "gene_id"
@@ -127,4 +115,3 @@ suppressWarnings({
                                  onlySignificantGenes=TRUE)
 })
 write.csv(dxr_pval, file="DEXseq_out.txt")
-
