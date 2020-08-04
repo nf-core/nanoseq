@@ -919,7 +919,7 @@ if (!params.skip_transcriptquant) {
 
             script:
             """
-            Rscript --vanilla $Bambuscript --input=$bams --tag=. --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq --gene_output=count_gene.txt --transcript_output=count_transcript.txt
+            Rscript --vanilla $Bambuscript --tag=. --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq $bams
             """
         }
     } else {
