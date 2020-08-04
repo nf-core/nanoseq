@@ -123,7 +123,7 @@ The creation of these files can be bypassed by setting the parameters `--skip_bi
 [bambu](https://github.com/GoekeLab/bambu), [StringTie2](https://ccb.jhu.edu/software/stringtie/), [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html), [DEXSeq](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html)
 
 *Description*:  
-Transcripts are quantified using either *bambu* or *StringTie2*, and if there are two or more sample conditions with at least three in each, then differential analysis on gene and transcripts will be done using *DESeq2* or *DEXSeq*, respectively. You can skip the alignment and downstream processes by providing the `--skip_transcriptquant` parameter.
+Transcripts are quantified using either *bambu* or *StringTie2*, and if there are two or more sample conditions with at least three in each, then differential analysis on gene and transcripts will be done using *DESeq2* or *DEXSeq*, respectively. You can skip transcript quantification and downstream processes by providing the `--skip_transcriptquant` parameter.
 
 *Output directories*:
 
