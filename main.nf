@@ -59,7 +59,7 @@ def helpMessage() {
       --skip_multiqc [bool]           Skip MultiQC (Default: false)
      
     Transcript Quantification
-      --transcriptquant [str]         Specifies the transcript quantification method to use (available are: bambu or stringtie). Only available when protocol is cDNA or directRNA.
+      --transcriptquant [str]         Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
       --skip_transcriptquant [bool]   Skip transcript quantification and subsequent process (Default: false)
       
     Other
@@ -165,8 +165,8 @@ if (!params.skip_alignment) {
 }
 
 if (!params.skip_transcriptquant) {
-    if (params.transcriptquant != 'bambu' && params.transcriptquant != 'stringtie') {
-        exit 1, "Invalid transcript quantification option: ${params.transcriptquant}. Valid options: 'bambu', 'stringtie'"
+    if (params.transcriptquant != 'bambu' && params.transcriptquant != 'stringtie2') {
+        exit 1, "Invalid transcript quantification option: ${params.transcriptquant}. Valid options: 'bambu', 'stringtie2'"
     }
     if (params.protocol != 'cDNA' && params.protocol != 'directRNA') {
         exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'cDNA', 'directRNA'"
@@ -279,7 +279,8 @@ process CheckSampleSheet {
     file samplesheet from ch_input
 
     output:
-    file "*.csv" into ch_samplesheet_reformat
+    file "*reformat.csv" into ch_samplesheet_reformat
+    file "total_conditions.csv" into ch_sample_condition
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
     """
@@ -307,7 +308,7 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     sample_path = sample.sample_path ? file(sample.sample_path, checkIfExists: true) : null
     gtf = sample.gtf ? file(sample.gtf, checkIfExists: true) : gtf
 
-    return [ sample.sample, sample_path, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString(), sample.dir_path ]
+    return [ sample.sample, sample_path, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString() ]
 }
 
 // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
@@ -318,6 +319,12 @@ ch_samplesheet_reformat
     .into { ch_sample_info;
             ch_sample_name;
             ch_transquant_info}
+
+ch_sample_condition
+    .splitCsv(header:false, sep:',')
+    .map {it -> it.size()}
+    .into { ch_deseq2_num_condition;
+            ch_dexseq_num_condition}
 
 if (!params.skip_basecalling) {
 
@@ -762,7 +769,6 @@ if (!params.skip_alignment) {
                                                                                            ch_sortbam_bed12
     set val(sample), file("*.sorted.bam") into ch_sortbam_stringtie
     file "*.sorted.bam" into ch_bamlist
-    val "${params.outdir}/${params.aligner}/bam" into ch_bamdir
     file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
 
     script:
@@ -782,14 +788,9 @@ if (!params.skip_alignment) {
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[0], it[1], it[7] ] }
+        .map { it -> [ it[0], it[1]] }
         .into {ch_sortbam_stringtie;
-              ch_get_bamdir;
               ch_get_bams}
-    ch_get_bamdir
-        .map {it -> it[2]}
-        .unique()
-        .set {ch_bamdir}
     ch_get_bams
         .map {it -> it[1]}
         .set{ch_bamlist}
@@ -908,16 +909,17 @@ if (!params.skip_transcriptquant) {
 
             input:
             set  file(genomeseq), file(annot) from ch_bambu_input
-            val bams from ch_bamlist.collect()
+            file bams from ch_bamlist.collect()
             file Bambuscript from ch_Bambuscript
 
 
             output:
-            file "Bambu" into ch_deseq2_in, ch_dexseq_in
+            file "counts_gene.txt" into ch_deseq2_in
+            file "counts_transcript.txt" into ch_dexseq_in
 
             script:
             """
-            Rscript --vanilla $Bambuscript --input=$bams --tag=Bambu/ --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq 
+            Rscript --vanilla $Bambuscript --tag=. --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq $bams
             """
         }
     } else {
@@ -937,7 +939,7 @@ if (!params.skip_transcriptquant) {
                         }
 
             input:
-            set val(name), val(genomeseq), file(annot), file(bam), val(dir_path) from ch_txome_reconstruction
+            set val(name), val(genomeseq), file(annot), file(bam) from ch_txome_reconstruction
 
             output:
             set val(name), file(bam) into ch_txome_feature_count
@@ -986,7 +988,7 @@ if (!params.skip_transcriptquant) {
             label 'process_medium'
             publishDir "${params.outdir}/${params.transcriptquant}", mode: 'copy',
                saveAs: { filename ->
-                          if (!filename.endsWith(".version")) filename
+                          if (!filename.endsWith(".version")) "featureCounts/$filename"
                         }
 
             input:
@@ -995,18 +997,78 @@ if (!params.skip_transcriptquant) {
 
             output:
             file("*.version") into ch_feat_counts_version
-            file "featureCounts_transcript" into ch_deseq2_indir, ch_dexseq_indir 
+            file "*gene.txt" into ch_deseq2_in
+            file "*transcript.txt" into ch_dexseq_in
+            file "*.log"
 
             script:
             """
-            mkdir featureCounts_transcript
-            featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o featureCounts_transcript/counts_transcript.txt $bams 2>> featureCounts_transcript/counts_transcript.log
-            featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o featureCounts_transcript/counts_gene.txt $bams 2>> featureCounts_transcript/counts_gene.log
+            featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o counts_transcript.txt $bams 2>> counts_transcript.log
+            featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o counts_gene.txt $bams 2>> counts_gene.log
             featureCounts -v &> featureCounts.version
             """
         } 
     }
-    
+    /*
+     * STEP 3 - DESeq2
+     */
+    params.DEscript= "$baseDir/bin/runDESeq2.R"
+    ch_DEscript = Channel.fromPath("$params.DEscript", checkIfExists:true)
+
+    process DESeq2 {
+      publishDir "${params.outdir}/DESeq2", mode: 'copy',
+            saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                    }
+
+      input:
+      file sampleinfo from ch_samplesheet_reformat
+      file DESeq2script from ch_DEscript
+      file inpath from ch_deseq2_in
+      val num_condition from ch_deseq2_num_condition
+      val transcriptquant from params.transcriptquant
+
+      output:
+      file "*.txt" into ch_DEout
+ 
+      when:
+      num_condition >= 2
+
+      script:
+      """
+      Rscript --vanilla $DESeq2script $transcriptquant $inpath $sampleinfo 
+      """
+    }
+    /*
+     * STEP 4 - DEXseq
+     */
+    params.DEXscript= "$baseDir/bin/runDEXseq.R"
+    ch_DEXscript = Channel.fromPath("$params.DEXscript", checkIfExists:true)
+
+    process DEXseq {
+      publishDir "${params.outdir}/DEXseq", mode: 'copy',
+            saveAs: { filename ->
+                          if (!filename.endsWith(".version")) filename
+                    }
+
+      input:
+      file sampleinfo from ch_samplesheet_reformat
+      file DEXscript from ch_DEXscript
+      val inpath from ch_dexseq_in
+      val num_condition from ch_dexseq_num_condition
+      val transcriptquant from params.transcriptquant
+
+      output:
+      file "*.txt" into ch_DEXout
+
+      when:
+      num_condition >= 2
+
+      script:
+      """
+      Rscript --vanilla $DEXscript $transcriptquant $inpath $sampleinfo
+      """
+    }
 }
 
 /*
