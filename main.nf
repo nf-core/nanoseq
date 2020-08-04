@@ -916,6 +916,7 @@ if (!params.skip_transcriptquant) {
             output:
             file "counts_gene.txt" into ch_deseq2_in
             file "counts_transcript.txt" into ch_dexseq_in
+            file "extended_annotations.gtf" 
 
             script:
             """
