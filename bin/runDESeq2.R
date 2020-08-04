@@ -1,12 +1,6 @@
 #!/usr/bin/env Rscript
 
-if (!requireNamespace("BiocManager", quietly = TRUE)){
-    install.packages("BiocManager", repos='http://cran.us.r-project.org')
- }
-if (!require("DESeq2")){
-    BiocManager::install("DESeq2",update = FALSE, ask= FALSE)
-    library(DESeq2)
-}
+library(DESeq2)
 
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 3) {
@@ -35,12 +29,12 @@ if (transcriptquant == "bambu"){
 
 #sampInfo <- read.csv("~/Downloads/nanorna-bam-master/two_conditions.csv",row.names = 1)
 sampInfo<-read.csv(args[3],row.names=1)
-#all(rownames(sampInfo) %in% colnames(countTab))
-#all(rownames(sampInfo) == colnames(countTab))
+if (!all(rownames(sampInfo) == colnames(countTab))){
+  sampInfo <- sampInfo[match(colnames(countTab), rownames(sampInfo)),]
+}
 dds <- DESeqDataSetFromMatrix(countData = countTab,colData = sampInfo,design = ~ condition)
 dds <- DESeq(dds)
 res <- results(dds)
 #register(MulticoreParam(6))
 resOrdered <- res[order(res$pvalue),]
 write.csv(as.data.frame(resOrdered), file=args[4])
-
