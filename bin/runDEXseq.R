@@ -20,9 +20,9 @@ if (transcriptquant == "stringtie"){
   colnames(count.matrix)[2:length(colnames(count.matrix))] <- unlist(lapply(strsplit(colnames(count.matrix)[2:length(colnames(count.matrix))],"\\."),"[[",1))
 
 }
-
 if (transcriptquant == "bambu"){
   count.matrix <- data.frame(read.table(path,sep="\t",header=T))
+  colnames(count.matrix) <- unlist(lapply(strsplit(colnames(count.matrix),"\\."),"[[",1))
 }
 colnames(count.matrix)[1] <- "feature_id"
 colnames(count.matrix)[2] <- "gene_id"
