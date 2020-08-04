@@ -153,14 +153,14 @@ If bambu is used:
   * `counts_transcript.txt` - transcript expression estimates 
 
 If StringTie2 is used:
-* `stringtie2` 
+* `stringtie2/` 
    * `*.bam`
      Per-sample coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
    * `*.out.gtf` 
      Per-sample annotations for novel transcripts obtained in *StringTie2*.
    * `merged.combined.gtf`
      Extended annotation that combines provided gtf with gtf files from each sample via *StringTie2 Merge*.
-   * `featureCounts`               
+   * `featureCounts/`               
       * `counts_gene.txt` - gene expression estimates.
       * `counts_gene.log` - featureCounts for gene level log file.
       * `counts_transcript.txt` - transcript expression estimates.
