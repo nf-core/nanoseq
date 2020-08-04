@@ -91,8 +91,10 @@ The initial SAM alignment files created by *GraphMap2* or *Minimap2* are not sav
 
 *Output directories*:
 
-* `<ALIGNER>/`  
+* `<ALIGNER>/bam`  
   Per-sample coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+* `<ALIGNER>/bam_index`  
+  Per-sample coordinate sorted alignment index files in [`*.bai`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
 * `<ALIGNER>/samtools_stats/`  
   *SAMtools* `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
 
@@ -114,6 +116,26 @@ The creation of these files can be bypassed by setting the parameters `--skip_bi
   Per-sample `*.bigWig` files.
 * `<ALIGNER>/bigbed/`  
   Per-sample `*.bigBed` files.
+
+## Transcript Quantification
+
+*Documentation*:  
+[bambu](https://github.com/GoekeLab/bambu), [StringTie2](https://ccb.jhu.edu/software/stringtie/), [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html), [DEXSeq](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html)
+
+*Description*:  
+Transcripts are quantified using either *bambu* or *StringTie2*, and if there are two or more sample conditions with at least three in each, then differential analysis on gene and transcripts will be done using *DESeq2* or *DEXSeq*, respectively. You can skip the alignment and downstream processes by providing the `--skip_transcriptquant` parameter.
+
+*Output directories*:
+
+If bambu is used:
+* `bambu/`  
+  Gene and transcript count `*.txt` files
+
+If StringTie2 is used:
+* `stringtie2/`  
+  Sorted and unsorted `*.bam` files and quantification `*.gtf` files
+* `stringtie2/featureCounts`  
+  Gene and transcript count `*.txt` files
 
 ## MultiQC
 

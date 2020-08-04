@@ -156,6 +156,7 @@ You will need to create a file with information about the samples in your experi
 | `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                      |
 | `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
 | `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz". |
+| `condition` | Name of condition. If there are two or more conditions with at least three samples in each, then DESeq2 and DEXseq will be performed for differential expression analysis.|
 
 #### Specifying a reference genome/transcriptome
 
@@ -411,7 +412,7 @@ Skip alignment and downstream processes.
 
 ### `--transcriptquant`
 
-Specifies the transcript quantification method to use i.e. `bambu` or `stringtie`.
+Specifies the transcript quantification method to use i.e. `bambu` or `stringtie2`.
 
 ### `--skip_transcriptquant`
 
