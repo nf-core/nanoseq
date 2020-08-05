@@ -152,7 +152,7 @@ You will need to create a file with information about the samples in your experi
 | Column          | Description                                                                                                                |
 |-----------------|----------------------------------------------------------------------------------------------------------------------------|
 | `sample`        | Sample name without spaces.                                                                                                |
-| `sample_path`   | Full path to FastQ file if previously demultiplexed or to BAM file if previously aligned. FastQ File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam". |
+| `input_file`   | Full path to FastQ file if previously demultiplexed or to BAM file if previously aligned. FastQ File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam". |
 | `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                      |
 | `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
 | `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz". |
@@ -178,7 +178,7 @@ As shown in the examples below, the accepted format of the file is slightly diff
 ###### Example `samplesheet.csv`
 
 ```bash
-sample,sample_path,barcode,genome,transcriptome
+sample,input_file,barcode,genome,transcriptome
 Sample1,,1,mm10,
 Sample2,,2,hg19,
 Sample3,,3,/path/to/local/genome.fa,
@@ -205,7 +205,7 @@ nextflow run nf-core/nanoseq \
 ###### Example `samplesheet.csv`
 
 ```bash
-sample,sample_path,barcode,genome,transcriptome
+sample,input_file,barcode,genome,transcriptome
 Sample1,,1,/path/to/local/genome.fa,
 ```
 
@@ -229,7 +229,7 @@ nextflow run nf-core/nanoseq \
 ###### Example `samplesheet.csv`
 
 ```bash
-sample,sample_path,barcode,genome,transcriptome
+sample,input_file,barcode,genome,transcriptome
 Sample1,,1,mm10,
 Sample2,,2,hg19,
 Sample3,,3,/path/to/local/genome.fa,
@@ -255,7 +255,7 @@ nextflow run nf-core/nanoseq \
 ###### Example `samplesheet.csv`
 
 ```bash
-sample,sample_path,barcode,genome,transcriptome
+sample,input_file,barcode,genome,transcriptome
 Sample1,SAM101A1.fastq.gz,,mm10
 Sample2,SAM101A2.fastq.gz,,hg19
 Sample3,SAM101A3.fastq.gz,/path/to/local/genome.fa,
@@ -278,7 +278,7 @@ nextflow run nf-core/nanoseq \
 ###### Example `samplesheet.csv`
 
 ```bash
-sample,sample_path,barcode,genome,transcriptome
+sample,input_file,barcode,genome,transcriptome
 Sample1,SAM101A1.bam,,hg19
 Sample2,SAM101A2.bam,,hg19
 Sample3,SAM101A3.bam,/path/to/local/genome.fa,/path/to/local/genes.gtf
