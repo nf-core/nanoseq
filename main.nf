@@ -59,7 +59,7 @@ def helpMessage() {
       --skip_multiqc [bool]           Skip MultiQC (Default: false)
      
     Transcript Quantification
-      --transcriptquant [str]         Specifies the transcript quantification method to use (available are: bambu or stringtie). Only available when protocol is cDNA or directRNA.
+      --transcriptquant [str]         Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
       --skip_transcriptquant [bool]   Skip transcript quantification and subsequent process (Default: false)
       
     Other
@@ -165,8 +165,8 @@ if (!params.skip_alignment) {
 }
 
 if (!params.skip_transcriptquant) {
-    if (params.transcriptquant != 'bambu' && params.transcriptquant != 'stringtie') {
-        exit 1, "Invalid transcript quantification option: ${params.transcriptquant}. Valid options: 'bambu', 'stringtie'"
+    if (params.transcriptquant != 'bambu' && params.transcriptquant != 'stringtie2') {
+        exit 1, "Invalid transcript quantification option: ${params.transcriptquant}. Valid options: 'bambu', 'stringtie2'"
     }
     if (params.protocol != 'cDNA' && params.protocol != 'directRNA') {
         exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'cDNA', 'directRNA'"
@@ -916,6 +916,7 @@ if (!params.skip_transcriptquant) {
             output:
             file "counts_gene.txt" into ch_deseq2_in
             file "counts_transcript.txt" into ch_dexseq_in
+            file "extended_annotations.gtf" 
 
             script:
             """

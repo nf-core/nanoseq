@@ -14,7 +14,7 @@ if (length(args) < 3) {
 #path <- "~/Downloads/nanorna-bam-master/mod/featureCounts_transcript/"
 transcriptquant <- args[1]
 path<-args[2]
-if (transcriptquant == "stringtie"){
+if (transcriptquant == "stringtie2"){
   count.matrix <- data.frame(read.table(path,sep="\t",header=TRUE, skip = 1))
   count.matrix$Chr <- count.matrix$Start <- count.matrix$End <- count.matrix$Length <- count.matrix$Strand <- NULL
   colnames(count.matrix)[2:length(colnames(count.matrix))] <- unlist(lapply(strsplit(colnames(count.matrix)[2:length(colnames(count.matrix))],"\\."),"[[",1))
