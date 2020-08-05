@@ -100,7 +100,7 @@ jobs:
       NXF_ANSI_LOG: false
     strategy:
       matrix:
-        parameters: ['',--aligner graphmap2, --skip_alignment, --skip_qc]
+        parameters: [--aligner graphmap2, --skip_alignment, --skip_qc]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
