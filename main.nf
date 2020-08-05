@@ -37,6 +37,7 @@ def helpMessage() {
       --flowcell [str]                Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
       --kit [str]                     Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
       --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
+      --barcode_both_ends [bool]      Require barcode on both ends for Guppy basecaller (Default: false)
       --guppy_config [file/str]       Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
       --guppy_model [file/str]        Custom basecalling model file (JSON) to use for Guppy basecalling, such as the output from Taiyaki (Default: false)
       --guppy_gpu [bool]              Whether to perform basecalling with Guppy in GPU mode (Default: false)
@@ -209,6 +210,7 @@ if (!params.skip_basecalling) {
     summary['Flowcell ID']        = params.flowcell ?: 'Not required'
     summary['Kit ID']             = params.kit ?: 'Not required'
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
+    summary['Barcode Both Ends']  = params.barcode_both_ends ? 'Yes' : 'No'
     summary['Guppy Config File']  = params.guppy_config ?: 'Unspecified'
     summary['Guppy Model File']   = params.guppy_model ?:'Unspecified'
     summary['Guppy GPU Mode']     = params.guppy_gpu ? 'Yes' : 'No'
@@ -347,6 +349,7 @@ if (!params.skip_basecalling) {
 
         script:
         barcode_kit = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
+        barcode_ends = params.barcode_both_ends ? "--require_barcodes_both_ends" : ""
         proc_options = params.guppy_gpu ? "--device $params.gpu_device --num_callers $task.cpus --cpu_threads_per_caller $params.guppy_cpu_threads --gpu_runners_per_device $params.guppy_gpu_runners" : "--num_callers 2 --cpu_threads_per_caller ${task.cpus/2}"
         def config = "--flowcell $params.flowcell --kit $params.kit"
         if (params.guppy_config) config = file(params.guppy_config).exists() ? "--config ./$guppy_config" : "--config $params.guppy_config"
@@ -360,6 +363,7 @@ if (!params.skip_basecalling) {
             --compress_fastq \\
             $barcode_kit \\
             $proc_options \\
+            $barcode_ends \\
             $config \\
             $model
 
