@@ -2,7 +2,7 @@
 
 library(DRIMSeq)
 library(DEXSeq)
-#library(stageR)
+library(stageR)
 
 
 args = commandArgs(trailingOnly=TRUE)
@@ -92,26 +92,25 @@ dxr <- DEXSeqResults(dxd, independentFiltering=FALSE)
 
 ### Pinpoint genes with transcripts differentially used ### 
 ##### and transcripts that are differentially used ########
-#library(stageR)
 strp <- function(x) substr(x,1,15)
-#qval <- perGeneQValue(dxr)
-#dxr.g <- data.frame(gene=names(qval),qval)
+qval <- perGeneQValue(dxr)
+dxr.g <- data.frame(gene=names(qval),qval)
 
 columns <- c("featureID","groupID","pvalue",lgcolName)
 dxr_pval <- as.data.frame(dxr[,columns])
 #head(dxr_pval)
 pConfirmation <- matrix(dxr_pval$pvalue,ncol=1)
 dimnames(pConfirmation) <- list(strp(dxr_pval$featureID),"transcript")
-#pScreen <- qval
-#names(pScreen) <- strp(names(pScreen))
+pScreen <- qval
+names(pScreen) <- strp(names(pScreen))
 tx2gene <- as.data.frame(dxr_pval[,c("featureID", "groupID")])
 for (i in 1:2) tx2gene[,i] <- strp(tx2gene[,i])
 
-#stageRObj <- stageRTx(pScreen=pScreen, pConfirmation=pConfirmation,
-#                      pScreenAdjusted=TRUE, tx2gene=tx2gene)
-#stageRObj <- stageWiseAdjustment(stageRObj, method="dtu", alpha=0.05)
-#suppressWarnings({
-#  dex.padj <- getAdjustedPValues(stageRObj, order=FALSE,
-#                                 onlySignificantGenes=TRUE)
-#})
-write.csv(dxr_pval, file="DEXseq_out.txt")
+stageRObj <- stageRTx(pScreen=pScreen, pConfirmation=pConfirmation,
+                      pScreenAdjusted=TRUE, tx2gene=tx2gene)
+stageRObj <- stageWiseAdjustment(stageRObj, method="dtu", alpha=0.05)
+suppressWarnings({
+  dex.padj <- getAdjustedPValues(stageRObj, order=FALSE,
+                                 onlySignificantGenes=FALSE)
+})
+write.csv(cbind(dxr_pval,dex.padj$gene,dex.padj$transcript), file="DEXseq_out.txt")
