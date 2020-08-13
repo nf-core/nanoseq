@@ -147,30 +147,31 @@ With genome alignments, transcripts can be reconstructed by softwares to find no
 *Output directories*:
 
 If bambu is used:
+
 * `bambu/`  
   * `extended_annotations.gtf` - a gtf file that contains both annotated and novel transcripts  
-  * `counts_gene.txt` - gene expression estimates 
-  * `counts_transcript.txt` - transcript expression estimates 
+  * `counts_gene.txt` - gene expression estimates
+  * `counts_transcript.txt` - transcript expression estimates
 
 If StringTie2 is used:
-* `stringtie2/` 
-   * `*.bam`
+
+* `stringtie2/`
+  * `*.bam`
      Per-sample coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
-   * `*.out.gtf` 
+  * `*.out.gtf`
      Per-sample annotations for novel transcripts obtained in *StringTie2*.
-   * `merged.combined.gtf`
+  * `merged.combined.gtf`
      Extended annotation that combines provided gtf with gtf files from each sample via *StringTie2 Merge*.
-   * `featureCounts/`               
-      * `counts_gene.txt` - gene expression estimates.
-      * `counts_gene.log` - featureCounts for gene level log file.
-      * `counts_transcript.txt` - transcript expression estimates.
-      * `counts_transcript.txt` - featureCounts for transcript level log file.
+  * `featureCounts/`
+    * `counts_gene.txt` - gene expression estimates.
+    * `counts_gene.log` - featureCounts for gene level log file.
+    * `counts_transcript.txt` - transcript expression estimates.
+    * `counts_transcript.txt` - featureCounts for transcript level log file.
 
 ## Differential expression analysis
 
 *Documentation*:
 [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html), [DEXSeq](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html)
-
 
 *Description*:  
 When condition is specified in sample information, then differential analysis on gene and transcripts will be done using *DESeq2* or *DEXSeq*, respectively. This step will be skipped automatically when there are only one sample condition or less than three replicates in each condition or transcript quantification is skipped.
@@ -179,8 +180,6 @@ When condition is specified in sample information, then differential analysis on
 
 * `DESeq2/DESeq2out.txt` - a `.txt` file that can contains differential expression results for genes.
 * `DEXSeq/DEXSeqout.txt` - a `.txt` file that can contains differential expression results for transcripts.
-
-
 
 ## Pipeline information
 

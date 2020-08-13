@@ -92,7 +92,6 @@ dxr <- DEXSeqResults(dxd, independentFiltering=FALSE)
 
 ### Pinpoint genes with transcripts differentially used ### 
 ##### and transcripts that are differentially used ########
-library(stageR)
 strp <- function(x) substr(x,1,15)
 qval <- perGeneQValue(dxr)
 dxr.g <- data.frame(gene=names(qval),qval)
@@ -112,6 +111,6 @@ stageRObj <- stageRTx(pScreen=pScreen, pConfirmation=pConfirmation,
 stageRObj <- stageWiseAdjustment(stageRObj, method="dtu", alpha=0.05)
 suppressWarnings({
   dex.padj <- getAdjustedPValues(stageRObj, order=FALSE,
-                                 onlySignificantGenes=TRUE)
+                                 onlySignificantGenes=FALSE)
 })
-write.csv(dxr_pval, file="DEXseq_out.txt")
+write.csv(cbind(dxr_pval,dex.padj$gene,dex.padj$transcript), file="DEXseq_out.txt")

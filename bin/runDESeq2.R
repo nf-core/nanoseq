@@ -25,6 +25,7 @@ if (transcriptquant == "stringtie2"){
 if (transcriptquant == "bambu"){
    countTab <- data.frame(read.table(path,sep="\t",header=TRUE))
    colnames(countTab) <- unlist(lapply(strsplit(colnames(countTab),"\\."),"[[",1))
+   countTab[,1:length(colnames(countTab))] <- sapply(countTab, as.integer)
 }
 
 #sampInfo <- read.csv("~/Downloads/nanorna-bam-master/two_conditions.csv",row.names = 1)

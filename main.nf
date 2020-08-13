@@ -305,7 +305,7 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     }
 
     // Check if fastq and gtf file exists
-    sample_path = sample.sample_path ? file(sample.sample_path, checkIfExists: true) : null
+    sample_path = sample.input_file ? file(sample.input_file, checkIfExists: true) : null
     gtf = sample.gtf ? file(sample.gtf, checkIfExists: true) : gtf
 
     return [ sample.sample, sample_path, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString() ]
