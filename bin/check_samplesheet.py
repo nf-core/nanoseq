@@ -20,7 +20,7 @@ def print_error(error,line):
 
 
 def check_samplesheet(FileIn,FileOut):
-    HEADER = ['sample', 'fastq', 'barcode', 'genome', 'transcriptome']
+    HEADER = ['sample', 'input_file', 'barcode', 'genome', 'transcriptome','condition']
 
     ## CHECK HEADER
     fin = open(FileIn,'r')
@@ -29,7 +29,7 @@ def check_samplesheet(FileIn,FileOut):
         print("ERROR: Please check samplesheet header -> {} != {}".format(','.join(header),','.join(HEADER)))
         sys.exit(1)
 
-    outLines = []
+    outLines, conditions = [], {}
     while True:
         line = fin.readline()
         if line:
@@ -42,7 +42,7 @@ def check_samplesheet(FileIn,FileOut):
                 sys.exit(1)
 
             ## CHECK SAMPLE ID ENTRIES
-            sample,fastq,barcode,genome,transcriptome = lspl
+            sample,input_file,barcode,genome,transcriptome,condition = lspl
             if sample:
                 if sample.find(' ') != -1:
                     print_error("Sample entry contains spaces!",line)
@@ -50,6 +50,13 @@ def check_samplesheet(FileIn,FileOut):
             else:
                 print_error("Sample entry has not been specified!",line)
                 sys.exit(1)
+
+            ## CHECK CONDITION ENTRIES
+            if condition:
+                if condition not in conditions:
+                    conditions[condition] = 1
+                else:
+                    conditions[condition] += 1
 
             ## CHECK BARCODE ENTRIES
             if barcode:
@@ -60,9 +67,9 @@ def check_samplesheet(FileIn,FileOut):
                     barcode = 'barcode%s' % (barcode.zfill(2))
 
             ## CHECK FASTQ ENTRIES
-            if fastq:
-                if fastq[-9:] != '.fastq.gz' and fastq[-6:] != '.fq.gz':
-                    print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz'!",line)
+            if input_file:
+                if input_file[-9:] != '.fastq.gz' and input_file[-6:] != '.fq.gz' and input_file[-4:] != ".bam":
+                    print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz' or '.bam'!",line)
                     sys.exit(1)
 
             ## CHECK GENOME ENTRIES
@@ -98,18 +105,23 @@ def check_samplesheet(FileIn,FileOut):
                     is_transcripts = '1'
                     genome = transcriptome
 
-            outLines.append([sample,fastq,barcode,genome,gtf,is_transcripts])
+            outLines.append([sample,input_file,barcode,genome,gtf,is_transcripts,condition])
         else:
             fin.close()
             break
 
     ## WRITE TO FILE
     fout = open(FileOut,'w')
-    fout.write(','.join(['sample', 'fastq', 'barcode', 'genome', 'gtf', 'is_transcripts']) + '\n')
+    fout.write(','.join(['sample', 'input_file', 'barcode', 'genome', 'gtf', 'is_transcripts','condition']) + '\n')
     for line in outLines:
         fout.write(','.join(line) + '\n')
     fout.close()
-
+    outfile=open("total_conditions.csv","w")
+    num_samp = next(iter(conditions.values()))
+    if num_samp >= 3 and all(samples == num_samp for samples in conditions.values()):
+        outfile.write(",".join(conditions)+"\n")
+    else:
+        outfile.write("false")
 
 def main(args=None):
     args = parse_args(args)
