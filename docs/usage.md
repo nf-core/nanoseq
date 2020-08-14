@@ -30,7 +30,7 @@ As shown in the examples below, the accepted format of the file is slightly diff
 
 #### With basecalling and demultiplexing
 
-##### Example `samplesheet.csv`
+##### Example `samplesheet.csv` for barcoded fast5 inputs
 
 ```bash
 sample,input_file,barcode,genome,transcriptome,condition
@@ -42,7 +42,7 @@ Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf,
 Sample6,,6,,,
 ```
 
-##### Example command
+##### Example command for barcoded fast5 inputs
 
 ```bash
 nextflow run nf-core/nanoseq \
@@ -57,7 +57,7 @@ nextflow run nf-core/nanoseq \
 
 #### With basecalling but not demultiplexing
 
-##### Example `samplesheet.csv`
+##### Example `samplesheet.csv` for non-barcoded fast5 inputs
 
 ```bash
 sample,input_file,barcode,genome,transcriptome,condition
@@ -66,7 +66,7 @@ Sample1,,1,/path/to/local/genome.fa,,
 
 > Only a single sample can be specified if you would like to skip demultiplexing
 
-##### Example command
+##### Example command for non-barcoded fast5 inputs
 
 ```bash
 nextflow run nf-core/nanoseq \
@@ -81,7 +81,7 @@ nextflow run nf-core/nanoseq \
 
 #### With demultiplexing but not basecalling
 
-##### Example `samplesheet.csv`
+##### Example `samplesheet.csv` for non-demultiplexed fastq inputs
 
 ```bash
 sample,input_file,barcode,genome,transcriptome,condition
@@ -93,7 +93,7 @@ Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf,mouse
 Sample6,,6,,,
 ```
 
-##### Example command
+##### Example command for non-demultiplexed fastq inputs
 
 ```bash
 nextflow run nf-core/nanoseq \
@@ -107,7 +107,7 @@ nextflow run nf-core/nanoseq \
 
 #### Without both basecalling and demultiplexing
 
-##### Example `samplesheet.csv`
+##### Example `samplesheet.csv` for demultiplexed fastq inputs
 
 ```bash
 sample,input_file,barcode,genome,transcriptome,condition
@@ -117,7 +117,7 @@ Sample3,SAM101A3.fastq.gz,/path/to/local/genome.fa,mouse
 Sample4,SAM101A4.fastq.gz,,human
 ```
 
-##### Example command
+##### Example command for demultiplexed fastq inputs
 
 ```bash
 nextflow run nf-core/nanoseq \
@@ -130,7 +130,7 @@ nextflow run nf-core/nanoseq \
 
 ##### Without basecalling, demultiplexing, and alignment
 
-##### Example `samplesheet.csv`
+##### Example `samplesheet.csv` for BAM inputs
 
 ```bash
 sample,input_file,barcode,genome,transcriptome,condition
@@ -140,7 +140,7 @@ Sample3,SAM101A3.bam,/path/to/local/genome.fa,mouse
 Sample4,SAM101A4.bam,,human
 ```
 
-##### Example command
+##### Example command for BAM inputs
 
 ```bash
 nextflow run nf-core/nanoseq \
@@ -152,6 +152,7 @@ nextflow run nf-core/nanoseq \
     --skip_alignment \
     -profile <docker/singularity/institute>
 ```
+
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
