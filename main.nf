@@ -1063,16 +1063,20 @@ if (!params.skip_transcriptquant) {
       val inpath from ch_dexseq_in
       val num_condition from ch_dexseq_num_condition
       val transcriptquant from params.transcriptquant
+
       output:
       file "*.txt" into ch_DEXout
+      
       when:
       num_condition >= 2
+      
       script:
       """
       Rscript --vanilla $DEXscript $transcriptquant $inpath $sampleinfo
       """
     }
 }
+
 /*
  * STEP 16 - Output Description HTML
  */

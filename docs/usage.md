@@ -128,7 +128,7 @@ nextflow run nf-core/nanoseq \
     -profile <docker/singularity/institute>
 ```
 
-#### Without basecalling, demultiplexing, and alignment
+##### Without basecalling, demultiplexing, and alignment
 
 ##### Example `samplesheet.csv`
 

@@ -10,6 +10,7 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
+
             "required": [
                 "input"
             ],
@@ -26,6 +27,7 @@
                     "fa_icon": "fas fa-align-center",
                     "help_text": "By default, the pipeline expects paired-end data. If you have single-end data, you need to specify `--single_end` on the command line when you launch the pipeline. A normal glob pattern, enclosed in quotation marks, can then be used for `--input`. For example:\n\n```bash\n--single_end --input '*.fastq'\n```\n\nIt is not possible to run a mixture of single-end and paired-end files in one run."
                 },
+
                 "outdir": {
                     "type": "string",
                     "description": "The output directory where the results will be saved.",
@@ -47,6 +49,7 @@
             "fa_icon": "fas fa-dna",
             "description": "Options for the reference genome indices used to align reads.",
             "properties": {
+
                 "genome": {
                     "type": "string",
                     "description": "Name of iGenomes reference.",
@@ -59,6 +62,7 @@
                     "description": "Path to FASTA genome file.",
                     "help_text": "If you have no genome reference available, the pipeline can build one using a FASTA file. This requires additional time and resources, so it's better to use a pre-build index if possible."
                 },
+
                 "igenomes_base": {
                     "type": "string",
                     "description": "Directory / URL base for iGenomes references.",
@@ -88,6 +92,7 @@
                     "hidden": true,
                     "fa_icon": "fas fa-question-circle"
                 },
+
                 "publish_dir_mode": {
                     "type": "string",
                     "default": "copy",
@@ -104,6 +109,7 @@
                         "mov"
                     ]
                 },
+
                 "name": {
                     "type": "string",
                     "description": "Workflow name.",
@@ -255,5 +261,6 @@
         {
             "$ref": "#/definitions/institutional_config_options"
         }
+
     ]
 }
