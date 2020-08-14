@@ -1053,7 +1053,7 @@ if (!params.skip_transcriptquant) {
     ch_DEXscript = Channel.fromPath("$params.DEXscript", checkIfExists:true)
 
     process DEXseq {
-      publishDir "${params.outdir}/DEXseq", mode: params.publish_dir_mode',
+      publishDir "${params.outdir}/DEXseq", mode: params.publish_dir_mode,
             saveAs: { filename ->
                           if (!filename.endsWith(".version")) filename
                     }
