@@ -20,7 +20,7 @@ def print_error(error,line):
 
 
 def check_samplesheet(FileIn,FileOut):
-    HEADER = ['sample', 'input_file', 'barcode', 'genome', 'transcriptome','condition']
+    HEADER = ['group','replicate','input_file','barcode','genome','transcriptome']
 
     ## CHECK HEADER
     fin = open(FileIn,'r')
@@ -29,7 +29,7 @@ def check_samplesheet(FileIn,FileOut):
         print("ERROR: Please check samplesheet header -> {} != {}".format(','.join(header),','.join(HEADER)))
         sys.exit(1)
 
-    outLines, conditions = [], {}
+    outLines, groups = [], {}
     while True:
         line = fin.readline()
         if line:
@@ -41,22 +41,35 @@ def check_samplesheet(FileIn,FileOut):
                 print_error("Please specify 'sample' entry along with either 'fastq' or 'barcode'!",line)
                 sys.exit(1)
 
-            ## CHECK SAMPLE ID ENTRIES
-            sample,input_file,barcode,genome,transcriptome,condition = lspl
-            if sample:
-                if sample.find(' ') != -1:
-                    print_error("Sample entry contains spaces!",line)
-                    sys.exit(1)
-            else:
-                print_error("Sample entry has not been specified!",line)
-                sys.exit(1)
+            ## ASSIGN ENTRIES TO VARIABLES
+            group,replicate,input_file,barcode,genome,transcriptome = lspl
 
-            ## CHECK CONDITION ENTRIES
-            if condition:
-                if condition not in conditions:
-                    conditions[condition] = 1
+            ## CHECK GROUP ENTRIES
+            if group:
+                if group.find(' ') != -1:
+                    print("{}: Group id contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip()))
+                    sys.exit(1)
                 else:
-                    conditions[condition] += 1
+                    if group not in groups:
+                        groups[group] = 1
+                    else:
+                        groups[group] += 1
+
+            ## CHECK REPLICATE ENTRIES
+            if replicate:
+                if not replicate.isdigit():
+                    print("{}: Replicate id not an integer!\nLine: '{}'".format(ERROR_STR,line.strip()))
+                    sys.exit(1)
+
+            ## CHECK INPUT FILE ENTRIES
+            if input_file:
+                if input_file[-9:] != '.fastq.gz' and input_file[-6:] != '.fq.gz' and input_file[-4:] != ".bam":
+                    print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz' or '.bam'!",line)
+                    sys.exit(1)
+                sample = input_file.split('/')[-1].split('.')[0]
+            else:
+                print_error("Input file has not been specified!",line)
+                sys.exit(1)
 
             ## CHECK BARCODE ENTRIES
             if barcode:
@@ -65,12 +78,6 @@ def check_samplesheet(FileIn,FileOut):
                     sys.exit(1)
                 else:
                     barcode = 'barcode%s' % (barcode.zfill(2))
-
-            ## CHECK FASTQ ENTRIES
-            if input_file:
-                if input_file[-9:] != '.fastq.gz' and input_file[-6:] != '.fq.gz' and input_file[-4:] != ".bam":
-                    print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz' or '.bam'!",line)
-                    sys.exit(1)
 
             ## CHECK GENOME ENTRIES
             if genome:
@@ -105,21 +112,21 @@ def check_samplesheet(FileIn,FileOut):
                     is_transcripts = '1'
                     genome = transcriptome
 
-            outLines.append([sample,input_file,barcode,genome,gtf,is_transcripts,condition])
+            outLines.append([sample,group,replicate,input_file,barcode,genome,gtf,is_transcripts])
         else:
             fin.close()
             break
 
     ## WRITE TO FILE
     fout = open(FileOut,'w')
-    fout.write(','.join(['sample', 'input_file', 'barcode', 'genome', 'gtf', 'is_transcripts','condition']) + '\n')
+    fout.write(','.join(['sample','group','replicate','input_file','barcode','genome','gtf','is_transcripts']) + '\n')
     for line in outLines:
         fout.write(','.join(line) + '\n')
     fout.close()
     outfile=open("total_conditions.csv","w")
-    num_samp = next(iter(conditions.values()))
-    if num_samp >= 3 and all(samples == num_samp for samples in conditions.values()):
-        outfile.write(",".join(conditions)+"\n")
+    num_samp = next(iter(groups.values()))
+    if num_samp >= 3 and all(samples == num_samp for samples in groups.values()):
+        outfile.write(",".join(groups)+"\n")
     else:
         outfile.write("false")
 
