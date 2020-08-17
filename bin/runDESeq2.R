@@ -33,7 +33,7 @@ sampInfo<-read.csv(args[3],row.names=1)
 if (!all(rownames(sampInfo) == colnames(countTab))){
   sampInfo <- sampInfo[match(colnames(countTab), rownames(sampInfo)),]
 }
-dds <- DESeqDataSetFromMatrix(countData = countTab,colData = sampInfo,design = ~ condition)
+dds <- DESeqDataSetFromMatrix(countData = countTab,colData = sampInfo,design = ~ group)
 dds <- DESeq(dds)
 res <- results(dds)
 #register(MulticoreParam(6))
