@@ -30,6 +30,7 @@ colnames(count.matrix)[2] <- "gene_id"
 #sampleinfo<-read.table("~/Downloads/nanorna-bam-master/samples_conditions.csv",sep=",",header=T)
 sampleinfo<-read.table(args[3],sep=",",header=T)
 colnames(sampleinfo)[1] <- "sample_id"
+colnames(sampleinfo)[2] <- "condition"
 condition_names <- sampleinfo[!duplicated(sampleinfo$condition),]$condition
 #condition_names <- c(levels(sampleinfo$condition))
 lgcolName <- "log2fold"
