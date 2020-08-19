@@ -281,6 +281,7 @@ process CheckSampleSheet {
 
     input:
     file samplesheet from ch_input
+    val boo_inputpath from params.input_path
 
     output:
     file "*reformat.csv" into ch_samplesheet_reformat
@@ -288,7 +289,7 @@ process CheckSampleSheet {
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
     """
-    check_samplesheet.py $samplesheet samplesheet_reformat.csv
+    check_samplesheet.py $samplesheet samplesheet_reformat.csv $boo_inputpath
     """
 }
 
