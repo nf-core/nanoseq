@@ -21,7 +21,7 @@ def print_error(error,line):
 
 
 def check_samplesheet(FileIn,FileOut,InputPath):
-    HEADER = ['group','replicate','input_file','barcode','genome','transcriptome']
+    HEADER = ['group','replicate','barcode','input_file','genome','transcriptome']
 
     ## CHECK HEADER
     fin = open(FileIn,'r')
@@ -43,7 +43,7 @@ def check_samplesheet(FileIn,FileOut,InputPath):
                 sys.exit(1)
 
             ## ASSIGN ENTRIES TO VARIABLES
-            group,replicate,input_file,barcode,genome,transcriptome = lspl
+            group,replicate,barcode,input_file,genome,transcriptome = lspl
 
             ## CHECK GROUP ENTRIES
             if group:
@@ -72,9 +72,16 @@ def check_samplesheet(FileIn,FileOut,InputPath):
                 else:
                     sample = input_file
                     input_file = ''
+                    if replicate:
+                        sample += "REP"+replicate
             else:
-                print_error("Input file has not been specified!",line)
-                sys.exit(1)
+                if group:
+                    sample = group
+                    if replicate:
+                        sample += "REP"+replicate
+                else:
+                    print_error("Input file has not been specified!",line)
+                    sys.exit(1)
 
             ## CHECK BARCODE ENTRIES
             if barcode:
