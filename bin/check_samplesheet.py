@@ -11,6 +11,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(description=Description, epilog=Epilog)
     parser.add_argument('FILE_IN', help="Input samplesheet file.")
     parser.add_argument('FILE_OUT', help="Output samplesheet file.")
+    parser.add_argument('INPUT_PATH', help="Input path for files.")
 
     return parser.parse_args(args)
 
@@ -19,7 +20,7 @@ def print_error(error,line):
     print("ERROR: Please check samplesheet -> {}\nLine: '{}'".format(error,line.strip()))
 
 
-def check_samplesheet(FileIn,FileOut):
+def check_samplesheet(FileIn,FileOut,InputPath):
     HEADER = ['group','replicate','input_file','barcode','genome','transcriptome']
 
     ## CHECK HEADER
@@ -36,7 +37,7 @@ def check_samplesheet(FileIn,FileOut):
             lspl = [x.strip() for x in line.strip().split(',')]
 
             ## CHECK VALID NUMBER OF COLUMNS PER SAMPLE
-            numCols = len([x for x in lspl[:3] if x])
+            numCols = len([x for x in lspl[2:] if x])
             if numCols < 2:
                 print_error("Please specify 'sample' entry along with either 'fastq' or 'barcode'!",line)
                 sys.exit(1)
@@ -63,10 +64,14 @@ def check_samplesheet(FileIn,FileOut):
 
             ## CHECK INPUT FILE ENTRIES
             if input_file:
-                if input_file[-9:] != '.fastq.gz' and input_file[-6:] != '.fq.gz' and input_file[-4:] != ".bam":
-                    print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz' or '.bam'!",line)
-                    sys.exit(1)
-                sample = input_file.split('/')[-1].split('.')[0]
+                if InputPath == 'false':
+                    if input_file[-9:] != '.fastq.gz' and input_file[-6:] != '.fq.gz' and input_file[-4:] != ".bam":
+                        print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz' or '.bam'!",line)
+                        sys.exit(1)
+                    sample = input_file.split('/')[-1].split('.')[0]
+                else:
+                    sample = input_file
+                    input_file = ''
             else:
                 print_error("Input file has not been specified!",line)
                 sys.exit(1)
@@ -124,16 +129,18 @@ def check_samplesheet(FileIn,FileOut):
         fout.write(','.join(line) + '\n')
     fout.close()
     outfile=open("total_conditions.csv","w")
-    num_samp = next(iter(groups.values()))
-    if num_samp >= 3 and all(samples == num_samp for samples in groups.values()):
-        outfile.write(",".join(groups)+"\n")
+    if len(groups) > 0:
+         num_samp = next(iter(groups.values()))
+         if num_samp >= 3 and all(samples == num_samp for samples in groups.values()):
+             outfile.write(",".join(groups)+"\n")
+         else:
+             outfile.write("false")
     else:
-        outfile.write("false")
+         outfile.write("false")
 
 def main(args=None):
     args = parse_args(args)
-    check_samplesheet(args.FILE_IN,args.FILE_OUT)
-
+    check_samplesheet(args.FILE_IN,args.FILE_OUT,args.INPUT_PATH)
 
 if __name__ == '__main__':
     sys.exit(main())
