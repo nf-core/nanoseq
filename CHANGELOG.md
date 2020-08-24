@@ -7,13 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
-* [#69](https://github.com/nf-core/nanoseq/pull/69) - transcript quantification processes, samplesheet `group` and `replicate` columns, and BAM input option
-* [#72](https://github.com/nf-core/nanoseq/pull/72) - dependencies in environment.yml
-* Update template to tools `1.10.2`
-* Parameters:
-    * `--transcriptquant` to specify the software(s) used for transcript quantification
-    * `--skip_transcriptquant` to skip the transcript quantification processes
-
 ### `Fixed`
 
 * Added `--gpus all` to Docker `runOptions` when using GPU as mentioned [here](https://github.com/docker/compose/issues/6691#issuecomment-514429646)
@@ -31,10 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add bioconductor-bsgenome `1.56.0`
 
 ### `Deprecated`
-
-| Deprecated                   | Replacement                    |
-|------------------------------|--------------------------------|
-| samplesheet `fastq` column   | samplesheet `input_file` column|
 
 ## [1.0.0] - 2020-03-05
 
