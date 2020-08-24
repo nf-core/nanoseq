@@ -10,6 +10,27 @@ dependencies:
   - conda-forge::markdown=3.1.1
   - conda-forge::pymdown-extensions=6.0
   - conda-forge::pygments=2.5.2
-  # TODO nf-core: Add required software dependencies here
-  - bioconda::fastqc=0.11.8
-  - bioconda::multiqc=1.7
+  - conda-forge::pigz=2.3.4
+  - conda-forge::psutil=5.7.0
+  - conda-forge::r-base=4.0.1
+  - conda-forge::r-devtools=2.3.0
+
+  - bioconda::fastqc=0.11.9
+  - bioconda::multiqc=1.8
+  - bioconda::qcat=1.1.0
+  - bioconda::pycoqc=2.5.0.3
+  - bioconda::nanoplot=1.28.4
+  - bioconda::samtools=1.9
+  - bioconda::minimap2=2.17
+  - bioconda::graphmap=0.6.3
+  - bioconda::bedtools=2.29.2
+  - bioconda::ucsc-bedgraphtobigwig=357
+  - bioconda::ucsc-bedtobigbed=357
+  - bioconda::stringtie=2.0
+  - bioconda::subread=2.0.1
+  - bioconda::bioconductor-deseq2=1.28.0
+  - bioconda::bioconductor-drimseq=1.16.0
+  - bioconda::bioconductor-dexseq=1.34.0
+  - bioconda::bioconductor-stager=1.10.0
+  - bioconda::bioconductor-bsgenome=1.56.0
+  
