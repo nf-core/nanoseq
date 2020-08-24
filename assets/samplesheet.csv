@@ -1,0 +1,7 @@
+sample,fastq,barcode,genome,transcriptome
+Sample1,,1,mm10,
+Sample2,,2,hg19,
+Sample3,,3,/path/to/local/genome.fa,
+Sample4,,4,,/path/to/local/transcriptome.fa
+Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+Sample6,,6,,

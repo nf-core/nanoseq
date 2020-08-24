@@ -48,8 +48,85 @@ jobs:
           sudo mv nextflow /usr/local/bin/
 
       - name: Run pipeline with test data
-        # TODO nf-core: You can customise CI pipeline run tests as required
-        # For example: adding multiple test runs with different parameters
-        # Remember that you can parallelise this by using strategy.matrix
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test,docker
+
+  profile:
+    name: Run profile tests
+    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    runs-on: ubuntu-latest
+    env:
+      NXF_VER: '19.10.0'
+      NXF_ANSI_LOG: false
+    strategy:
+      matrix:
+        profiles: [test_bc_nodx, test_nobc_dx, test_nobc_nodx]
+    steps:
+      - name: Check out pipeline code
+        uses: actions/checkout@v2
+
+      - name: Check if Dockerfile or Conda environment changed
+        uses: technote-space/get-diff-action@v1
+        with:
+          PREFIX_FILTER: |
+            Dockerfile
+            environment.yml
+
+      - name: Build new docker image
+        if: env.GIT_DIFF
+        run: docker build --no-cache . -t nfcore/nanoseq:dev
+
+      - name: Pull docker image
+        if: ${{ !env.GIT_DIFF }}
+        run: |
+          docker pull nfcore/nanoseq:dev
+          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
+
+      - name: Install Nextflow
+        run: |
+          wget -qO- get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+
+      - name: Run pipeline with different profiles
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profiles }},docker
+
+  parameters:
+    name: Run parameter tests
+    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    runs-on: ubuntu-latest
+    env:
+      NXF_VER: '19.10.0'
+      NXF_ANSI_LOG: false
+    strategy:
+      matrix:
+        parameters: [--aligner graphmap2, --skip_alignment, --skip_qc]
+    steps:
+      - name: Check out pipeline code
+        uses: actions/checkout@v2
+
+      - name: Check if Dockerfile or Conda environment changed
+        uses: technote-space/get-diff-action@v1
+        with:
+          PREFIX_FILTER: |
+            Dockerfile
+            environment.yml
+
+      - name: Build new docker image
+        if: env.GIT_DIFF
+        run: docker build --no-cache . -t nfcore/nanoseq:dev
+
+      - name: Pull docker image
+        if: ${{ !env.GIT_DIFF }}
+        run: |
+          docker pull nfcore/nanoseq:dev
+          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
+
+      - name: Install Nextflow
+        run: |
+          wget -qO- get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+
+      - name: Run pipeline with different parameters
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker ${{ matrix.parameters }}
