@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+* [#69](https://github.com/nf-core/nanoseq/pull/69) - transcript quantification processes, samplesheet `group` and `replicate` columns, and BAM input option
+* [#72](https://github.com/nf-core/nanoseq/pull/72) - dependencies in environment.yml
 * Update template to tools `1.10.2`
+* Parameters:
+    * `--transcriptquant` to specify the software(s) used for transcript quantification
+    * `--skip_transcriptquant` to skip the transcript quantification processes
 
 ### `Fixed`
 
@@ -15,7 +20,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Dependencies`
 
+* Add r-base `4.0.1`
+* Add r-devtools `2.3.0`
+* Add stringtie `2.0`
+* Add subread `2.0.1`
+* Add bioconductor-deseq2 `1.28.0`
+* Add bioconductor-drimseq `1.16.0`
+* Add bioconductor-dexseq `1.34.0`
+* Add bioconductor-stager `1.10.0`
+* Add bioconductor-bsgenome `1.56.0`
+
 ### `Deprecated`
+
+| Deprecated                   | Replacement                    |
+|------------------------------|--------------------------------|
+| samplesheet `fastq` column   | samplesheet `input_file` column|
 
 ## [1.0.0] - 2020-03-05
 
