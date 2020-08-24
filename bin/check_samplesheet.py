@@ -36,7 +36,7 @@ def check_samplesheet(FileIn,FileOut,InputPath):
         if line:
             lspl = [x.strip() for x in line.strip().split(',')]
 
-            ## CHECK VALID NUMBER OF COLUMNS PER SAMPLE
+            ## CHECK VALID NUMBER OF COLUMNS PER SAMPLE (REQUIRE EITHER GROUP OR INPUT_FILE)
             numCols = len([x for x in lspl[:4] if x])
             if numCols < 2:
                 print_error("Please specify 'sample' entry along with either 'fastq' or 'barcode'!",line)
