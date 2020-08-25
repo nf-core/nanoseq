@@ -24,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add bioconductor-bsgenome `1.56.0`
 
 ### `Deprecated`
-
 ## [1.0.0] - 2020-03-05
 
 Initial release of nf-core/nanoseq, created with the [nf-core](http://nf-co.re/) template.
