@@ -11,6 +11,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(description=Description, epilog=Epilog)
     parser.add_argument('FILE_IN', help="Input samplesheet file.")
     parser.add_argument('FILE_OUT', help="Output samplesheet file.")
+    parser.add_argument('INPUT_PATH', help="Input path for files.")
 
     return parser.parse_args(args)
 
@@ -19,8 +20,8 @@ def print_error(error,line):
     print("ERROR: Please check samplesheet -> {}\nLine: '{}'".format(error,line.strip()))
 
 
-def check_samplesheet(FileIn,FileOut):
-    HEADER = ['sample', 'fastq', 'barcode', 'genome', 'transcriptome']
+def check_samplesheet(FileIn,FileOut,InputPath):
+    HEADER = ['group','replicate','barcode','input_file','genome','transcriptome']
 
     ## CHECK HEADER
     fin = open(FileIn,'r')
@@ -29,27 +30,58 @@ def check_samplesheet(FileIn,FileOut):
         print("ERROR: Please check samplesheet header -> {} != {}".format(','.join(header),','.join(HEADER)))
         sys.exit(1)
 
-    outLines = []
+    outLines, groups = [], {}
     while True:
         line = fin.readline()
         if line:
             lspl = [x.strip() for x in line.strip().split(',')]
 
-            ## CHECK VALID NUMBER OF COLUMNS PER SAMPLE
-            numCols = len([x for x in lspl[:3] if x])
+            ## CHECK VALID NUMBER OF COLUMNS PER SAMPLE (REQUIRE EITHER GROUP OR INPUT_FILE)
+            numCols = len([x for x in lspl[:4] if x])
             if numCols < 2:
                 print_error("Please specify 'sample' entry along with either 'fastq' or 'barcode'!",line)
                 sys.exit(1)
 
-            ## CHECK SAMPLE ID ENTRIES
-            sample,fastq,barcode,genome,transcriptome = lspl
-            if sample:
-                if sample.find(' ') != -1:
-                    print_error("Sample entry contains spaces!",line)
+            ## ASSIGN ENTRIES TO VARIABLES
+            group,replicate,barcode,input_file,genome,transcriptome = lspl
+
+            ## CHECK GROUP ENTRIES
+            if group:
+                if group.find(' ') != -1:
+                    print("{}: Group id contains spaces!\nLine: '{}'".format(ERROR_STR,line.strip()))
                     sys.exit(1)
+                else:
+                    if group not in groups:
+                        groups[group] = 1
+                    else:
+                        groups[group] += 1
+
+            ## CHECK REPLICATE ENTRIES
+            if replicate:
+                if not replicate.isdigit():
+                    print("{}: Replicate id not an integer!\nLine: '{}'".format(ERROR_STR,line.strip()))
+                    sys.exit(1)
+
+            ## CHECK INPUT FILE ENTRIES
+            if input_file:
+                if InputPath == 'false':
+                    if input_file[-9:] != '.fastq.gz' and input_file[-6:] != '.fq.gz' and input_file[-4:] != ".bam":
+                        print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz' or '.bam'!",line)
+                        sys.exit(1)
+                    sample = input_file.split('/')[-1].split('.')[0]
+                else:
+                    sample = input_file
+                    input_file = ''
+                    if replicate:
+                        sample += "REP"+replicate
             else:
-                print_error("Sample entry has not been specified!",line)
-                sys.exit(1)
+                if group:
+                    sample = group
+                    if replicate:
+                        sample += "REP"+replicate
+                else:
+                    print_error("Input file has not been specified!",line)
+                    sys.exit(1)
 
             ## CHECK BARCODE ENTRIES
             if barcode:
@@ -58,12 +90,6 @@ def check_samplesheet(FileIn,FileOut):
                     sys.exit(1)
                 else:
                     barcode = 'barcode%s' % (barcode.zfill(2))
-
-            ## CHECK FASTQ ENTRIES
-            if fastq:
-                if fastq[-9:] != '.fastq.gz' and fastq[-6:] != '.fq.gz':
-                    print_error("FastQ file does not have extension '.fastq.gz' or '.fq.gz'!",line)
-                    sys.exit(1)
 
             ## CHECK GENOME ENTRIES
             if genome:
@@ -98,23 +124,30 @@ def check_samplesheet(FileIn,FileOut):
                     is_transcripts = '1'
                     genome = transcriptome
 
-            outLines.append([sample,fastq,barcode,genome,gtf,is_transcripts])
+            outLines.append([sample,group,replicate,input_file,barcode,genome,gtf,is_transcripts])
         else:
             fin.close()
             break
 
     ## WRITE TO FILE
     fout = open(FileOut,'w')
-    fout.write(','.join(['sample', 'fastq', 'barcode', 'genome', 'gtf', 'is_transcripts']) + '\n')
+    fout.write(','.join(['sample','group','replicate','input_file','barcode','genome','gtf','is_transcripts']) + '\n')
     for line in outLines:
         fout.write(','.join(line) + '\n')
     fout.close()
-
+    outfile=open("total_conditions.csv","w")
+    if len(groups) > 0:
+         num_samp = next(iter(groups.values()))
+         if num_samp >= 3 and all(samples == num_samp for samples in groups.values()):
+             outfile.write(",".join(groups)+"\n")
+         else:
+             outfile.write("false")
+    else:
+         outfile.write("false")
 
 def main(args=None):
     args = parse_args(args)
-    check_samplesheet(args.FILE_IN,args.FILE_OUT)
-
+    check_samplesheet(args.FILE_IN,args.FILE_OUT,args.INPUT_PATH)
 
 if __name__ == '__main__':
     sys.exit(main())

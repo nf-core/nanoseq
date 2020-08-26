@@ -7,10 +7,11 @@ You will need to create a file with information about the samples in your experi
 | Column          | Description                                                                                                                |
 |-----------------|----------------------------------------------------------------------------------------------------------------------------|
 | `sample`        | Sample name without spaces.                                                                                                |
-| `fastq`         | Full path to FastQ file if previously demultiplexed. File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". |
+| `input_file`   | Full path to FastQ file if previously demultiplexed or to BAM file if previously aligned. FastQ File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam". |
 | `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                      |
 | `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
 | `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz". |
+| `condition` | Name of condition. If there are two or more conditions with at least three samples in each, then DESeq2 and DEXseq will be performed for differential expression analysis.|
 
 ### Specifying a reference genome/transcriptome
 
@@ -29,19 +30,19 @@ As shown in the examples below, the accepted format of the file is slightly diff
 
 #### With basecalling and demultiplexing
 
-##### Example `samplesheet.csv`
+##### Example `samplesheet.csv` for barcoded fast5 inputs
 
 ```bash
-sample,fastq,barcode,genome,transcriptome
-Sample1,,1,mm10,
-Sample2,,2,hg19,
-Sample3,,3,/path/to/local/genome.fa,
-Sample4,,4,,/path/to/local/transcriptome.fa
-Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
-Sample6,,6,,
+sample,input_file,barcode,genome,transcriptome,condition
+Sample1,,1,mm10,,
+Sample2,,2,hg19,,
+Sample3,,3,/path/to/local/genome.fa,,
+Sample4,,4,,/path/to/local/transcriptome.fa,
+Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf,
+Sample6,,6,,,
 ```
 
-##### Example command
+##### Example command for barcoded fast5 inputs
 
 ```bash
 nextflow run nf-core/nanoseq \
@@ -56,16 +57,16 @@ nextflow run nf-core/nanoseq \
 
 #### With basecalling but not demultiplexing
 
-##### Example `samplesheet.csv`
+##### Example `samplesheet.csv` for non-barcoded fast5 inputs
 
 ```bash
-sample,fastq,barcode,genome,transcriptome
-Sample1,,1,/path/to/local/genome.fa,
+sample,input_file,barcode,genome,transcriptome,condition
+Sample1,,1,/path/to/local/genome.fa,,
 ```
 
 > Only a single sample can be specified if you would like to skip demultiplexing
 
-##### Example command
+##### Example command for non-barcoded fast5 inputs
 
 ```bash
 nextflow run nf-core/nanoseq \
@@ -80,19 +81,19 @@ nextflow run nf-core/nanoseq \
 
 #### With demultiplexing but not basecalling
 
-##### Example `samplesheet.csv`
+##### Example `samplesheet.csv` for non-demultiplexed fastq inputs
 
 ```bash
-sample,fastq,barcode,genome,transcriptome
-Sample1,,1,mm10,
-Sample2,,2,hg19,
-Sample3,,3,/path/to/local/genome.fa,
-Sample4,,4,,/path/to/local/transcriptome.fa
-Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
-Sample6,,6,,
+sample,input_file,barcode,genome,transcriptome,condition
+Sample1,,1,mm10,mouse
+Sample2,,2,hg19,human
+Sample3,,3,/path/to/local/genome.fa,mouse
+Sample4,,4,,/path/to/local/transcriptome.fa,human
+Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf,mouse
+Sample6,,6,,,
 ```
 
-##### Example command
+##### Example command for non-demultiplexed fastq inputs
 
 ```bash
 nextflow run nf-core/nanoseq \
@@ -106,17 +107,17 @@ nextflow run nf-core/nanoseq \
 
 #### Without both basecalling and demultiplexing
 
-##### Example `samplesheet.csv`
+##### Example `samplesheet.csv` for demultiplexed fastq inputs
 
 ```bash
-sample,fastq,barcode,genome,transcriptome
-Sample1,SAM101A1.fastq.gz,,mm10
-Sample2,SAM101A2.fastq.gz,,hg19
-Sample3,SAM101A3.fastq.gz,/path/to/local/genome.fa,
-Sample4,SAM101A4.fastq.gz,,
+sample,input_file,barcode,genome,transcriptome,condition
+Sample1,SAM101A1.fastq.gz,,mm10,mouse
+Sample2,SAM101A2.fastq.gz,,hg19,human
+Sample3,SAM101A3.fastq.gz,/path/to/local/genome.fa,mouse
+Sample4,SAM101A4.fastq.gz,,human
 ```
 
-##### Example command
+##### Example command for demultiplexed fastq inputs
 
 ```bash
 nextflow run nf-core/nanoseq \
@@ -124,6 +125,31 @@ nextflow run nf-core/nanoseq \
     --protocol cDNA \
     --skip_basecalling \
     --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
+
+##### Without basecalling, demultiplexing, and alignment
+
+##### Example `samplesheet.csv` for BAM inputs
+
+```bash
+sample,input_file,barcode,genome,transcriptome,condition
+Sample1,SAM101A1.bam,,mm10,mouse
+Sample2,SAM101A2.bam,,hg19,human
+Sample3,SAM101A3.bam,/path/to/local/genome.fa,mouse
+Sample4,SAM101A4.bam,,human
+```
+
+##### Example command for BAM inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    --skip_qc \
+    --skip_alignment \
     -profile <docker/singularity/institute>
 ```
 

@@ -91,8 +91,10 @@ The initial SAM alignment files created by *GraphMap2* or *Minimap2* are not sav
 
 *Output directories*:
 
-* `<ALIGNER>/`  
+* `<ALIGNER>/bam`  
   Per-sample coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+* `<ALIGNER>/bam_index`  
+  Per-sample coordinate sorted alignment index files in [`*.bai`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
 * `<ALIGNER>/samtools_stats/`  
   *SAMtools* `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
 
@@ -133,6 +135,51 @@ The pipeline has special steps which also allow the software versions to be repo
   * `multiqc_report.html` - a standalone HTML file that can be viewed in your web browser.
   * `multiqc_data/` - directory containing parsed statistics from the different tools used in the pipeline.
   * `multiqc_plots/` - directory containing static images from the report in various formats.
+
+## Transcript Reconstruction and Quantification
+
+*Documentation*:  
+[bambu](https://github.com/GoekeLab/bambu), [StringTie2](https://ccb.jhu.edu/software/stringtie/), [featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
+
+*Description*:  
+With genome alignments, transcripts can be reconstructed by softwares to find novel transcripts. We used *bambu*  to identify novel transcripts. Quantification can be performed then based on extended annotations. *bambu* also provides quantification after transcript recontruction. An an alternative approach, we also provides an option to run *StringTie2* to identify novel transcripts. However, when multiple samples are provided, quantification for multiple samples are not implemented explicitly in the software. Hence we provide *StringTie2 Merge*  to merge novel transcripts across multiple samples and perform quantification for both gene and transcripts using *featureCounts*. You can skip transcript reconstruction and quantification by providing the `--skip_transcriptquant` parameter.
+
+*Output directories*:
+
+If bambu is used:
+
+* `bambu/`  
+  * `extended_annotations.gtf` - a gtf file that contains both annotated and novel transcripts  
+  * `counts_gene.txt` - gene expression estimates
+  * `counts_transcript.txt` - transcript expression estimates
+
+If StringTie2 is used:
+
+* `stringtie2/`
+  * `*.bam`
+     Per-sample coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+  * `*.out.gtf`
+     Per-sample annotations for novel transcripts obtained in *StringTie2*.
+  * `merged.combined.gtf`
+     Extended annotation that combines provided gtf with gtf files from each sample via *StringTie2 Merge*.
+  * `featureCounts/`
+    * `counts_gene.txt` - gene expression estimates.
+    * `counts_gene.log` - featureCounts for gene level log file.
+    * `counts_transcript.txt` - transcript expression estimates.
+    * `counts_transcript.txt` - featureCounts for transcript level log file.
+
+## Differential expression analysis
+
+*Documentation*:
+[DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html), [DEXSeq](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html)
+
+*Description*:  
+When condition is specified in sample information, then differential analysis on gene and transcripts will be done using *DESeq2* or *DEXSeq*, respectively. This step will be skipped automatically when there are only one sample condition or less than three replicates in each condition or transcript quantification is skipped.
+
+*Output directories*:
+
+* `DESeq2/DESeq2out.txt` - a `.txt` file that can contains differential expression results for genes.
+* `DEXSeq/DEXSeqout.txt` - a `.txt` file that can contains differential expression results for transcripts.
 
 ## Pipeline information
 
