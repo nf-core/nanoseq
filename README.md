@@ -28,7 +28,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
    * When [`StringTie2`](https://ccb.jhu.edu/software/stringtie/) is chosen, each sample can be processed individually and combined. After which, [`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/) will be used for both gene and transcript quantification.
    * [`bambu`](https://github.com/GoekeLab/bambu) performs both transcript reconstruction and quantification.
 8. Differential expression analysis with ([`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) or [`DEXSeq`](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html) for condition comparison
-   * At least 3 replicates for each condtion need to be satistified for this step. 
+   * At least 3 replicates for each condtion need to be satistified for this step.
 
 ## Quick Start
 
