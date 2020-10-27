@@ -115,7 +115,7 @@ if (!params.skip_basecalling) {
         if (!isOffline()) {
             process GET_TEST_DATA {
                 output:
-                file "test-datasets/fast5/$barcoded/" into ch_input_path
+                path "test-datasets/fast5/$barcoded/" into ch_input_path
 
                 script:
                 barcoded = workflow.profile.contains('test_nonbc') ? "nonbarcoded" : "barcoded"
@@ -286,12 +286,12 @@ process CHECK_SAMPLESHEET {
     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
 
     input:
-    file samplesheet from ch_input
+    path samplesheet from ch_input
     val boo_inputpath from params.input_path
 
     output:
-    file "*reformat.csv" into ch_samplesheet_reformat
-    file "total_conditions.csv" into ch_sample_condition
+    path "*reformat.csv" into ch_samplesheet_reformat
+    path "total_conditions.csv" into ch_sample_condition
 
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
     """
@@ -361,17 +361,17 @@ if (!params.skip_basecalling) {
                     }
 
         input:
-        file input_path from ch_input_path
+        path input_path from ch_input_path
         val name from ch_sample_name
-        file guppy_config from ch_guppy_config.ifEmpty([])
-        file guppy_model from ch_guppy_model.ifEmpty([])
+        path guppy_config from ch_guppy_config.ifEmpty([])
+        path guppy_model from ch_guppy_model.ifEmpty([])
 
         output:
-        file "fastq/*.fastq.gz" into ch_fastq
-        file "basecalling/*.txt" into ch_guppy_pycoqc_summary,
+        path "fastq/*.fastq.gz" into ch_fastq
+        path "basecalling/*.txt" into ch_guppy_pycoqc_summary,
                                       ch_guppy_nanoplot_summary
-        file "basecalling/*"
-        file "v_guppy.txt" into ch_guppy_version
+        path "basecalling/*"
+        path "v_guppy.txt" into ch_guppy_version
 
         script:
         barcode_kit  = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
@@ -437,10 +437,10 @@ if (!params.skip_basecalling) {
             publishDir path: "${params.outdir}/qcat", mode: params.publish_dir_mode
 
             input:
-            file input_path from ch_input_path
+            path input_path from ch_input_path
 
             output:
-            file "fastq/*.fastq.gz" into ch_fastq
+            path "fastq/*.fastq.gz" into ch_fastq
 
             script:
             detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
@@ -517,10 +517,10 @@ process PYCOQC {
     !params.skip_basecalling && !params.skip_qc && !params.skip_pycoqc
 
     input:
-    file summary_txt from ch_guppy_pycoqc_summary
+    path summary_txt from ch_guppy_pycoqc_summary
 
     output:
-    file "*.html"
+    path "*.html"
 
     script:
     """
@@ -540,10 +540,10 @@ process NANOPLOT_SUMMARY {
     !params.skip_basecalling && !params.skip_qc && !params.skip_nanoplot
 
     input:
-    file summary_txt from ch_guppy_nanoplot_summary
+    path summary_txt from ch_guppy_nanoplot_summary
 
     output:
-    file "*.{png,html,txt,log}"
+    path "*.{png,html,txt,log}"
 
     script:
     """
@@ -563,10 +563,10 @@ process NANOPLOT_FASTQ {
     !params.skip_qc && !params.skip_nanoplot
 
     input:
-    tuple val(sample), file(fastq) from ch_fastq_nanoplot.map { ch -> [ ch[0], ch[1] ] }
+    tuple val(sample), path(fastq) from ch_fastq_nanoplot.map { ch -> [ ch[0], ch[1] ] }
 
     output:
-    file "*.{png,html,txt,log}"
+    path "*.{png,html,txt,log}"
 
     script:
     """
@@ -586,10 +586,10 @@ process FASTQC {
     !params.skip_qc && !params.skip_fastqc
 
     input:
-    tuple val(sample), file(fastq) from ch_fastq_fastqc.map { ch -> [ ch[0], ch[1] ] }
+    tuple val(sample), path(fastq) from ch_fastq_fastqc.map { ch -> [ ch[0], ch[1] ] }
 
     output:
-    file "*.{zip,html}" into ch_fastqc_multiqc
+    path "*.{zip,html}" into ch_fastqc_multiqc
 
     script:
     """
@@ -614,10 +614,10 @@ if (!params.skip_alignment) {
         tag "$fasta"
 
         input:
-        tuple file(fasta), val(name) from ch_fastq_sizes
+        tuple path(fasta), val(name) from ch_fastq_sizes
 
         output:
-        tuple file("*.sizes"), val(name) into ch_chrom_sizes
+        tuple path("*.sizes"), val(name) into ch_chrom_sizes
 
         script:
         """
@@ -641,10 +641,10 @@ if (!params.skip_alignment) {
         label 'process_low'
 
         input:
-        tuple file(gtf), val(name) from ch_fastq_gtf
+        tuple path(gtf), val(name) from ch_fastq_gtf
 
         output:
-        tuple file("*.bed"), val(name) into ch_gtf_bed
+        tuple path("*.bed"), val(name) into ch_gtf_bed
 
         script: // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
         """
@@ -671,10 +671,10 @@ if (!params.skip_alignment) {
             label 'process_medium'
 
             input:
-            tuple file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
+            tuple path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
 
             output:
-            tuple file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.mmi"), val(annotation_str) into ch_index
+            tuple path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), path("*.mmi"), val(annotation_str) into ch_index
 
             script:
             preset    = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -692,10 +692,10 @@ if (!params.skip_alignment) {
             label 'process_high'
 
             input:
-            tuple file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
+            tuple path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
 
             output:
-            tuple file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.gmidx"), val(annotation_str) into ch_index
+            tuple path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), path("*.gmidx"), val(annotation_str) into ch_index
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -729,11 +729,11 @@ if (!params.skip_alignment) {
             }
 
             input:
-            tuple val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
+            tuple val(sample), path(fastq), path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), path(index) from ch_index
 
 
             output:
-            tuple val(sample), file(sizes), val(is_transcripts), file("*.sam") into ch_align_sam
+            tuple val(sample), path(sizes), val(is_transcripts), path("*.sam") into ch_align_sam
 
             script:
             preset    = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -757,10 +757,10 @@ if (!params.skip_alignment) {
             }
 
             input:
-            tuple val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
+            tuple val(sample), path(fastq), path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), path(index) from ch_index
 
             output:
-            tuple val(sample), file(sizes), val(is_transcripts), file("*.sam") into ch_align_sam
+            tuple val(sample), path(sizes), val(is_transcripts), path("*.sam") into ch_align_sam
 
             script:
             preset    = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -789,14 +789,14 @@ if (!params.skip_alignment) {
                     }
 
         input:
-        tuple val(sample), file(sizes), val(is_transcripts), file(sam) from ch_align_sam
+        tuple val(sample), path(sizes), val(is_transcripts), path(sam) from ch_align_sam
 
         output:
-        tuple val(sample), file(sizes), val(is_transcripts), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
+        tuple val(sample), path(sizes), val(is_transcripts), path("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
                                                                                             ch_sortbam_bed12
-        tuple val(sample), file("*.sorted.bam") into ch_sortbam_stringtie
-        file "*.sorted.bam" into ch_bamlist
-        file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_multiqc
+        tuple val(sample), path("*.sorted.bam") into ch_sortbam_stringtie
+        path "*.sorted.bam" into ch_bamlist
+        path "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_multiqc
 
         script:
         """
@@ -838,10 +838,10 @@ process BEDTOOLS_GENOMECOV {
     !params.skip_alignment && !params.skip_bigwig
 
     input:
-    tuple val(sample), file(sizes), val(is_transcripts), file(bam) from ch_sortbam_bedgraph
+    tuple val(sample), path(sizes), val(is_transcripts), path(bam) from ch_sortbam_bedgraph
 
     output:
-    tuple val(sample), file(sizes), val(is_transcripts), file("*.bedGraph") into ch_bedgraph
+    tuple val(sample), path(sizes), val(is_transcripts), path("*.bedGraph") into ch_bedgraph
 
     script:
     split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
@@ -862,10 +862,10 @@ process UCSC_BEDGRAPHTOBIGWIG {
     !params.skip_alignment && !params.skip_bigwig
 
     input:
-    tuple val(sample), file(sizes), val(is_transcripts), file(bedgraph) from ch_bedgraph
+    tuple val(sample), path(sizes), val(is_transcripts), path(bedgraph) from ch_bedgraph
 
     output:
-    tuple val(sample), file(sizes), val(is_transcripts), file("*.bigWig") into ch_bigwig
+    tuple val(sample), path(sizes), val(is_transcripts), path("*.bigWig") into ch_bigwig
 
     script:
     """
@@ -884,10 +884,10 @@ process BEDTOOLS_BAMTOBED {
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     input:
-    tuple val(sample), file(sizes), val(is_transcripts), file(bam) from ch_sortbam_bed12
+    tuple val(sample), path(sizes), val(is_transcripts), path(bam) from ch_sortbam_bed12
 
     output:
-    tuple val(sample), file(sizes), val(is_transcripts), file("*.bed12") into ch_bed12
+    tuple val(sample), path(sizes), val(is_transcripts), path("*.bed12") into ch_bed12
 
     script:
     """
@@ -907,10 +907,10 @@ process UCSC_BED12TOBIGBED {
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     input:
-    tuple val(sample), file(sizes), val(is_transcripts), file(bed12) from ch_bed12
+    tuple val(sample), path(sizes), val(is_transcripts), path(bed12) from ch_bed12
 
     output:
-    tuple val(sample), file(sizes), val(is_transcripts), file("*.bigBed") into ch_bigbed
+    tuple val(sample), path(sizes), val(is_transcripts), path("*.bigBed") into ch_bigbed
 
     script:
     """
@@ -939,15 +939,15 @@ if (!params.skip_transcriptquant) {
                         }
 
             input:
-            tuple  file(genomeseq), file(annot) from ch_bambu_input
-            file bams from ch_bamlist.collect()
-            file Bambuscript from ch_Bambuscript
+            tuple  path(genomeseq), path(annot) from ch_bambu_input
+            path bams from ch_bamlist.collect()
+            path Bambuscript from ch_Bambuscript
 
 
             output:
-            file "counts_gene.txt" into ch_deseq2_in
-            file "counts_transcript.txt" into ch_dexseq_in
-            file "extended_annotations.gtf" 
+            path "counts_gene.txt" into ch_deseq2_in
+            path "counts_transcript.txt" into ch_dexseq_in
+            path "extended_annotations.gtf" 
 
             script:
             """
@@ -972,14 +972,14 @@ if (!params.skip_transcriptquant) {
                         }
 
             input:
-            tuple val(name), val(genomeseq), file(annot), file(bam) from ch_txome_reconstruction
+            tuple val(name), val(genomeseq), path(annot), path(bam) from ch_txome_reconstruction
 
             output:
-            tuple val(name), file(bam) into ch_txome_feature_count
-            file annot into ch_annot
-            file("*.version") into ch_stringtie_version
+            tuple val(name), path(bam) into ch_txome_feature_count
+            path annot into ch_annot
+            path "*.version" into ch_stringtie_version
             val "${params.outdir}/${params.transcriptquant}" into ch_stringtie_outputs
-            file "*.out.gtf" into ch_gtflist
+            path "*.out.gtf" into ch_gtflist
 
             script:
             """
@@ -1006,11 +1006,11 @@ if (!params.skip_transcriptquant) {
 
             input:
             val stringtie_dir from ch_stringtie_dir
-            file gtfs from ch_gtflist.collect()
-            file annot from ch_annotation
+            path gtfs from ch_gtflist.collect()
+            path annot from ch_annotation
 
             output:
-            file "merged.combined.gtf" into ch_merged_gtf
+            path "merged.combined.gtf" into ch_merged_gtf
 
             script:
             """
@@ -1027,14 +1027,14 @@ if (!params.skip_transcriptquant) {
                         }
 
             input:
-            file annot from ch_merged_gtf
-            file bams from ch_bamlist.collect()
+            path annot from ch_merged_gtf
+            path bams from ch_bamlist.collect()
 
             output:
-            file("*.version") into ch_feat_counts_version
-            file "*gene.txt" into ch_deseq2_in
-            file "*transcript.txt" into ch_dexseq_in
-            file "*.log"
+            path "*.version" into ch_feat_counts_version
+            path "*gene.txt" into ch_deseq2_in
+            path "*transcript.txt" into ch_dexseq_in
+            path "*.log"
 
             script:
             """
@@ -1058,14 +1058,14 @@ if (!params.skip_transcriptquant) {
                         }
 
         input:
-        file sampleinfo from ch_samplesheet_reformat
-        file DESeq2script from ch_DEscript
-        file inpath from ch_deseq2_in
+        path sampleinfo from ch_samplesheet_reformat
+        path DESeq2script from ch_DEscript
+        path inpath from ch_deseq2_in
         val num_condition from ch_deseq2_num_condition
         val transcriptquant from params.transcriptquant
 
         output:
-        file "*.txt" into ch_DEout
+        path "*.txt" into ch_DEout
     
         when:
         num_condition >= 2
@@ -1089,14 +1089,14 @@ if (!params.skip_transcriptquant) {
                         }
         
         input:
-        file sampleinfo from ch_samplesheet_reformat
-        file DEXscript from ch_DEXscript
+        path sampleinfo from ch_samplesheet_reformat
+        path DEXscript from ch_DEXscript
         val inpath from ch_dexseq_in
         val num_condition from ch_dexseq_num_condition
         val transcriptquant from params.transcriptquant
 
         output:
-        file "*.txt"
+        path "*.txt"
         
         when:
         num_condition >= 2
@@ -1115,11 +1115,11 @@ process OUTPUT_DOCUMENTATION {
     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
 
     input:
-    file output_docs from ch_output_docs
-    file images from ch_output_docs_images
+    path output_docs from ch_output_docs
+    path images from ch_output_docs_images
 
     output:
-    file "results_description.html"
+    path "results_description.html"
 
     script:
     """
@@ -1138,11 +1138,11 @@ process GET_SOFTWARE_VERSIONS {
                 }
 
     input:
-    file guppy from ch_guppy_version.collect().ifEmpty([])
+    path guppy from ch_guppy_version.collect().ifEmpty([])
 
     output:
-    file 'software_versions_mqc.yaml' into software_versions_yaml
-    file "software_versions.csv"
+    path 'software_versions_mqc.yaml' into software_versions_yaml
+    path "software_versions.csv"
 
     script:
     """
@@ -1187,17 +1187,17 @@ process MULTIQC {
     !params.skip_multiqc
 
     input:
-    file (multiqc_config) from ch_multiqc_config
-    file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
-    file ('samtools/*')  from ch_sortbam_stats_multiqc.collect().ifEmpty([])
-    file ('fastqc/*')  from ch_fastqc_multiqc.collect().ifEmpty([])
-    file ('software_versions/*') from software_versions_yaml.collect()
-    file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
+    path (multiqc_config) from ch_multiqc_config
+    path (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
+    path ('samtools/*')  from ch_sortbam_stats_multiqc.collect().ifEmpty([])
+    path ('fastqc/*')  from ch_fastqc_multiqc.collect().ifEmpty([])
+    path ('software_versions/*') from software_versions_yaml.collect()
+    path workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
     output:
-    file "*multiqc_report.html" into ch_multiqc_report
-    file "*_data"
-    file "multiqc_plots"
+    path "*multiqc_report.html" into ch_multiqc_report
+    path "*_data"
+    path "multiqc_plots"
 
     script:
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
