@@ -928,7 +928,7 @@ if (!params.skip_transcriptquant) {
            .map { it -> [ it[2], it[3] ] }
            .set { ch_bambu_input }
            
-        params.Bambuscript= "$baseDir/bin/runBambu.R"
+        params.Bambuscript= "$baseDir/bin/run_bambu.r"
         ch_Bambuscript = Channel.fromPath("$params.Bambuscript", checkIfExists:true)
         process BAMBU {
             tag "$sample"
@@ -1048,7 +1048,7 @@ if (!params.skip_transcriptquant) {
     /*
      * STEP 3 - DESeq2
      */
-    params.DEscript= "$baseDir/bin/runDESeq2.R"
+    params.DEscript= "$baseDir/bin/run_deseq2.r"
     ch_DEscript = Channel.fromPath("$params.DEscript", checkIfExists:true)
 
     process DESEQ2 {
@@ -1079,7 +1079,7 @@ if (!params.skip_transcriptquant) {
     /*
      * STEP 4 - DEXseq
      */
-    params.DEXscript= "$baseDir/bin/runDEXseq.R"
+    params.DEXscript= "$baseDir/bin/run_dexseq.r"
     ch_DEXscript = Channel.fromPath("$params.DEXscript", checkIfExists:true)
 
     process DEXSEQ {
