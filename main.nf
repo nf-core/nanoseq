@@ -563,7 +563,7 @@ process NANOPLOT_FASTQ {
     !params.skip_qc && !params.skip_nanoplot
 
     input:
-    set val(sample), file(fastq) from ch_fastq_nanoplot.map { ch -> [ ch[0], ch[1] ] }
+    tuple val(sample), file(fastq) from ch_fastq_nanoplot.map { ch -> [ ch[0], ch[1] ] }
 
     output:
     file "*.{png,html,txt,log}"
@@ -586,7 +586,7 @@ process FASTQC {
     !params.skip_qc && !params.skip_fastqc
 
     input:
-    set val(sample), file(fastq) from ch_fastq_fastqc.map { ch -> [ ch[0], ch[1] ] }
+    tuple val(sample), file(fastq) from ch_fastq_fastqc.map { ch -> [ ch[0], ch[1] ] }
 
     output:
     file "*.{zip,html}" into ch_fastqc_multiqc
@@ -614,10 +614,10 @@ if (!params.skip_alignment) {
         tag "$fasta"
 
         input:
-        set file(fasta), val(name) from ch_fastq_sizes
+        tuple file(fasta), val(name) from ch_fastq_sizes
 
         output:
-        set file("*.sizes"), val(name) into ch_chrom_sizes
+        tuple file("*.sizes"), val(name) into ch_chrom_sizes
 
         script:
         """
@@ -641,10 +641,10 @@ if (!params.skip_alignment) {
         label 'process_low'
 
         input:
-        set file(gtf), val(name) from ch_fastq_gtf
+        tuple file(gtf), val(name) from ch_fastq_gtf
 
         output:
-        set file("*.bed"), val(name) into ch_gtf_bed
+        tuple file("*.bed"), val(name) into ch_gtf_bed
 
         script: // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
         """
@@ -671,10 +671,10 @@ if (!params.skip_alignment) {
             label 'process_medium'
 
             input:
-            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
+            tuple file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
 
             output:
-            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.mmi"), val(annotation_str) into ch_index
+            tuple file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.mmi"), val(annotation_str) into ch_index
 
             script:
             preset    = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -692,10 +692,10 @@ if (!params.skip_alignment) {
             label 'process_high'
 
             input:
-            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
+            tuple file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str) from ch_fasta_index
 
             output:
-            set file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.gmidx"), val(annotation_str) into ch_index
+            tuple file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file("*.gmidx"), val(annotation_str) into ch_index
 
             script:
             preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -729,11 +729,11 @@ if (!params.skip_alignment) {
             }
 
             input:
-            set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
+            tuple val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
 
 
             output:
-            set val(sample), file(sizes), val(is_transcripts), file("*.sam") into ch_align_sam
+            tuple val(sample), file(sizes), val(is_transcripts), file("*.sam") into ch_align_sam
 
             script:
             preset    = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -757,10 +757,10 @@ if (!params.skip_alignment) {
             }
 
             input:
-            set val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
+            tuple val(sample), file(fastq), file(fasta), file(sizes), val(gtf), val(bed), val(is_transcripts), file(index) from ch_index
 
             output:
-            set val(sample), file(sizes), val(is_transcripts), file("*.sam") into ch_align_sam
+            tuple val(sample), file(sizes), val(is_transcripts), file("*.sam") into ch_align_sam
 
             script:
             preset    = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -789,12 +789,12 @@ if (!params.skip_alignment) {
                     }
 
         input:
-        set val(sample), file(sizes), val(is_transcripts), file(sam) from ch_align_sam
+        tuple val(sample), file(sizes), val(is_transcripts), file(sam) from ch_align_sam
 
         output:
-        set val(sample), file(sizes), val(is_transcripts), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
+        tuple val(sample), file(sizes), val(is_transcripts), file("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
                                                                                             ch_sortbam_bed12
-        set val(sample), file("*.sorted.bam") into ch_sortbam_stringtie
+        tuple val(sample), file("*.sorted.bam") into ch_sortbam_stringtie
         file "*.sorted.bam" into ch_bamlist
         file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_multiqc
 
@@ -838,10 +838,10 @@ process BEDTOOLS_GENOMECOV {
     !params.skip_alignment && !params.skip_bigwig
 
     input:
-    set val(sample), file(sizes), val(is_transcripts), file(bam) from ch_sortbam_bedgraph
+    tuple val(sample), file(sizes), val(is_transcripts), file(bam) from ch_sortbam_bedgraph
 
     output:
-    set val(sample), file(sizes), val(is_transcripts), file("*.bedGraph") into ch_bedgraph
+    tuple val(sample), file(sizes), val(is_transcripts), file("*.bedGraph") into ch_bedgraph
 
     script:
     split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
@@ -862,10 +862,10 @@ process UCSC_BEDGRAPHTOBIGWIG {
     !params.skip_alignment && !params.skip_bigwig
 
     input:
-    set val(sample), file(sizes), val(is_transcripts), file(bedgraph) from ch_bedgraph
+    tuple val(sample), file(sizes), val(is_transcripts), file(bedgraph) from ch_bedgraph
 
     output:
-    set val(sample), file(sizes), val(is_transcripts), file("*.bigWig") into ch_bigwig
+    tuple val(sample), file(sizes), val(is_transcripts), file("*.bigWig") into ch_bigwig
 
     script:
     """
@@ -884,10 +884,10 @@ process BEDTOOLS_BAMTOBED {
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     input:
-    set val(sample), file(sizes), val(is_transcripts), file(bam) from ch_sortbam_bed12
+    tuple val(sample), file(sizes), val(is_transcripts), file(bam) from ch_sortbam_bed12
 
     output:
-    set val(sample), file(sizes), val(is_transcripts), file("*.bed12") into ch_bed12
+    tuple val(sample), file(sizes), val(is_transcripts), file("*.bed12") into ch_bed12
 
     script:
     """
@@ -907,10 +907,10 @@ process UCSC_BED12TOBIGBED {
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     input:
-    set val(sample), file(sizes), val(is_transcripts), file(bed12) from ch_bed12
+    tuple val(sample), file(sizes), val(is_transcripts), file(bed12) from ch_bed12
 
     output:
-    set val(sample), file(sizes), val(is_transcripts), file("*.bigBed") into ch_bigbed
+    tuple val(sample), file(sizes), val(is_transcripts), file("*.bigBed") into ch_bigbed
 
     script:
     """
@@ -939,7 +939,7 @@ if (!params.skip_transcriptquant) {
                         }
 
             input:
-            set  file(genomeseq), file(annot) from ch_bambu_input
+            tuple  file(genomeseq), file(annot) from ch_bambu_input
             file bams from ch_bamlist.collect()
             file Bambuscript from ch_Bambuscript
 
@@ -972,10 +972,10 @@ if (!params.skip_transcriptquant) {
                         }
 
             input:
-            set val(name), val(genomeseq), file(annot), file(bam) from ch_txome_reconstruction
+            tuple val(name), val(genomeseq), file(annot), file(bam) from ch_txome_reconstruction
 
             output:
-            set val(name), file(bam) into ch_txome_feature_count
+            tuple val(name), file(bam) into ch_txome_feature_count
             file annot into ch_annot
             file("*.version") into ch_stringtie_version
             val "${params.outdir}/${params.transcriptquant}" into ch_stringtie_outputs
@@ -1096,7 +1096,7 @@ if (!params.skip_transcriptquant) {
         val transcriptquant from params.transcriptquant
 
         output:
-        file "*.txt" into ch_DEXout
+        file "*.txt"
         
         when:
         num_condition >= 2
