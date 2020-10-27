@@ -29,6 +29,7 @@ def helpMessage() {
       --protocol [str]                Specifies the type of sequencing i.e. "DNA", "cDNA" or "directRNA"
       -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
                                       Available: docker, singularity, test, awsbatch, <institute> and more.
+
     Basecalling/Demultiplexing
       --input_path [file]             Path to Nanopore run directory (e.g. fastq_pass/) or a basecalled fastq file that requires demultiplexing
       --flowcell [str]                Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
@@ -57,17 +58,17 @@ def helpMessage() {
       --skip_bigwig [bool]            Skip BigWig file generation (Default: false)
       --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
 
+    Transcript Quantification
+      --transcriptquant [str]         Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
+      --skip_transcriptquant [bool]   Skip transcript quantification and subsequent processes (Default: false)
+
     QC
       --skip_qc [bool]                Skip all QC steps apart from MultiQC (Default: false)
       --skip_pycoqc [bool]            Skip pycoQC (Default: false)
       --skip_nanoplot [bool]          Skip NanoPlot (Default: false)
       --skip_fastqc [bool]            Skip FastQC (Default: false)
       --skip_multiqc [bool]           Skip MultiQC (Default: false)
-     
-    Transcript Quantification
-      --transcriptquant [str]         Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
-      --skip_transcriptquant [bool]   Skip transcript quantification and subsequent processes (Default: false)
-      
+           
     Other
       --outdir [file]                 The output directory where the results will be saved (Default: '/results')
       --publish_dir_mode [str]        Mode for publishing results in the output directory. Available: symlink, rellink, link, copy, copyNoFollow, move (Default: copy)
@@ -112,7 +113,7 @@ if (!params.skip_basecalling) {
     // Nextflow is unable to recursively download directories via HTTPS
     if (workflow.profile.contains('test')) {
         if (!isOffline()) {
-            process GetTestData {
+            process GET_TEST_DATA {
                 output:
                 file "test-datasets/fast5/$barcoded/" into ch_input_path
 
@@ -280,7 +281,7 @@ checkHostname()
 /*
  * PREPROCESSING - CHECK SAMPLESHEET
  */
-process CheckSampleSheet {
+process CHECK_SAMPLESHEET {
     tag "$samplesheet"
     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
 
@@ -351,7 +352,7 @@ if (!params.skip_basecalling) {
     /*
      * STEP 1 - Basecalling and demultipexing using Guppy
      */
-    process Guppy {
+    process GUPPY {
         tag "$input_path"
         label 'process_high'
         publishDir path: "${params.outdir}/guppy", mode: params.publish_dir_mode,
@@ -430,7 +431,7 @@ if (!params.skip_basecalling) {
         /*
          * STEP 1 - Demultipexing using qcat
          */
-        process Qcat {
+        process QCAT {
             tag "$input_path"
             label 'process_medium'
             publishDir path: "${params.outdir}/qcat", mode: params.publish_dir_mode
@@ -507,7 +508,7 @@ if (!params.skip_basecalling) {
 /*
  * STEP 2 - QC using PycoQC
  */
-process PycoQC {
+process PYCOQC {
     tag "$summary_txt"
     label 'process_low'
     publishDir "${params.outdir}/pycoqc", mode: params.publish_dir_mode
@@ -530,7 +531,7 @@ process PycoQC {
 /*
  * STEP 3 - QC using NanoPlot
  */
-process NanoPlotSummary {
+process NANOPLOT_SUMMARY {
     tag "$summary_txt"
     label 'process_low'
     publishDir "${params.outdir}/nanoplot/summary", mode: params.publish_dir_mode
@@ -553,7 +554,7 @@ process NanoPlotSummary {
 /*
  * STEP 4 - FastQ QC using NanoPlot
  */
-process NanoPlotFastQ {
+process NANOPLOT_FASTQ {
     tag "$sample"
     label 'process_low'
     publishDir "${params.outdir}/nanoplot/fastq/${sample}", mode: params.publish_dir_mode
@@ -576,7 +577,7 @@ process NanoPlotFastQ {
 /*
  * STEP 5 - FastQ QC using FastQC
  */
-process FastQC {
+process FASTQC {
     tag "$sample"
     label 'process_medium'
     publishDir "${params.outdir}/fastqc", mode: params.publish_dir_mode
@@ -609,7 +610,7 @@ if (!params.skip_alignment) {
     /*
      * STEP 6 - Make chromosome sizes file
      */
-    process GetChromSizes {
+    process GET_CHROM_SIZES {
         tag "$fasta"
 
         input:
@@ -635,7 +636,7 @@ if (!params.skip_alignment) {
     /*
      * STEP 7 - Convert GTF to BED12
      */
-    process GTFToBED {
+    process GTF_TO_BED {
         tag "$gtf"
         label 'process_low'
 
@@ -665,7 +666,7 @@ if (!params.skip_alignment) {
      * STEP 8 - Create genome/transcriptome index
      */
     if (params.aligner == 'minimap2') {
-        process MiniMap2Index {
+        process MINIMAP2_INDEX {
             tag "$fasta"
             label 'process_medium'
 
@@ -686,7 +687,7 @@ if (!params.skip_alignment) {
             """
         }
     } else {
-        process GraphMap2Index {
+        process GRAPHMAP2_INDEX {
             tag "$fasta"
             label 'process_high'
 
@@ -717,7 +718,7 @@ if (!params.skip_alignment) {
      * STEP 9 - Align fastq files
      */
     if (params.aligner == 'minimap2') {
-        process MiniMap2Align {
+        process MINIMAP2_ALIGN {
             tag "$sample"
             label 'process_medium'
             if (params.save_align_intermeds) {
@@ -745,7 +746,7 @@ if (!params.skip_alignment) {
             """
         }
     } else {
-        process GraphMap2Align {
+        process GRAPHMAP2_ALIGN {
             tag "$sample"
             label 'process_medium'
             if (params.save_align_intermeds) {
@@ -774,7 +775,7 @@ if (!params.skip_alignment) {
     /*
     * STEP 10 - Coordinate sort BAM files
     */
-    process SortBAM {
+    process SAMTOOLS_SORT {
         tag "$sample"
         label 'process_medium'
         publishDir path: "${params.outdir}/${params.aligner}", mode: params.publish_dir_mode,
@@ -829,7 +830,7 @@ if (!params.skip_alignment) {
 /*
  * STEP 11 - Convert BAM to BEDGraph
  */
-process BAMToBedGraph {
+process BEDTOOLS_GENOMECOV {
     tag "$sample"
     label 'process_medium'
 
@@ -852,7 +853,7 @@ process BAMToBedGraph {
 /*
  * STEP 12 - Convert BEDGraph to BigWig
  */
-process BedGraphToBigWig {
+process UCSC_BEDGRAPHTOBIGWIG {
     tag "$sample"
     label 'process_medium'
     publishDir path: "${params.outdir}/${params.aligner}/bigwig/", mode: params.publish_dir_mode
@@ -875,7 +876,7 @@ process BedGraphToBigWig {
 /*
  * STEP 13 - Convert BAM to BED12
  */
-process BAMToBed12 {
+process BEDTOOLS_BAMTOBED {
     tag "$sample"
     label 'process_medium'
 
@@ -897,7 +898,7 @@ process BAMToBed12 {
 /*
  * STEP 14 - Convert BED12 to BigBED
  */
-process Bed12ToBigBed {
+process UCSC_BED12TOBIGBED {
     tag "$sample"
     label 'process_medium'
     publishDir path: "${params.outdir}/${params.aligner}/bigbed/", mode: params.publish_dir_mode
@@ -929,7 +930,7 @@ if (!params.skip_transcriptquant) {
            
         params.Bambuscript= "$baseDir/bin/runBambu.R"
         ch_Bambuscript = Channel.fromPath("$params.Bambuscript", checkIfExists:true)
-        process Bambu {
+        process BAMBU {
             tag "$sample"
             label 'process_medium'
             publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode,
@@ -962,7 +963,7 @@ if (!params.skip_transcriptquant) {
            .join(ch_sortbam_stringtie)
            .set { ch_txome_reconstruction }
            
-        process StringTie2 {
+        process STRINGTIE2 {
             tag "$sample"
             label 'process_medium'
             publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode,
@@ -993,9 +994,9 @@ if (!params.skip_transcriptquant) {
         
         ch_annot
             .unique()
-            .set{ ch_annotation }
+            .set { ch_annotation }
 
-        process StringTie2Merge {
+        process STRINGTIE2_MERGE {
             tag "$sample"
             label 'process_medium'
             publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode,
@@ -1017,7 +1018,7 @@ if (!params.skip_transcriptquant) {
             """
         }
         
-        process FeatureCounts {
+        process SUBREAD_FEATURECOUNTS {
             tag "$sample"
             label 'process_medium'
             publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode,
@@ -1050,7 +1051,7 @@ if (!params.skip_transcriptquant) {
     params.DEscript= "$baseDir/bin/runDESeq2.R"
     ch_DEscript = Channel.fromPath("$params.DEscript", checkIfExists:true)
 
-    process DESeq2 {
+    process DESEQ2 {
         publishDir "${params.outdir}/DESeq2", mode: params.publish_dir_mode,
                 saveAs: { filename ->
                             if (!filename.endsWith(".version")) filename
@@ -1081,7 +1082,7 @@ if (!params.skip_transcriptquant) {
     params.DEXscript= "$baseDir/bin/runDEXseq.R"
     ch_DEXscript = Channel.fromPath("$params.DEXscript", checkIfExists:true)
 
-    process DEXseq {
+    process DEXSEQ {
         publishDir "${params.outdir}/DEXseq", mode: params.publish_dir_mode,
                 saveAs: { filename ->
                             if (!filename.endsWith(".version")) filename
@@ -1110,7 +1111,7 @@ if (!params.skip_transcriptquant) {
 /*
  * STEP 16 - Output Description HTML
  */
-process output_documentation {
+process OUTPUT_DOCUMENTATION {
     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
 
     input:
@@ -1129,7 +1130,7 @@ process output_documentation {
 /*
  * Parse software version numbers
  */
-process get_software_versions {
+process GET_SOFTWARE_VERSIONS {
     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode,
         saveAs: { filename ->
                       if (filename.indexOf(".csv") > 0) filename
@@ -1142,7 +1143,7 @@ process get_software_versions {
     output:
     file 'software_versions_mqc.yaml' into software_versions_yaml
     file "software_versions.csv"
-    
+
     script:
     """
     echo $workflow.manifest.version > v_pipeline.txt
@@ -1179,7 +1180,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
 /*
  * STEP 15 - MultiQC
  */
-process MultiQC {
+process MULTIQC {
     publishDir "${params.outdir}/multiqc", mode: params.publish_dir_mode
 
     when:
