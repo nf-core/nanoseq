@@ -58,7 +58,7 @@ def helpMessage() {
       --skip_bigwig [bool]            Skip BigWig file generation (Default: false)
       --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
 
-    Transcript Quantification
+    Transcript quantification
       --transcriptquant [str]         Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
       --skip_transcriptquant [bool]   Skip transcript quantification and subsequent processes (Default: false)
 
