@@ -589,7 +589,7 @@ process FASTQC {
     set val(sample), file(fastq) from ch_fastq_fastqc.map { ch -> [ ch[0], ch[1] ] }
 
     output:
-    file "*.{zip,html}" into ch_fastqc_mqc
+    file "*.{zip,html}" into ch_fastqc_multiqc
 
     script:
     """
@@ -796,7 +796,7 @@ if (!params.skip_alignment) {
                                                                                             ch_sortbam_bed12
         set val(sample), file("*.sorted.bam") into ch_sortbam_stringtie
         file "*.sorted.bam" into ch_bamlist
-        file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_mqc
+        file "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_multiqc
 
         script:
         """
@@ -809,9 +809,9 @@ if (!params.skip_alignment) {
         """
     }
 } else {
-    ch_sortbam_bedgraph  = Channel.empty()
-    ch_sortbam_bed12     = Channel.empty()
-    ch_sortbam_stats_mqc = Channel.empty()
+    ch_sortbam_bedgraph      = Channel.empty()
+    ch_sortbam_bed12         = Channel.empty()
+    ch_sortbam_stats_multiqc = Channel.empty()
 
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
@@ -1023,7 +1023,7 @@ if (!params.skip_transcriptquant) {
             label 'process_medium'
             publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode,
                saveAs: { filename ->
-                          if (!filename.endsWith(".version")) "featureCounts/$filename"
+                          if (!filename.endsWith(".version")) "featurecounts/$filename"
                         }
 
             input:
@@ -1052,7 +1052,7 @@ if (!params.skip_transcriptquant) {
     ch_DEscript = Channel.fromPath("$params.DEscript", checkIfExists:true)
 
     process DESEQ2 {
-        publishDir "${params.outdir}/DESeq2", mode: params.publish_dir_mode,
+        publishDir "${params.outdir}/deseq2", mode: params.publish_dir_mode,
                 saveAs: { filename ->
                             if (!filename.endsWith(".version")) filename
                         }
@@ -1083,7 +1083,7 @@ if (!params.skip_transcriptquant) {
     ch_DEXscript = Channel.fromPath("$params.DEXscript", checkIfExists:true)
 
     process DEXSEQ {
-        publishDir "${params.outdir}/DEXseq", mode: params.publish_dir_mode,
+        publishDir "${params.outdir}/dexseq", mode: params.publish_dir_mode,
                 saveAs: { filename ->
                             if (!filename.endsWith(".version")) filename
                         }
@@ -1189,8 +1189,8 @@ process MULTIQC {
     input:
     file (multiqc_config) from ch_multiqc_config
     file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
-    file ('samtools/*')  from ch_sortbam_stats_mqc.collect().ifEmpty([])
-    file ('fastqc/*')  from ch_fastqc_mqc.collect().ifEmpty([])
+    file ('samtools/*')  from ch_sortbam_stats_multiqc.collect().ifEmpty([])
+    file ('fastqc/*')  from ch_fastqc_multiqc.collect().ifEmpty([])
     file ('software_versions/*') from software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
