@@ -12,6 +12,7 @@ dependencies:
   - conda-forge::pygments=2.7.2
   - conda-forge::pigz=2.3.4
   - conda-forge::psutil=5.7.3
+  - conda-forge::seaborn=0.10.1
   - conda-forge::r-base=4.0.3
   - conda-forge::r-devtools=2.3.2
 
