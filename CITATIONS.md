@@ -38,24 +38,6 @@
 * [DESeq2](https://www.ncbi.nlm.nih.gov/pubmed/25516281/)
   > Love MI, Huber W, Anders S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol. 2014;15(12):550. PubMed PMID: 25516281; PubMed Central PMCID: PMC4302049.
 
-* [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html)
-  > H. Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.
-
-* [optparse](https://CRAN.R-project.org/package=optparse)
-  > Trevor L Davis (2018). optparse: Command Line Option Parser.
-
-* [pheatmap](https://CRAN.R-project.org/package=pheatmap)
-  > Raivo Kolde (2018). pheatmap: Pretty Heatmaps.
-
-* [RColorBrewer](https://CRAN.R-project.org/package=RColorBrewer)
-  > Erich Neuwirth (2014). RColorBrewer: ColorBrewer Palettes.
-
-* [SummarizedExperiment](https://bioconductor.org/packages/release/bioc/html/SummarizedExperiment.html)
-  > Morgan M, Obenchain V, Hester J and Pagès H (2020). SummarizedExperiment: SummarizedExperiment container.
-
-* [Tximeta](https://www.ncbi.nlm.nih.gov/pubmed/32097405/)
-  > Love MI, Soneson C, Hickey PF, Johnson LK, Pierce NT, Shepherd L, Morgan M, Patro R. Tximeta: Reference sequence checksums for provenance identification in RNA-seq PLoS Comput Biol. 2020 Feb 25;16(2):e1007664. doi: 10.1371/journal.pcbi.1007664. eCollection 2020 Feb. PubMed PMID: 32097405; PubMed Central PMCID: PMC7059966.
-
 ## Software packaging/containerisation tools
 
 * [Anaconda](https://anaconda.com)
