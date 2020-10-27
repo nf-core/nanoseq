@@ -1,5 +1,5 @@
 {
-    "$schema": "https://json-schema.org/draft-07/schema",
+    "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://raw.githubusercontent.com/nf-core/nanoseq/master/nextflow_schema.json",
     "title": "nf-core/nanoseq pipeline parameters",
     "description": "A pipeline to demultiplex, QC and map Nanopore data",

@@ -32,45 +32,38 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 ## Quick Start
 
-i. Install [`nextflow`](https://nf-co.re/usage/installation)
+1. Install [`nextflow`](https://nf-co.re/usage/installation)
 
-ii. Install one of [`docker`](https://docs.docker.com/engine/installation/) or [`singularity`](https://www.sylabs.io/guides/3.0/user-guide/)
+2. Install any of [`Docker`](https://docs.docker.com/engine/installation/), [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) or [`Podman`](https://podman.io/)
 
-iii. Download the pipeline and test it on a minimal dataset with a single command
+3. Download the pipeline and test it on a minimal dataset with a single command:
 
-```bash
-nextflow run nf-core/nanoseq -profile test,<docker/singularity/institute>
-```
+    ```bash
+    nextflow run nf-core/nanoseq -profile test,<docker/singularity/podman/institute>
+    ```
 
-> Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
+    > Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
 
-iv. Start running your own analysis!
+4. Start running your own analysis!
 
-```bash
-nextflow run nf-core/nanoseq \
-    --input samplesheet.csv \
-    --protocol DNA \
-    --input_path ./fast5/ \
-    --flowcell FLO-MIN106 \
-    --kit SQK-LSK109 \
-    --barcode_kit SQK-PBK004 \
-    -profile <docker/singularity/institute>
-```
+    ```bash
+    nextflow run nf-core/nanoseq \
+        --input samplesheet.csv \
+        --protocol DNA \
+        --input_path ./fast5/ \
+        --flowcell FLO-MIN106 \
+        --kit SQK-LSK109 \
+        --barcode_kit SQK-PBK004 \
+        -profile <docker/singularity/podman/institute>
+    ```
 
-See [usage docs](docs/usage.md) for all of the available options when running the pipeline. An example input samplesheet for performing both basecalling and demultiplexing can be found [here](assets/samplesheet.csv).
+See [usage docs](https://nf-co.re/nanoseq/usage) for all of the available options when running the pipeline.
+
+An example input samplesheet for performing both basecalling and demultiplexing can be found [here](assets/samplesheet.csv).
 
 ## Documentation
 
-The nf-core/nanoseq pipeline comes with documentation about the pipeline, found in the `docs/` directory:
-
-1. [Installation](https://nf-co.re/usage/installation)
-2. Pipeline configuration
-    * [Local installation](https://nf-co.re/usage/local_installation)
-    * [Adding your own system config](https://nf-co.re/usage/adding_own_config)
-    * [Reference genomes](https://nf-co.re/usage/reference_genomes)
-3. [Running the pipeline](docs/usage.md)
-4. [Output and how to interpret the results](docs/output.md)
-5. [Troubleshooting](https://nf-co.re/usage/troubleshooting)
+The nf-core/nanoseq pipeline comes with documentation about the pipeline: [usage](https://nf-co.re/nanoseq/usage) and [output](https://nf-co.re/nanoseq/output).
 
 ## Credits
 
