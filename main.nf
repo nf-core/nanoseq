@@ -60,7 +60,7 @@ def helpMessage() {
 
     Transcript quantification
       --quantification_method [str]   Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
-      --skip_quantification [bool]    Skip transcript quantification and subsequent processes (Default: false)
+      --skip_quantification [bool]    Skip transcript quantification and differential analysis (Default: false)
 
     QC
       --skip_qc [bool]                Skip all QC steps apart from MultiQC (Default: false)
