@@ -846,7 +846,7 @@ process BEDTOOLS_GENOMECOV {
     script:
     split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
     """
-    bedtools genomecov $split -ibam ${bam[0]} -bg | sort -k1,1 -k2,2n > ${sample}.bedGraph
+    bedtools genomecov $split -ibam ${bam[0]} -bg | bedtools sort > ${sample}.bedGraph
     """
 }
 
@@ -933,10 +933,7 @@ if (!params.skip_transcriptquant) {
         process BAMBU {
             tag "$sample"
             label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode,
-               saveAs: { filename ->
-                          if (!filename.endsWith(".version")) filename
-                        }
+            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
 
             input:
             tuple  path(genomeseq), path(annot) from ch_bambu_input
@@ -966,10 +963,7 @@ if (!params.skip_transcriptquant) {
         process STRINGTIE2 {
             tag "$sample"
             label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode,
-               saveAs: { filename ->
-                          if (!filename.endsWith(".version")) filename
-                        }
+            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
 
             input:
             tuple val(name), val(genomeseq), path(annot), path(bam) from ch_txome_reconstruction
@@ -977,14 +971,12 @@ if (!params.skip_transcriptquant) {
             output:
             tuple val(name), path(bam) into ch_txome_feature_count
             path annot into ch_annot
-            path "*.version" into ch_stringtie_version
             val "${params.outdir}/${params.transcriptquant}" into ch_stringtie_outputs
             path "*.out.gtf" into ch_gtflist
 
             script:
             """
             stringtie -L -G $annot -o ${name}.out.gtf $bam
-            stringtie --version &> stringtie.version
             """
         }
 
@@ -999,10 +991,7 @@ if (!params.skip_transcriptquant) {
         process STRINGTIE2_MERGE {
             tag "$sample"
             label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode,
-               saveAs: { filename ->
-                          if (!filename.endsWith(".version")) filename
-                        }
+            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
 
             input:
             val stringtie_dir from ch_stringtie_dir
@@ -1021,17 +1010,13 @@ if (!params.skip_transcriptquant) {
         process SUBREAD_FEATURECOUNTS {
             tag "$sample"
             label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode,
-               saveAs: { filename ->
-                          if (!filename.endsWith(".version")) "featurecounts/$filename"
-                        }
+            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
 
             input:
             path annot from ch_merged_gtf
             path bams from ch_bamlist.collect()
 
             output:
-            path "*.version" into ch_feat_counts_version
             path "*gene.txt" into ch_deseq2_in
             path "*transcript.txt" into ch_dexseq_in
             path "*.log"
@@ -1040,7 +1025,6 @@ if (!params.skip_transcriptquant) {
             """
             featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o counts_transcript.txt $bams 2>> counts_transcript.log
             featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o counts_gene.txt $bams 2>> counts_gene.log
-            featureCounts -v &> featureCounts.version
             """
         } 
     }
@@ -1052,10 +1036,7 @@ if (!params.skip_transcriptquant) {
     ch_DEscript = Channel.fromPath("$params.DEscript", checkIfExists:true)
 
     process DESEQ2 {
-        publishDir "${params.outdir}/deseq2", mode: params.publish_dir_mode,
-                saveAs: { filename ->
-                            if (!filename.endsWith(".version")) filename
-                        }
+        publishDir "${params.outdir}/deseq2", mode: params.publish_dir_mode
 
         input:
         path sampleinfo from ch_samplesheet_reformat
@@ -1083,10 +1064,7 @@ if (!params.skip_transcriptquant) {
     ch_DEXscript = Channel.fromPath("$params.DEXscript", checkIfExists:true)
 
     process DEXSEQ {
-        publishDir "${params.outdir}/dexseq", mode: params.publish_dir_mode,
-                saveAs: { filename ->
-                            if (!filename.endsWith(".version")) filename
-                        }
+        publishDir "${params.outdir}/dexseq", mode: params.publish_dir_mode
         
         input:
         path sampleinfo from ch_samplesheet_reformat
@@ -1156,6 +1134,14 @@ process GET_SOFTWARE_VERSIONS {
     echo \$(graphmap2 2>&1) > v_graphmap2.txt
     samtools --version > v_samtools.txt
     bedtools --version > v_bedtools.txt
+    stringtie --version > v_stringtie.txt
+    echo \$(featureCounts -v 2>&1) > v_featurecounts.txt
+    echo \$(R --version 2>&1) > v_r.txt
+    Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
+    Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
+    Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"
+    Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='v_stager.txt')"
+    Rscript -e "library(BSgenome); write(x=as.character(packageVersion('BSgenome')), file='v_bsgenome.txt')"
     multiqc --version > v_multiqc.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
