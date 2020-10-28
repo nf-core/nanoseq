@@ -24,7 +24,6 @@
 * [Guppy](https://hpc.nih.gov/apps/guppy.html)
   > Wick RR, Judd LM, and Holt KE. Performance of neural network basecalling tools for Oxford Nanopore sequencing. Genome Biology 2019, 20:129. doi: 10.1186/s13059-019-1727-y. PubMed PMID: 31234903; PubMed Central PMCID: PMC6591954.
 
-
 * [Minimap2](https://pubmed.ncbi.nlm.nih.gov/29750242/)
   > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PMID: 29750242; PMCID: PMC6137996.
 * [MultiQC](https://www.ncbi.nlm.nih.gov/pubmed/27312411/)
