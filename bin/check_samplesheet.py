@@ -42,6 +42,7 @@ def check_samplesheet(file_in, file_out):
     K562,2,,K562_directcDNA_replicate4.fastq.gz,,transcripts.fa
     """
 
+    input_extensions = []
     sample_info_dict = {}
     with open(file_in, "r") as fin:
 
@@ -94,6 +95,12 @@ def check_samplesheet(file_in, file_out):
                     print_error("Input file contains spaces!", 'Line', line)
                 if not input_file.endswith(".fastq.gz") and not input_file.endswith(".fq.gz") and not input_file.endswith(".bam"):
                     print_error("Input file does not have extension '.fastq.gz', '.fq.gz' or '.bam'!", 'Line', line)
+                if input_file.endswith(".fastq.gz"):
+                    input_extensions.append("*.fastq.gz")
+                elif input_file.endswith(".fq.gz"):
+                    input_extensions.append("*.fq.gz")
+                elif input_file.endswith(".bam"):
+                    input_extensions.append("*.bam")
 
             ## Check genome entries
             if genome:
@@ -128,6 +135,10 @@ def check_samplesheet(file_in, file_out):
             else:
                 print_error("Same replicate id provided multiple times!", 'Line', line)
                 
+    ## Check all input files have the same extension
+    if len(set(input_extensions)) != 1:
+        print_error("All input files must have the same extension!", 'Multiple extensions found', ', '.join(set(input_extensions)))
+
     ## Write validated samplesheet with appropriate columns
     if len(sample_info_dict) > 0:
         out_dir = os.path.dirname(file_out)
