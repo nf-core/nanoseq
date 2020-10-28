@@ -169,6 +169,26 @@
                 }
             }
         },
+        "transcript_quantification_options": {
+            "title": "Transcript quantification options",
+            "type": "object",
+            "description": "Options to adjust quantification and differential analysis",
+            "default": "",
+            "fa_icon": "fas fa-calculator",
+            "properties": {
+                "quantification_method": {
+                    "type": "string",
+                    "default": "bambu",
+                    "description": "Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
+                "skip_quantification": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip transcript quantification and differential analysis."
+                }
+            }
+        },
         "process_skipping_options": {
             "title": "Process skipping options",
             "type": "object",
@@ -414,6 +434,9 @@
         },
         {
             "$ref": "#/definitions/alignment_options"
+        },
+        {
+            "$ref": "#/definitions/transcript_quantification_options"
         },
         {
             "$ref": "#/definitions/process_skipping_options"
