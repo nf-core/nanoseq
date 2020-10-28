@@ -15,6 +15,14 @@ regexes = {
     'minimap2': ['v_minimap2.txt', r"(\S+)"],
     'Samtools': ['v_samtools.txt', r"samtools (\S+)"],
     'BEDTools': ['v_bedtools.txt', r"bedtools v(\S+)"],
+    'StringTie': ['v_stringtie.txt', r"(\S+)"],
+    'featureCounts': ['v_featurecounts.txt', r"featureCounts v(\S+)"],
+    'R': ['v_r.txt', r"R version (\S+)"],
+    'DESeq2': ['v_deseq2.txt', r"(\S+)"],
+    'DRIMSeq': ['v_drimseq.txt', r"(\S+)"],
+    'DEXSeq': ['v_dexseq.txt', r"(\S+)"],
+    'stageR': ['v_stager.txt', r"(\S+)"],
+    'BSgenome': ['v_bsgenome.txt', r"(\S+)"],
     'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"]
 }
 
@@ -30,6 +38,14 @@ results['GraphMap2'] = '<span style="color:#999999;\">N/A</span>'
 results['minimap2'] = '<span style="color:#999999;\">N/A</span>'
 results['Samtools'] = '<span style="color:#999999;\">N/A</span>'
 results['BEDTools'] = '<span style="color:#999999;\">N/A</span>'
+results['StringTie'] = '<span style="color:#999999;\">N/A</span>'
+results['featureCounts'] = '<span style="color:#999999;\">N/A</span>'
+results['R'] = '<span style="color:#999999;\">N/A</span>'
+results['DESeq2'] = '<span style="color:#999999;\">N/A</span>'
+results['DRIMSeq'] = '<span style="color:#999999;\">N/A</span>'
+results['DEXSeq'] = '<span style="color:#999999;\">N/A</span>'
+results['stageR'] = '<span style="color:#999999;\">N/A</span>'
+results['BSgenome'] = '<span style="color:#999999;\">N/A</span>'
 results['MultiQC'] = '<span style="color:#999999;\">N/A</span>'
 
 # Search each file using its regex
