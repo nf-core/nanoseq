@@ -21,11 +21,11 @@
 * [GraphMap](https://pubmed.ncbi.nlm.nih.gov/27079541/)
   > Sović I, Šikić M, Wilm A, Fenlon SN, Chen S, Nagarajan N. Fast and sensitive mapping of nanopore sequencing reads with GraphMap. Nat Commun. 2016 Apr 15;7:11307. doi: 10.1038/ncomms11307. PMID: 27079541; PMCID: PMC4835549.
 
-* [Guppy](https://hpc.nih.gov/apps/guppy.html)
-  > Wick RR, Judd LM, and Holt KE. Performance of neural network basecalling tools for Oxford Nanopore sequencing. Genome Biology 2019, 20:129. doi: 10.1186/s13059-019-1727-y. PubMed PMID: 31234903; PubMed Central PMCID: PMC6591954.
+* [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
 * [Minimap2](https://pubmed.ncbi.nlm.nih.gov/29750242/)
   > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PMID: 29750242; PMCID: PMC6137996.
+
 * [MultiQC](https://www.ncbi.nlm.nih.gov/pubmed/27312411/)
   > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
 
@@ -52,10 +52,10 @@
   > R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria.
 
 * [bambu](https://github.com/GoekeLab/bambu)
-  > Chen Y, Goeke J, & Wan YK. (2020, June 18). GoekeLab/bambu: bambu release version 0.2.0 (Version v0.2.0). Zenodo. doi: 10.5281/zenodo.3900025.
+  > Chen Y, Goeke J, & Wan YK. (2020, July 28). GoekeLab/bambu: bambu release version 0.3.0 (Version v0.3.0). Zenodo. doi: 10.5281/zenodo.3963706.
 
 * [BSgenome](https://bioconductor.org/packages/release/bioc/html/BSgenome.html)
-  > Pagès H (2020). BSgenome: Software infrastructure for efficient representation of full genomes and their SNPs. R package version 1.56.0. doi: 10.18129/B9.bioc.BSgenome
+  > Pagès H (2020). BSgenome: Software infrastructure for efficient representation of full genomes and their SNPs. doi: 10.18129/B9.bioc.BSgenome.
 
 * [DESeq2](https://www.ncbi.nlm.nih.gov/pubmed/25516281/)
   > Love MI, Huber W, Anders S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol. 2014;15(12):550. PubMed PMID: 25516281; PubMed Central PMCID: PMC4302049.
@@ -68,7 +68,6 @@
 
 * [stageR](https://pubmed.ncbi.nlm.nih.gov/28784146/)
   > Van den Berge K, Soneson C, Robinson MD, Clement L. stageR: a general stage-wise method for controlling the gene-level false discovery rate in differential expression and differential transcript usage. Genome Biol. 2017 Aug 7;18(1):151. doi: 10.1186/s13059-017-1277-0. PubMed PMID: 28784146; PubMed Central PMCID: PMC5547545.
-Copy
 
 ## Software packaging/containerisation tools
 
