@@ -22,6 +22,7 @@ def make_dir(path):
             if exception.errno != errno.EEXIST:
                 raise exception
 
+
 def print_error(error, context='Line', context_str=''):
     error_str = "ERROR: Please check samplesheet -> {}".format(error)
     if context != '' and context_str != '':
@@ -35,10 +36,10 @@ def check_samplesheet(file_in, file_out):
     This function checks that the samplesheet follows the following structure:
 
     group,replicate,barcode,input_file,genome,transcriptome
-    MCF7,1,,MCF7_directcDNA_replicate1.fastq.gz,genome.fa,genome.gtf
+    MCF7,1,,MCF7_directcDNA_replicate1.fastq.gz,genome.fa,
     MCF7,2,,MCF7_directcDNA_replicate3.fastq.gz,genome.fa,genome.gtf
-    K562,1,,K562_directcDNA_replicate1.fastq.gz,genome.fa,genome.gtf
-    K562,2,,K562_directcDNA_replicate4.fastq.gz,genome.fa,genome.gtf
+    K562,1,,K562_directcDNA_replicate1.fastq.gz,genome.fa,
+    K562,2,,K562_directcDNA_replicate4.fastq.gz,,transcripts.fa
     """
 
     sample_info_dict = {}
@@ -73,8 +74,11 @@ def check_samplesheet(file_in, file_out):
                 print_error("Group entry has not been specified!", 'Line', line)
 
             ## Check replicate entry is integer
-            if not replicate.isdigit():
-                print_error("Replicate id not an integer!", 'Line', line)
+            if replicate:
+                if not replicate.isdigit():
+                    print_error("Replicate id not an integer!", 'Line', line)
+            else:
+                print_error("Replicate id not specified!", 'Line', line)
             replicate = int(replicate)
 
             ## Check barcode entry
@@ -130,7 +134,7 @@ def check_samplesheet(file_in, file_out):
         make_dir(out_dir)
         with open(file_out, "w") as fout:
 
-            fout.write(",".join(['sample', 'barcode', 'input_file', 'genome', 'gtf', 'is_transcripts'] + "\n")
+            fout.write(",".join(['sample', 'barcode', 'input_file', 'genome', 'gtf', 'is_transcripts']) + "\n")
             for sample in sorted(sample_info_dict.keys()):
 
                 ## Check that replicate ids are in format 1..<NUM_REPS>
@@ -143,12 +147,6 @@ def check_samplesheet(file_in, file_out):
                     sample_id = "{}_R{}".format(sample,replicate)
                     fout.write(','.join([sample_id] + sample_info_dict[sample][replicate]) + '\n')
 
-#     ## WRITE TO FILE
-#     fout = open(FileOut,'w')
-#     fout.write(','.join(['sample','group','replicate','input_file','barcode','genome','gtf','is_transcripts']) + '\n')
-#     for line in outLines:
-#         fout.write(','.join(line) + '\n')
-#     fout.close()
 
 def main(args=None):
     args = parse_args(args)
