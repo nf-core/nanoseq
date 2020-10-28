@@ -136,9 +136,9 @@ def check_samplesheet(file_in, file_out):
                 print_error("Same replicate id provided multiple times!", 'Line', line)
                 
     ## Check all input files have the same extension
-    if len(set(input_extensions)) != 1:
+    if len(set(input_extensions)) > 1:
         print_error("All input files must have the same extension!", 'Multiple extensions found', ', '.join(set(input_extensions)))
-
+    
     ## Write validated samplesheet with appropriate columns
     if len(sample_info_dict) > 0:
         out_dir = os.path.dirname(file_out)
