@@ -430,23 +430,5 @@
         {
             "$ref": "#/definitions/institutional_config_options"
         }
-    ],
-    "properties": {
-        "transcriptquant": {
-            "type": "string",
-            "default": "bambu"
-        },
-        "skip_transcriptquant": {
-            "type": "string"
-        },
-        "Bambuscript": {
-            "type": "string"
-        },
-        "DEscript": {
-            "type": "string"
-        },
-        "DEXscript": {
-            "type": "string"
-        }
-    }
+    ]
 }
