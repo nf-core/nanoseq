@@ -328,16 +328,7 @@ ch_samplesheet_reformat
     .into { 
         ch_sample_info
         ch_sample_name
-        //ch_transquant_info 
     }
-
-// ch_sample_condition
-//     .splitCsv(header:false, sep:',')
-//     .map { it -> it.size() }
-//     .into { 
-//         ch_deseq2_num_condition
-//         ch_dexseq_num_condition
-//     }
 
 if (!params.skip_basecalling) {
 
@@ -792,11 +783,9 @@ if (!params.skip_alignment) {
         output:
         tuple val(sample), path(sizes), val(is_transcripts), path("*.sorted.bam"), path("*.sorted.bam.bai") into ch_sortbam_bedgraph,
                                                                                                                  ch_sortbam_bed12,
-                                                                                                                 ch_sortbam_quant
+                                                                                                                 ch_sortbam_bambu
         path "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_multiqc
-        //tuple val(sample), path("*.sorted.bam") into ch_sortbam_stringtie
-        //path "*.sorted.bam" into ch_bamlist
-
+        
         script:
         """
         samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
@@ -808,9 +797,13 @@ if (!params.skip_alignment) {
         """
     }
 
-    ch_sortbam_quant
-        .map { it -> [ it[0], it[3]] }
-
+    ch_sortbam_bambu
+        .map { it -> [ it[0], it[3] ] }
+        .into { 
+            ch_sortbam_bambu
+            ch_sortbam_stringtie 
+            ch_sortbam_featurecounts
+        }
 
 } else {
     ch_sortbam_bedgraph      = Channel.empty()
@@ -820,16 +813,12 @@ if (!params.skip_alignment) {
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
-        //.map { it -> if (it[1].toString().endsWith('.bam')) [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
-        .map { it -> [ it[0], it[1]] }
+        .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0], it[1] ] }
         .into {
+            ch_sortbam_bambu
             ch_sortbam_stringtie
-            ch_get_bams
+            ch_sortbam_featurecounts
         }
-
-    ch_get_bams
-        .map { it -> it[1] }
-        .set { ch_bamlist }
 }
 
 /*
@@ -923,18 +912,45 @@ process UCSC_BED12TOBIGBED {
     """
 }
 
+//tuple val(sample), path("*.sorted.bam") into ch_sortbam_stringtie
+//path "*.sorted.bam" into ch_bamlist
+
+// ch_get_bams
+//     .map { it -> it[1] }
+//     .set { ch_bamlist }
+
+// // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
+// ch_samplesheet_reformat
+//     .splitCsv(header:true, sep:',')
+//     .map { get_sample_info(it, params.genomes) }
+//     .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
+//     .into { 
+//         ch_sample_info
+//         ch_sample_name
+//         //ch_transquant_info 
+//     }
+
+// ch_sample_condition
+//     .splitCsv(header:false, sep:',')
+//     .map { it -> it.size() }
+//     .into { 
+//         ch_deseq2_num_condition
+//         ch_dexseq_num_condition
+//     }
+
 // if (!params.skip_quantification) {
 
 //     /*
 //      * STEP 15 - Transcript Quantification
 //      */
 //     if (params.quantification_method == 'bambu') {
-//         ch_transquant_info.view()
+
+//         // [ fasta, gtf ]
+//         ch_transquant_info
+//            .map { it -> [ it[2], it[3] ] }
+//            .set { ch_bambu_input }
+//         ch_bambu_input.view()
 //     }
-//         // ch_transquant_info
-//         //    .map { it -> [ it[2], it[3] ] }
-//         //    .set { ch_bambu_input }
-        
 //         // process BAMBU {
 //         //     //tag "$sample"
 //         //     label 'process_medium'
@@ -1063,7 +1079,6 @@ process UCSC_BED12TOBIGBED {
         
 //     //     input:
 //     //     path sampleinfo from ch_samplesheet_reformat
-//     //     path DEXscript from ch_DEXscript
 //     //     val inpath from ch_dexseq_in
 //     //     val num_condition from ch_dexseq_num_condition
         
@@ -1080,231 +1095,231 @@ process UCSC_BED12TOBIGBED {
 //     // }
 // }
 
-// /*
-//  * STEP 16 - Output Description HTML
-//  */
-// process OUTPUT_DOCUMENTATION {
-//     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
+/*
+ * STEP 16 - Output Description HTML
+ */
+process OUTPUT_DOCUMENTATION {
+    publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
 
-//     input:
-//     path output_docs from ch_output_docs
-//     path images from ch_output_docs_images
+    input:
+    path output_docs from ch_output_docs
+    path images from ch_output_docs_images
 
-//     output:
-//     path "results_description.html"
+    output:
+    path "results_description.html"
 
-//     script:
-//     """
-//     markdown_to_html.py $output_docs -o results_description.html
-//     """
-// }
+    script:
+    """
+    markdown_to_html.py $output_docs -o results_description.html
+    """
+}
 
-// /*
-//  * Parse software version numbers
-//  */
-// process GET_SOFTWARE_VERSIONS {
-//     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode,
-//         saveAs: { filename ->
-//                       if (filename.indexOf(".csv") > 0) filename
-//                       else null
-//                 }
+/*
+ * Parse software version numbers
+ */
+process GET_SOFTWARE_VERSIONS {
+    publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode,
+        saveAs: { filename ->
+                      if (filename.indexOf(".csv") > 0) filename
+                      else null
+                }
 
-//     input:
-//     path guppy from ch_guppy_version.collect().ifEmpty([])
+    input:
+    path guppy from ch_guppy_version.collect().ifEmpty([])
 
-//     output:
-//     path 'software_versions_mqc.yaml' into software_versions_yaml
-//     path "software_versions.csv"
+    output:
+    path 'software_versions_mqc.yaml' into software_versions_yaml
+    path "software_versions.csv"
 
-//     script:
-//     """
-//     echo $workflow.manifest.version > v_pipeline.txt
-//     echo $workflow.nextflow.version > v_nextflow.txt
-//     qcat --version &> v_qcat.txt
-//     NanoPlot --version &> v_nanoplot.txt
-//     pycoQC --version &> v_pycoqc.txt
-//     fastqc --version > v_fastqc.txt
-//     minimap2 --version &> v_minimap2.txt
-//     echo \$(graphmap2 2>&1) > v_graphmap2.txt
-//     samtools --version > v_samtools.txt
-//     bedtools --version > v_bedtools.txt
-//     stringtie --version > v_stringtie.txt
-//     echo \$(featureCounts -v 2>&1) > v_featurecounts.txt
-//     echo \$(R --version 2>&1) > v_r.txt
-//     Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
-//     Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
-//     Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"
-//     Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='v_stager.txt')"
-//     Rscript -e "library(BSgenome); write(x=as.character(packageVersion('BSgenome')), file='v_bsgenome.txt')"
-//     multiqc --version > v_multiqc.txt
-//     scrape_software_versions.py &> software_versions_mqc.yaml
-//     """
-// }
+    script:
+    """
+    echo $workflow.manifest.version > v_pipeline.txt
+    echo $workflow.nextflow.version > v_nextflow.txt
+    qcat --version &> v_qcat.txt
+    NanoPlot --version &> v_nanoplot.txt
+    pycoQC --version &> v_pycoqc.txt
+    fastqc --version > v_fastqc.txt
+    minimap2 --version &> v_minimap2.txt
+    echo \$(graphmap2 2>&1) > v_graphmap2.txt
+    samtools --version > v_samtools.txt
+    bedtools --version > v_bedtools.txt
+    stringtie --version > v_stringtie.txt
+    echo \$(featureCounts -v 2>&1) > v_featurecounts.txt
+    echo \$(R --version 2>&1) > v_r.txt
+    Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
+    Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
+    Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"
+    Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='v_stager.txt')"
+    Rscript -e "library(BSgenome); write(x=as.character(packageVersion('BSgenome')), file='v_bsgenome.txt')"
+    multiqc --version > v_multiqc.txt
+    scrape_software_versions.py &> software_versions_mqc.yaml
+    """
+}
 
-// Channel.from(summary.collect{ [it.key, it.value] })
-//     .map { k,v -> "<dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }
-//     .reduce { a, b -> return [a, b].join("\n            ") }
-//     .map { x -> """
-//     id: 'nf-core-nanoseq-summary'
-//     description: " - this information is collected when the pipeline is started."
-//     section_name: 'nf-core/nanoseq Workflow Summary'
-//     section_href: 'https://github.com/nf-core/nanoseq'
-//     plot_type: 'html'
-//     data: |
-//         <dl class=\"dl-horizontal\">
-//             $x
-//         </dl>
-//     """.stripIndent() }
-//     .set { ch_workflow_summary }
+Channel.from(summary.collect{ [it.key, it.value] })
+    .map { k,v -> "<dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }
+    .reduce { a, b -> return [a, b].join("\n            ") }
+    .map { x -> """
+    id: 'nf-core-nanoseq-summary'
+    description: " - this information is collected when the pipeline is started."
+    section_name: 'nf-core/nanoseq Workflow Summary'
+    section_href: 'https://github.com/nf-core/nanoseq'
+    plot_type: 'html'
+    data: |
+        <dl class=\"dl-horizontal\">
+            $x
+        </dl>
+    """.stripIndent() }
+    .set { ch_workflow_summary }
 
-// /*
-//  * STEP 15 - MultiQC
-//  */
-// process MULTIQC {
-//     publishDir "${params.outdir}/multiqc", mode: params.publish_dir_mode
+/*
+ * STEP 15 - MultiQC
+ */
+process MULTIQC {
+    publishDir "${params.outdir}/multiqc", mode: params.publish_dir_mode
 
-//     when:
-//     !params.skip_multiqc
+    when:
+    !params.skip_multiqc
 
-//     input:
-//     path (multiqc_config) from ch_multiqc_config
-//     path (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
-//     path ('samtools/*')  from ch_sortbam_stats_multiqc.collect().ifEmpty([])
-//     path ('fastqc/*')  from ch_fastqc_multiqc.collect().ifEmpty([])
-//     path ('software_versions/*') from software_versions_yaml.collect()
-//     path workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
+    input:
+    path (multiqc_config) from ch_multiqc_config
+    path (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
+    path ('samtools/*')  from ch_sortbam_stats_multiqc.collect().ifEmpty([])
+    path ('fastqc/*')  from ch_fastqc_multiqc.collect().ifEmpty([])
+    path ('software_versions/*') from software_versions_yaml.collect()
+    path workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
-//     output:
-//     path "*multiqc_report.html" into ch_multiqc_report
-//     path "*_data"
-//     path "multiqc_plots"
+    output:
+    path "*multiqc_report.html" into ch_multiqc_report
+    path "*_data"
+    path "multiqc_plots"
 
-//     script:
-//     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
-//     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
-//     custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
-//     """
-//     multiqc . -f $rtitle $rfilename $custom_config_file -m custom_content -m fastqc -m samtools
-//     """
-// }
+    script:
+    rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
+    rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
+    custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
+    """
+    multiqc . -f $rtitle $rfilename $custom_config_file -m custom_content -m fastqc -m samtools
+    """
+}
 
-// /*
-//  * Completion e-mail notification
-//  */
-// workflow.onComplete {
+/*
+ * Completion e-mail notification
+ */
+workflow.onComplete {
 
-//     // Set up the e-mail variables
-//     def subject = "[nf-core/nanoseq] Successful: $workflow.runName"
-//     if (!workflow.success) {
-//         subject = "[nf-core/nanoseq] FAILED: $workflow.runName"
-//     }
-//     def email_fields = [:]
-//     email_fields['version'] = workflow.manifest.version
-//     email_fields['runName'] = custom_runName ?: workflow.runName
-//     email_fields['success'] = workflow.success
-//     email_fields['dateComplete'] = workflow.complete
-//     email_fields['duration'] = workflow.duration
-//     email_fields['exitStatus'] = workflow.exitStatus
-//     email_fields['errorMessage'] = (workflow.errorMessage ?: 'None')
-//     email_fields['errorReport'] = (workflow.errorReport ?: 'None')
-//     email_fields['commandLine'] = workflow.commandLine
-//     email_fields['projectDir'] = workflow.projectDir
-//     email_fields['summary'] = summary
-//     email_fields['summary']['Date Started'] = workflow.start
-//     email_fields['summary']['Date Completed'] = workflow.complete
-//     email_fields['summary']['Pipeline script file path'] = workflow.scriptFile
-//     email_fields['summary']['Pipeline script hash ID'] = workflow.scriptId
-//     if (workflow.repository) email_fields['summary']['Pipeline repository Git URL'] = workflow.repository
-//     if (workflow.commitId) email_fields['summary']['Pipeline repository Git Commit'] = workflow.commitId
-//     if (workflow.revision) email_fields['summary']['Pipeline Git branch/tag'] = workflow.revision
-//     email_fields['summary']['Nextflow Version'] = workflow.nextflow.version
-//     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
-//     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
+    // Set up the e-mail variables
+    def subject = "[nf-core/nanoseq] Successful: $workflow.runName"
+    if (!workflow.success) {
+        subject = "[nf-core/nanoseq] FAILED: $workflow.runName"
+    }
+    def email_fields = [:]
+    email_fields['version'] = workflow.manifest.version
+    email_fields['runName'] = custom_runName ?: workflow.runName
+    email_fields['success'] = workflow.success
+    email_fields['dateComplete'] = workflow.complete
+    email_fields['duration'] = workflow.duration
+    email_fields['exitStatus'] = workflow.exitStatus
+    email_fields['errorMessage'] = (workflow.errorMessage ?: 'None')
+    email_fields['errorReport'] = (workflow.errorReport ?: 'None')
+    email_fields['commandLine'] = workflow.commandLine
+    email_fields['projectDir'] = workflow.projectDir
+    email_fields['summary'] = summary
+    email_fields['summary']['Date Started'] = workflow.start
+    email_fields['summary']['Date Completed'] = workflow.complete
+    email_fields['summary']['Pipeline script file path'] = workflow.scriptFile
+    email_fields['summary']['Pipeline script hash ID'] = workflow.scriptId
+    if (workflow.repository) email_fields['summary']['Pipeline repository Git URL'] = workflow.repository
+    if (workflow.commitId) email_fields['summary']['Pipeline repository Git Commit'] = workflow.commitId
+    if (workflow.revision) email_fields['summary']['Pipeline Git branch/tag'] = workflow.revision
+    email_fields['summary']['Nextflow Version'] = workflow.nextflow.version
+    email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
+    email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
 
-//     // On success try attach the multiqc report
-//     def mqc_report = null
-//     try {
-//         if (workflow.success) {
-//             mqc_report = ch_multiqc_report.getVal()
-//             if (mqc_report.getClass() == ArrayList) {
-//                 log.warn "[nf-core/nanoseq] Found multiple reports from process 'multiqc', will use only one"
-//                 mqc_report = mqc_report[0]
-//             }
-//         }
-//     } catch (all) {
-//         log.warn "[nf-core/nanoseq] Could not attach MultiQC report to summary email"
-//     }
+    // On success try attach the multiqc report
+    def mqc_report = null
+    try {
+        if (workflow.success) {
+            mqc_report = ch_multiqc_report.getVal()
+            if (mqc_report.getClass() == ArrayList) {
+                log.warn "[nf-core/nanoseq] Found multiple reports from process 'multiqc', will use only one"
+                mqc_report = mqc_report[0]
+            }
+        }
+    } catch (all) {
+        log.warn "[nf-core/nanoseq] Could not attach MultiQC report to summary email"
+    }
 
-//     // Check if we are only sending emails on failure
-//     email_address = params.email
-//     if (!params.email && params.email_on_fail && !workflow.success) {
-//         email_address = params.email_on_fail
-//     }
+    // Check if we are only sending emails on failure
+    email_address = params.email
+    if (!params.email && params.email_on_fail && !workflow.success) {
+        email_address = params.email_on_fail
+    }
 
-//     // Render the TXT template
-//     def engine = new groovy.text.GStringTemplateEngine()
-//     def tf = new File("$baseDir/assets/email_template.txt")
-//     def txt_template = engine.createTemplate(tf).make(email_fields)
-//     def email_txt = txt_template.toString()
+    // Render the TXT template
+    def engine = new groovy.text.GStringTemplateEngine()
+    def tf = new File("$baseDir/assets/email_template.txt")
+    def txt_template = engine.createTemplate(tf).make(email_fields)
+    def email_txt = txt_template.toString()
 
-//     // Render the HTML template
-//     def hf = new File("$baseDir/assets/email_template.html")
-//     def html_template = engine.createTemplate(hf).make(email_fields)
-//     def email_html = html_template.toString()
+    // Render the HTML template
+    def hf = new File("$baseDir/assets/email_template.html")
+    def html_template = engine.createTemplate(hf).make(email_fields)
+    def email_html = html_template.toString()
 
-//     // Render the sendmail template
-//     def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, baseDir: "$baseDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
-//     def sf = new File("$baseDir/assets/sendmail_template.txt")
-//     def sendmail_template = engine.createTemplate(sf).make(smail_fields)
-//     def sendmail_html = sendmail_template.toString()
+    // Render the sendmail template
+    def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, baseDir: "$baseDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
+    def sf = new File("$baseDir/assets/sendmail_template.txt")
+    def sendmail_template = engine.createTemplate(sf).make(smail_fields)
+    def sendmail_html = sendmail_template.toString()
 
-//     // Send the HTML e-mail
-//     if (email_address) {
-//         try {
-//             if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
-//             // Try to send HTML e-mail using sendmail
-//             [ 'sendmail', '-t' ].execute() << sendmail_html
-//             log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (sendmail)"
-//         } catch (all) {
-//             // Catch failures and try with plaintext
-//             def mail_cmd = [ 'mail', '-s', subject, '--content-type=text/html', email_address ]
-//             if ( mqc_report.size() <= params.max_multiqc_email_size.toBytes() ) {
-//               mail_cmd += [ '-A', mqc_report ]
-//             }
-//             mail_cmd.execute() << email_html
-//             log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (mail)"
-//         }
-//     }
+    // Send the HTML e-mail
+    if (email_address) {
+        try {
+            if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
+            // Try to send HTML e-mail using sendmail
+            [ 'sendmail', '-t' ].execute() << sendmail_html
+            log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (sendmail)"
+        } catch (all) {
+            // Catch failures and try with plaintext
+            def mail_cmd = [ 'mail', '-s', subject, '--content-type=text/html', email_address ]
+            if ( mqc_report.size() <= params.max_multiqc_email_size.toBytes() ) {
+              mail_cmd += [ '-A', mqc_report ]
+            }
+            mail_cmd.execute() << email_html
+            log.info "[nf-core/nanoseq] Sent summary e-mail to $email_address (mail)"
+        }
+    }
 
-//     // Write summary e-mail HTML to a file
-//     def output_d = new File("${params.outdir}/pipeline_info/")
-//     if (!output_d.exists()) {
-//         output_d.mkdirs()
-//     }
-//     def output_hf = new File(output_d, "pipeline_report.html")
-//     output_hf.withWriter { w -> w << email_html }
-//     def output_tf = new File(output_d, "pipeline_report.txt")
-//     output_tf.withWriter { w -> w << email_txt }
+    // Write summary e-mail HTML to a file
+    def output_d = new File("${params.outdir}/pipeline_info/")
+    if (!output_d.exists()) {
+        output_d.mkdirs()
+    }
+    def output_hf = new File(output_d, "pipeline_report.html")
+    output_hf.withWriter { w -> w << email_html }
+    def output_tf = new File(output_d, "pipeline_report.txt")
+    output_tf.withWriter { w -> w << email_txt }
 
-//     c_green = params.monochrome_logs ? '' : "\033[0;32m";
-//     c_purple = params.monochrome_logs ? '' : "\033[0;35m";
-//     c_red = params.monochrome_logs ? '' : "\033[0;31m";
-//     c_reset = params.monochrome_logs ? '' : "\033[0m";
+    c_green = params.monochrome_logs ? '' : "\033[0;32m";
+    c_purple = params.monochrome_logs ? '' : "\033[0;35m";
+    c_red = params.monochrome_logs ? '' : "\033[0;31m";
+    c_reset = params.monochrome_logs ? '' : "\033[0m";
 
-//     if (workflow.stats.ignoredCount > 0 && workflow.success) {
-//         log.info "-${c_purple}Warning, pipeline completed, but with errored process(es) ${c_reset}-"
-//         log.info "-${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCount} ${c_reset}-"
-//         log.info "-${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCount} ${c_reset}-"
-//     }
+    if (workflow.stats.ignoredCount > 0 && workflow.success) {
+        log.info "-${c_purple}Warning, pipeline completed, but with errored process(es) ${c_reset}-"
+        log.info "-${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCount} ${c_reset}-"
+        log.info "-${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCount} ${c_reset}-"
+    }
 
-//     if (workflow.success) {
-//         log.info "-${c_purple}[nf-core/nanoseq]${c_green} Pipeline completed successfully${c_reset}-"
-//     } else {
-//         checkHostname()
-//         log.info "-${c_purple}[nf-core/nanoseq]${c_red} Pipeline completed with errors${c_reset}-"
-//     }
-
-// }
+    if (workflow.success) {
+        log.info "-${c_purple}[nf-core/nanoseq]${c_green} Pipeline completed successfully${c_reset}-"
+    } else {
+        checkHostname()
+        log.info "-${c_purple}[nf-core/nanoseq]${c_red} Pipeline completed with errors${c_reset}-"
+    }
+}
+    
 
 def nfcoreHeader() {
     // Log colors ANSI codes
