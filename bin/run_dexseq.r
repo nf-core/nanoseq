@@ -4,14 +4,13 @@ library(DRIMSeq)
 library(DEXSeq)
 library(stageR)
 
-
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 3) {
   stop("Please input the directory with the transcript level featureCounts results and the sample information file", call.=FALSE)
 } 
+
 ######### import data ###########
 ##Import featureCounts data
-#path <- "~/Downloads/nanorna-bam-master/mod/featureCounts_transcript/"
 transcriptquant <- args[1]
 path<-args[2]
 if (transcriptquant == "stringtie2"){
@@ -27,12 +26,10 @@ if (transcriptquant == "bambu"){
 colnames(count.matrix)[1] <- "feature_id"
 colnames(count.matrix)[2] <- "gene_id"
 #sample information
-#sampleinfo<-read.table("~/Downloads/nanorna-bam-master/samples_conditions.csv",sep=",",header=T)
 sampleinfo<-read.table(args[3],sep=",",header=T)
 colnames(sampleinfo)[1] <- "sample_id"
 colnames(sampleinfo)[2] <- "condition"
 condition_names <- sampleinfo[!duplicated(sampleinfo$condition),]$condition
-#condition_names <- c(levels(sampleinfo$condition))
 lgcolName <- "log2fold"
 for (i in length(condition_names):1){
   lgcolName <- paste(lgcolName,condition_names[i],sep='_')
@@ -99,7 +96,6 @@ dxr.g <- data.frame(gene=names(qval),qval)
 
 columns <- c("featureID","groupID","pvalue",lgcolName)
 dxr_pval <- as.data.frame(dxr[,columns])
-#head(dxr_pval)
 pConfirmation <- matrix(dxr_pval$pvalue,ncol=1)
 dimnames(pConfirmation) <- list(strp(dxr_pval$featureID),"transcript")
 pScreen <- qval
