@@ -19,18 +19,18 @@
   > Liao Y, Smyth GK, Shi W. featureCounts: an efficient general purpose program for assigning sequence reads to genomic features. Bioinformatics. 2014 Apr 1;30(7):923-30. doi: 10.1093/bioinformatics/btt656. Epub 2013 Nov 13. PubMed PMID: 24227677.
 
 * [GraphMap](https://pubmed.ncbi.nlm.nih.gov/27079541/)
- > Sović I, Šikić M, Wilm A, Fenlon SN, Chen S, Nagarajan N. Fast and sensitive mapping of nanopore sequencing reads with GraphMap. Nat Commun. 2016 Apr 15;7:11307. doi: 10.1038/ncomms11307. PMID: 27079541; PMCID: PMC4835549.
+  > Sović I, Šikić M, Wilm A, Fenlon SN, Chen S, Nagarajan N. Fast and sensitive mapping of nanopore sequencing reads with GraphMap. Nat Commun. 2016 Apr 15;7:11307. doi: 10.1038/ncomms11307. PMID: 27079541; PMCID: PMC4835549.
  
 * [Guppy](https://hpc.nih.gov/apps/guppy.html)
- > R. R. Wick, L. M. Judd, and K. E. Holt. Performance of neural network basecalling tools for Oxford Nanopore sequencing. Genome Biology 2019, 20:129. doi: 10.1186/s13059-019-1727-y PubMed PMID: 31234903; PubMed Central PMCID: PMC6591954.
+  > R. R. Wick, L. M. Judd, and K. E. Holt. Performance of neural network basecalling tools for Oxford Nanopore sequencing. Genome Biology 2019, 20:129. doi: 10.1186/s13059-019-1727-y PubMed PMID: 31234903; PubMed Central PMCID: PMC6591954.
 
 * [Minimap2](https://pubmed.ncbi.nlm.nih.gov/29750242/)
- > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PMID: 29750242; PMCID: PMC6137996.
+  > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PMID: 29750242; PMCID: PMC6137996.
 * [MultiQC](https://www.ncbi.nlm.nih.gov/pubmed/27312411/)
   > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
 
 * [NanoPlot](https://academic.oup.com/bioinformatics/article/34/15/2666/4934939)
- > De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018 Aug 1;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149. PMID: 29547981; PMCID: PMC6061794.
+  > De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018 Aug 1;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149. PMID: 29547981; PMCID: PMC6061794.
 
 * [pycoQC](https://doi.org/10.21105/joss.01236)
   > Leger et al., (2019). pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software, 4(34), 1236, https://doi.org/10.21105/joss.01236
@@ -54,19 +54,19 @@
   > Chen Y, Goeke J, & Wan YK. (2020, June 18). GoekeLab/bambu: bambu release version 0.2.0 (Version v0.2.0). Zenodo. http://doi.org/10.5281/zenodo.3900025
 
 * [BSgenome](https://bioconductor.org/packages/release/bioc/html/BSgenome.html)
- > Pagès H (2020). BSgenome: Software infrastructure for efficient representation of full genomes and their SNPs. R package version 1.56.0. doi: 10.18129/B9.bioc.BSgenome
+  > Pagès H (2020). BSgenome: Software infrastructure for efficient representation of full genomes and their SNPs. R package version 1.56.0. doi: 10.18129/B9.bioc.BSgenome
 
 * [DESeq2](https://www.ncbi.nlm.nih.gov/pubmed/25516281/)
   > Love MI, Huber W, Anders S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol. 2014;15(12):550. PubMed PMID: 25516281; PubMed Central PMCID: PMC4302049.
 
 * [DEXSeq](https://pubmed.ncbi.nlm.nih.gov/22722343/)
- > Anders S, Reyes A, Huber W. Detecting differential usage of exons from RNA-seq data. Genome Res. 2012 Oct;22(10):2008-17. doi: 10.1101/gr.133744.111. Epub 2012 Jun 21. PMID: 22722343; PMCID: PMC3460195.
+  > Anders S, Reyes A, Huber W. Detecting differential usage of exons from RNA-seq data. Genome Res. 2012 Oct;22(10):2008-17. doi: 10.1101/gr.133744.111. Epub 2012 Jun 21. PMID: 22722343; PMCID: PMC3460195.
 
 * [DRIMSeq](https://pubmed.ncbi.nlm.nih.gov/28105305/)
- > Nowicka M, Robinson MD. DRIMSeq: a Dirichlet-multinomial framework for multivariate count outcomes in genomics. F1000Res. 2016 Jun 13;5:1356. doi: 10.12688/f1000research.8900.2. PMID: 28105305; PMCID: PMC5200948.
+  > Nowicka M, Robinson MD. DRIMSeq: a Dirichlet-multinomial framework for multivariate count outcomes in genomics. F1000Res. 2016 Jun 13;5:1356. doi: 10.12688/f1000research.8900.2. PMID: 28105305; PMCID: PMC5200948.
  
 * [stageR](https://pubmed.ncbi.nlm.nih.gov/28784146/)
- > Van den Berge K, Soneson C, Robinson MD, Clement L. stageR: a general stage-wise method for controlling the gene-level false discovery rate in differential expression and differential transcript usage. Genome Biol. 2017 Aug 7;18(1):151. doi: 10.1186/s13059-017-1277-0. PMID: 28784146; PMCID: PMC5547545.
+  > Van den Berge K, Soneson C, Robinson MD, Clement L. stageR: a general stage-wise method for controlling the gene-level false discovery rate in differential expression and differential transcript usage. Genome Biol. 2017 Aug 7;18(1):151. doi: 10.1186/s13059-017-1277-0. PMID: 28784146; PMCID: PMC5547545.
 Copy
 
 ## Software packaging/containerisation tools
