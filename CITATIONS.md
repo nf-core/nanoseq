@@ -20,7 +20,7 @@
 
 * [GraphMap](https://pubmed.ncbi.nlm.nih.gov/27079541/)
   > Sović I, Šikić M, Wilm A, Fenlon SN, Chen S, Nagarajan N. Fast and sensitive mapping of nanopore sequencing reads with GraphMap. Nat Commun. 2016 Apr 15;7:11307. doi: 10.1038/ncomms11307. PMID: 27079541; PMCID: PMC4835549.
- 
+
 * [Guppy](https://hpc.nih.gov/apps/guppy.html)
   > R. R. Wick, L. M. Judd, and K. E. Holt. Performance of neural network basecalling tools for Oxford Nanopore sequencing. Genome Biology 2019, 20:129. doi: 10.1186/s13059-019-1727-y PubMed PMID: 31234903; PubMed Central PMCID: PMC6591954.
 
@@ -33,7 +33,7 @@
   > De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018 Aug 1;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149. PMID: 29547981; PMCID: PMC6061794.
 
 * [pycoQC](https://doi.org/10.21105/joss.01236)
-  > Leger et al., (2019). pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software, 4(34), 1236, https://doi.org/10.21105/joss.01236
+  > Leger et al., (2019). pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software, 4(34), 1236.
 
 * [qcat](https://github.com/nanoporetech/qcat)
 
@@ -47,11 +47,12 @@
   > Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics. 2010 Sep 1;26(17):2204-7. doi: 10.1093/bioinformatics/btq351. Epub 2010 Jul 17. PubMed PMID: 20639541; PubMed Central PMCID: PMC2922891.
 
 ## R packages
+
 * [R](https://www.R-project.org/)
   > R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria.
 
-* [bambu](https://zenodo.org/record/3900025#.X5laq4gzbIU)
-  > Chen Y, Goeke J, & Wan YK. (2020, June 18). GoekeLab/bambu: bambu release version 0.2.0 (Version v0.2.0). Zenodo. http://doi.org/10.5281/zenodo.3900025
+* [bambu](https://github.com/GoekeLab/bambu)
+  > Chen Y, Goeke J, & Wan YK. (2020, June 18). GoekeLab/bambu: bambu release version 0.2.0 (Version v0.2.0). Zenodo. doi: 10.5281/zenodo.3900025.
 
 * [BSgenome](https://bioconductor.org/packages/release/bioc/html/BSgenome.html)
   > Pagès H (2020). BSgenome: Software infrastructure for efficient representation of full genomes and their SNPs. R package version 1.56.0. doi: 10.18129/B9.bioc.BSgenome
@@ -64,7 +65,7 @@
 
 * [DRIMSeq](https://pubmed.ncbi.nlm.nih.gov/28105305/)
   > Nowicka M, Robinson MD. DRIMSeq: a Dirichlet-multinomial framework for multivariate count outcomes in genomics. F1000Res. 2016 Jun 13;5:1356. doi: 10.12688/f1000research.8900.2. PMID: 28105305; PMCID: PMC5200948.
- 
+
 * [stageR](https://pubmed.ncbi.nlm.nih.gov/28784146/)
   > Van den Berge K, Soneson C, Robinson MD, Clement L. stageR: a general stage-wise method for controlling the gene-level false discovery rate in differential expression and differential transcript usage. Genome Biol. 2017 Aug 7;18(1):151. doi: 10.1186/s13059-017-1277-0. PMID: 28784146; PMCID: PMC5547545.
 Copy
