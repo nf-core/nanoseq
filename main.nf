@@ -484,10 +484,10 @@ if (!params.skip_basecalling) {
                     ch_fastq_index
                     ch_fastq_align 
                 }
-        } //else {
-        //     ch_fastq_nanoplot = Channel.empty()
-        //     ch_fastq_fastqc   = Channel.empty()
-        // }
+        } else {
+            ch_fastq_nanoplot = Channel.empty()
+            ch_fastq_fastqc   = Channel.empty()
+        }
     }
     ch_guppy_version          = Channel.empty()
     ch_guppy_pycoqc_summary   = Channel.empty()
