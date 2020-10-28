@@ -16,13 +16,13 @@ def helpMessage() {
     The typical command for running the pipeline is as follows:
 
       nextflow run nf-core/nanoseq \
-          --input samplesheet.csv \
-          --protocol DNA \
-          --input_path ./fast5/ \
-          --flowcell FLO-MIN106 \
-          --kit SQK-LSK109 \
-          --barcode_kit SQK-PBK004 \
-          -profile docker
+        --input samplesheet.csv \
+        --protocol DNA \
+        --input_path ./fast5/ \
+        --flowcell FLO-MIN106 \
+        --kit SQK-LSK109 \
+        --barcode_kit SQK-PBK004 \
+        -profile docker
 
     Mandatory arguments
       --input [file]                  Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
@@ -891,7 +891,7 @@ process BEDTOOLS_BAMTOBED {
 
     script:
     """
-    bedtools bamtobed -bed12 -cigar -i ${bam[0]} | sort -k1,1 -k2,2n > ${sample}.bed12
+    bedtools bamtobed -bed12 -cigar -i ${bam[0]} | bedtools sort > ${sample}.bed12
     """
 }
 
