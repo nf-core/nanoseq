@@ -59,8 +59,8 @@ def helpMessage() {
       --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
 
     Transcript quantification
-      --transcriptquant [str]         Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
-      --skip_transcriptquant [bool]   Skip transcript quantification and subsequent processes (Default: false)
+      --quantification_method [str]   Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
+      --skip_quantification [bool]    Skip transcript quantification and subsequent processes (Default: false)
 
     QC
       --skip_qc [bool]                Skip all QC steps apart from MultiQC (Default: false)
@@ -172,9 +172,9 @@ if (!params.skip_alignment) {
     }
 }
 
-if (!params.skip_transcriptquant) {
-    if (params.transcriptquant != 'bambu' && params.transcriptquant != 'stringtie2') {
-        exit 1, "Invalid transcript quantification option: ${params.transcriptquant}. Valid options: 'bambu', 'stringtie2'"
+if (!params.skip_quantification) {
+    if (params.quantification_method != 'bambu' && params.quantification_method != 'stringtie2') {
+        exit 1, "Invalid transcript quantification option: ${params.quantification_method}. Valid options: 'bambu', 'stringtie2'"
     }
     if (params.protocol != 'cDNA' && params.protocol != 'directRNA') {
         exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'cDNA', 'directRNA'"
@@ -239,8 +239,8 @@ if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
 }
-if (!params.skip_transcriptquant && params.protocol != 'DNA') {
-    summary['Transcript Quantification'] = params.transcriptquant
+if (!params.skip_quantification && params.protocol != 'DNA') {
+    summary['Transcript Quantification'] = params.quantification_method
 }
 if (params.skip_alignment) summary['Skip Alignment'] = 'Yes'
 if (params.skip_bigbed)    summary['Skip BigBed']    = 'Yes'
@@ -918,12 +918,12 @@ process UCSC_BED12TOBIGBED {
     """
 }
 
-if (!params.skip_transcriptquant) {
+if (!params.skip_quantification) {
 
     /*
      * STEP 15 - Transcript Quantification
      */
-    if (params.transcriptquant == 'bambu') {
+    if (params.quantification_method == 'bambu') {
         ch_transquant_info
            .map { it -> [ it[2], it[3] ] }
            .set { ch_bambu_input }
@@ -933,7 +933,7 @@ if (!params.skip_transcriptquant) {
         process BAMBU {
             tag "$sample"
             label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
+            publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
             input:
             tuple  path(genomeseq), path(annot) from ch_bambu_input
@@ -963,7 +963,7 @@ if (!params.skip_transcriptquant) {
         process STRINGTIE2 {
             tag "$sample"
             label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
+            publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
             input:
             tuple val(name), val(genomeseq), path(annot), path(bam) from ch_txome_reconstruction
@@ -971,7 +971,7 @@ if (!params.skip_transcriptquant) {
             output:
             tuple val(name), path(bam) into ch_txome_feature_count
             path annot into ch_annot
-            val "${params.outdir}/${params.transcriptquant}" into ch_stringtie_outputs
+            val "${params.outdir}/${params.quantification_method}" into ch_stringtie_outputs
             path "*.out.gtf" into ch_gtflist
 
             script:
@@ -991,7 +991,7 @@ if (!params.skip_transcriptquant) {
         process STRINGTIE2_MERGE {
             tag "$sample"
             label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
+            publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
             input:
             val stringtie_dir from ch_stringtie_dir
@@ -1010,7 +1010,7 @@ if (!params.skip_transcriptquant) {
         process SUBREAD_FEATURECOUNTS {
             tag "$sample"
             label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
+            publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
             input:
             path annot from ch_merged_gtf
@@ -1043,7 +1043,7 @@ if (!params.skip_transcriptquant) {
         path DESeq2script from ch_DEscript
         path inpath from ch_deseq2_in
         val num_condition from ch_deseq2_num_condition
-        val transcriptquant from params.transcriptquant
+        val quantification_method from params.quantification_method
 
         output:
         path "*.txt" into ch_DEout
@@ -1053,7 +1053,7 @@ if (!params.skip_transcriptquant) {
 
         script:
         """
-        Rscript --vanilla $DESeq2script $transcriptquant $inpath $sampleinfo 
+        Rscript --vanilla $DESeq2script $quantification_method $inpath $sampleinfo 
         """
     }
 
@@ -1071,7 +1071,7 @@ if (!params.skip_transcriptquant) {
         path DEXscript from ch_DEXscript
         val inpath from ch_dexseq_in
         val num_condition from ch_dexseq_num_condition
-        val transcriptquant from params.transcriptquant
+        val quantification_method from params.quantification_method
 
         output:
         path "*.txt"
@@ -1081,7 +1081,7 @@ if (!params.skip_transcriptquant) {
         
         script:
         """
-        Rscript --vanilla $DEXscript $transcriptquant $inpath $sampleinfo
+        Rscript --vanilla $DEXscript $quantification_method $inpath $sampleinfo
         """
     }
 }
