@@ -59,8 +59,8 @@ def helpMessage() {
       --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
 
     Transcript quantification
-      --transcriptquant [str]         Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
-      --skip_transcriptquant [bool]   Skip transcript quantification and subsequent processes (Default: false)
+      --quantification_method [str]   Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
+      --skip_quantification [bool]    Skip transcript quantification and differential analysis (Default: false)
 
     QC
       --skip_qc [bool]                Skip all QC steps apart from MultiQC (Default: false)
@@ -172,9 +172,9 @@ if (!params.skip_alignment) {
     }
 }
 
-if (!params.skip_transcriptquant) {
-    if (params.transcriptquant != 'bambu' && params.transcriptquant != 'stringtie2') {
-        exit 1, "Invalid transcript quantification option: ${params.transcriptquant}. Valid options: 'bambu', 'stringtie2'"
+if (!params.skip_quantification) {
+    if (params.quantification_method != 'bambu' && params.quantification_method != 'stringtie2') {
+        exit 1, "Invalid transcript quantification option: ${params.quantification_method}. Valid options: 'bambu', 'stringtie2'"
     }
     if (params.protocol != 'cDNA' && params.protocol != 'directRNA') {
         exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'cDNA', 'directRNA'"
@@ -239,8 +239,8 @@ if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
     summary['Save Intermeds']     = params.save_align_intermeds ? 'Yes' : 'No'
 }
-if (!params.skip_transcriptquant && params.protocol != 'DNA') {
-    summary['Transcript Quantification'] = params.transcriptquant
+if (!params.skip_quantification && params.protocol != 'DNA') {
+    summary['Quantification Method'] = params.quantification_method
 }
 if (params.skip_alignment) summary['Skip Alignment'] = 'Yes'
 if (params.skip_bigbed)    summary['Skip BigBed']    = 'Yes'
@@ -272,7 +272,7 @@ if (params.email || params.email_on_fail) {
     summary['E-mail on failure']  = params.email_on_fail
     summary['MultiQC maxsize']    = params.max_multiqc_email_size
 }
-log.info summary.collect { k,v -> "${k.padRight(19)}: $v" }.join("\n")
+log.info summary.collect { k,v -> "${k.padRight(21)}: $v" }.join("\n")
 log.info "-\033[2m--------------------------------------------------\033[0m-"
 
 // Check the hostnames against configured profiles
@@ -287,20 +287,18 @@ process CHECK_SAMPLESHEET {
 
     input:
     path samplesheet from ch_input
-    val boo_inputpath from params.input_path
-
+    
     output:
     path "*reformat.csv" into ch_samplesheet_reformat
-    path "total_conditions.csv" into ch_sample_condition
-
+    
     script:  // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
     """
-    check_samplesheet.py $samplesheet samplesheet_reformat.csv $boo_inputpath
+    check_samplesheet.py $samplesheet samplesheet_reformat.csv
     """
 }
 
 // Function to resolve fasta and gtf file if using iGenomes
-// Returns [ sample, fastq, barcode, fasta, gtf, is_transcripts, annotation_str ]
+// Returns [ sample, input_file, barcode, fasta, gtf, is_transcripts, annotation_str ]
 def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
 
     // Resolve fasta and gtf file if using iGenomes
@@ -315,11 +313,11 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
         }
     }
 
-    // Check if fastq and gtf file exists
-    sample_path = sample.input_file ? file(sample.input_file, checkIfExists: true) : null
-    gtf         = sample.gtf        ? file(sample.gtf, checkIfExists: true)        : gtf
+    // Check if input file and gtf file exists
+    input_file = sample.input_file ? file(sample.input_file, checkIfExists: true) : null
+    gtf        = sample.gtf        ? file(sample.gtf, checkIfExists: true)        : gtf
 
-    return [ sample.sample, sample_path, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString() ]
+    return [ sample.sample, input_file, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString() ]
 }
 
 // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
@@ -330,15 +328,6 @@ ch_samplesheet_reformat
     .into { 
         ch_sample_info
         ch_sample_name
-        ch_transquant_info 
-    }
-
-ch_sample_condition
-    .splitCsv(header:false, sep:',')
-    .map { it -> it.size() }
-    .into { 
-        ch_deseq2_num_condition
-        ch_dexseq_num_condition
     }
 
 if (!params.skip_basecalling) {
@@ -486,7 +475,7 @@ if (!params.skip_basecalling) {
             ch_samplesheet_reformat
                 .splitCsv(header:true, sep:',')
                 .map { get_sample_info(it, params.genomes) }
-                .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
+                .map { it -> if (it[1].toString().endsWith('.gz')) [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
                 .into { 
                     ch_fastq_nanoplot
                     ch_fastq_fastqc
@@ -783,8 +772,8 @@ if (!params.skip_alignment) {
                         if (filename.endsWith(".flagstat")) "samtools_stats/$filename"
                         else if (filename.endsWith(".idxstats")) "samtools_stats/$filename"
                         else if (filename.endsWith(".stats")) "samtools_stats/$filename"
-                        else if (filename.endsWith(".sorted.bam")) "bam/$filename"
-                        else if (filename.endsWith(".sorted.bam.bai")) "bam_index/$filename"
+                        else if (filename.endsWith(".sorted.bam")) filename
+                        else if (filename.endsWith(".sorted.bam.bai")) filename
                         else null
                     }
 
@@ -792,12 +781,11 @@ if (!params.skip_alignment) {
         tuple val(sample), path(sizes), val(is_transcripts), path(sam) from ch_align_sam
 
         output:
-        tuple val(sample), path(sizes), val(is_transcripts), path("*.sorted.{bam,bam.bai}") into ch_sortbam_bedgraph,
-                                                                                            ch_sortbam_bed12
-        tuple val(sample), path("*.sorted.bam") into ch_sortbam_stringtie
-        path "*.sorted.bam" into ch_bamlist
+        tuple val(sample), path(sizes), val(is_transcripts), path("*.sorted.bam"), path("*.sorted.bam.bai") into ch_sortbam_bedgraph,
+                                                                                                                 ch_sortbam_bed12,
+                                                                                                                 ch_sortbam_bambu
         path "*.{flagstat,idxstats,stats}" into ch_sortbam_stats_multiqc
-
+        
         script:
         """
         samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
@@ -808,6 +796,15 @@ if (!params.skip_alignment) {
         samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
         """
     }
+
+    ch_sortbam_bambu
+        .map { it -> [ it[0], it[3] ] }
+        .into { 
+            ch_sortbam_bambu
+            ch_sortbam_stringtie 
+            ch_sortbam_featurecounts
+        }
+
 } else {
     ch_sortbam_bedgraph      = Channel.empty()
     ch_sortbam_bed12         = Channel.empty()
@@ -816,15 +813,12 @@ if (!params.skip_alignment) {
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
-        .map { it -> [ it[0], it[1]] }
+        .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0], it[1] ] }
         .into {
+            ch_sortbam_bambu
             ch_sortbam_stringtie
-            ch_get_bams
+            ch_sortbam_featurecounts
         }
-
-    ch_get_bams
-        .map { it -> it[1] }
-        .set { ch_bamlist }
 }
 
 /*
@@ -838,7 +832,7 @@ process BEDTOOLS_GENOMECOV {
     !params.skip_alignment && !params.skip_bigwig
 
     input:
-    tuple val(sample), path(sizes), val(is_transcripts), path(bam) from ch_sortbam_bedgraph
+    tuple val(sample), path(sizes), val(is_transcripts), path(bam), path(bai) from ch_sortbam_bedgraph
 
     output:
     tuple val(sample), path(sizes), val(is_transcripts), path("*.bedGraph") into ch_bedgraph
@@ -884,7 +878,7 @@ process BEDTOOLS_BAMTOBED {
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     input:
-    tuple val(sample), path(sizes), val(is_transcripts), path(bam) from ch_sortbam_bed12
+    tuple val(sample), path(sizes), val(is_transcripts), path(bam), path(bai) from ch_sortbam_bed12
 
     output:
     tuple val(sample), path(sizes), val(is_transcripts), path("*.bed12") into ch_bed12
@@ -918,162 +912,188 @@ process UCSC_BED12TOBIGBED {
     """
 }
 
-if (!params.skip_transcriptquant) {
+//tuple val(sample), path("*.sorted.bam") into ch_sortbam_stringtie
+//path "*.sorted.bam" into ch_bamlist
 
-    /*
-     * STEP 15 - Transcript Quantification
-     */
-    if (params.transcriptquant == 'bambu') {
-        ch_transquant_info
-           .map { it -> [ it[2], it[3] ] }
-           .set { ch_bambu_input }
+// ch_get_bams
+//     .map { it -> it[1] }
+//     .set { ch_bamlist }
 
-        process BAMBU {
-            tag "$sample"
-            label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
+// // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
+// ch_samplesheet_reformat
+//     .splitCsv(header:true, sep:',')
+//     .map { get_sample_info(it, params.genomes) }
+//     .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
+//     .into { 
+//         ch_sample_info
+//         ch_sample_name
+//         //ch_transquant_info 
+//     }
 
-            input:
-            tuple  path(genomeseq), path(annot) from ch_bambu_input
-            path bams from ch_bamlist.collect()
+// ch_sample_condition
+//     .splitCsv(header:false, sep:',')
+//     .map { it -> it.size() }
+//     .into { 
+//         ch_deseq2_num_condition
+//         ch_dexseq_num_condition
+//     }
 
+// if (!params.skip_quantification) {
 
-            output:
-            path "counts_gene.txt" into ch_deseq2_in
-            path "counts_transcript.txt" into ch_dexseq_in
-            path "extended_annotations.gtf" 
+//     /*
+//      * STEP 15 - Transcript Quantification
+//      */
+//     if (params.quantification_method == 'bambu') {
 
-            script:
-            """
-            run_bambu.r --tag=. --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq $bams
-            """
-        }
-    } else {
-        ch_transquant_info
-           .map { it -> [ it[0], it[2], it[3] ] }
-           .set { ch_fasta_gtf }
+//         // [ fasta, gtf ]
+//         ch_transquant_info
+//            .map { it -> [ it[2], it[3] ] }
+//            .set { ch_bambu_input }
+//         ch_bambu_input.view()
+//     }
+//         // process BAMBU {
+//         //     //tag "$sample"
+//         //     label 'process_medium'
+//         //     publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
-        ch_fasta_gtf
-           .join(ch_sortbam_stringtie)
-           .set { ch_txome_reconstruction }
+//         //     input:
+//         //     tuple path(genomeseq), path(annot) from ch_bambu_input
+//         //     path bams from ch_bamlist.collect()
+            
+//         //     output:
+//         //     path "counts_gene.txt" into ch_deseq2_in
+//         //     path "counts_transcript.txt" into ch_dexseq_in
+//         //     path "extended_annotations.gtf" 
+
+//         //     script:
+//         //     """
+//         //     run_bambu.r --tag=. --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq $bams
+//         //     """
+//         // }
+//     // } else {
+//     //     ch_transquant_info
+//     //        .map { it -> [ it[0], it[2], it[3] ] }
+//     //        .set { ch_fasta_gtf }
+
+//     //     ch_fasta_gtf
+//     //        .join(ch_sortbam_stringtie)
+//     //        .set { ch_txome_reconstruction }
            
-        process STRINGTIE2 {
-            tag "$sample"
-            label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
+//     //     process STRINGTIE2 {
+//     //         tag "$sample"
+//     //         label 'process_medium'
+//     //         publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
-            input:
-            tuple val(name), val(genomeseq), path(annot), path(bam) from ch_txome_reconstruction
+//     //         input:
+//     //         tuple val(name), val(genomeseq), path(annot), path(bam) from ch_txome_reconstruction
 
-            output:
-            tuple val(name), path(bam) into ch_txome_feature_count
-            path annot into ch_annot
-            val "${params.outdir}/${params.transcriptquant}" into ch_stringtie_outputs
-            path "*.out.gtf" into ch_gtflist
+//     //         output:
+//     //         tuple val(name), path(bam) into ch_txome_feature_count
+//     //         path annot into ch_annot
+//     //         val "${params.outdir}/${params.quantification_method}" into ch_stringtie_outputs
+//     //         path "*.out.gtf" into ch_gtflist
 
-            script:
-            """
-            stringtie -L -G $annot -o ${name}.out.gtf $bam
-            """
-        }
+//     //         script:
+//     //         """
+//     //         stringtie -L -G $annot -o ${name}.out.gtf $bam
+//     //         """
+//     //     }
 
-        ch_stringtie_outputs
-            .unique()
-            .set { ch_stringtie_dir }
+//     //     ch_stringtie_outputs
+//     //         .unique()
+//     //         .set { ch_stringtie_dir }
         
-        ch_annot
-            .unique()
-            .set { ch_annotation }
+//     //     ch_annot
+//     //         .unique()
+//     //         .set { ch_annotation }
 
-        process STRINGTIE2_MERGE {
-            tag "$sample"
-            label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
+//     //     process STRINGTIE2_MERGE {
+//     //         tag "$sample"
+//     //         label 'process_medium'
+//     //         publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
-            input:
-            val stringtie_dir from ch_stringtie_dir
-            path gtfs from ch_gtflist.collect()
-            path annot from ch_annotation
+//     //         input:
+//     //         val stringtie_dir from ch_stringtie_dir
+//     //         path gtfs from ch_gtflist.collect()
+//     //         path annot from ch_annotation
 
-            output:
-            path "merged.combined.gtf" into ch_merged_gtf
+//     //         output:
+//     //         path "merged.combined.gtf" into ch_merged_gtf
 
-            script:
-            """
-            stringtie --merge $gtfs -G $annot -o merged.combined.gtf
-            """
-        }
+//     //         script:
+//     //         """
+//     //         stringtie --merge $gtfs -G $annot -o merged.combined.gtf
+//     //         """
+//     //     }
         
-        process SUBREAD_FEATURECOUNTS {
-            tag "$sample"
-            label 'process_medium'
-            publishDir "${params.outdir}/${params.transcriptquant}", mode: params.publish_dir_mode
+//     //     process SUBREAD_FEATURECOUNTS {
+//     //         tag "$sample"
+//     //         label 'process_medium'
+//     //         publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
-            input:
-            path annot from ch_merged_gtf
-            path bams from ch_bamlist.collect()
+//     //         input:
+//     //         path annot from ch_merged_gtf
+//     //         path bams from ch_bamlist.collect()
 
-            output:
-            path "*gene.txt" into ch_deseq2_in
-            path "*transcript.txt" into ch_dexseq_in
-            path "*.log"
+//     //         output:
+//     //         path "*gene.txt" into ch_deseq2_in
+//     //         path "*transcript.txt" into ch_dexseq_in
+//     //         path "*.log"
 
-            script:
-            """
-            featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o counts_transcript.txt $bams 2>> counts_transcript.log
-            featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o counts_gene.txt $bams 2>> counts_gene.log
-            """
-        } 
-    }
+//     //         script:
+//     //         """
+//     //         featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o counts_transcript.txt $bams 2>> counts_transcript.log
+//     //         featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o counts_gene.txt $bams 2>> counts_gene.log
+//     //         """
+//     //     } 
+//     // }
 
-    /*
-     * STEP 3 - DESeq2
-     */
-    process DESEQ2 {
-        publishDir "${params.outdir}/deseq2", mode: params.publish_dir_mode
+//     // /*
+//     //  * STEP 3 - DESeq2
+//     //  */
+//     // process DESEQ2 {
+//     //     publishDir "${params.outdir}/deseq2", mode: params.publish_dir_mode
 
-        input:
-        path sampleinfo from ch_samplesheet_reformat
-        path inpath from ch_deseq2_in
-        val num_condition from ch_deseq2_num_condition
-        val transcriptquant from params.transcriptquant
-
-        output:
-        path "*.txt" into ch_DEout
+//     //     input:
+//     //     path sampleinfo from ch_samplesheet_reformat
+//     //     path inpath from ch_deseq2_in
+//     //     val num_condition from ch_deseq2_num_condition
+        
+//     //     output:
+//     //     path "*.txt" into ch_DEout
     
-        when:
-        num_condition >= 2
+//     //     when:
+//     //     num_condition >= 2
 
-        script:
-        """
-        run_deseq2.r $transcriptquant $inpath $sampleinfo 
-        """
-    }
+//     //     script:
+//     //     """
+//     //     run_deseq2.r $params.quantification_method $inpath $sampleinfo 
+//     //     """
+//     // }
 
-    /*
-     * STEP 4 - DEXseq
-     */
-    process DEXSEQ {
-        publishDir "${params.outdir}/dexseq", mode: params.publish_dir_mode
+//     // /*
+//     //  * STEP 4 - DEXseq
+//     //  */
+//     // process DEXSEQ {
+//     //     publishDir "${params.outdir}/dexseq", mode: params.publish_dir_mode
         
-        input:
-        path sampleinfo from ch_samplesheet_reformat
-        val inpath from ch_dexseq_in
-        val num_condition from ch_dexseq_num_condition
-        val transcriptquant from params.transcriptquant
-
-        output:
-        path "*.txt"
+//     //     input:
+//     //     path sampleinfo from ch_samplesheet_reformat
+//     //     val inpath from ch_dexseq_in
+//     //     val num_condition from ch_dexseq_num_condition
         
-        when:
-        num_condition >= 2
+//     //     output:
+//     //     path "*.txt"
         
-        script:
-        """
-        run_dexseq.r $transcriptquant $inpath $sampleinfo
-        """
-    }
-}
+//     //     when:
+//     //     num_condition >= 2
+        
+//     //     script:
+//     //     """
+//     //     run_dexseq.r $params.quantification_method $inpath $sampleinfo
+//     //     """
+//     // }
+// }
 
 /*
  * STEP 16 - Output Description HTML
@@ -1298,8 +1318,8 @@ workflow.onComplete {
         checkHostname()
         log.info "-${c_purple}[nf-core/nanoseq]${c_red} Pipeline completed with errors${c_reset}-"
     }
-
 }
+    
 
 def nfcoreHeader() {
     // Log colors ANSI codes
