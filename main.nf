@@ -820,10 +820,7 @@ if (!params.skip_alignment) {
 
     ch_sortbam_quant
         .map { it -> [ it[0], it[3] ] }
-        .into { 
-            ch_sortbam_quant
-            ch_sortbam_featurecounts
-        }
+        .set { ch_sortbam_quant }
 
 } else {
     ch_sortbam_bedgraph      = Channel.empty()
@@ -834,10 +831,7 @@ if (!params.skip_alignment) {
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
         .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0], it[1] ] }
-        .into {
-            ch_sortbam_quant
-            ch_sortbam_featurecounts
-        }
+        .set { ch_sortbam_quant }
 }
 
 /*
@@ -946,7 +940,10 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
 
         process BAMBU {
             label 'process_medium'
-            publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
+            publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode,
+                saveAs: { filename ->
+                            if (!filename.endsWith("bambu.txt")) filename
+                        }
 
             input:
             tuple path(fasta), path(gtf) from ch_sample_annotation
@@ -970,7 +967,10 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
         ch_sample_annotation
             .map { it -> [ it[0], it[2], it[3] ] }
             .join(ch_sortbam_quant)
-            .set { ch_sample_annotation }
+            .into { 
+                ch_sample_annotation
+                ch_sample_gtf
+            }
            
         process STRINGTIE2 {
             tag "$sample"
@@ -989,31 +989,61 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             """
         }
 
-        // ch_stringtie_outputs
-        //     .unique()
-        //     .set { ch_stringtie_dir }
-        
-        // ch_annot
-        //     .unique()
-        //     .set { ch_annotation }
+        ch_sample_gtf
+            .map { it -> [ it[2]] }
+            .unique()
+            .set { ch_sample_gtf }
 
         process STRINGTIE2_MERGE {
             label 'process_medium'
             publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
             input:
+            path gtf from ch_sample_gtf
             path gtfs from ch_stringtie_gtf.collect()
-            // path annot from ch_annotation
-
+            
             output:
-            path "merged.combined.gtf" into ch_merged_gtf
+            path "stringtie.merged.gtf" into ch_stringtie_merged_gtf
 
             script:
             """
-            stringtie --merge $gtfs -G $annot -o merged.combined.gtf
+            stringtie --merge $gtfs -G $gtf -o stringtie.merged.gtf
+            """
+        }
+
+        process SUBREAD_FEATURECOUNTS {
+            tag "$sample"
+            label 'process_medium'
+            publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
+
+            input:
+            path gtf from ch_stringtie_merged_gtf
+            path bams from ch_bamlist.collect()
+
+            output:
+            path "*gene.txt" into ch_gene_counts
+            path "*transcript.txt" into ch_transcript_counts
+            path "*.log"
+
+            script:
+            """
+            featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o counts_transcript.txt $bams 2>> counts_transcript.log
+            featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o counts_gene.txt $bams 2>> counts_gene.log
             """
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
 } else {
     ch_bambu_version = Channel.empty()
 }
