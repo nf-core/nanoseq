@@ -1,7 +1,28 @@
 #!/usr/bin/env Rscript
 
+################################################
+################################################
+## REQUIREMENTS                               ##
+################################################
+################################################
+
+## DIFFERENTIAL GENE EXPRESSION ANALYSIS
+    ## - GENE COUNT QUANTIFICATION INPUTS FROM EITHER STRINGTIE2+FEATURECOUNTS OR BAMBU
+    ## - SAMPLE INFORMATION INCLUDING CONDITIONS
+    ## - THE PACKAGE BELOW NEEDS TO BE AVAILABLE TO LOAD WHEN RUNNING R
+
+################################################
+################################################
+## LOAD LIBRARY                               ##
+################################################
+################################################
 library(DESeq2)
 
+################################################
+################################################
+## PARSE COMMAND-LINE PARAMETERS              ##
+################################################
+################################################
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 3) {
   stop("Please input the directory with the featureCounts results and the sample information file", call.=FALSE)
@@ -9,9 +30,14 @@ if (length(args) < 3) {
   # default output file
   args[4] = "DESeq2out.txt"
 }
-#DeSeq2
 transcriptquant <- args[1]
 path<-args[2]
+
+################################################
+################################################
+## FORMAT GENE COUNT QUANTIFICATION OUTPUT    ##
+################################################
+################################################
 #create a dataframe for all samples
 if (transcriptquant == "stringtie2"){
   #count_files<- grep(list.files(path), pattern='tx_', inv=TRUE, value=TRUE)
@@ -28,11 +54,22 @@ if (transcriptquant == "bambu"){
    countTab[,1:length(colnames(countTab))] <- sapply(countTab, as.integer)
 }
 
+################################################
+################################################
+## READ IN SAMPLE INFORMATION (CONDITIONS)    ##
+################################################
+################################################
 #sampInfo <- read.csv("~/Downloads/nanorna-bam-master/two_conditions.csv",row.names = 1)
 sampInfo<-read.csv(args[3],row.names=1)
 if (!all(rownames(sampInfo) == colnames(countTab))){
   sampInfo <- sampInfo[match(colnames(countTab), rownames(sampInfo)),]
 }
+
+################################################
+################################################
+## RUN DESEQ2                                 ##
+################################################
+################################################
 dds <- DESeqDataSetFromMatrix(countData = countTab,colData = sampInfo,design = ~ group)
 dds <- DESeq(dds)
 res <- results(dds)
