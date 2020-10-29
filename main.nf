@@ -279,7 +279,7 @@ log.info "-\033[2m--------------------------------------------------\033[0m-"
 checkHostname()
 
 /*
- * PREPROCESSING - CHECK SAMPLESHEET
+ * Check input samplesheet
  */
 process CHECK_SAMPLESHEET {
     tag "$samplesheet"
@@ -360,7 +360,7 @@ if (!params.skip_basecalling) {
         .set { ch_sample_name }
 
     /*
-     * STEP 1 - Basecalling and demultipexing using Guppy
+     * Basecalling and demultipexing using Guppy
      */
     process GUPPY {
         tag "$input_path"
@@ -439,7 +439,7 @@ if (!params.skip_basecalling) {
     if (!params.skip_demultiplexing) {
 
         /*
-         * STEP 1 - Demultipexing using qcat
+         * Demultipexing using qcat
          */
         process QCAT {
             tag "$input_path"
@@ -516,7 +516,7 @@ if (!params.skip_basecalling) {
 }
 
 /*
- * STEP 2 - QC using PycoQC
+ * QC using PycoQC
  */
 process PYCOQC {
     tag "$summary_txt"
@@ -539,7 +539,7 @@ process PYCOQC {
 }
 
 /*
- * STEP 3 - QC using NanoPlot
+ * QC using NanoPlot
  */
 process NANOPLOT_SUMMARY {
     tag "$summary_txt"
@@ -562,7 +562,7 @@ process NANOPLOT_SUMMARY {
 }
 
 /*
- * STEP 4 - FastQ QC using NanoPlot
+ * FastQ QC using NanoPlot
  */
 process NANOPLOT_FASTQ {
     tag "$sample"
@@ -585,7 +585,7 @@ process NANOPLOT_FASTQ {
 }
 
 /*
- * STEP 5 - FastQ QC using FastQC
+ * FastQ QC using FastQC
  */
 process FASTQC {
     tag "$sample"
@@ -622,7 +622,7 @@ if (!params.skip_alignment) {
         .set { ch_fastq_sizes }
 
     /*
-     * STEP 6 - Make chromosome sizes file
+     * Make chromosome sizes file
      */
     process GET_CHROM_SIZES {
         tag "$fasta"
@@ -648,7 +648,7 @@ if (!params.skip_alignment) {
         .set { ch_fastq_gtf }
 
     /*
-     * STEP 7 - Convert GTF to BED12
+     * Convert GTF to BED12
      */
     process GTF_TO_BED {
         tag "$gtf"
@@ -677,7 +677,7 @@ if (!params.skip_alignment) {
         .set { ch_fasta_index }
 
     /*
-     * STEP 8 - Create genome/transcriptome index
+     * Create genome/transcriptome index
      */
     if (params.aligner == 'minimap2') {
         process MINIMAP2_INDEX {
@@ -742,7 +742,7 @@ if (!params.skip_alignment) {
         .set { ch_index }
 
     /*
-     * STEP 9 - Align fastq files
+     * Align fastq files
      */
     if (params.aligner == 'minimap2') {
         process MINIMAP2_ALIGN {
@@ -816,7 +816,7 @@ if (!params.skip_alignment) {
     }
 
     /*
-    * STEP 10 - Coordinate sort BAM files
+    * Coordinate sort BAM files
     */
     process SAMTOOLS_SORT {
         tag "$sample"
@@ -868,7 +868,7 @@ if (!params.skip_alignment) {
 }
 
 /*
- * STEP 11 - Convert BAM to BEDGraph
+ * Convert BAM to BEDGraph
  */
 process BEDTOOLS_GENOMECOV {
     tag "$sample"
@@ -896,7 +896,7 @@ process BEDTOOLS_GENOMECOV {
 }
 
 /*
- * STEP 12 - Convert BEDGraph to BigWig
+ * Convert BEDGraph to BigWig
  */
 process UCSC_BEDGRAPHTOBIGWIG {
     tag "$sample"
@@ -922,7 +922,7 @@ process UCSC_BEDGRAPHTOBIGWIG {
 }
 
 /*
- * STEP 13 - Convert BAM to BED12
+ * Convert BAM to BED12
  */
 process BEDTOOLS_BAMTOBED {
     tag "$sample"
@@ -949,7 +949,7 @@ process BEDTOOLS_BAMTOBED {
 }
 
 /*
- * STEP 14 - Convert BED12 to BigBED
+ * Convert BED12 to BigBED
  */
 process UCSC_BED12TOBIGBED {
     tag "$sample"
@@ -975,9 +975,6 @@ process UCSC_BED12TOBIGBED {
 }
 
 if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
-    /*
-     * STEP 15 - Transcript Quantification
-     */
     if (params.quantification_method == 'bambu') {
         
         ch_sample_annotation
@@ -985,6 +982,9 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             .unique()
             .set { ch_sample_annotation }
 
+        /*
+         * Quantification and novel isoform detection with bambu
+         */
         process BAMBU {
             label 'process_medium'
             publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode,
@@ -1013,7 +1013,6 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
             """
         }
-
         ch_featurecounts_transcript_multiqc = Channel.empty()
         ch_featurecounts_genes_multiqc      = Channel.empty()
 
@@ -1028,6 +1027,9 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
                 ch_sample_featurecounts
             }
            
+        /*
+         * Novel isoform detection with StringTie
+         */
         process STRINGTIE2 {
             tag "$sample"
             label 'process_medium'
@@ -1053,6 +1055,9 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             .unique()
             .set { ch_sample_gtf }
 
+        /*
+         * Merge isoforms across samples caleed by StringTie
+         */
         process STRINGTIE2_MERGE {
             label 'process_medium'
             publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
@@ -1073,6 +1078,9 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             """
         }
 
+        /*
+         * Gene and transcript quantification with featureCounts
+         */
         process SUBREAD_FEATURECOUNTS {
             label 'process_medium'
             publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
@@ -1116,156 +1124,60 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
                 $bams
             """
         }
-
         ch_bambu_version = Channel.empty()
     }
 
-    // def REPLICATES_EXIST    = false
-    // def MULTIPLE_CONDITIONS = false
+    if (!params.skip_differential_analysis) {
+        /*
+         * DESeq2 differential expression of genes
+         */
+        process DESEQ2 {
+            publishDir "${params.outdir}/${params.quantification_method}/deseq2", mode: params.publish_dir_mode
 
+            when:
+            MULTIPLE_CONDITIONS && REPLICATES_EXIST
 
+            input:
+            path counts from ch_gene_counts
+            
+            output:
+            path "*.txt"
+        
+            script:
+            """
+            run_deseq2.r $params.quantification_method $counts
+            """
+        }
 
+        /*
+         * DEXseq differential expression of transcripts
+         */
+        process DEXSEQ {
+            publishDir "${params.outdir}/${params.quantification_method}/dexseq", mode: params.publish_dir_mode
 
+            when:
+            MULTIPLE_CONDITIONS && REPLICATES_EXIST
 
-
-
-
-
-
-
-
+            input:
+            path counts from ch_transcript_counts
+            
+            output:
+            path "*.txt"
+            
+            script:
+            """
+            run_dexseq.r $params.quantification_method $counts
+            """
+        }
+    }
 } else {
     ch_bambu_version                    = Channel.empty()
     ch_featurecounts_transcript_multiqc = Channel.empty()
     ch_featurecounts_gene_multiqc       = Channel.empty()
 }
-// //     //     ch_transquant_info
-// //     //        .map { it -> [ it[0], it[2], it[3] ] }
-// //     //        .set { ch_fasta_gtf }
-
-// //     //     ch_fasta_gtf
-// //     //        .join(ch_sortbam_stringtie)
-// //     //        .set { ch_txome_reconstruction }
-           
-// //     //     // Generate de novo GTF for individual samples and then merge in the next step
-// //     //     process STRINGTIE2 {
-// //     //         tag "$sample"
-// //     //         label 'process_medium'
-// //     //         publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
-
-// //     //         input:
-// //     //         tuple val(name), val(genomeseq), path(annot), path(bam) from ch_txome_reconstruction
-
-// //     //         output:
-// //     //         tuple val(name), path(bam) into ch_txome_feature_count
-// //     //         path annot into ch_annot
-// //     //         val "${params.outdir}/${params.quantification_method}" into ch_stringtie_outputs
-// //     //         path "*.out.gtf" into ch_gtflist
-
-// //     //         script:
-// //     //         """
-// //     //         stringtie -L -G $annot -o ${name}.out.gtf $bam
-// //     //         """
-// //     //     }
-
-// //     //     ch_stringtie_outputs
-// //     //         .unique()
-// //     //         .set { ch_stringtie_dir }
-        
-// //     //     ch_annot
-// //     //         .unique()
-// //     //         .set { ch_annotation }
-
-// //     //     process STRINGTIE2_MERGE {
-// //     //         tag "$sample"
-// //     //         label 'process_medium'
-// //     //         publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
-
-// //     //         input:
-// //     //         val stringtie_dir from ch_stringtie_dir
-// //     //         path gtfs from ch_gtflist.collect()
-// //     //         path annot from ch_annotation
-
-// //     //         output:
-// //     //         path "merged.combined.gtf" into ch_merged_gtf
-
-// //     //         script:
-// //     //         """
-// //     //         stringtie --merge $gtfs -G $annot -o merged.combined.gtf
-// //     //         """
-// //     //     }
-        
-// //     //     process SUBREAD_FEATURECOUNTS {
-// //     //         tag "$sample"
-// //     //         label 'process_medium'
-// //     //         publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
-
-// //     //         input:
-// //     //         path annot from ch_merged_gtf
-// //     //         path bams from ch_bamlist.collect()
-
-// //     //         output:
-// //     //         path "*gene.txt" into ch_deseq2_in
-// //     //         path "*transcript.txt" into ch_dexseq_in
-// //     //         path "*.log"
-
-// //     //         script:
-// //     //         """
-// //     //         featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o counts_transcript.txt $bams 2>> counts_transcript.log
-// //     //         featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o counts_gene.txt $bams 2>> counts_gene.log
-// //     //         """
-// //     //     } 
-// //     // }
-
-// //     // /*
-// //     //  * STEP 3 - DESeq2
-// //     //  */
-// //     // process DESEQ2 {
-// //     //     publishDir "${params.outdir}/${params.quantification_method}/deseq2", mode: params.publish_dir_mode
-
-// //     //     input:
-// //     //     path sampleinfo from ch_samplesheet_reformat
-// //     //     path inpath from ch_deseq2_in
-// //     //     val num_condition from ch_deseq2_num_condition
-        
-// //     //     output:
-// //     //     path "*.txt" into ch_DEout
-    
-// //     //     when:
-// //     //     num_condition >= 2
-
-// //     //     script:
-// //     //     """
-// //     //     run_deseq2.r $params.quantification_method $inpath $sampleinfo 
-// //     //     """
-// //     // }
-
-// //     // /*
-// //     //  * STEP 4 - DEXseq
-// //     //  */
-// //     // process DEXSEQ {
-// //     //     publishDir "${params.outdir}/${params.quantification_method}/dexseq", mode: params.publish_dir_mode
-        
-// //     //     input:
-// //     //     path sampleinfo from ch_samplesheet_reformat
-// //     //     val inpath from ch_dexseq_in
-// //     //     val num_condition from ch_dexseq_num_condition
-        
-// //     //     output:
-// //     //     path "*.txt"
-        
-// //     //     when:
-// //     //     num_condition >= 2
-        
-// //     //     script:
-// //     //     """
-// //     //     run_dexseq.r $params.quantification_method $inpath $sampleinfo
-// //     //     """
-// //     // }
-// // }
 
 /*
- * STEP 16 - Output Description HTML
+ * Output Description HTML
  */
 process OUTPUT_DOCUMENTATION {
     publishDir "${params.outdir}/pipeline_info", mode: params.publish_dir_mode
@@ -1343,7 +1255,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
     .set { ch_workflow_summary }
 
 /*
- * STEP 15 - MultiQC
+ * MultiQC
  */
 process MULTIQC {
     publishDir "${params.outdir}/multiqc", mode: params.publish_dir_mode
@@ -1357,8 +1269,8 @@ process MULTIQC {
     
     path ('fastqc/*')  from ch_fastqc_multiqc.collect().ifEmpty([])
     path ('samtools/*')  from ch_sortbam_stats_multiqc.collect().ifEmpty([])
-    path ('featurecounts/*')  from ch_featurecounts_gene_multiqc.collect().ifEmpty([])
-    path ('featurecounts/*')  from ch_featurecounts_transcript_multiqc.collect().ifEmpty([])
+    path ('featurecounts/gene/*')  from ch_featurecounts_gene_multiqc.collect().ifEmpty([])
+    path ('featurecounts/transcript/*')  from ch_featurecounts_transcript_multiqc.collect().ifEmpty([])
     path ('software_versions/*') from software_versions_yaml.collect()
     path workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
