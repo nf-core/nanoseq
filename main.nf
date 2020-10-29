@@ -1128,6 +1128,7 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
     }
 
     if (!params.skip_differential_analysis) {
+        
         /*
          * DESeq2 differential expression of genes
          */
