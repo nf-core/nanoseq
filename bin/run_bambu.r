@@ -10,11 +10,11 @@
     ## - ALIGNED READS IN BAM FILE FORMAT
     ## - GENOME SEQUENCE
     ## - ANNOTATION GTF FILE
-    ## - THE PACKAGE BELOW NEED TO BE AVAILABLE TO LOAD WHEN RUNNING R
+    ## - THE PACKAGE BELOW NEEDS TO BE AVAILABLE TO LOAD WHEN RUNNING R
 
 ################################################
 ################################################
-## LOAD LIBRARIES                             ##
+## LOAD LIBRARY                               ##
 ################################################
 ################################################
 library(bambu)
