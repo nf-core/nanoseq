@@ -1018,7 +1018,7 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             """
         }
         ch_featurecounts_transcript_multiqc = Channel.empty()
-        ch_featurecounts_genes_multiqc      = Channel.empty()
+        ch_featurecounts_gene_multiqc       = Channel.empty()
 
     } else {
         
