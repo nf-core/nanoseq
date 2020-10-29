@@ -933,29 +933,10 @@ process UCSC_BED12TOBIGBED {
 
 // def REPLICATES_EXIST    = false
 // def MULTIPLE_CONDITIONS = false
-// //tuple val(sample), path("*.sorted.bam") into ch_sortbam_stringtie
-// //path "*.sorted.bam" into ch_bamlist
-
-// // ch_get_bams
-// //     .map { it -> it[1] }
-// //     .set { ch_bamlist }
-
-// // // Create channels = [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
-// // ch_samplesheet_reformat
-// //     .splitCsv(header:true, sep:',')
-// //     .map { get_sample_info(it, params.genomes) }
-// //     .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6] ] }
-// //     .into { 
-// //         ch_sample_info
-// //         ch_sample_name
-// //         //ch_transquant_info 
-// //     }
-
 if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
     /*
      * STEP 15 - Transcript Quantification
      */
-    
     if (params.quantification_method == 'bambu') {
 
         ch_sample_annotation
@@ -972,8 +953,8 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             path bams from ch_sortbam_quant.collect{ it[1] }
             
             output:
-            path "counts_gene.txt" into ch_gene_counts               // ch_deseq2_in
-            path "counts_transcript.txt" into ch_transcript_counts   // ch_dexseq_in
+            path "counts_gene.txt" into ch_gene_counts
+            path "counts_transcript.txt" into ch_transcript_counts
             path "extended_annotations.gtf" 
             path "v_bambu.txt" into ch_bambu_version
 
@@ -983,9 +964,56 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
             """
         }
-    }// else {
+    } else {
+        ch_bambu_version = Channel.empty()
+        
+        ch_sample_annotation
+            .map { it -> [ it[0], it[2], it[3] ] }
+            .join(ch_sortbam_quant)
+            .set { ch_sample_annotation }
+           
+        process STRINGTIE2 {
+            tag "$sample"
+            label 'process_medium'
+            publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
-    // ch_bambu_version = Channel.empty()
+            input:
+            tuple val(sample), path(fasta), path(gtf), path(bam) from ch_sample_annotation
+
+            output:
+            path "*.stringtie.gtf" into ch_stringtie_gtf
+
+            script:
+            """
+            stringtie -L -G $gtf -o ${sample}.stringtie.gtf $bam
+            """
+        }
+
+        // ch_stringtie_outputs
+        //     .unique()
+        //     .set { ch_stringtie_dir }
+        
+        // ch_annot
+        //     .unique()
+        //     .set { ch_annotation }
+
+        process STRINGTIE2_MERGE {
+            label 'process_medium'
+            publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
+
+            input:
+            path gtfs from ch_stringtie_gtf.collect()
+            // path annot from ch_annotation
+
+            output:
+            path "merged.combined.gtf" into ch_merged_gtf
+
+            script:
+            """
+            stringtie --merge $gtfs -G $annot -o merged.combined.gtf
+            """
+        }
+    }
 } else {
     ch_bambu_version = Channel.empty()
 }
