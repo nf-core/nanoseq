@@ -18,10 +18,6 @@ fn_clean_exts:
 module_order:
     - fastqc
     - samtools
-        # name: 'LIB: SAMTools'
-        # info: 'This section of the report shows SAMTools results for individual libraries.'
-        # path_filters:
-        #     - './alignment/library/*'
     - featureCounts:
         name: 'featureCounts: gene'
         info: 'This section of the report shows featureCounts results for the number of reads assigned to gene features.'
@@ -34,10 +30,6 @@ module_order:
             - './featurecounts/transcript/*.summary'
             
 report_section_order:
-    # fastqc:
-    #     order: -1000
-    # Samtools:
-    #     order: -1100
     software_versions:
         order: -1200
     nf-core-nanoseq-summary:
