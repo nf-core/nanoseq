@@ -25,62 +25,63 @@ def helpMessage() {
         -profile docker
 
     Mandatory arguments
-      --input [file]                  Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
-      --protocol [str]                Specifies the type of sequencing i.e. "DNA", "cDNA" or "directRNA"
-      -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
-                                      Available: docker, singularity, test, awsbatch, <institute> and more.
+      --input [file]                      Comma-separated file containing information about the samples in the experiment (see docs/usage.md)
+      --protocol [str]                    Specifies the type of sequencing i.e. "DNA", "cDNA" or "directRNA"
+      -profile [str]                      Configuration profile to use. Can use multiple (comma separated)
+                                          Available: docker, singularity, test, awsbatch, <institute> and more.
 
     Basecalling/Demultiplexing
-      --input_path [file]             Path to Nanopore run directory (e.g. fastq_pass/) or a basecalled fastq file that requires demultiplexing
-      --flowcell [str]                Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
-      --kit [str]                     Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
-      --barcode_kit [str]             Barcode kit used to perform the sequencing e.g. SQK-PBK004
-      --barcode_both_ends [bool]      Require barcode on both ends for Guppy basecaller (Default: false)
-      --guppy_config [file/str]       Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
-      --guppy_model [file/str]        Custom basecalling model file (JSON) to use for Guppy basecalling, such as the output from Taiyaki (Default: false)
-      --guppy_gpu [bool]              Whether to perform basecalling with Guppy in GPU mode (Default: false)
-      --guppy_gpu_runners [int]       Number of '--gpu_runners_per_device' used for Guppy when using '--guppy_gpu' (Default: 6)
-      --guppy_cpu_threads [int]       Number of '--cpu_threads_per_caller' used for Guppy when using '--guppy_gpu' (Default: 1)
-      --gpu_device [str]              Basecalling device specified to Guppy in GPU mode using '--device' (Default: 'auto')
-      --gpu_cluster_options [str]     Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
-      --qcat_min_score [int]          Minimum scores of '--min-score' used for qcat (Default: 60)
-      --qcat_detect_middle [bool]     Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
-      --skip_basecalling [bool]       Skip basecalling with Guppy (Default: false)
-      --skip_demultiplexing [bool]    Skip demultiplexing with Guppy (Default: false)
+      --input_path [file]                 Path to Nanopore run directory (e.g. fastq_pass/) or a basecalled fastq file that requires demultiplexing
+      --flowcell [str]                    Flowcell used to perform the sequencing e.g. FLO-MIN106. Not required if '--guppy_config' is specified
+      --kit [str]                         Kit used to perform the sequencing e.g. SQK-LSK109. Not required if '--guppy_config' is specified
+      --barcode_kit [str]                 Barcode kit used to perform the sequencing e.g. SQK-PBK004
+      --barcode_both_ends [bool]          Require barcode on both ends for Guppy basecaller (Default: false)
+      --guppy_config [file/str]           Guppy config file used for basecalling. Cannot be used in conjunction with '--flowcell' and '--kit'
+      --guppy_model [file/str]            Custom basecalling model file (JSON) to use for Guppy basecalling, such as the output from Taiyaki (Default: false)
+      --guppy_gpu [bool]                  Whether to perform basecalling with Guppy in GPU mode (Default: false)
+      --guppy_gpu_runners [int]           Number of '--gpu_runners_per_device' used for Guppy when using '--guppy_gpu' (Default: 6)
+      --guppy_cpu_threads [int]           Number of '--cpu_threads_per_caller' used for Guppy when using '--guppy_gpu' (Default: 1)
+      --gpu_device [str]                  Basecalling device specified to Guppy in GPU mode using '--device' (Default: 'auto')
+      --gpu_cluster_options [str]         Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')
+      --qcat_min_score [int]              Minimum scores of '--min-score' used for qcat (Default: 60)
+      --qcat_detect_middle [bool]         Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
+      --skip_basecalling [bool]           Skip basecalling with Guppy (Default: false)
+      --skip_demultiplexing [bool]        Skip demultiplexing with Guppy (Default: false)
 
     Alignment
-      --aligner [str]                 Specifies the aligner to use (available are: minimap2 or graphmap2). Both are capable of performing unspliced/spliced alignment (Default: 'minimap2')
-      --stranded [bool]               Specifies if the data is strand-specific. Automatically activated when using '--protocol directRNA' (Default: false)
-      --save_align_intermeds [bool]   Save the '.sam' files from the alignment step (Default: false)
-      --skip_alignment [bool]         Skip alignment and subsequent process (Default: false)
+      --aligner [str]                     Specifies the aligner to use (available are: minimap2 or graphmap2). Both are capable of performing unspliced/spliced alignment (Default: 'minimap2')
+      --stranded [bool]                   Specifies if the data is strand-specific. Automatically activated when using '--protocol directRNA' (Default: false)
+      --save_align_intermeds [bool]       Save the '.sam' files from the alignment step (Default: false)
+      --skip_alignment [bool]             Skip alignment and subsequent process (Default: false)
 
     Coverage tracks
-      --skip_bigwig [bool]            Skip BigWig file generation (Default: false)
-      --skip_bigbed [bool]            Skip BigBed file generation (Default: false)
+      --skip_bigwig [bool]                Skip BigWig file generation (Default: false)
+      --skip_bigbed [bool]                Skip BigBed file generation (Default: false)
 
-    Transcript quantification
-      --quantification_method [str]   Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
-      --skip_quantification [bool]    Skip transcript quantification and differential analysis (Default: false)
+    Quantification and differential analysis
+      --quantification_method [str]       Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.
+      --skip_quantification [bool]        Skip transcript quantification and differential analysis (Default: false)
+      --skip_differential_analysis [bool] Skip differential analysis with DESeq2 and DEXSeq (Default: false)
 
     QC
-      --skip_qc [bool]                Skip all QC steps apart from MultiQC (Default: false)
-      --skip_pycoqc [bool]            Skip pycoQC (Default: false)
-      --skip_nanoplot [bool]          Skip NanoPlot (Default: false)
-      --skip_fastqc [bool]            Skip FastQC (Default: false)
-      --skip_multiqc [bool]           Skip MultiQC (Default: false)
+      --skip_qc [bool]                    Skip all QC steps apart from MultiQC (Default: false)
+      --skip_pycoqc [bool]                Skip pycoQC (Default: false)
+      --skip_nanoplot [bool]              Skip NanoPlot (Default: false)
+      --skip_fastqc [bool]                Skip FastQC (Default: false)
+      --skip_multiqc [bool]               Skip MultiQC (Default: false)
            
     Other
-      --outdir [file]                 The output directory where the results will be saved (Default: '/results')
-      --publish_dir_mode [str]        Mode for publishing results in the output directory. Available: symlink, rellink, link, copy, copyNoFollow, move (Default: copy)
-      --email [email]                 Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
-      --email_on_fail [email]         Same as --email, except only send mail if the workflow is not successful (Default: false)
-      --max_multiqc_email_size [str]  Theshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB)
-      -name [str]                     Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
+      --outdir [file]                     The output directory where the results will be saved (Default: '/results')
+      --publish_dir_mode [str]            Mode for publishing results in the output directory. Available: symlink, rellink, link, copy, copyNoFollow, move (Default: copy)
+      --email [email]                     Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
+      --email_on_fail [email]             Same as --email, except only send mail if the workflow is not successful (Default: false)
+      --max_multiqc_email_size [str]      Theshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB)
+      -name [str]                         Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
 
     AWSBatch
-      --awsqueue [str]                The AWSBatch JobQueue that needs to be set when running on AWSBatch
-      --awsregion [str]               The AWS Region for your AWS Batch job to run on (Default: 'eu-west-1')
-      --awscli [str]                  Path to the AWS CLI tool
+      --awsqueue [str]                    The AWSBatch JobQueue that needs to be set when running on AWSBatch
+      --awsregion [str]                   The AWS Region for your AWS Batch job to run on (Default: 'eu-west-1')
+      --awscli [str]                      Path to the AWS CLI tool
     """.stripIndent()
 }
 
@@ -1127,50 +1128,52 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
         ch_bambu_version = Channel.empty()
     }
 
-    if (!params.skip_differential_analysis) {
+    // if (!params.skip_differential_analysis) {
+
+    //     /*
+    //      * DESeq2 differential expression of genes
+    //      */
+    //     process DESEQ2 {
+    //         label 'process_medium'
+    //         publishDir "${params.outdir}/${params.quantification_method}/deseq2", mode: params.publish_dir_mode
+
+    //         when:
+    //         MULTIPLE_CONDITIONS && REPLICATES_EXIST
+
+    //         input:
+    //         path counts from ch_gene_counts
+            
+    //         output:
+    //         path "*.txt"
         
-        /*
-         * DESeq2 differential expression of genes
-         */
-        process DESEQ2 {
-            publishDir "${params.outdir}/${params.quantification_method}/deseq2", mode: params.publish_dir_mode
+    //         script:
+    //         """
+    //         run_deseq2.r $params.quantification_method $counts
+    //         """
+    //     }
 
-            when:
-            MULTIPLE_CONDITIONS && REPLICATES_EXIST
+    //     /*
+    //      * DEXseq differential expression of transcripts
+    //      */
+    //     process DEXSEQ {
+    //         label 'process_medium'
+    //         publishDir "${params.outdir}/${params.quantification_method}/dexseq", mode: params.publish_dir_mode
 
-            input:
-            path counts from ch_gene_counts
+    //         when:
+    //         MULTIPLE_CONDITIONS && REPLICATES_EXIST
+
+    //         input:
+    //         path counts from ch_transcript_counts
             
-            output:
-            path "*.txt"
-        
-            script:
-            """
-            run_deseq2.r $params.quantification_method $counts
-            """
-        }
-
-        /*
-         * DEXseq differential expression of transcripts
-         */
-        process DEXSEQ {
-            publishDir "${params.outdir}/${params.quantification_method}/dexseq", mode: params.publish_dir_mode
-
-            when:
-            MULTIPLE_CONDITIONS && REPLICATES_EXIST
-
-            input:
-            path counts from ch_transcript_counts
+    //         output:
+    //         path "*.txt"
             
-            output:
-            path "*.txt"
-            
-            script:
-            """
-            run_dexseq.r $params.quantification_method $counts
-            """
-        }
-    }
+    //         script:
+    //         """
+    //         run_dexseq.r $params.quantification_method $counts
+    //         """
+    //     }
+    // }
 } else {
     ch_bambu_version                    = Channel.empty()
     ch_featurecounts_transcript_multiqc = Channel.empty()
