@@ -979,7 +979,7 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
      * STEP 15 - Transcript Quantification
      */
     if (params.quantification_method == 'bambu') {
-
+        
         ch_sample_annotation
             .map { it -> [ it[2], it[3] ] }
             .unique()
@@ -1013,8 +1013,11 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
             """
         }
+
+        ch_featurecounts_transcript_multiqc = Channel.empty()
+        ch_featurecounts_genes_multiqc      = Channel.empty()
+
     } else {
-        ch_bambu_version = Channel.empty()
         
         ch_sample_annotation
             .map { it -> [ it[0], it[2], it[3] ] }
@@ -1076,16 +1079,27 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
 
             input:
             path gtf from ch_stringtie_merged_gtf
-            path bams from ch_sample_featurecounts.collect{ it[1] }
+            path bams from ch_sample_featurecounts.collect{ it[-1] }
 
             output:
-            path "*gene.txt" into ch_gene_counts
-            path "*transcript.txt" into ch_transcript_counts
-            path "counts_transcript.log" into ch_featurecounts_transcripts_multiqc
-            path "counts_gene.log" into ch_featurecounts_gene_multiqc
+            path "counts_gene.txt" into ch_gene_counts
+            path "counts_transcript.txt" into ch_transcript_counts
+            path "counts_gene.txt.summary" into ch_featurecounts_gene_multiqc
+            path "counts_transcript.txt.summary" into ch_featurecounts_transcript_multiqc
             
             script:
             """
+            featureCounts \\
+                -L \\
+                -O \\
+                -f \\
+                -g gene_id \\
+                -t exon \\
+                -T $task.cpus \\
+                -a $gtf \\
+                -o counts_gene.txt \\
+                $bams
+            
             featureCounts \\
                 -L \\
                 -O \\
@@ -1099,20 +1113,11 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
                 -T $task.cpus \\
                 -a $gtf \\
                 -o counts_transcript.txt \\
-                $bams 2>> counts_transcript.log
-            
-            featureCounts \\
-                -L \\
-                -O \\
-                -f \\
-                -g gene_id \\
-                -t exon \\
-                -T $task.cpus \\
-                -a $gtf \\
-                -o counts_gene.txt \\
-                $bams 2>> counts_gene.log
+                $bams
             """
         }
+
+        ch_bambu_version = Channel.empty()
     }
 
     // def REPLICATES_EXIST    = false
@@ -1130,7 +1135,9 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
 
 
 } else {
-    ch_bambu_version = Channel.empty()
+    ch_bambu_version                    = Channel.empty()
+    ch_featurecounts_transcript_multiqc = Channel.empty()
+    ch_featurecounts_gene_multiqc       = Channel.empty()
 }
 // //     //     ch_transquant_info
 // //     //        .map { it -> [ it[0], it[2], it[3] ] }
@@ -1347,8 +1354,11 @@ process MULTIQC {
     input:
     path (multiqc_config) from ch_multiqc_config
     path (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
-    path ('samtools/*')  from ch_sortbam_stats_multiqc.collect().ifEmpty([])
+    
     path ('fastqc/*')  from ch_fastqc_multiqc.collect().ifEmpty([])
+    path ('samtools/*')  from ch_sortbam_stats_multiqc.collect().ifEmpty([])
+    path ('featurecounts/*')  from ch_featurecounts_gene_multiqc.collect().ifEmpty([])
+    path ('featurecounts/*')  from ch_featurecounts_transcript_multiqc.collect().ifEmpty([])
     path ('software_versions/*') from software_versions_yaml.collect()
     path workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
@@ -1362,7 +1372,7 @@ process MULTIQC {
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
     """
-    multiqc . -f $rtitle $rfilename $custom_config_file -m custom_content -m fastqc -m samtools
+    multiqc . -f $rtitle $rfilename $custom_config_file
     """
 }
 
