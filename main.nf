@@ -242,6 +242,7 @@ if (!params.skip_alignment) {
 }
 if (!params.skip_quantification && params.protocol != 'DNA') {
     summary['Quantification Method'] = params.quantification_method
+    summary['Skip Diff Analysis']    = params.skip_differential_analysis
 }
 if (params.skip_alignment) summary['Skip Alignment'] = 'Yes'
 if (params.skip_bigbed)    summary['Skip BigBed']    = 'Yes'
@@ -532,11 +533,12 @@ process PYCOQC {
     path summary_txt from ch_guppy_pycoqc_summary
 
     output:
+    path "*.json" into ch_pycoqc_multiqc
     path "*.html"
 
     script:
     """
-    pycoQC -f $summary_txt -o pycoQC_output.html
+    pycoQC -f $summary_txt -o pycoqc.html -j pycoqc.json
     """
 }
 
@@ -1272,10 +1274,11 @@ process MULTIQC {
     path (multiqc_config) from ch_multiqc_config
     path (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
     
-    path ('fastqc/*')  from ch_fastqc_multiqc.collect().ifEmpty([])
-    path ('samtools/*')  from ch_sortbam_stats_multiqc.collect().ifEmpty([])
-    path ('featurecounts/gene/*')  from ch_featurecounts_gene_multiqc.collect().ifEmpty([])
-    path ('featurecounts/transcript/*')  from ch_featurecounts_transcript_multiqc.collect().ifEmpty([])
+    path ('pycoqc/*') from ch_pycoqc_multiqc.collect().ifEmpty([])
+    path ('fastqc/*') from ch_fastqc_multiqc.collect().ifEmpty([])
+    path ('samtools/*') from ch_sortbam_stats_multiqc.collect().ifEmpty([])
+    path ('featurecounts/gene/*') from ch_featurecounts_gene_multiqc.collect().ifEmpty([])
+    path ('featurecounts/transcript/*') from ch_featurecounts_transcript_multiqc.collect().ifEmpty([])
     path ('software_versions/*') from software_versions_yaml.collect()
     path workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
