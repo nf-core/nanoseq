@@ -927,9 +927,7 @@ if (!params.skip_transcriptquant) {
         ch_transquant_info
            .map { it -> [ it[2], it[3] ] }
            .set { ch_bambu_input }
-           
-        params.Bambuscript= "$baseDir/bin/run_bambu.r"
-        ch_Bambuscript = Channel.fromPath("$params.Bambuscript", checkIfExists:true)
+
         process BAMBU {
             tag "$sample"
             label 'process_medium'
@@ -938,7 +936,6 @@ if (!params.skip_transcriptquant) {
             input:
             tuple  path(genomeseq), path(annot) from ch_bambu_input
             path bams from ch_bamlist.collect()
-            path Bambuscript from ch_Bambuscript
 
 
             output:
@@ -948,7 +945,7 @@ if (!params.skip_transcriptquant) {
 
             script:
             """
-            Rscript --vanilla $Bambuscript --tag=. --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq $bams
+            run_bambu.r --tag=. --ncore=$task.cpus --annotation=$annot --fasta=$genomeseq $bams
             """
         }
     } else {
@@ -1032,15 +1029,11 @@ if (!params.skip_transcriptquant) {
     /*
      * STEP 3 - DESeq2
      */
-    params.DEscript= "$baseDir/bin/run_deseq2.r"
-    ch_DEscript = Channel.fromPath("$params.DEscript", checkIfExists:true)
-
     process DESEQ2 {
         publishDir "${params.outdir}/deseq2", mode: params.publish_dir_mode
 
         input:
         path sampleinfo from ch_samplesheet_reformat
-        path DESeq2script from ch_DEscript
         path inpath from ch_deseq2_in
         val num_condition from ch_deseq2_num_condition
         val transcriptquant from params.transcriptquant
@@ -1053,22 +1046,18 @@ if (!params.skip_transcriptquant) {
 
         script:
         """
-        Rscript --vanilla $DESeq2script $transcriptquant $inpath $sampleinfo 
+        run_deseq2.r $transcriptquant $inpath $sampleinfo 
         """
     }
 
     /*
      * STEP 4 - DEXseq
      */
-    params.DEXscript= "$baseDir/bin/run_dexseq.r"
-    ch_DEXscript = Channel.fromPath("$params.DEXscript", checkIfExists:true)
-
     process DEXSEQ {
         publishDir "${params.outdir}/dexseq", mode: params.publish_dir_mode
         
         input:
         path sampleinfo from ch_samplesheet_reformat
-        path DEXscript from ch_DEXscript
         val inpath from ch_dexseq_in
         val num_condition from ch_dexseq_num_condition
         val transcriptquant from params.transcriptquant
@@ -1081,7 +1070,7 @@ if (!params.skip_transcriptquant) {
         
         script:
         """
-        Rscript --vanilla $DEXscript $transcriptquant $inpath $sampleinfo
+        run_dexseq.r $transcriptquant $inpath $sampleinfo
         """
     }
 }
