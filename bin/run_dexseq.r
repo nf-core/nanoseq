@@ -1,10 +1,29 @@
 #!/usr/bin/env Rscript
 
+################################################
+################################################
+## REQUIREMENTS                               ##
+################################################
+################################################
+
+## DIFFERENTIAL TRANSCRIPT EXPRESSION ANALYSIS
+    ## - TRANSCRIPT COUNT QUANTIFICATION INPUTS FROM EITHER STRINGTIE2+FEATURECOUNTS OR BAMBU
+    ## - SAMPLE INFORMATION INCLUDING CONDITIONS
+
+################################################
+################################################
+## LOAD LIBRARIES                             ##
+################################################
+################################################
 library(DRIMSeq)
 library(DEXSeq)
 library(stageR)
 
-
+################################################
+################################################
+## PARSE COMMAND-LINE PARAMETERS              ##
+################################################
+################################################
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 3) {
   stop("Please input the directory with the transcript level featureCounts results and the sample information file", call.=FALSE)
@@ -14,6 +33,12 @@ if (length(args) < 3) {
 #path <- "~/Downloads/nanorna-bam-master/mod/featureCounts_transcript/"
 transcriptquant <- args[1]
 path<-args[2]
+
+###################################################
+###################################################
+## FORMAT TRANSCRIPT COUNT QUANTIFICATION OUTPUT ##
+###################################################
+###################################################
 if (transcriptquant == "stringtie2"){
   count.matrix <- data.frame(read.table(path,sep="\t",header=TRUE, skip = 1))
   count.matrix$Chr <- count.matrix$Start <- count.matrix$End <- count.matrix$Length <- count.matrix$Strand <- NULL
@@ -26,6 +51,12 @@ if (transcriptquant == "bambu"){
 }
 colnames(count.matrix)[1] <- "feature_id"
 colnames(count.matrix)[2] <- "gene_id"
+
+################################################
+################################################
+## READ IN SAMPLE INFORMATION (CONDITIONS)    ##
+################################################
+################################################
 #sample information
 #sampleinfo<-read.table("~/Downloads/nanorna-bam-master/samples_conditions.csv",sep=",",header=T)
 sampleinfo<-read.table(args[3],sep=",",header=T)
@@ -37,8 +68,12 @@ lgcolName <- "log2fold"
 for (i in length(condition_names):1){
   lgcolName <- paste(lgcolName,condition_names[i],sep='_')
 }
-######### Filtering #############
 
+################################################
+################################################
+## FILTERING                                  ##
+################################################
+################################################
 cat(paste(sampleinfo$sample_id, collapse = " "))
 cat(paste(colnames(count.matrix), collapse = " "))
 d <- dmDSdata(counts=count.matrix, samples=sampleinfo)
@@ -57,7 +92,11 @@ dFilter <- dmFilter(d,
                     min_gene_expr = min_count_gene,
                     min_feature_prop=0.1)
 
-########## DEXSeq #########
+################################################
+################################################
+## RUN DEXSEQ                                 ##
+################################################
+################################################
 formulaFullModel <- as.formula("~sample + exon + condition:exon")
 #formulaReducedModel <- as.formula("~sample + exon + covariate:exon")
 dxd <- DEXSeqDataSet(countData=round(as.matrix(counts(dFilter)[,-c(1:2)])),
