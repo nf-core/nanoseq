@@ -604,7 +604,11 @@ process FASTQC {
     script:
     """
     [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
-    fastqc -q -t $task.cpus ${sample}.fastq.gz
+
+    fastqc \\
+        -q \\
+        -t $task.cpus \\
+        ${sample}.fastq.gz
     """
 }
 
@@ -693,7 +697,14 @@ if (!params.skip_alignment) {
             // TODO pipeline: Should be staging bed file properly as an input
             junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
             """
-            minimap2 $preset $kmer $stranded $junctions -t $task.cpus -d ${fasta}.mmi $fasta
+            minimap2 \\
+                $preset \\
+                $kmer \\
+                $stranded \\
+                $junctions \\
+                -t $task.cpus \\
+                -d ${fasta}.mmi \\
+                $fasta
             """
         }
     } else {
@@ -712,7 +723,13 @@ if (!params.skip_alignment) {
             // TODO pipeline: Should be staging gtf file properly as an input
             junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
             """
-            graphmap2 align $preset $junctions -t $task.cpus -I -r $fasta
+            graphmap2 \\
+                align \\
+                $preset \\
+                $junctions \\
+                -t $task.cpus \\
+                -I \\
+                -r $fasta
             """
         }
     }
@@ -752,7 +769,14 @@ if (!params.skip_alignment) {
             // TODO pipeline: Should be staging bed file properly as an input
             junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
             """
-            minimap2 $preset $kmer $stranded $junctions -t $task.cpus $index $fastq > ${sample}.sam
+            minimap2 \\
+                $preset \\
+                $kmer \\
+                $stranded \\
+                $junctions \\
+                -t $task.cpus \\
+                $index \\
+                $fastq > ${sample}.sam
             """
         }
     } else {
@@ -777,7 +801,16 @@ if (!params.skip_alignment) {
             // TODO pipeline: Should be staging gtf file properly as an input
             junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf ${file(gtf)}" : ""
             """
-            graphmap2 align $preset $junctions -t $task.cpus -r $fasta -i $index -d $fastq -o ${sample}.sam --extcigar
+            graphmap2 \\
+                align \\
+                $preset \\
+                $junctions \\
+                -t $task.cpus \\
+                -r $fasta \\
+                -i $index \\
+                -d $fastq \\
+                -o ${sample}.sam \\
+                --extcigar
             """
         }
     }
@@ -853,7 +886,12 @@ process BEDTOOLS_GENOMECOV {
     script:
     split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
     """
-    bedtools genomecov $split -ibam ${bam[0]} -bg | bedtools sort > ${sample}.bedGraph
+    bedtools \\
+        genomecov \\
+        $split \\
+        -ibam ${bam[0]} \\
+        -bg \\
+        | bedtools sort > ${sample}.bedGraph
     """
 }
 
@@ -876,7 +914,10 @@ process UCSC_BEDGRAPHTOBIGWIG {
 
     script:
     """
-    bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
+    bedGraphToBigWig \\
+        $bedgraph \\
+        $sizes \\
+        ${sample}.bigWig
     """
 }
 
@@ -898,7 +939,12 @@ process BEDTOOLS_BAMTOBED {
 
     script:
     """
-    bedtools bamtobed -bed12 -cigar -i ${bam[0]} | bedtools sort > ${sample}.bed12
+    bedtools \\
+        bamtobed \\
+        -bed12 \\
+        -cigar \\
+        -i ${bam[0]} \\
+        | bedtools sort > ${sample}.bed12
     """
 }
 
@@ -921,12 +967,13 @@ process UCSC_BED12TOBIGBED {
 
     script:
     """
-    bedToBigBed $bed12 $sizes ${sample}.bigBed
+    bedToBigBed \\
+        $bed12 \\
+        $sizes \\
+        ${sample}.bigBed
     """
 }
 
-// def REPLICATES_EXIST    = false
-// def MULTIPLE_CONDITIONS = false
 if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
     /*
      * STEP 15 - Transcript Quantification
@@ -957,7 +1004,12 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
 
             script:
             """
-            run_bambu.r --tag=. --ncore=$task.cpus --annotation=$gtf --fasta=$fasta $bams
+            run_bambu.r \\
+                --tag=. \\
+                --ncore=$task.cpus \\
+                --annotation=$gtf \\
+                --fasta=$fasta $bams
+
             Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
             """
         }
@@ -970,6 +1022,7 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             .into { 
                 ch_sample_annotation
                 ch_sample_gtf
+                ch_sample_featurecounts
             }
            
         process STRINGTIE2 {
@@ -985,7 +1038,10 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
 
             script:
             """
-            stringtie -L -G $gtf -o ${sample}.stringtie.gtf $bam
+            stringtie \\
+                -L \\
+                -G $gtf \\
+                -o ${sample}.stringtie.gtf $bam
             """
         }
 
@@ -1007,31 +1063,60 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
 
             script:
             """
-            stringtie --merge $gtfs -G $gtf -o stringtie.merged.gtf
+            stringtie \\
+                --merge $gtfs \\
+                -G $gtf \\
+                -o stringtie.merged.gtf
             """
         }
 
         process SUBREAD_FEATURECOUNTS {
-            tag "$sample"
             label 'process_medium'
             publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode
 
             input:
             path gtf from ch_stringtie_merged_gtf
-            path bams from ch_bamlist.collect()
+            path bams from ch_sample_featurecounts.collect{ it[1] }
 
             output:
             path "*gene.txt" into ch_gene_counts
             path "*transcript.txt" into ch_transcript_counts
-            path "*.log"
-
+            path "counts_transcript.log" into ch_featurecounts_transcripts_multiqc
+            path "counts_gene.log" into ch_featurecounts_gene_multiqc
+            
             script:
             """
-            featureCounts -L -O -f --primary --fraction  -F GTF -g transcript_id -t transcript --extraAttributes gene_id -T $task.cpus -a $annot -o counts_transcript.txt $bams 2>> counts_transcript.log
-            featureCounts -L -O -f -g gene_id -t exon -T $task.cpus -a $annot -o counts_gene.txt $bams 2>> counts_gene.log
+            featureCounts \\
+                -L \\
+                -O \\
+                -f \\
+                --primary \\
+                --fraction \\
+                -F GTF \\
+                -g transcript_id \\
+                -t transcript \\
+                --extraAttributes gene_id \\
+                -T $task.cpus \\
+                -a $gtf \\
+                -o counts_transcript.txt \\
+                $bams 2>> counts_transcript.log
+            
+            featureCounts \\
+                -L \\
+                -O \\
+                -f \\
+                -g gene_id \\
+                -t exon \\
+                -T $task.cpus \\
+                -a $gtf \\
+                -o counts_gene.txt \\
+                $bams 2>> counts_gene.log
             """
         }
     }
+
+    // def REPLICATES_EXIST    = false
+    // def MULTIPLE_CONDITIONS = false
 
 
 
