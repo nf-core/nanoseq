@@ -5,6 +5,12 @@ report_comment: >
 
 export_plots: true
 
+run_modules:
+    - custom_content
+    - fastqc
+    - samtools
+    - featureCounts
+
 fn_clean_exts:
     - 'fastq.gz'
     - 'sorted.bam'
