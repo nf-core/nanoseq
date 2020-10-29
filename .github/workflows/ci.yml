@@ -60,7 +60,7 @@ jobs:
       NXF_ANSI_LOG: false
     strategy:
       matrix:
-        profiles: [test_bc_nodx, test_nobc_dx, test_nobc_nodx]
+        profiles: [test_bc_nodx, test_nobc_dx, test_nobc_nodx, test_nobc_nodx_noaln]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
@@ -100,7 +100,7 @@ jobs:
       NXF_ANSI_LOG: false
     strategy:
       matrix:
-        parameters: [--aligner graphmap2, --skip_alignment, --skip_qc]
+        parameters: [--aligner graphmap2, --skip_alignment, --skip_qc, --skip_quantification]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
