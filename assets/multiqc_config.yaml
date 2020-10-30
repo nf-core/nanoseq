@@ -5,15 +5,33 @@ report_comment: >
 
 export_plots: true
 
+run_modules:
+    - custom_content
+    - pycoQC
+    - fastqc
+    - samtools
+    - featureCounts
+
 fn_clean_exts:
     - 'fastq.gz'
     - 'sorted.bam'
 
+module_order:
+    - pycoQC
+    - fastqc
+    - samtools
+    - featureCounts:
+        name: 'featureCounts: gene'
+        info: 'This section of the report shows featureCounts results for the number of reads assigned to gene features.'
+        path_filters:
+            - './featurecounts/gene/*.summary'
+    - featureCounts:
+        name: 'featureCounts: transcript'
+        info: 'This section of the report shows featureCounts results for the number of reads assigned to transcript features.'
+        path_filters:
+            - './featurecounts/transcript/*.summary'
+            
 report_section_order:
-    fastqc:
-        order: -1000
-    Samtools:
-        order: -1100
     software_versions:
         order: -1200
     nf-core-nanoseq-summary:
