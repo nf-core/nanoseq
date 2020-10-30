@@ -17,7 +17,6 @@ dependencies:
   - bioconda::fastqc=0.11.9
   - bioconda::multiqc=1.9
   - bioconda::qcat=1.1.0
-  - bioconda::pycoqc=2.5.0.23
   - bioconda::nanoplot=1.32.1
   - bioconda::samtools=1.11
   - bioconda::minimap2=2.17
