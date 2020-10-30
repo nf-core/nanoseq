@@ -6,7 +6,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - conda-forge::python=3.8.6
+  - conda-forge::python
   - conda-forge::markdown=3.3.3
   - conda-forge::pymdown-extensions=8.0.1
   - conda-forge::pygments=2.7.2
@@ -17,7 +17,7 @@ dependencies:
   - bioconda::fastqc=0.11.9
   - bioconda::multiqc=1.9
   - bioconda::qcat=1.1.0
-  - bioconda::pycoqc=2.5.0.3
+  - bioconda::pycoqc=2.5.0.23
   - bioconda::nanoplot=1.32.1
   - bioconda::samtools=1.11
   - bioconda::minimap2=2.17
