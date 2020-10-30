@@ -533,8 +533,8 @@ process PYCOQC {
     path summary_txt from ch_guppy_pycoqc_summary
 
     output:
-    path "*.json" into ch_pycoqc_multiqc
-    path "*.html"
+    path "*.json" 
+    path "*.html" into ch_pycoqc_multiqc
 
     script:
     """
