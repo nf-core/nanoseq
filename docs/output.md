@@ -55,7 +55,7 @@ If you have a pre-basecalled fastq file then *qcat* will be used to perform the 
 <details markdown="1">
 <summary>Output files</summary>
 
-* `pycoqc/pycoQC_output.html`  
+* `pycoqc/pycoqc.html`  
   `*.html` file that includes a run summary and graphical representation of various QC metrics including distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time and percentage of reads per barcode.  
 * `nanoplot/summary/`  
   `*.html` files for QC metrics and individual `*.png` image files for plots.
@@ -155,15 +155,14 @@ If StringTie2 is used:
 * `stringtie2/`
   * `*.bam`
      Per-sample coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
-  * `*.out.gtf`
+  * `*.stringtie.gtf`
      Per-sample annotations for novel transcripts obtained in *StringTie2*.
-  * `merged.combined.gtf`
+  * `stringtie.merged.gtf`
      Extended annotation that combines provided gtf with gtf files from each sample via *StringTie2 Merge*.
-  * `featureCounts/`
-    * `counts_gene.txt` - gene expression estimates.
-    * `counts_gene.log` - featureCounts for gene level log file.
-    * `counts_transcript.txt` - transcript expression estimates.
-    * `counts_transcript.txt` - featureCounts for transcript level log file.
+  * `counts_gene.txt` - gene expression estimates calculated by featureCounts.
+  * `counts_gene.txt.summary` - featureCounts gene level log file.
+  * `counts_transcript.txt` - transcript expression estimates calculated by featureCounts.
+  * `counts_transcript.txt.summary` - featureCounts transcript level log file.
 
 </details>
 
@@ -171,15 +170,15 @@ If StringTie2 is used:
 [bambu](https://github.com/GoekeLab/bambu), [StringTie2](https://ccb.jhu.edu/software/stringtie/), [featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
 
 *Description*:  
-With genome alignments, transcripts can be reconstructed by softwares to find novel transcripts. We used *bambu*  to identify novel transcripts. Quantification can be performed then based on extended annotations. *bambu* also provides quantification after transcript recontruction. An an alternative approach, we also provides an option to run *StringTie2* to identify novel transcripts. However, when multiple samples are provided, quantification for multiple samples are not implemented explicitly in the software. Hence we provide *StringTie2 Merge*  to merge novel transcripts across multiple samples and perform quantification for both gene and transcripts using *featureCounts*. You can skip transcript reconstruction and quantification by providing the `--skip_quantification` parameter.
+After genomic alignment, novel transcripts can be reconstructed using tools such as bambu and StringTie2. Quantification can then be performed on a more complete annotation based on the transcripts detected within a given set of samples. bambu performs both the reconstruction and quantification steps. An an alternative approach, we also provides an option to run StringTie2 to identify novel transcripts. However, when multiple samples are provided, quantification for multiple samples are not implemented explicitly in the software. Hence a second step is required to merge novel transcripts across multiple samples followed by quantification for both gene and transcripts using featureCounts. You can skip transcript reconstruction and quantification by providing the `--skip_quantification` parameter.
 
 ## Differential expression analysis
 
 <details markdown="1">
 <summary>Output files</summary>
 
-* `DESeq2/DESeq2out.txt` - a `.txt` file that can contains differential expression results for genes.
-* `DEXSeq/DEXSeqout.txt` - a `.txt` file that can contains differential expression results for transcripts.
+* `<QUANTIFICATION_METHOD>/deseq2/deseq2.results.txt` - a `.txt` file that can contains differential expression results for genes.
+* `<QUANTIFICATION_METHOD>/dexseq/dexseq.results.txt` - a `.txt` file that can contains differential expression results for transcripts.
 
 </details>
 
@@ -187,7 +186,7 @@ With genome alignments, transcripts can be reconstructed by softwares to find no
 [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html), [DEXSeq](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html)
 
 *Description*:  
-When condition is specified in sample information, then differential analysis on gene and transcripts will be done using *DESeq2* or *DEXSeq*, respectively. This step will be skipped automatically when there are only one sample condition or less than three replicates in each condition or transcript quantification is skipped.
+If multiple conditions and multiple replicates are available then the pipeline is able to run differential analysis on gene and transcripts with DESeq2 and DEXSeq, respectively. These steps won't be run if you provide the `--skip_quantification` or `--skip_differential_analysis` parameters or if all of the samples in the samplesheet don't have the same fasta and GTF reference files.
 
 ## MultiQC
 
