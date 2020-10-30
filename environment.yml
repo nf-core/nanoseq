@@ -6,7 +6,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - conda-forge::python
+  - conda-forge::python=3.8.6
   - conda-forge::markdown=3.3.3
   - conda-forge::pymdown-extensions=8.0.1
   - conda-forge::pygments=2.7.2
