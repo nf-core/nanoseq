@@ -18,17 +18,8 @@ The directories listed below will be created in the output directory after the p
 
 ## Basecalling and demultiplexing
 
-*Documentation*:  
-[Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis), [qcat](https://github.com/nanoporetech/qcat)
-
-*Description*:  
-The pipeline has been written to deal with the various scenarios where you would like to include/exclude the basecalling and demultiplexing steps. This will be dependent on what type of input data you would like to provide the pipeline. Additionally, if you would like to align your samples to a reference genome there are various options for providing this information. Please see [`usage.md`](usage.md#--input) for more details about the format of the input samplesheet, associated commands and how to provide reference genome data.
-
-*Guppy* will be used to basecall and demultiplex the data. Various options have been provided to customise specific parameters and to be able to run *Guppy* on GPUs.
-
-If you have a pre-basecalled fastq file then *qcat* will be used to perform the demultiplexing if you provide the `--skip_basecalling` parameter. If you would like to skip both of these steps entirely then you can provide `--skip_basecalling --skip_demultiplexing` when running the pipeline. As a result, the structure of the output folder will depend on which steps you have chosen to run in the pipeline.
-
-*Output directories*:
+<details markdown="1">
+<summary>Output files</summary>
 
 * `guppy/fastq/`  
   Merged fastq output files for each barcode.
@@ -47,7 +38,29 @@ If you have a pre-basecalled fastq file then *qcat* will be used to perform the 
 * `qcat/fastq/none.fastq.gz`  
   fastq file with reads were unassigned to any given barcode.
 
+</details>
+
+*Documentation*:  
+[Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis), [qcat](https://github.com/nanoporetech/qcat)
+
+*Description*:  
+The pipeline has been written to deal with the various scenarios where you would like to include/exclude the basecalling and demultiplexing steps. This will be dependent on what type of input data you would like to provide the pipeline. Additionally, if you would like to align your samples to a reference genome there are various options for providing this information. Please see [`usage.md`](usage.md#--input) for more details about the format of the input samplesheet, associated commands and how to provide reference genome data.
+
+*Guppy* will be used to basecall and demultiplex the data. Various options have been provided to customise specific parameters and to be able to run *Guppy* on GPUs.
+
+If you have a pre-basecalled fastq file then *qcat* will be used to perform the demultiplexing if you provide the `--skip_basecalling` parameter. If you would like to skip both of these steps entirely then you can provide `--skip_basecalling --skip_demultiplexing` when running the pipeline. As a result, the structure of the output folder will depend on which steps you have chosen to run in the pipeline.
+
 ## Sequencing QC
+
+<details markdown="1">
+<summary>Output files</summary>
+
+* `pycoqc/pycoqc.html`  
+  `*.html` file that includes a run summary and graphical representation of various QC metrics including distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time and percentage of reads per barcode.  
+* `nanoplot/summary/`  
+  `*.html` files for QC metrics and individual `*.png` image files for plots.
+
+</details>
 
 *Documentation*:  
 [PycoQC](https://github.com/a-slide/pycoQC), [NanoPlot](https://github.com/wdecoster/NanoPlot)
@@ -57,14 +70,17 @@ If you have a pre-basecalled fastq file then *qcat* will be used to perform the 
 
 ![PycoQC - Number of reads per barcode](images/pycoqc_readsperbarcode.png)
 
-*Output directories*:
-
-* `pycoqc/pycoQC_output.html`  
-  `*.html` file that includes a run summary and graphical representation of various QC metrics including distribution of read length, distribution of read quality scores, mean read quality per sequence length, output per channel over experiment time and percentage of reads per barcode.  
-* `nanoplot/summary/`  
-  `*.html` files for QC metrics and individual `*.png` image files for plots.
-
 ## Read QC
+
+<details markdown="1">
+<summary>Output files</summary>
+
+* `nanoplot/fastq/<SAMPLE>/`  
+  Per-sample `*.html` files for QC metrics and individual `*.png` image files for plots.
+* `fastqc/`  
+  *FastQC* `*.html` and `*.zip` files.  
+
+</details>
 
 *Documentation*:  
 [NanoPlot](https://github.com/wdecoster/NanoPlot), [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/)
@@ -76,14 +92,19 @@ If you have a pre-basecalled fastq file then *qcat* will be used to perform the 
 
 *FastQC* gives general quality metrics about your reads. It provides information about the quality score distribution across your reads, the per base sequence content (%A/C/G/T). You get information about adapter contamination and other overrepresented sequences.  
 
-*Output directories*:
-
-* `nanoplot/fastq/<SAMPLE>/`  
-  Per-sample `*.html` files for QC metrics and individual `*.png` image files for plots.
-* `fastqc/`  
-  *FastQC* `*.html` and `*.zip` files.  
-
 ## Alignment
+
+<details markdown="1">
+<summary>Output files</summary>
+
+* `<ALIGNER>/bam`  
+  Per-sample coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+* `<ALIGNER>/bam_index`  
+  Per-sample coordinate sorted alignment index files in [`*.bai`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
+* `<ALIGNER>/samtools_stats/`  
+  *SAMtools* `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
+
+</details>
 
 *Documentation*:  
 [GraphMap2](https://github.com/lbcb-sci/graphmap2), [MiniMap2](https://github.com/lh3/minimap2), [SAMtools](http://samtools.sourceforge.net/)
@@ -95,16 +116,17 @@ The initial SAM alignment files created by *GraphMap2* or *Minimap2* are not sav
 
 ![MultiQC - SAMtools stats plot](images/mqc_samtools_stats_plot.png)
 
-*Output directories*:
-
-* `<ALIGNER>/bam`  
-  Per-sample coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
-* `<ALIGNER>/bam_index`  
-  Per-sample coordinate sorted alignment index files in [`*.bai`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
-* `<ALIGNER>/samtools_stats/`  
-  *SAMtools* `*.flagstat`, `*.idxstats` and `*.stats` files generated from the alignment files.
-
 ## Coverage tracks
+
+<details markdown="1">
+<summary>Output files</summary>
+
+* `<ALIGNER>/bigwig/`  
+  Per-sample `*.bigWig` files.
+* `<ALIGNER>/bigbed/`  
+  Per-sample `*.bigBed` files.
+
+</details>
 
 *Documentation*:  
 [BEDTools](https://bedtools.readthedocs.io/en/latest/), [bedGraphToBigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html#Ex3), [`bedToBigBed`](https://genome.ucsc.edu/goldenPath/help/bigBed.html#Ex2)
@@ -116,41 +138,10 @@ The [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html) format is in a
 
 The creation of these files can be bypassed by setting the parameters `--skip_bigwig`/`--skip_bigbed`.
 
-*Output directories*:
-
-* `<ALIGNER>/bigwig/`  
-  Per-sample `*.bigWig` files.
-* `<ALIGNER>/bigbed/`  
-  Per-sample `*.bigBed` files.
-
-## MultiQC
-
-*Documentation*:  
-[MultiQC](https://multiqc.info/docs/)
-
-*Description*:  
-*MultiQC* is a visualisation tool that generates a single HTML report summarising all samples in your project. Most of the pipeline QC results are visualised in the report and further statistics are available within the report data directory.  
-
-Results generated by *MultiQC* for this pipeline collate QC from *FastQC*, *samtools flagstat*, *samtools idxstats* and *samtools stats*.
-
-The pipeline has special steps which also allow the software versions to be reported in the *MultiQC* output for future traceability. For more information about how to use *MultiQC* reports, see <http://multiqc.info>.
-
-*Output directories*:  
-
-* `multiqc/`  
-  * `multiqc_report.html` - a standalone HTML file that can be viewed in your web browser.
-  * `multiqc_data/` - directory containing parsed statistics from the different tools used in the pipeline.
-  * `multiqc_plots/` - directory containing static images from the report in various formats.
-
 ## Transcript Reconstruction and Quantification
 
-*Documentation*:  
-[bambu](https://github.com/GoekeLab/bambu), [StringTie2](https://ccb.jhu.edu/software/stringtie/), [featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
-
-*Description*:  
-With genome alignments, transcripts can be reconstructed by softwares to find novel transcripts. We used *bambu*  to identify novel transcripts. Quantification can be performed then based on extended annotations. *bambu* also provides quantification after transcript recontruction. An an alternative approach, we also provides an option to run *StringTie2* to identify novel transcripts. However, when multiple samples are provided, quantification for multiple samples are not implemented explicitly in the software. Hence we provide *StringTie2 Merge*  to merge novel transcripts across multiple samples and perform quantification for both gene and transcripts using *featureCounts*. You can skip transcript reconstruction and quantification by providing the `--skip_quantification` parameter.
-
-*Output directories*:
+<details markdown="1">
+<summary>Output files</summary>
 
 If bambu is used:
 
@@ -164,41 +155,76 @@ If StringTie2 is used:
 * `stringtie2/`
   * `*.bam`
      Per-sample coordinate sorted alignment files in [`*.bam`](https://samtools.github.io/hts-specs/SAMv1.pdf) format.
-  * `*.out.gtf`
+  * `*.stringtie.gtf`
      Per-sample annotations for novel transcripts obtained in *StringTie2*.
-  * `merged.combined.gtf`
+  * `stringtie.merged.gtf`
      Extended annotation that combines provided gtf with gtf files from each sample via *StringTie2 Merge*.
-  * `featureCounts/`
-    * `counts_gene.txt` - gene expression estimates.
-    * `counts_gene.log` - featureCounts for gene level log file.
-    * `counts_transcript.txt` - transcript expression estimates.
-    * `counts_transcript.txt` - featureCounts for transcript level log file.
+  * `counts_gene.txt` - gene expression estimates calculated by featureCounts.
+  * `counts_gene.txt.summary` - featureCounts gene level log file.
+  * `counts_transcript.txt` - transcript expression estimates calculated by featureCounts.
+  * `counts_transcript.txt.summary` - featureCounts transcript level log file.
+
+</details>
+
+*Documentation*:  
+[bambu](https://github.com/GoekeLab/bambu), [StringTie2](https://ccb.jhu.edu/software/stringtie/), [featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
+
+*Description*:  
+After genomic alignment, novel transcripts can be reconstructed using tools such as bambu and StringTie2. Quantification can then be performed on a more complete annotation based on the transcripts detected within a given set of samples. bambu performs both the reconstruction and quantification steps. An an alternative approach, we also provides an option to run StringTie2 to identify novel transcripts. However, when multiple samples are provided, quantification for multiple samples are not implemented explicitly in the software. Hence a second step is required to merge novel transcripts across multiple samples followed by quantification for both gene and transcripts using featureCounts. You can skip transcript reconstruction and quantification by providing the `--skip_quantification` parameter.
 
 ## Differential expression analysis
+
+<details markdown="1">
+<summary>Output files</summary>
+
+* `<QUANTIFICATION_METHOD>/deseq2/deseq2.results.txt` - a `.txt` file that can contains differential expression results for genes.
+* `<QUANTIFICATION_METHOD>/dexseq/dexseq.results.txt` - a `.txt` file that can contains differential expression results for transcripts.
+
+</details>
 
 *Documentation*:
 [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html), [DEXSeq](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html)
 
 *Description*:  
-When condition is specified in sample information, then differential analysis on gene and transcripts will be done using *DESeq2* or *DEXSeq*, respectively. This step will be skipped automatically when there are only one sample condition or less than three replicates in each condition or transcript quantification is skipped.
+If multiple conditions and multiple replicates are available then the pipeline is able to run differential analysis on gene and transcripts with DESeq2 and DEXSeq, respectively. These steps won't be run if you provide the `--skip_quantification` or `--skip_differential_analysis` parameters or if all of the samples in the samplesheet don't have the same fasta and GTF reference files.
 
-*Output directories*:
+## MultiQC
 
-* `DESeq2/DESeq2out.txt` - a `.txt` file that can contains differential expression results for genes.
-* `DEXSeq/DEXSeqout.txt` - a `.txt` file that can contains differential expression results for transcripts.
+<details markdown="1">
+<summary>Output files</summary>
+
+* `multiqc/`  
+  * `multiqc_report.html` - a standalone HTML file that can be viewed in your web browser.
+  * `multiqc_data/` - directory containing parsed statistics from the different tools used in the pipeline.
+  * `multiqc_plots/` - directory containing static images from the report in various formats.
+
+</details>
+
+*Documentation*:  
+[MultiQC](https://multiqc.info/docs/)
+
+*Description*:  
+*MultiQC* is a visualisation tool that generates a single HTML report summarising all samples in your project. Most of the pipeline QC results are visualised in the report and further statistics are available within the report data directory.  
+
+Results generated by *MultiQC* for this pipeline collate QC from *FastQC*, *samtools flagstat*, *samtools idxstats* and *samtools stats*.
+
+The pipeline has special steps which also allow the software versions to be reported in the *MultiQC* output for future traceability. For more information about how to use *MultiQC* reports, see <http://multiqc.info>.
 
 ## Pipeline information
 
-*Documentation*:  
-[Nextflow](https://www.nextflow.io/docs/latest/tracing.html)
-
-*Description*:  
-*Nextflow* provides excellent functionality for generating various reports relevant to the running and execution of the pipeline. This will allow you to trouble-shoot errors with the running of the pipeline, and also provide you with other information such as launch commands, run times and resource usage.
-
-*Output directories*:
+<details markdown="1">
+<summary>Output files</summary>
 
 * `pipeline_info/`  
   * Reports generated by the pipeline - `pipeline_report.html`, `pipeline_report.txt` and `software_versions.csv`.
   * Reports generated by *Nextflow* - `execution_report.html`, `execution_timeline.html`, `execution_trace.txt` and `pipeline_dag.svg`.
   * Reformatted sample sheet files used as input to the pipeline - `samplesheet_reformat.csv`.
   * Documentation for interpretation of results in HTML format - `results_description.html`.
+
+</details>
+
+*Documentation*:  
+[Nextflow](https://www.nextflow.io/docs/latest/tracing.html)
+
+*Description*:  
+*Nextflow* provides excellent functionality for generating various reports relevant to the running and execution of the pipeline. This will allow you to trouble-shoot errors with the running of the pipeline, and also provide you with other information such as launch commands, run times and resource usage.
