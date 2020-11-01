@@ -169,8 +169,8 @@
                 }
             }
         },
-        "transcript_quantification_options": {
-            "title": "Transcript quantification options",
+        "differential_analysis_options": {
+            "title": "Differential analysis options",
             "type": "object",
             "description": "Options to adjust quantification and differential analysis",
             "default": "",
@@ -186,6 +186,11 @@
                     "type": "boolean",
                     "fa_icon": "fas fa-fast-forward",
                     "description": "Skip transcript quantification and differential analysis."
+                },
+                "skip_differential_analysis": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip differential analysis with DESeq2 and DEXSeq."
                 }
             }
         },
@@ -436,7 +441,7 @@
             "$ref": "#/definitions/alignment_options"
         },
         {
-            "$ref": "#/definitions/transcript_quantification_options"
+            "$ref": "#/definitions/differential_analysis_options"
         },
         {
             "$ref": "#/definitions/process_skipping_options"

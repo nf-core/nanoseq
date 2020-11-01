@@ -8,14 +8,14 @@
 
 You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated file with 5 columns and a header row:
 
-| Column          | Description                                                                                                                |
-|-----------------|----------------------------------------------------------------------------------------------------------------------------|
-| `sample`        | Sample name without spaces.                                                                                                |
-| `input_file`   | Full path to FastQ file if previously demultiplexed or to BAM file if previously aligned. FastQ File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam". |
-| `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                      |
+| Column          | Description                                                                                                                                                                                                                                  |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `group`         | Group identifier for sample. This will be identical for replicate samples from the same experimental group.                                                                                                                                  |
+| `replicate`     | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                          |
+| `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                                                                                                                                        |
+| `input_file`    | Full path to FastQ file if previously demultiplexed or a BAM file if previously aligned. FastQ File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam".                              |
 | `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
-| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz". |
-| `condition` | Name of condition. If there are two or more conditions with at least three samples in each, then DESeq2 and DEXseq will be performed for differential expression analysis.|
+| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz".                                                                   |
 
 ### Specifying a reference genome/transcriptome
 
@@ -37,13 +37,13 @@ As shown in the examples below, the accepted format of the file is slightly diff
 ##### Example `samplesheet.csv` for barcoded fast5 inputs
 
 ```bash
-sample,input_file,barcode,genome,transcriptome,condition
-Sample1,,1,mm10,,
-Sample2,,2,hg19,,
-Sample3,,3,/path/to/local/genome.fa,,
-Sample4,,4,,/path/to/local/transcriptome.fa,
-Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf,
-Sample6,,6,,,
+group,replicate,barcode,input_file,genome,transcriptome
+WT_MOUSE,1,1,,mm10,
+WT_HUMAN,1,2,,hg19,
+WT_POMBE,1,3,,/path/to/local/genome.fa,
+WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
+WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+WT_UNKNOWN,3,6,,,
 ```
 
 ##### Example command for barcoded fast5 inputs
@@ -64,8 +64,8 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for non-barcoded fast5 inputs
 
 ```bash
-sample,input_file,barcode,genome,transcriptome,condition
-Sample1,,1,/path/to/local/genome.fa,,
+group,replicate,barcode,input_file,genome,transcriptome
+SAMPLE,1,1,/path/to/local/genome.fa,,
 ```
 
 > Only a single sample can be specified if you would like to skip demultiplexing
@@ -88,13 +88,13 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for non-demultiplexed fastq inputs
 
 ```bash
-sample,input_file,barcode,genome,transcriptome,condition
-Sample1,,1,mm10,mouse
-Sample2,,2,hg19,human
-Sample3,,3,/path/to/local/genome.fa,mouse
-Sample4,,4,,/path/to/local/transcriptome.fa,human
-Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf,mouse
-Sample6,,6,,,
+group,replicate,barcode,input_file,genome,transcriptome
+WT_MOUSE,1,1,,mm10,
+WT_HUMAN,1,2,,hg19,
+WT_POMBE,1,3,,/path/to/local/genome.fa,
+WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
+WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+WT_UNKNOWN,3,6,,,
 ```
 
 ##### Example command for non-demultiplexed fastq inputs
@@ -114,11 +114,11 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for demultiplexed fastq inputs
 
 ```bash
-sample,input_file,barcode,genome,transcriptome,condition
-Sample1,SAM101A1.fastq.gz,,mm10,mouse
-Sample2,SAM101A2.fastq.gz,,hg19,human
-Sample3,SAM101A3.fastq.gz,/path/to/local/genome.fa,mouse
-Sample4,SAM101A4.fastq.gz,,human
+group,replicate,barcode,input_file,genome,transcriptome
+WT,1,,SAM101A1.fastq.gz,hg19,
+WT,2,,SAM101A2.fastq.gz,hg19,
+KO,1,,SAM101A3.fastq.gz,hg19,
+KO,2,,SAM101A4.fastq.gz,hg19,
 ```
 
 ##### Example command for demultiplexed fastq inputs
@@ -137,11 +137,11 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for BAM inputs
 
 ```bash
-sample,input_file,barcode,genome,transcriptome,condition
-Sample1,SAM101A1.bam,,mm10,mouse
-Sample2,SAM101A2.bam,,hg19,human
-Sample3,SAM101A3.bam,/path/to/local/genome.fa,mouse
-Sample4,SAM101A4.bam,,human
+group,replicate,barcode,input_file,genome,transcriptome
+WT,1,,SAM101A1.bam,hg19,
+WT,2,,SAM101A2.bam,hg19,
+KO,1,,SAM101A3.bam,hg19,
+KO,2,,SAM101A4.bam,hg19,
 ```
 
 ##### Example command for BAM inputs
@@ -152,7 +152,6 @@ nextflow run nf-core/nanoseq \
     --protocol cDNA \
     --skip_basecalling \
     --skip_demultiplexing \
-    --skip_qc \
     --skip_alignment \
     -profile <docker/singularity/institute>
 ```
@@ -227,10 +226,6 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 * `podman`
   * A generic configuration profile to be used with [Podman](https://podman.io/)
   * Pulls software from Docker Hub: [`nfcore/nanoseq`](https://hub.docker.com/r/nfcore/nanoseq/)
-* `conda`
-  * Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker, Singularity or Podman.
-  * A generic configuration profile to be used with [Conda](https://conda.io/docs/)
-  * Pulls most software from [Bioconda](https://bioconda.github.io/)
 * `test`
   * A profile with a complete configuration for automated testing
   * Includes links to test data so needs no other parameters

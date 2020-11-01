@@ -15,6 +15,7 @@
 ## LOAD LIBRARIES                             ##
 ################################################
 ################################################
+
 library(DRIMSeq)
 library(DEXSeq)
 library(stageR)
@@ -24,30 +25,29 @@ library(stageR)
 ## PARSE COMMAND-LINE PARAMETERS              ##
 ################################################
 ################################################
+
 args = commandArgs(trailingOnly=TRUE)
 if (length(args) < 3) {
-  stop("Please input the directory with the transcript level featureCounts results and the sample information file", call.=FALSE)
+    stop("Please input the directory with the transcript level featureCounts results and the sample information file", call.=FALSE)
 } 
-######### import data ###########
-##Import featureCounts data
-#path <- "~/Downloads/nanorna-bam-master/mod/featureCounts_transcript/"
 transcriptquant <- args[1]
-path<-args[2]
+path            <-args[2]
 
 ###################################################
 ###################################################
 ## FORMAT TRANSCRIPT COUNT QUANTIFICATION OUTPUT ##
 ###################################################
 ###################################################
-if (transcriptquant == "stringtie2"){
-  count.matrix <- data.frame(read.table(path,sep="\t",header=TRUE, skip = 1))
-  count.matrix$Chr <- count.matrix$Start <- count.matrix$End <- count.matrix$Length <- count.matrix$Strand <- NULL
-  colnames(count.matrix)[2:length(colnames(count.matrix))] <- unlist(lapply(strsplit(colnames(count.matrix)[2:length(colnames(count.matrix))],"\\."),"[[",1))
 
+if (transcriptquant == "stringtie2"){
+    count.matrix     <- data.frame(read.table(path,sep="\t",header=TRUE, skip = 1))
+    count.matrix$Chr <- count.matrix$Start <- count.matrix$End <- count.matrix$Length <- count.matrix$Strand <- NULL
+    colnames(count.matrix)[2:length(colnames(count.matrix))] <- unlist(lapply(strsplit(colnames(count.matrix)[2:length(colnames(count.matrix))],"\\."),"[[",1))
 }
+
 if (transcriptquant == "bambu"){
-  count.matrix <- data.frame(read.table(path,sep="\t",header=T))
-  colnames(count.matrix) <- unlist(lapply(strsplit(colnames(count.matrix),"\\."),"[[",1))
+    count.matrix           <- data.frame(read.table(path,sep="\t",header=T))
+    colnames(count.matrix) <- unlist(lapply(strsplit(colnames(count.matrix),"\\."),"[[",1))
 }
 colnames(count.matrix)[1] <- "feature_id"
 colnames(count.matrix)[2] <- "gene_id"
@@ -57,16 +57,14 @@ colnames(count.matrix)[2] <- "gene_id"
 ## READ IN SAMPLE INFORMATION (CONDITIONS)    ##
 ################################################
 ################################################
-#sample information
-#sampleinfo<-read.table("~/Downloads/nanorna-bam-master/samples_conditions.csv",sep=",",header=T)
+
 sampleinfo<-read.table(args[3],sep=",",header=T)
 colnames(sampleinfo)[1] <- "sample_id"
 colnames(sampleinfo)[2] <- "condition"
-condition_names <- sampleinfo[!duplicated(sampleinfo$condition),]$condition
-#condition_names <- c(levels(sampleinfo$condition))
-lgcolName <- "log2fold"
+condition_names         <- sampleinfo[!duplicated(sampleinfo$condition),]$condition
+lgcolName               <- "log2fold"
 for (i in length(condition_names):1){
-  lgcolName <- paste(lgcolName,condition_names[i],sep='_')
+    lgcolName <- paste(lgcolName,condition_names[i],sep='_')
 }
 
 ################################################
@@ -74,6 +72,7 @@ for (i in length(condition_names):1){
 ## FILTERING                                  ##
 ################################################
 ################################################
+
 cat(paste(sampleinfo$sample_id, collapse = " "))
 cat(paste(colnames(count.matrix), collapse = " "))
 d <- dmDSdata(counts=count.matrix, samples=sampleinfo)
@@ -97,8 +96,8 @@ dFilter <- dmFilter(d,
 ## RUN DEXSEQ                                 ##
 ################################################
 ################################################
+
 formulaFullModel <- as.formula("~sample + exon + condition:exon")
-#formulaReducedModel <- as.formula("~sample + exon + covariate:exon")
 dxd <- DEXSeqDataSet(countData=round(as.matrix(counts(dFilter)[,-c(1:2)])),
                      sampleData=DRIMSeq::samples(dFilter),
                      design=formulaFullModel,
@@ -109,24 +108,11 @@ dxd <- estimateSizeFactors(dxd)
 print('Size factor estimated')
 dxd <- estimateDispersions(dxd, formula = formulaFullModel)
 print('Dispersion estimated')
-#reducedModel = formulaReducedModel, 
 dxd <- testForDEU(dxd, fullModel = formulaFullModel)
 print('DEU tested')
 dxd <- estimateExonFoldChanges(dxd)
 print('Exon fold changes estimated')
-##Got an error with the MulticoreParam on Docker, but the MulticoreParam was fine locally.
-#system.time({
- # BPPARAM <- MulticoreParam(6)
-#  dxd <- estimateSizeFactors(dxd)
-#  print('Size factor estimated')
-#  dxd <- estimateDispersions(dxd, formula = formulaFullModel, BPPARAM=BPPARAM)
-#  print('Dispersion estimated')
-#  dxd <- testForDEU(dxd, fullModel = formulaFullModel, BPPARAM=BPPARAM)
-#  print('DEU tested')
-#  dxd <- estimateExonFoldChanges(dxd)
- # dxd <- estimateExonFoldChanges(dxd, BPPARAM=BPPARAM)
-#  print('Exon fold changes estimated')
-#}) 
+
 # Extract DEXSeq results 
 dxr <- DEXSeqResults(dxd, independentFiltering=FALSE)
 
@@ -153,4 +139,4 @@ suppressWarnings({
   dex.padj <- getAdjustedPValues(stageRObj, order=FALSE,
                                  onlySignificantGenes=FALSE)
 })
-write.csv(cbind(dxr_pval,dex.padj$gene,dex.padj$transcript), file="DEXseq_out.txt")
+write.csv(cbind(dxr_pval,dex.padj$gene,dex.padj$transcript), file="dexseq.results.txt")
