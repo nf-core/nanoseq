@@ -32,6 +32,9 @@ if (length(args) < 3) {
 } 
 transcriptquant <- args[1]
 path            <-args[2]
+sample_map      <-gsub(",","",args[3:length(args)])
+sample_map      <-gsub("\\[","",sample_map)
+sample_map      <-gsub("\\]","",sample_map)
 
 ###################################################
 ###################################################
@@ -51,16 +54,22 @@ if (transcriptquant == "bambu"){
 }
 colnames(count.matrix)[1] <- "feature_id"
 colnames(count.matrix)[2] <- "gene_id"
-
+if (length(sample_map)>1){
+  sample_map <- split(sample_map, 1:2)
+  new_colnames <- unlist(sample_map[1])
+  old_colnames <- unlist(lapply(lapply(sample_map[2], strsplit, split="/")[[1]],
+                            function(x) gsub(".bam","",x[length(x)])))
+  count.matrix[3:length(colnames(count.matrix))] <- count.matrix[3:length(colnames(count.matrix))][, old_colnames]
+  colnames(count.matrix)[3:length(colnames(count.matrix))] <- new_colnames
+}
 ################################################
 ################################################
 ## READ IN SAMPLE INFORMATION (CONDITIONS)    ##
 ################################################
 ################################################
-
-sampleinfo<-read.table(args[3],sep=",",header=T)
-colnames(sampleinfo)[1] <- "sample_id"
-colnames(sampleinfo)[2] <- "condition"
+sample_id <- colnames(count.matrix[,3:length(count.matrix)])
+condition <- sub("(^[^-]+)_.*", "\\1", sample_id)
+sampleinfo<-data.frame(sample_id, condition)
 condition_names         <- sampleinfo[!duplicated(sampleinfo$condition),]$condition
 lgcolName               <- "log2fold"
 for (i in length(condition_names):1){
@@ -139,4 +148,4 @@ suppressWarnings({
   dex.padj <- getAdjustedPValues(stageRObj, order=FALSE,
                                  onlySignificantGenes=FALSE)
 })
-write.csv(cbind(dxr_pval,dex.padj$gene,dex.padj$transcript), file="dexseq.results.txt")
+write.csv(cbind(dxr_pval,dex.padj$gene,dex.padj$transcript), file="DEXseq_out.txt")
