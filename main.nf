@@ -533,12 +533,14 @@ process PYCOQC {
     path summary_txt from ch_guppy_pycoqc_summary
 
     output:
+    path "*.html" 
     path "*.json" into ch_pycoqc_multiqc
-    path "*.html"
+    path "v_pycoqc.txt" into ch_pycoqc_version
 
     script:
     """
     pycoQC -f $summary_txt -o pycoqc.html -j pycoqc.json
+    pycoQC --version &> v_pycoqc.txt
     """
 }
 
@@ -1214,8 +1216,9 @@ process GET_SOFTWARE_VERSIONS {
 
     input:
     path guppy from ch_guppy_version.collect().ifEmpty([])
+    path pycoqc from ch_pycoqc_version.collect().ifEmpty([])
     path bambu from ch_bambu_version.collect().ifEmpty([])
-
+    
     output:
     path 'software_versions_mqc.yaml' into software_versions_yaml
     path "software_versions.csv"
@@ -1226,7 +1229,6 @@ process GET_SOFTWARE_VERSIONS {
     echo $workflow.nextflow.version > v_nextflow.txt
     qcat --version &> v_qcat.txt
     NanoPlot --version &> v_nanoplot.txt
-    pycoQC --version &> v_pycoqc.txt
     fastqc --version > v_fastqc.txt
     minimap2 --version &> v_minimap2.txt
     echo \$(graphmap2 2>&1) > v_graphmap2.txt

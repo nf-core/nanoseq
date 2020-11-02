@@ -7,7 +7,7 @@ export_plots: true
 
 run_modules:
     - custom_content
-    - pycoQC
+    - pycoqc
     - fastqc
     - samtools
     - featureCounts
@@ -17,7 +17,7 @@ fn_clean_exts:
     - 'sorted.bam'
 
 module_order:
-    - pycoQC
+    - pycoqc
     - fastqc
     - samtools
     - featureCounts:

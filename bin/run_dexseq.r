@@ -139,4 +139,4 @@ suppressWarnings({
   dex.padj <- getAdjustedPValues(stageRObj, order=FALSE,
                                  onlySignificantGenes=FALSE)
 })
-write.csv(cbind(dxr_pval,dex.padj$gene,dex.padj$transcript), file="DEXseq_out.txt")
+write.csv(cbind(dxr_pval,dex.padj$gene,dex.padj$transcript), file="dexseq.results.txt")
