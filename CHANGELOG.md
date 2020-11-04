@@ -3,9 +3,9 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unpublished Version / DEV]
+## [1.1.0] - 2020-11-13
 
-### `Added`
+### Major enhancements
 
 * Transcript reconstruction and quantification ([`bambu`](https://github.com/GoekeLab/bambu) or [`StringTie2`](https://ccb.jhu.edu/software/stringtie/) and [`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/))
 * Differential expression analysis at the gene-level ([`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html)) and transcript-level ([`DEXSeq`](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html))
@@ -17,41 +17,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add citations file
 * Update pipeline template to nf-core/tools `1.11`
 * Collapsible sections for output files in `docs/output.md`
-* Replace `set` with `tuple` and `file()` with `path()` in all processes
+* Replace `set` with `tuple` and `file` with `path` in `input` section of all processes
 * Capitalise process names
-* Parameters:
-  * `--barcode_both_ends` requires barcode on both ends for Guppy basecaller
-  * `--quantification_method` to specify the transcript quantification method to use
-  * `--skip_quantification` to skip transcript quantification and differential analysis
-  * `--skip_differential_analysis` to skip differential analysis with DESeq2 and DEXSeq
-  * `--publish_dir_mode` to customise method of publishing results to output directory [nf-core/tools#585](https://github.com/nf-core/tools/issues/585)
-
-### `Fixed`
-
 * Added `--gpus all` to Docker `runOptions` when using GPU as mentioned [here](https://github.com/docker/compose/issues/6691#issuecomment-514429646)
 
-### `Dependencies`
+### Parameters
 
-* Add seaborn `0.10.1`
-* Add r-base `4.0.3`
-* Add stringtie `2.1.4`
-* Add subread `2.0.1`
-* Add bioconductor-deseq2 `1.28.0`
-* Add bioconductor-drimseq `1.16.0`
-* Add bioconductor-dexseq `1.34.0`
-* Add bioconductor-stager `1.10.0`
-* Add bioconductor-bsgenome `1.56.0`
-* Update python `3.7.3` -> `3.8.6`
-* Update markdown `3.1.1` -> `3.3.3`
-* Update pymdown-extensions `6.0` -> `8.0.1`
-* Update pygments `2.5.2` -> `2.7.2`
-* Update pycoqc `2.5.0.3` -> `2.5.0.21`
-* Update nanoplot `1.28.4` -> `1.32.1`
-* Update samtools `1.9` -> `1.11`
-* Update ucsc-bedgraphtobigwig `357` -> `377`
-* Update ucsc-bedtobigbed `357` -> `377`
-* Update multiqc `1.8` -> `1.9`
-* Remove psutil `5.7.0`
+* Added `--barcode_both_ends` requires barcode on both ends for Guppy basecaller
+* Added `--quantification_method` to specify the transcript quantification method to use
+* Added `--skip_quantification` to skip transcript quantification and differential analysis
+* Added `--skip_differential_analysis` to skip differential analysis with DESeq2 and DEXSeq
+* Added `--publish_dir_mode` to customise method of publishing results to output directory [nf-core/tools#585](https://github.com/nf-core/tools/issues/585)
+
+### Software dependencies
+
+| Dependency              | Old version | New version |
+|-------------------------|-------------|-------------|
+| `Guppy`                 | 3.4.4       | 4.0.14      |
+| `markdown`              | 3.1.1       | 3.3.3       |
+| `multiqc`               | 1.8         | 1.9         |
+| `nanoplot`              | 1.28.4      | 1.32.1      |
+| `pygments`              | 2.5.2       | 2.7.2       |
+| `pymdown-extensions`    | 6.0         | 8.0.1       |
+| `python`                | 3.7.3       | 3.8.6       |
+| `samtools`              | 1.9         | 1.11        |
+| `ucsc-bedgraphtobigwig` | 357         | 377         |
+| `ucsc-bedtobigbed`      | 357         | 377         |
+| `bioconductor-bambu`    | -           | 1.0.0       |
+| `bioconductor-bsgenome` | -           | 1.58.0      |
+| `bioconductor-deseq2`   | -           | 1.30.0      |
+| `bioconductor-dexseq`   | -           | 1.36.0      |
+| `bioconductor-drimseq`  | -           | 1.18.0      |
+| `bioconductor-stager`   | -           | 1.12.0      |
+| `r-base`                | -           | 4.0.3       |
+| `seaborn`               | -           | 0.10.1      |
+| `stringtie`             | -           | 2.1.4       |
+| `subread`               | -           | 2.0.1       |
+| `psutil`                | -           | -           |
+
+> **NB:** Dependency has been __updated__ if both old and new version information is present.  
+> **NB:** Dependency has been __added__ if just the new version information is present.  
+> **NB:** Dependency has been __removed__ if version information isn't present.  
 
 ## [1.0.0] - 2020-03-05
 
