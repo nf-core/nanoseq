@@ -27,7 +27,7 @@ library(stageR)
 ################################################
 
 args = commandArgs(trailingOnly=TRUE)
-if (length(args) < 3) {
+if (length(args) < 2) {
     stop("Please input the directory with the transcript level featureCounts results and the sample information file", call.=FALSE)
 } 
 transcriptquant <- args[1]
@@ -57,10 +57,9 @@ colnames(count.matrix)[2] <- "gene_id"
 ## READ IN SAMPLE INFORMATION (CONDITIONS)    ##
 ################################################
 ################################################
-
-sampleinfo<-read.table(args[3],sep=",",header=T)
-colnames(sampleinfo)[1] <- "sample_id"
-colnames(sampleinfo)[2] <- "condition"
+sample_id <- colnames(count.matrix[,3:length(count.matrix)])
+condition <- sub("(^[^-]+)_.*", "\\1", sample_id)
+sampleinfo<-data.frame(sample_id, condition)
 condition_names         <- sampleinfo[!duplicated(sampleinfo$condition),]$condition
 lgcolName               <- "log2fold"
 for (i in length(condition_names):1){

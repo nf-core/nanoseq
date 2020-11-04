@@ -869,9 +869,28 @@ if (!params.skip_alignment) {
     ch_samplesheet_reformat
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
-        .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0], it[1] ] }
-        .set { ch_sortbam_quant }
+        .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0] , it[1] ] }
+        .set { ch_sortbam_rename }
+
+   /*
+    * Rename BAM inputs to Group_Replicate
+    */
+    process BAM_RENAME {
+        tag "$sample"
+        
+        input:
+        tuple val(sample), path(bam) from ch_sortbam_rename
+        
+        output:
+        tuple val(sample), path("*.bam") into ch_sortbam_quant
+        
+        script:
+        """
+        [ ! -f ${sample}.bam ] && ln -s $bam ${sample}.bam
+        """
+    }
 }
+
 
 /*
  * Convert BAM to BEDGraph
@@ -1015,7 +1034,6 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
                 --ncore=$task.cpus \\
                 --annotation=$gtf \\
                 --fasta=$fasta $bams
-
             Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
             """
         }
@@ -1133,52 +1151,52 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
         ch_bambu_version = Channel.empty()
     }
 
-    // if (!params.skip_differential_analysis) {
+    if (!params.skip_differential_analysis) {
 
-    //     /*
-    //      * DESeq2 differential expression of genes
-    //      */
-    //     process DESEQ2 {
-    //         label 'process_medium'
-    //         publishDir "${params.outdir}/${params.quantification_method}/deseq2", mode: params.publish_dir_mode
+        /*
+         * DESeq2 differential expression of genes
+         */
+        process DESEQ2 {
+            label 'process_medium'
+            publishDir "${params.outdir}/${params.quantification_method}/deseq2", mode: params.publish_dir_mode
 
-    //         when:
-    //         MULTIPLE_CONDITIONS && REPLICATES_EXIST
+            when:
+            MULTIPLE_CONDITIONS && REPLICATES_EXIST
 
-    //         input:
-    //         path counts from ch_gene_counts
+            input:
+            path counts from ch_gene_counts
             
-    //         output:
-    //         path "*.txt"
+            output:
+            path "*.txt"
         
-    //         script:
-    //         """
-    //         run_deseq2.r $params.quantification_method $counts
-    //         """
-    //     }
+            script:
+            """
+            run_deseq2.r $params.quantification_method $counts
+            """
+        }
 
-    //     /*
-    //      * DEXseq differential expression of transcripts
-    //      */
-    //     process DEXSEQ {
-    //         label 'process_medium'
-    //         publishDir "${params.outdir}/${params.quantification_method}/dexseq", mode: params.publish_dir_mode
+        /*
+         * DEXseq differential expression of transcripts
+         */
+        process DEXSEQ {
+            label 'process_medium'
+            publishDir "${params.outdir}/${params.quantification_method}/dexseq", mode: params.publish_dir_mode
 
-    //         when:
-    //         MULTIPLE_CONDITIONS && REPLICATES_EXIST
+            when:
+            MULTIPLE_CONDITIONS && REPLICATES_EXIST
 
-    //         input:
-    //         path counts from ch_transcript_counts
+            input:
+            path counts from ch_transcript_counts
+
+            output:
+            path "*.txt"
             
-    //         output:
-    //         path "*.txt"
-            
-    //         script:
-    //         """
-    //         run_dexseq.r $params.quantification_method $counts
-    //         """
-    //     }
-    // }
+            script:
+            """
+            run_dexseq.r $params.quantification_method $counts
+            """
+        }
+    }
 } else {
     ch_bambu_version                    = Channel.empty()
     ch_featurecounts_transcript_multiqc = Channel.empty()

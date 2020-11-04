@@ -24,14 +24,13 @@ library(DESeq2)
 ## PARSE COMMAND-LINE PARAMETERS              ##
 ################################################
 ################################################
-
 args = commandArgs(trailingOnly=TRUE)
-if (length(args) < 3) {
+if (length(args) < 2) {
     stop("Please input the directory with the featureCounts results and the sample information file", call.=FALSE)
-} else if (length(args)==3) {
-    # default output file
-    args[4] = "deseq2.results.txt"
 }
+# default output file
+outfile <- "deseq2.results.txt"
+
 transcriptquant <- args[1]
 path            <-args[2]
 
@@ -56,13 +55,16 @@ if (transcriptquant == "bambu"){
     countTab[,1:length(colnames(countTab))] <- sapply(countTab, as.integer)
 }
 
+
 ################################################
 ################################################
 ## READ IN SAMPLE INFORMATION (CONDITIONS)    ##
 ################################################
 ################################################
 
-sampInfo<-read.csv(args[3],row.names=1)
+sample <- colnames(countTab)
+group <- sub("(^[^-]+)_.*", "\\1", sample)
+sampInfo <- data.frame(group, row.names = sample)
 if (!all(rownames(sampInfo) == colnames(countTab))){
     sampInfo <- sampInfo[match(colnames(countTab), rownames(sampInfo)),]
 }
@@ -77,4 +79,4 @@ dds <- DESeqDataSetFromMatrix(countData = countTab, colData = sampInfo, design =
 dds <- DESeq(dds)
 res <- results(dds)
 resOrdered <- res[order(res$pvalue),]
-write.csv(as.data.frame(resOrdered), file=args[4])
+write.csv(as.data.frame(resOrdered), file=outfile)
