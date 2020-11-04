@@ -25,7 +25,7 @@ library(DESeq2)
 ################################################
 ################################################
 args = commandArgs(trailingOnly=TRUE)
-if (length(args) < 3) {
+if (length(args) < 2) {
     stop("Please input the directory with the featureCounts results and the sample information file", call.=FALSE)
 }
 # default output file
@@ -33,9 +33,7 @@ outfile <- "deseq2.results.txt"
 
 transcriptquant <- args[1]
 path            <-args[2]
-sample_map      <-gsub(",","",args[3:length(args)])
-sample_map      <-gsub("\\[","",sample_map)
-sample_map      <-gsub("\\]","",sample_map)
+
 ################################################
 ################################################
 ## FORMAT GENE COUNT QUANTIFICATION OUTPUT    ##
@@ -55,15 +53,6 @@ if (transcriptquant == "bambu"){
     countTab           <- data.frame(read.table(path,sep="\t",header=TRUE))
     colnames(countTab) <- unlist(lapply(strsplit(colnames(countTab),"\\."),"[[",1))
     countTab[,1:length(colnames(countTab))] <- sapply(countTab, as.integer)
-}
-if (length(sample_map) > 1){
-    sample_map <- split(sample_map, 1:2)
-    new_colnames <- unlist(sample_map[1])
-    old_colnames <- unlist(lapply(lapply(sample_map[2], strsplit, split="/")[[1]],
-                           function(x) gsub(".bam","",x[length(x)])))
-    countTab <- countTab[, old_colnames]
-    colnames(countTab) <- new_colnames
-    print(colnames(countTab))
 }
 
 
