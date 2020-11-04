@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Dependency            | Old version | New version |
 |-----------------------|-------------|-------------|
+| Guppy                 | `3.4.4`     | `4.0.14`    |
 | markdown              | `3.1.1`     | `3.3.3`     |
 | multiqc               | `1.8`       | `1.9`       |
 | nanoplot              | `1.28.4`    | `1.32.1`    |
@@ -49,24 +50,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | samtools              | `1.9`       | `1.11`      |
 | ucsc-bedgraphtobigwig | `357`       | `377`       |
 | ucsc-bedtobigbed      | `357`       | `377`       |
+| bioconductor-bambu    | `-`         | `1.0.0`     |
+| bioconductor-bsgenome | `-`         | `1.56.0`    |
+| bioconductor-dexseq   | `-`         | `1.34.0`    |
+| bioconductor-drimseq  | `-`         | `1.16.0`    |
+| bioconductor-stager   | `-`         | `1.10.0`    |
+| r-base                | `-`         | `4.0.3`     |
+| seaborn               | `-`         | `0.10.1`    |
+| stringtie             | `-`         | `2.1.4`     |
+| subread               | `-`         | `2.0.1`     |
+| psutil                | `-`         | `-`         |
 
-#### Added
-
-| Dependency            | Version  |
-|-----------------------|----------|
-| bioconductor-bambu    | `1.0.0`  |
-| bioconductor-bsgenome | `1.56.0` |
-| bioconductor-dexseq   | `1.34.0` |
-| bioconductor-drimseq  | `1.16.0` |
-| bioconductor-stager   | `1.10.0` |
-| r-base                | `4.0.3`  |
-| seaborn               | `0.10.1` |
-| stringtie             | `2.1.4`  |
-| subread               | `2.0.1`  |
-
-#### Removed
-
-* psutil
+> **NB:** Dependency has been updated if both old and new version information is present.
+> **NB:** Dependency has been added if just the new version information is present.
+> **NB:** Dependency has been removed if any version information isn't available.
 
 ## [1.0.0] - 2020-03-05
 
