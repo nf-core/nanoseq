@@ -61,9 +61,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | subread               | `-`         | `2.0.1`     |
 | psutil                | `-`         | `-`         |
 
-> **NB:** Dependency has been updated if both old and new version information is present.
-> **NB:** Dependency has been added if just the new version information is present.
-> **NB:** Dependency has been removed if any version information isn't available.
+> **NB:** Dependency has been updated if both old and new version information is present.  
+> **NB:** Dependency has been added if just the new version information is present.  
+> **NB:** Dependency has been removed if version information isn't present.  
 
 ## [1.0.0] - 2020-03-05
 
