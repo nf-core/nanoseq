@@ -36,8 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Software dependencies
 
-#### Updated
-
 | Dependency              | Old version | New version |
 |-------------------------|-------------|-------------|
 | `Guppy`                 | 3.4.4       | 4.0.14      |
