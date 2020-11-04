@@ -860,8 +860,6 @@ if (!params.skip_alignment) {
     ch_sortbam_quant
         .map { it -> [ it[0], it[3] ] }
         .set { ch_sortbam_quant }
-    ch_sample_map_deseq2 = "F"
-    ch_sample_map_dexseq = "F"
 
 } else {
     ch_sortbam_bedgraph      = Channel.empty()
@@ -872,9 +870,25 @@ if (!params.skip_alignment) {
         .splitCsv(header:true, sep:',')
         .map { get_sample_info(it, params.genomes) }
         .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0] , it[1] ] }
-        .into { ch_sortbam_quant
-                ch_sample_map_deseq2
-                ch_sample_map_dexseq }
+        .set { ch_sortbam_rename }
+
+   /*
+    * Rename BAM inputs to Group_Replicate
+    */
+    process BAM_RENAME {
+        tag "$sample"
+        
+        input:
+        tuple val(sample), path(bam) from ch_sortbam_rename
+        
+        output:
+        tuple val(sample), path("*.bam") into ch_sortbam_quant
+        
+        script:
+        """
+        [ ! -f ${sample}.bam ] && ln -s $bam ${sample}.bam
+        """
+    }
 }
 
 
@@ -1151,14 +1165,13 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
 
             input:
             path counts from ch_gene_counts
-            val sample_map from ch_sample_map_deseq2.collect()
             
             output:
             path "*.txt"
         
             script:
             """
-            run_deseq2.r $params.quantification_method $counts $sample_map
+            run_deseq2.r $params.quantification_method $counts
             """
         }
 
@@ -1174,14 +1187,13 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
 
             input:
             path counts from ch_transcript_counts
-            val sample_map from ch_sample_map_dexseq.collect()
 
             output:
             path "*.txt"
             
             script:
             """
-            run_dexseq.r $params.quantification_method $counts $sample_map
+            run_dexseq.r $params.quantification_method $counts
             """
         }
     }
