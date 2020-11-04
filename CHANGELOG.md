@@ -40,15 +40,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Dependency            | Version               |
 |-----------------------|-----------------------|
-| markdown              | `3.1.1` -> `3.3.3`    |
-| multiqc               | `1.8` -> `1.9`        |
-| nanoplot              |  `1.28.4` -> `1.32.1` |
-| pygments              | `2.5.2` -> `2.7.2`    |
-| pymdown-extensions    |  `6.0` -> `8.0.1`     |
-| python                | `3.7.3` -> `3.8.6`    |
-| samtools              | `1.9` -> `1.11`       |
-| ucsc-bedgraphtobigwig | `357` -> `377`        |
-| ucsc-bedtobigbed      | `357` -> `377`        |
+| markdown              | `3.1.1`  -> `3.3.3`   |
+| multiqc               | `1.8`    -> `1.9`     |
+| nanoplot              | `1.28.4` -> `1.32.1`  |
+| pygments              | `2.5.2`  -> `2.7.2`   |
+| pymdown-extensions    |  `6.0`   -> `8.0.1`   |
+| python                | `3.7.3`  -> `3.8.6`   |
+| samtools              | `1.9`    -> `1.11`    |
+| ucsc-bedgraphtobigwig | `357`    -> `377`     |
+| ucsc-bedtobigbed      | `357`    -> `377`     |
 
 #### Added
 
