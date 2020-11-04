@@ -27,14 +27,11 @@ library(stageR)
 ################################################
 
 args = commandArgs(trailingOnly=TRUE)
-if (length(args) < 3) {
+if (length(args) < 2) {
     stop("Please input the directory with the transcript level featureCounts results and the sample information file", call.=FALSE)
 } 
 transcriptquant <- args[1]
 path            <-args[2]
-sample_map      <-gsub(",","",args[3:length(args)])
-sample_map      <-gsub("\\[","",sample_map)
-sample_map      <-gsub("\\]","",sample_map)
 
 ###################################################
 ###################################################
@@ -54,14 +51,7 @@ if (transcriptquant == "bambu"){
 }
 colnames(count.matrix)[1] <- "feature_id"
 colnames(count.matrix)[2] <- "gene_id"
-if (length(sample_map)>1){
-  sample_map <- split(sample_map, 1:2)
-  new_colnames <- unlist(sample_map[1])
-  old_colnames <- unlist(lapply(lapply(sample_map[2], strsplit, split="/")[[1]],
-                            function(x) gsub(".bam","",x[length(x)])))
-  count.matrix[3:length(colnames(count.matrix))] <- count.matrix[3:length(colnames(count.matrix))][, old_colnames]
-  colnames(count.matrix)[3:length(colnames(count.matrix))] <- new_colnames
-}
+
 ################################################
 ################################################
 ## READ IN SAMPLE INFORMATION (CONDITIONS)    ##
