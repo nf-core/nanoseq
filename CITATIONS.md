@@ -51,8 +51,8 @@
 * [R](https://www.R-project.org/)
   > R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria.
 
-* [bambu](https://github.com/GoekeLab/bambu)
-  > Chen Y, Goeke J, & Wan YK. (2020, July 28). GoekeLab/bambu: bambu release version 0.3.0 (Version v0.3.0). Zenodo. doi: 10.5281/zenodo.3963706.
+* [bambu](https://bioconductor.org/packages/release/bioc/html/bambu.html)
+  > Chen Y, Goeke J, Wan YK (2020). bambu: Reference-guided isoform reconstruction and quantification for long read RNA-Seq data. R package version 1.0.0.
 
 * [BSgenome](https://bioconductor.org/packages/release/bioc/html/BSgenome.html)
   > Pagès H (2020). BSgenome: Software infrastructure for efficient representation of full genomes and their SNPs. doi: 10.18129/B9.bioc.BSgenome.
