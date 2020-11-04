@@ -5,8 +5,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2020-11-13
 
-### `Added`
-
 * Transcript reconstruction and quantification ([`bambu`](https://github.com/GoekeLab/bambu) or [`StringTie2`](https://ccb.jhu.edu/software/stringtie/) and [`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/))
 * Differential expression analysis at the gene-level ([`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html)) and transcript-level ([`DEXSeq`](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html))
 * Ability to provide BAM input to the pipeline
@@ -19,20 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Collapsible sections for output files in `docs/output.md`
 * Replace `set` with `tuple` and `file` with `path` in `input` section of all processes
 * Capitalise process names
-
-### `Fixed`
-
 * Added `--gpus all` to Docker `runOptions` when using GPU as mentioned [here](https://github.com/docker/compose/issues/6691#issuecomment-514429646)
 
 ### Parameters
 
-#### Added
-
-* `--barcode_both_ends` requires barcode on both ends for Guppy basecaller
-* `--quantification_method` to specify the transcript quantification method to use
-* `--skip_quantification` to skip transcript quantification and differential analysis
-* `--skip_differential_analysis` to skip differential analysis with DESeq2 and DEXSeq
-* `--publish_dir_mode` to customise method of publishing results to output directory [nf-core/tools#585](https://github.com/nf-core/tools/issues/585)
+* Added `--barcode_both_ends` requires barcode on both ends for Guppy basecaller
+* Added `--quantification_method` to specify the transcript quantification method to use
+* Added `--skip_quantification` to skip transcript quantification and differential analysis
+* Added `--skip_differential_analysis` to skip differential analysis with DESeq2 and DEXSeq
+* Added `--publish_dir_mode` to customise method of publishing results to output directory [nf-core/tools#585](https://github.com/nf-core/tools/issues/585)
 
 ### Software dependencies
 
