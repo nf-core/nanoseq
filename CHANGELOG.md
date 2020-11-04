@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Replace `set` with `tuple` and `file` with `path` in `input` section of all processes
 * Capitalise process names
 * Added `--gpus all` to Docker `runOptions` when using GPU as mentioned [here](https://github.com/docker/compose/issues/6691#issuecomment-514429646)
+* Cannot invoke method `containsKey()` on null object when `--igenomes_ignore` is set [#76](https://github.com/nf-core/nanoseq/issues/76)
 
 ### Parameters
 
