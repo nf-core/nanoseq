@@ -872,9 +872,9 @@ if (!params.skip_alignment) {
         .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0] , it[1] ] }
         .set { ch_sortbam_rename }
 
-   /*
-    * Rename BAM inputs to Group_Replicate
-    */
+    /*
+     * Rename BAM inputs to <GROUP_REPLICATE>
+     */
     process BAM_RENAME {
         tag "$sample"
         
