@@ -1025,8 +1025,7 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             path "counts_gene.txt" into ch_gene_counts
             path "counts_transcript.txt" into ch_transcript_counts
             path "extended_annotations.gtf" 
-            path "v_bambu.txt" into ch_bambu_version
-
+            
             script:
             """
             run_bambu.r \\
@@ -1034,7 +1033,6 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
                 --ncore=$task.cpus \\
                 --annotation=$gtf \\
                 --fasta=$fasta $bams
-            Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
             """
         }
         ch_featurecounts_transcript_multiqc = Channel.empty()
@@ -1148,7 +1146,6 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
                 $bams
             """
         }
-        ch_bambu_version = Channel.empty()
     }
 
     if (!params.skip_differential_analysis) {
@@ -1198,7 +1195,6 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
         }
     }
 } else {
-    ch_bambu_version                    = Channel.empty()
     ch_featurecounts_transcript_multiqc = Channel.empty()
     ch_featurecounts_gene_multiqc       = Channel.empty()
 }
@@ -1235,7 +1231,6 @@ process GET_SOFTWARE_VERSIONS {
     input:
     path guppy from ch_guppy_version.collect().ifEmpty([])
     path pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    path bambu from ch_bambu_version.collect().ifEmpty([])
     
     output:
     path 'software_versions_mqc.yaml' into software_versions_yaml
@@ -1255,6 +1250,7 @@ process GET_SOFTWARE_VERSIONS {
     stringtie --version > v_stringtie.txt
     echo \$(featureCounts -v 2>&1) > v_featurecounts.txt
     echo \$(R --version 2>&1) > v_r.txt
+    Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
     Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
     Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
     Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"

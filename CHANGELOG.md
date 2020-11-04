@@ -44,10 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `ucsc-bedgraphtobigwig` | 357         | 377         |
 | `ucsc-bedtobigbed`      | 357         | 377         |
 | `bioconductor-bambu`    | -           | 1.0.0       |
-| `bioconductor-bsgenome` | -           | 1.56.0      |
-| `bioconductor-dexseq`   | -           | 1.34.0      |
-| `bioconductor-drimseq`  | -           | 1.16.0      |
-| `bioconductor-stager`   | -           | 1.10.0      |
+| `bioconductor-bsgenome` | -           | 1.58.0      |
+| `bioconductor-deseq2`   | -           | 1.30.0      |
+| `bioconductor-dexseq`   | -           | 1.36.0      |
+| `bioconductor-drimseq`  | -           | 1.18.0      |
+| `bioconductor-stager`   | -           | 1.12.0      |
 | `r-base`                | -           | 4.0.3       |
 | `seaborn`               | -           | 0.10.1      |
 | `stringtie`             | -           | 2.1.4       |
