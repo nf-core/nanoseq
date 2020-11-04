@@ -347,7 +347,7 @@ if (!params.skip_quantification) {
     def gtfs   = ch_sample_gtf.map   { it[3] }.unique().toList().val
     if (fastas.size() != 1 || gtfs.size() != 1 || fastas[0] == false || gtfs[0] == false) {
         exit 1, """Quantification can only be performed if all samples in the samplesheet have the same reference fasta and GTF file."
-        Please specify the '--skip_quantification' parameter if you wish to skip these steps."""
+                   Please specify the '--skip_quantification' parameter if you wish to skip these steps."""
     }
 
     REPLICATES_EXIST    = ch_sample_replicates.map { it -> it[0].split('_')[-1].replaceAll('R','').toInteger() }.max().val > 1
