@@ -34,13 +34,13 @@ jobs:
 
       - name: Build new docker image
         if: env.GIT_DIFF
-        run: docker build --no-cache . -t nfcore/nanoseq:dev
+        run: docker build --no-cache . -t nfcore/nanoseq:1.1.0
 
       - name: Pull docker image
         if: ${{ !env.GIT_DIFF }}
         run: |
           docker pull nfcore/nanoseq:dev
-          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
+          docker tag nfcore/nanoseq:dev nfcore/nanoseq:1.1.0
 
       - name: Install Nextflow
         run: |
@@ -74,13 +74,13 @@ jobs:
 
       - name: Build new docker image
         if: env.GIT_DIFF
-        run: docker build --no-cache . -t nfcore/nanoseq:dev
+        run: docker build --no-cache . -t nfcore/nanoseq:1.1.0
 
       - name: Pull docker image
         if: ${{ !env.GIT_DIFF }}
         run: |
           docker pull nfcore/nanoseq:dev
-          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
+          docker tag nfcore/nanoseq:dev nfcore/nanoseq:1.1.0
 
       - name: Install Nextflow
         run: |
@@ -114,13 +114,13 @@ jobs:
 
       - name: Build new docker image
         if: env.GIT_DIFF
-        run: docker build --no-cache . -t nfcore/nanoseq:dev
+        run: docker build --no-cache . -t nfcore/nanoseq:1.1.0
 
       - name: Pull docker image
         if: ${{ !env.GIT_DIFF }}
         run: |
           docker pull nfcore/nanoseq:dev
-          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
+          docker tag nfcore/nanoseq:dev nfcore/nanoseq:1.1.0
 
       - name: Install Nextflow
         run: |
@@ -154,13 +154,13 @@ jobs:
 
       - name: Build new docker image
         if: env.GIT_DIFF
-        run: docker build --no-cache . -t nfcore/nanoseq:dev
+        run: docker build --no-cache . -t nfcore/nanoseq:1.1.0
 
       - name: Pull docker image
         if: ${{ !env.GIT_DIFF }}
         run: |
           docker pull nfcore/nanoseq:dev
-          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
+          docker tag nfcore/nanoseq:dev nfcore/nanoseq:1.1.0
 
       - name: Install Nextflow
         run: |
