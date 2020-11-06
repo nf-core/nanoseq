@@ -1011,7 +1011,7 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
          * Quantification and novel isoform detection with bambu
          */
         process BAMBU {
-            label 'process_medium'
+            label 'process_high'
             publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode,
                 saveAs: { filename ->
                             if (!filename.endsWith("bambu.txt")) filename
