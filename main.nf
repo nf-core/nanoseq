@@ -183,10 +183,10 @@ if (!params.skip_quantification) {
 }
 
 // Stage config files
-ch_multiqc_config        = file("$baseDir/assets/multiqc_config.yaml", checkIfExists: true)
+ch_multiqc_config        = file("$projectDir/assets/multiqc_config.yaml", checkIfExists: true)
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config, checkIfExists: true) : Channel.empty()
-ch_output_docs           = file("$baseDir/docs/output.md", checkIfExists: true)
-ch_output_docs_images    = file("$baseDir/docs/images/", checkIfExists: true)
+ch_output_docs           = file("$projectDir/docs/output.md", checkIfExists: true)
+ch_output_docs_images    = file("$projectDir/docs/images/", checkIfExists: true)
 
 // Has the run name been specified by the user?
 // this has the bonus effect of catching both -name and --name
@@ -307,7 +307,7 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     def fasta = false
     def gtf   = false
     if (sample.genome) {
-        if (genomeMap.containsKey(sample.genome)) {
+        if (genomeMap && genomeMap.containsKey(sample.genome)) {
             fasta = file(genomeMap[sample.genome].fasta, checkIfExists: true)
             gtf   = file(genomeMap[sample.genome].gtf, checkIfExists: true)
         } else {
@@ -347,7 +347,7 @@ if (!params.skip_quantification) {
     def gtfs   = ch_sample_gtf.map   { it[3] }.unique().toList().val
     if (fastas.size() != 1 || gtfs.size() != 1 || fastas[0] == false || gtfs[0] == false) {
         exit 1, """Quantification can only be performed if all samples in the samplesheet have the same reference fasta and GTF file."
-        Please specify --skip_quantification the parameter if you wish to skip these steps."""
+                   Please specify the '--skip_quantification' parameter if you wish to skip these steps."""
     }
 
     REPLICATES_EXIST    = ch_sample_replicates.map { it -> it[0].split('_')[-1].replaceAll('R','').toInteger() }.max().val > 1
@@ -872,9 +872,9 @@ if (!params.skip_alignment) {
         .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0] , it[1] ] }
         .set { ch_sortbam_rename }
 
-   /*
-    * Rename BAM inputs to Group_Replicate
-    */
+    /*
+     * Rename BAM inputs to <GROUP_REPLICATE>
+     */
     process BAM_RENAME {
         tag "$sample"
         
@@ -1011,7 +1011,7 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
          * Quantification and novel isoform detection with bambu
          */
         process BAMBU {
-            label 'process_medium'
+            label 'process_high'
             publishDir "${params.outdir}/${params.quantification_method}", mode: params.publish_dir_mode,
                 saveAs: { filename ->
                             if (!filename.endsWith("bambu.txt")) filename
@@ -1025,8 +1025,7 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             path "counts_gene.txt" into ch_gene_counts
             path "counts_transcript.txt" into ch_transcript_counts
             path "extended_annotations.gtf" 
-            path "v_bambu.txt" into ch_bambu_version
-
+            
             script:
             """
             run_bambu.r \\
@@ -1034,7 +1033,6 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
                 --ncore=$task.cpus \\
                 --annotation=$gtf \\
                 --fasta=$fasta $bams
-            Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
             """
         }
         ch_featurecounts_transcript_multiqc = Channel.empty()
@@ -1148,7 +1146,6 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
                 $bams
             """
         }
-        ch_bambu_version = Channel.empty()
     }
 
     if (!params.skip_differential_analysis) {
@@ -1198,7 +1195,6 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
         }
     }
 } else {
-    ch_bambu_version                    = Channel.empty()
     ch_featurecounts_transcript_multiqc = Channel.empty()
     ch_featurecounts_gene_multiqc       = Channel.empty()
 }
@@ -1235,7 +1231,6 @@ process GET_SOFTWARE_VERSIONS {
     input:
     path guppy from ch_guppy_version.collect().ifEmpty([])
     path pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    path bambu from ch_bambu_version.collect().ifEmpty([])
     
     output:
     path 'software_versions_mqc.yaml' into software_versions_yaml
@@ -1255,6 +1250,7 @@ process GET_SOFTWARE_VERSIONS {
     stringtie --version > v_stringtie.txt
     echo \$(featureCounts -v 2>&1) > v_featurecounts.txt
     echo \$(R --version 2>&1) > v_r.txt
+    Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
     Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
     Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
     Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"
@@ -1371,18 +1367,18 @@ workflow.onComplete {
 
     // Render the TXT template
     def engine = new groovy.text.GStringTemplateEngine()
-    def tf = new File("$baseDir/assets/email_template.txt")
+    def tf = new File("$projectDir/assets/email_template.txt")
     def txt_template = engine.createTemplate(tf).make(email_fields)
     def email_txt = txt_template.toString()
 
     // Render the HTML template
-    def hf = new File("$baseDir/assets/email_template.html")
+    def hf = new File("$projectDir/assets/email_template.html")
     def html_template = engine.createTemplate(hf).make(email_fields)
     def email_html = html_template.toString()
 
     // Render the sendmail template
-    def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, baseDir: "$baseDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
-    def sf = new File("$baseDir/assets/sendmail_template.txt")
+    def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, projectDir: "$projectDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
+    def sf = new File("$projectDir/assets/sendmail_template.txt")
     def sendmail_template = engine.createTemplate(sf).make(smail_fields)
     def sendmail_html = sendmail_template.toString()
 

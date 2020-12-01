@@ -1,6 +1,6 @@
 # You can use this file to create a conda environment for this pipeline:
 #   conda env create -f environment.yml
-name: nf-core-nanoseq-1.1.0dev
+name: nf-core-nanoseq-1.2.0dev
 channels:
   - conda-forge
   - bioconda
@@ -26,8 +26,10 @@ dependencies:
   - bioconda::ucsc-bedtobigbed=377
   - bioconda::stringtie=2.1.4
   - bioconda::subread=2.0.1
-  - bioconda::bioconductor-deseq2=1.28.0
-  - bioconda::bioconductor-drimseq=1.16.0
-  - bioconda::bioconductor-dexseq=1.34.0
-  - bioconda::bioconductor-stager=1.10.0
-  - bioconda::bioconductor-bsgenome=1.56.0
+  - bioconda::bioconductor-bambu=1.0.0
+  - bioconda::bioconductor-deseq2=1.30.0
+  - bioconda::bioconductor-drimseq=1.18.0
+  - bioconda::bioconductor-dexseq=1.36.0
+  - bioconda::bioconductor-stager=1.12.0
+  - bioconda::bioconductor-bsgenome=1.58.0
+
