@@ -5,7 +5,7 @@
 [![AWS CI](https://img.shields.io/badge/CI%20tests-Full%20size-FF9900?labelColor=000000&logo=Amazon%20AWS)](https://nf-co.re/nanoseq/results)
 [![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.3697959-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.3697959)
 
-[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A519.10.0-23aa62.svg?labelColor=000000)](https://www.nextflow.io/)
+[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A520.04.0-23aa62.svg?labelColor=000000)](https://www.nextflow.io/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 [![Docker](https://img.shields.io/docker/automated/nfcore/nanoseq.svg)](https://hub.docker.com/r/nfcore/nanoseq)
