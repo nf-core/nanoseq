@@ -47,6 +47,7 @@ def helpMessage() {
       --qcat_detect_middle [bool]         Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
       --skip_basecalling [bool]           Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]        Skip demultiplexing with Guppy (Default: false)
+      --skip_control_cleaning [bool]      Skip control cleaning with NanoLyse (Default: false)
 
     Alignment
       --aligner [str]                     Specifies the aligner to use (available are: minimap2 or graphmap2). Both are capable of performing unspliced/spliced alignment (Default: 'minimap2')
@@ -335,6 +336,7 @@ ch_samplesheet_reformat
         ch_sample_info
         ch_sample_name
         ch_sample_annotation
+        ch_sample_nanolyse
     }
 
 // Check that reference genome and annotation are the same for all samples if perfoming quantification
@@ -436,6 +438,7 @@ if (!params.skip_basecalling) {
             ch_fastq_gtf
             ch_fastq_index
             ch_fastq_align 
+            ch_fastq_nanolyse
         }
 
 } else {
@@ -491,7 +494,8 @@ if (!params.skip_basecalling) {
                 ch_fastq_sizes
                 ch_fastq_gtf
                 ch_fastq_index
-                ch_fastq_align 
+                ch_fastq_align
+                ch_fastq_nanolyse 
             }
     } else {
         if (!params.skip_alignment) {
@@ -507,6 +511,7 @@ if (!params.skip_basecalling) {
                     ch_fastq_gtf
                     ch_fastq_index
                     ch_fastq_align 
+                    ch_fastq_nanolyse
                 }
         } else {
             ch_fastq_nanoplot = Channel.empty()
@@ -516,6 +521,42 @@ if (!params.skip_basecalling) {
     ch_guppy_version          = Channel.empty()
     ch_guppy_pycoqc_summary   = Channel.empty()
     ch_guppy_nanoplot_summary = Channel.empty()
+}
+
+if (!params.skip_control_cleaning){
+    /*
+     * Control cleaning using nanolyse
+     */
+    process NANOLYSE {
+        echo true
+        label 'process_medium'
+        publishDir "${params.outdir}/nanolyse", mode: params.publish_dir_mode
+
+        input:
+        tuple val(sample), path(fastq) from ch_fastq_nanolyse.map{ ch -> [ ch[0], ch[1] ] }
+
+        output:
+        tuple val(sample), path("*.fastq.gz") into ch_nanolyse_fastq
+
+        script:
+        sample_fastq_gz = "$sample"+".fastq.gz"
+        lambda_fasta_gz = "lambda.fasta.gz"
+        """
+        wget https://github.com/wdecoster/nanolyse/raw/master/reference/lambda.fasta.gz
+        gunzip -c $fastq | NanoLyse -r $lambda_fasta_gz | gzip > $sample_fastq_gz
+        """
+    }
+    ch_nanolyse_fastq
+        .join(ch_sample_nanolyse)
+        .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
+        .into {
+            ch_fastq_nanoplot
+            ch_fastq_fastqc
+            ch_fastq_sizes
+            ch_fastq_gtf
+            ch_fastq_index
+            ch_fastq_align
+        }
 }
 
 /*
@@ -1241,6 +1282,7 @@ process GET_SOFTWARE_VERSIONS {
     echo $workflow.manifest.version > v_pipeline.txt
     echo $workflow.nextflow.version > v_nextflow.txt
     qcat --version &> v_qcat.txt
+    NanoLyse --version &> v_nanolyse.txt
     NanoPlot --version &> v_nanoplot.txt
     fastqc --version > v_fastqc.txt
     minimap2 --version &> v_minimap2.txt
