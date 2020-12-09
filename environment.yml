@@ -14,6 +14,7 @@ dependencies:
   - conda-forge::seaborn=0.10.1
   - conda-forge::r-base=4.0.3
   
+  - bioconda::nanolyse=1.2.0
   - bioconda::fastqc=0.11.9
   - bioconda::multiqc=1.9
   - bioconda::qcat=1.1.0
