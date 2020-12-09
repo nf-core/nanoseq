@@ -135,6 +135,11 @@
                     "type": "boolean",
                     "description": "Skip demultiplexing with Guppy/qcat.",
                     "fa_icon": "fas fa-fast-forward"
+                },
+                "skip_control_cleaning": {
+                    "type": "boolean",
+                    "description": "Skip control cleaning with NanoLyse.",
+                    "fa_icon": "fas fa-fast-forward"
                 }
             }
         },
