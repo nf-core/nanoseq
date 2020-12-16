@@ -1,0 +1,37 @@
+// Import generic module functions
+include { initOptions; saveFiles; getSoftwareName } from './functions'
+
+params.options       = [:]
+params.multiqc_label = ''
+def options          = initOptions(params.options)
+
+process DEXSEQ {
+    label "process_medium"
+    publishDir "${params.outdir}",
+        mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
+
+    conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-dexseq=1.36.0 bioconda::bioconductor-drimseq=1.18.0 bioconda::bioconductor-stager=1.12.0" : null)
+    container "quay.io/biocontainers/mulled-v2-8849acf39a43cdd6c839a369a74c0adc823e2f91:ab110436faf952a33575c64dd74615a84011450b-0" 
+    // need a multitool container for r-base, dexseq, stager, drimseq and on quay hub 
+    
+    
+    when:
+    MULTIPLE_CONDITIONS && REPLICATES_EXIST
+
+    input:
+    path counts
+    
+    output:    
+    path "*.txt"                , emit: dexseq_txt
+    path  "*.version.txt"       , emit: version
+
+    script:
+    def software    = getSoftwareName(task.process)
+    def label_lower = params.multiqc_label.toLowerCase()
+    def label_upper = params.multiqc_label.toUpperCase()
+    """
+    run_dexseq.r $params.quantification_method $counts
+    Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='${software}.version.txt')"
+    """
+}
