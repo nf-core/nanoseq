@@ -15,13 +15,15 @@ workflow BEDTOOLS_UCSC_BIGBED {
     /*
      * Convert BAM to BED12
      */
-    ch_bed12 = BEDTOOLS_BAMBED ( ch_sortbam )
+    BEDTOOLS_BAMBED ( ch_sortbam )
+    ch_bed12 = BEDTOOLS_BAMBED.out.bed12
 
     /*
      * Convert BED12 to BigBED
      */
     UCSC_BED12TOBIGBED ( ch_bed12 )
+    ch_bigbed = UCSC_BED12TOBIGBED.out.bigbed
 
     emit:
-    bigbed   = UCSC_BED12TOBIGBED.bigBed
+    ch_bigbed
 }

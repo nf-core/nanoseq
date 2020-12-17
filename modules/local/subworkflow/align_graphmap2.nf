@@ -6,9 +6,9 @@ params.index_options    = [:]
 params.align_options    = [:]
 params.samtools_options = [:]
 
-include { GRAPHMAP2_INDEX      } from '../process/graphmap2_index'                     addParams( options: params.index_options    )
-include { GRAPHMAP2_ALIGN      } from '../process/graphmap2_align'                     addParams( options: params.align_options    )
-include { BAM_SORT_SAMTOOLS   } from '../../nf-core/subworkflow/bam_sort_samtools'     addParams( options: params.samtools_options )
+include { GRAPHMAP2_INDEX         } from '../process/graphmap2_index'                     addParams( options: params.index_options    )
+include { GRAPHMAP2_ALIGN         } from '../process/graphmap2_align'                     addParams( options: params.align_options    )
+include { SAMTOOLS_BAM_SORT_STATS } from '../process/samtools_bam_sort_stats'             addParams( options: params.samtools_options )
 
 workflow ALIGN_GRAPHMAP2 {
     take:
@@ -19,7 +19,8 @@ workflow ALIGN_GRAPHMAP2 {
     /*
      * Create genome/transcriptome index
      */
-    ch_index = GRAPHMAP2_INDEX ( ch_fasta_index )
+    GRAPHMAP2_INDEX ( ch_fasta_index )
+    ch_index = GRAPHMAP2_INDEX.out.index
 
     ch_index
         .cross(ch_fastq_alignment) { it -> it[-1] }
@@ -31,18 +32,18 @@ workflow ALIGN_GRAPHMAP2 {
     /*
      * Map reads with GRAPHMAP2
      */
-    ch_align_sam = GRAPHMAP2_ALIGN ( ch_index )
+    GRAPHMAP2_ALIGN ( ch_index )
+    ch_align_sam = GRAPHMAP2_ALIGN.out.align_sam
 
     /*
-     * Sort, index BAM file and run samtools stats, flagstat and idxstats
+     * Convert SAM to BAM, sort, index BAM file and run samtools stats, flagstat and idxstats
      */
-    BAM_SORT_SAMTOOLS ( ch_align_sam )
+    SAMTOOLS_BAM_SORT_STATS ( ch_align_sam )
+    ch_sortbam               = SAMTOOLS_BAM_SORT_STATS.out.sortbam
+    ch_sortbam_stats_multiqc = SAMTOOLS_BAM_SORT_STATS.out.sortbam_stats_multiqc
 
     emit:
-    bam              = BAM_SORT_SAMTOOLS.out.bam      // channel: [ val(meta), [ bam ] ]
-    bai              = BAM_SORT_SAMTOOLS.out.bai      // channel: [ val(meta), [ bai ] ]
-    stats            = BAM_SORT_SAMTOOLS.out.stats    // channel: [ val(meta), [ stats ] ]
-    flagstat         = BAM_SORT_SAMTOOLS.out.flagstat // channel: [ val(meta), [ flagstat ] ]
-    idxstats         = BAM_SORT_SAMTOOLS.out.idxstats // channel: [ val(meta), [ idxstats ] ]
-    samtools_version = BAM_SORT_SAMTOOLS.out.version  //    path: *.version.txt
+    ch_sortbam
+    ch_sortbam_stats_multiqc
+//    samtools_version = BAM_SORT_SAMTOOLS.out.version  //    path: *.version.txt
 }

@@ -224,8 +224,16 @@ workflow NANOSEQ{
        ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
        if (params.aligner == 'minimap2') {
           ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq_alignment )
+          ch_sortbam = ALIGN_MINIMAP2.out.ch_sortbam
        } else {
           ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq_alignment )
+          ch_sortbam = ALIGN_GRAPHMAP2.out.ch_sortbam
+       }
+       if (!params.skip_bigwig){
+          BEDTOOLS_UCSC_BIGWIG ( ch_sortbam )
+       }
+       if (!params.skip_bigbed){
+          BEDTOOLS_UCSC_BIGBED ( ch_sortbam )
        }
     }
 }

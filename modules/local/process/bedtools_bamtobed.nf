@@ -1,11 +1,10 @@
 // Import generic module functions
 include { initOptions; saveFiles; getSoftwareName } from './functions'
 
-params.options = [:]
-def options    = initOptions(params.options)
+// params.options = [:]
+// def options    = initOptions(params.options)
 
 process BEDTOOLS_BAMBED {
-    tag "$sample"
     label 'process_medium'
 
     conda     (params.enable_conda ? "bioconda::bedtools=2.29.2" : null)
