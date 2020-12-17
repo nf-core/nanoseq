@@ -47,7 +47,7 @@ def helpMessage() {
       --qcat_detect_middle [bool]         Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
       --skip_basecalling [bool]           Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]        Skip demultiplexing with Guppy (Default: false)
-      --skip_control_cleaning [bool]      Skip control cleaning with NanoLyse (Default: false)
+     --run_nanolyse [bool]               Filter reads from FastQ files mapping to the lambda phage genome using NanoLyse (Default: false)
 
     Alignment
       --aligner [str]                     Specifies the aligner to use (available are: minimap2 or graphmap2). Both are capable of performing unspliced/spliced alignment (Default: 'minimap2')
