@@ -528,7 +528,7 @@ if (!params.skip_control_cleaning){
      * Control cleaning using nanolyse
      */
     process NANOLYSE {
-        echo true
+        tag "$sample"
         label 'process_medium'
         publishDir "${params.outdir}/nanolyse", mode: params.publish_dir_mode
 
