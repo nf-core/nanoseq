@@ -541,7 +541,7 @@ if (!params.skip_control_cleaning){
         script:
         """
         wget https://github.com/wdecoster/nanolyse/raw/master/reference/lambda.fasta.gz
-        gunzip -c $fastq | NanoLyse -r $lambda_fasta_gz | gzip > $sample_fastq_gz
+        gunzip -c $fastq | NanoLyse -r $fasta | gzip > ${sample}.nanolyse.fastq.gz
         """
     }
     ch_nanolyse_fastq
