@@ -136,9 +136,9 @@
                     "description": "Skip demultiplexing with Guppy/qcat.",
                     "fa_icon": "fas fa-fast-forward"
                 },
-                "skip_control_cleaning": {
+                "run_nanolyse": {
                     "type": "boolean",
-                    "description": "Skip control cleaning with NanoLyse.",
+                    "description": "Filter reads from FastQ files mapping to the lambda phage genome using NanoLyse",
                     "fa_icon": "fas fa-fast-forward"
                 }
             }
