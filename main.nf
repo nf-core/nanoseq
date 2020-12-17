@@ -534,7 +534,7 @@ if (!params.skip_control_cleaning){
 
         input:
         tuple val(sample), path(fastq) from ch_fastq_nanolyse.map{ ch -> [ ch[0], ch[1] ] }
-
+        path fasta from ch_nanolyse_fasta
         output:
         tuple val(sample), path("*.fastq.gz") into ch_nanolyse_fastq
 
