@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Update pipeline template to nf-core/tools `1.12`
-* Add the NanoLyse process and the `--skip_control_cleaning` flag
+* Add the NanoLyse process and the `--run_nanolyse` flag
 
 ### Software dependencies
 
