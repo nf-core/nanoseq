@@ -47,6 +47,8 @@ def helpMessage() {
       --qcat_detect_middle [bool]         Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
       --skip_basecalling [bool]           Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]        Skip demultiplexing with Guppy (Default: false)
+    
+    Raw read cleaning
       --run_nanolyse [bool]               Filter reads from FastQ files mapping to the lambda phage genome using NanoLyse (Default: false)
       --nanolyse_fasta [file]             Provide a fasta file for NanoLyse to use for filtering FastQ files (Default: false)
 
