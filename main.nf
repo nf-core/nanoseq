@@ -47,7 +47,8 @@ def helpMessage() {
       --qcat_detect_middle [bool]         Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
       --skip_basecalling [bool]           Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]        Skip demultiplexing with Guppy (Default: false)
-     --run_nanolyse [bool]               Filter reads from FastQ files mapping to the lambda phage genome using NanoLyse (Default: false)
+      --run_nanolyse [bool]               Filter reads from FastQ files mapping to the lambda phage genome using NanoLyse (Default: false)
+      --nanolyse_fasta                    Provide a fasta file for nanolyse to filter against
 
     Alignment
       --aligner [str]                     Specifies the aligner to use (available are: minimap2 or graphmap2). Both are capable of performing unspliced/spliced alignment (Default: 'minimap2')
@@ -164,7 +165,25 @@ if (!params.skip_basecalling) {
         }
     }
 }
+if (params.run_nanolyse){
+    if (!params.nanolyse_fasta){
+        if (!isOffline()){
+            process GET_NANOLYSE_FASTA {
+                output:
+                path "lambda.fasta.gz" into ch_nanolyse_fasta
 
+                script:
+                """
+                wget https://github.com/wdecoster/nanolyse/raw/master/reference/lambda.fasta.gz
+                """
+            }
+        } else {
+             exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NANOLYSE!"
+        }
+    } else {
+        if (params.nanolyse_fasta) { ch_nanolyse_fasta = Channel.fromPath(params.nanolyse_fasta, checkIfExists: true) } else { exit 1, "Please specify a valid fasta file (usually lambda phage) for nanolyse to filter against!" }
+    }
+}
 if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap2'"
@@ -523,7 +542,7 @@ if (!params.skip_basecalling) {
     ch_guppy_nanoplot_summary = Channel.empty()
 }
 
-if (!params.skip_control_cleaning){
+if (params.run_nanolyse){
     /*
      * Control cleaning using nanolyse
      */
@@ -535,6 +554,7 @@ if (!params.skip_control_cleaning){
         input:
         tuple val(sample), path(fastq) from ch_fastq_nanolyse.map{ ch -> [ ch[0], ch[1] ] }
         path fasta from ch_nanolyse_fasta
+    
         output:
         tuple val(sample), path("*.fastq.gz") into ch_nanolyse_fastq
 
@@ -542,7 +562,6 @@ if (!params.skip_control_cleaning){
         sample_fastq_gz = "$sample"+".fastq.gz"
         lambda_fasta_gz = "lambda.fasta.gz"
         """
-        wget https://github.com/wdecoster/nanolyse/raw/master/reference/lambda.fasta.gz
         gunzip -c $fastq | NanoLyse -r $lambda_fasta_gz | gzip > $sample_fastq_gz
         """
     }
