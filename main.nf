@@ -1299,10 +1299,10 @@ process GET_SOFTWARE_VERSIONS {
     input:
     path guppy from ch_guppy_version.collect().ifEmpty([])
     path pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    path deseq2 from ch_deseq2_version
-    path drimseq from ch_drimseq_version
-    path dexseq from ch_dexseq_version
-    path stager from ch_stager_version
+    path deseq2 from ch_deseq2_version.collect().ifEmpty([])
+    path drimseq from ch_drimseq_version.collect().ifEmpty([])
+    path dexseq from ch_dexseq_version.collect().ifEmpty([])
+    path stager from ch_stager_version.collect().ifEmpty([])
 
     output:
     path 'software_versions_mqc.yaml' into software_versions_yaml
