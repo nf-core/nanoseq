@@ -558,7 +558,11 @@ if (params.run_nanolyse){
     process NANOLYSE {
         tag "$sample"
         label 'process_medium'
-        publishDir "${params.outdir}/nanolyse", mode: params.publish_dir_mode
+        publishDir "${params.outdir}/nanolyse", mode: params.publish_dir_mode,
+            saveAs: { filename ->
+                            if (filename.endsWith(".log")) "log/$filename"
+                            else filename
+                    }
 
         input:
         tuple val(sample), path(fastq) from ch_fastq_nanolyse.map{ ch -> [ ch[0], ch[1] ] }
@@ -566,10 +570,12 @@ if (params.run_nanolyse){
     
         output:
         tuple val(sample), path("*.fastq.gz") into ch_nanolyse_fastq
+        path "*.log"
 
         script:
         """
         gunzip -c $fastq | NanoLyse -r $fasta | gzip > ${sample}.clean.fastq.gz
+        cp NanoLyse.log ${sample}.nanolyse.log
         """
     }
 
