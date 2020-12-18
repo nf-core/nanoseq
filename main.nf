@@ -1261,8 +1261,17 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='v_stager.txt')"
             """
         }
+    } else {
+      ch_deseq2_version                 = Channel.empty()
+      ch_dexseq_version                 = Channel.empty()
+      ch_stager_version                 = Channel.empty()
+      ch_drimseq_version                = Channel.empty()
     }
 } else {
+    ch_deseq2_version                   = Channel.empty()
+    ch_dexseq_version                   = Channel.empty()
+    ch_stager_version                   = Channel.empty()
+    ch_drimseq_version                  = Channel.empty()
     ch_featurecounts_transcript_multiqc = Channel.empty()
     ch_featurecounts_gene_multiqc       = Channel.empty()
 }
