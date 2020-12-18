@@ -184,7 +184,7 @@ if (params.run_nanolyse){
              exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
         }
     } else {
-        ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true) } else { exit 1, "Please specify a valid fasta file (usually lambda phage) for NanoLyse to filter against!" }
+        ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
     }
 }
 
