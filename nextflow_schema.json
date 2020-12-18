@@ -141,6 +141,11 @@
                     "description": "Filter reads from FastQ files mapping to the lambda phage genome using NanoLyse",
                     "fa_icon": "fas fa-fast-forward"
                 }
+                "nanolyse_fasta": {
+                    "type": "string",
+                    "description": "genome (lambda phage/others) fasta file to be filtered against using NanoLyse",
+                    "fa_icon": "fas fa-fast-forward"
+                }
             }
         },
         "alignment_options": {
