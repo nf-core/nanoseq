@@ -409,7 +409,7 @@ if (!params.skip_basecalling) {
         path guppy_model from ch_guppy_model.ifEmpty([])
 
         output:
-        path "fastq/*.fastq.gz" into ch_fastq
+        path "fastq/*.fastq.gz" into ch_fastq, ch_test
         path "basecalling/*.txt" into ch_guppy_pycoqc_summary,
                                       ch_guppy_nanoplot_summary
         path "basecalling/*"
@@ -452,10 +452,16 @@ if (!params.skip_basecalling) {
         """
     }
 
+    if (params.skip_demultiplexing) {
+        ch_sample_info
+            .map { it -> [ it[0], it[0], it[2], it[3], it[4], it[5] ] }
+            .set { ch_sample_info }
+    }
+    
     // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
     ch_fastq
         .flatten()
-        .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]
+        .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] } // [barcode001.fastq, barcode001]    
         .join(ch_sample_info, by: 1) // join on barcode
         .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
         .into { 
@@ -465,7 +471,7 @@ if (!params.skip_basecalling) {
             ch_fastq_gtf
             ch_fastq_index
             ch_fastq_align 
-            ch_fastq_nanolyse
+            ch_fastq_nancolyse
         }
 
 } else {
@@ -550,11 +556,10 @@ if (!params.skip_basecalling) {
     ch_guppy_nanoplot_summary = Channel.empty()
 }
 
-
+/*
+ * DNA contaminant removal using NanoLyse
+ */
 if (params.run_nanolyse){
-    /*
-     * DNA contaminant removal using NanoLyse
-     */
     process NANOLYSE {
         tag "$sample"
         label 'process_medium'
