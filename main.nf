@@ -358,7 +358,7 @@ ch_samplesheet_reformat
         ch_sample_nanolyse
     }
 
-// Check that reference genome and annotation are the same for all samples if perfoming quantification
+// Check if reference genome and annotation are the same for all samples if perfoming quantification
 // Check if we have replicates and multiple conditions in the input samplesheet
 def REPLICATES_EXIST    = false
 def MULTIPLE_CONDITIONS = false
