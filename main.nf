@@ -550,9 +550,10 @@ if (!params.skip_basecalling) {
     ch_guppy_nanoplot_summary = Channel.empty()
 }
 
+
 if (params.run_nanolyse){
     /*
-     * Control cleaning using nanolyse
+     * DNA contaminant removal using NanoLyse
      */
     process NANOLYSE {
         tag "$sample"
@@ -567,12 +568,11 @@ if (params.run_nanolyse){
         tuple val(sample), path("*.fastq.gz") into ch_nanolyse_fastq
 
         script:
-        sample_fastq_gz = "$sample"+".fastq.gz"
-        lambda_fasta_gz = "lambda.fasta.gz"
         """
-        gunzip -c $fastq | NanoLyse -r $lambda_fasta_gz | gzip > $sample_fastq_gz
+        gunzip -c $fastq | NanoLyse -r $fasta | gzip > ${sample}.clean.fastq.gz
         """
     }
+
     ch_nanolyse_fastq
         .join(ch_sample_nanolyse)
         .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
