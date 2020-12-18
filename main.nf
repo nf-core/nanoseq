@@ -47,6 +47,8 @@ def helpMessage() {
       --qcat_detect_middle [bool]         Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
       --skip_basecalling [bool]           Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]        Skip demultiplexing with Guppy (Default: false)
+      --run_nanolyse [bool]               Filter reads from FastQ files mapping to the lambda phage genome using NanoLyse (Default: false)
+      --nanolyse_fasta                    Provide a fasta file for nanolyse to filter against
 
     Alignment
       --aligner [str]                     Specifies the aligner to use (available are: minimap2 or graphmap2). Both are capable of performing unspliced/spliced alignment (Default: 'minimap2')
@@ -163,7 +165,25 @@ if (!params.skip_basecalling) {
         }
     }
 }
+if (params.run_nanolyse){
+    if (!params.nanolyse_fasta){
+        if (!isOffline()){
+            process GET_NANOLYSE_FASTA {
+                output:
+                path "lambda.fasta.gz" into ch_nanolyse_fasta
 
+                script:
+                """
+                wget https://github.com/wdecoster/nanolyse/raw/master/reference/lambda.fasta.gz
+                """
+            }
+        } else {
+             exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NANOLYSE!"
+        }
+    } else {
+        if (params.nanolyse_fasta) { ch_nanolyse_fasta = Channel.fromPath(params.nanolyse_fasta, checkIfExists: true) } else { exit 1, "Please specify a valid fasta file (usually lambda phage) for nanolyse to filter against!" }
+    }
+}
 if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap2'"
@@ -335,9 +355,10 @@ ch_samplesheet_reformat
         ch_sample_info
         ch_sample_name
         ch_sample_annotation
+        ch_sample_nanolyse
     }
 
-// Check that reference genome and annotation are the same for all samples if perfoming quantification
+// Check if reference genome and annotation are the same for all samples if perfoming quantification
 // Check if we have replicates and multiple conditions in the input samplesheet
 def REPLICATES_EXIST    = false
 def MULTIPLE_CONDITIONS = false
@@ -436,6 +457,7 @@ if (!params.skip_basecalling) {
             ch_fastq_gtf
             ch_fastq_index
             ch_fastq_align 
+            ch_fastq_nanolyse
         }
 
 } else {
@@ -491,7 +513,8 @@ if (!params.skip_basecalling) {
                 ch_fastq_sizes
                 ch_fastq_gtf
                 ch_fastq_index
-                ch_fastq_align 
+                ch_fastq_align
+                ch_fastq_nanolyse 
             }
     } else {
         if (!params.skip_alignment) {
@@ -507,6 +530,7 @@ if (!params.skip_basecalling) {
                     ch_fastq_gtf
                     ch_fastq_index
                     ch_fastq_align 
+                    ch_fastq_nanolyse
                 }
         } else {
             ch_fastq_nanoplot = Channel.empty()
@@ -516,6 +540,42 @@ if (!params.skip_basecalling) {
     ch_guppy_version          = Channel.empty()
     ch_guppy_pycoqc_summary   = Channel.empty()
     ch_guppy_nanoplot_summary = Channel.empty()
+}
+
+if (params.run_nanolyse){
+    /*
+     * Control cleaning using nanolyse
+     */
+    process NANOLYSE {
+        tag "$sample"
+        label 'process_medium'
+        publishDir "${params.outdir}/nanolyse", mode: params.publish_dir_mode
+
+        input:
+        tuple val(sample), path(fastq) from ch_fastq_nanolyse.map{ ch -> [ ch[0], ch[1] ] }
+        path fasta from ch_nanolyse_fasta
+    
+        output:
+        tuple val(sample), path("*.fastq.gz") into ch_nanolyse_fastq
+
+        script:
+        sample_fastq_gz = "$sample"+".fastq.gz"
+        lambda_fasta_gz = "lambda.fasta.gz"
+        """
+        gunzip -c $fastq | NanoLyse -r $lambda_fasta_gz | gzip > $sample_fastq_gz
+        """
+    }
+    ch_nanolyse_fastq
+        .join(ch_sample_nanolyse)
+        .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
+        .into {
+            ch_fastq_nanoplot
+            ch_fastq_fastqc
+            ch_fastq_sizes
+            ch_fastq_gtf
+            ch_fastq_index
+            ch_fastq_align
+        }
 }
 
 /*
@@ -1164,11 +1224,13 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             path counts from ch_gene_counts
             
             output:
-            path "*.txt"
-        
+            path "*.results.txt"
+            path "v_deseq2.txt" into ch_deseq2_version        
+
             script:
             """
             run_deseq2.r $params.quantification_method $counts
+            Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
             """
         }
 
@@ -1186,15 +1248,30 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             path counts from ch_transcript_counts
 
             output:
-            path "*.txt"
+            path "*.results.txt"
+            path "v_drimseq.txt" into ch_drimseq_version
+            path "v_dexseq.txt" into ch_dexseq_version
+            path "v_stager.txt" into ch_stager_version
             
             script:
             """
             run_dexseq.r $params.quantification_method $counts
+            Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
+            Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"
+            Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='v_stager.txt')"
             """
         }
+    } else {
+      ch_deseq2_version                 = Channel.empty()
+      ch_dexseq_version                 = Channel.empty()
+      ch_stager_version                 = Channel.empty()
+      ch_drimseq_version                = Channel.empty()
     }
 } else {
+    ch_deseq2_version                   = Channel.empty()
+    ch_dexseq_version                   = Channel.empty()
+    ch_stager_version                   = Channel.empty()
+    ch_drimseq_version                  = Channel.empty()
     ch_featurecounts_transcript_multiqc = Channel.empty()
     ch_featurecounts_gene_multiqc       = Channel.empty()
 }
@@ -1231,7 +1308,11 @@ process GET_SOFTWARE_VERSIONS {
     input:
     path guppy from ch_guppy_version.collect().ifEmpty([])
     path pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    
+    path deseq2 from ch_deseq2_version.collect().ifEmpty([])
+    path drimseq from ch_drimseq_version.collect().ifEmpty([])
+    path dexseq from ch_dexseq_version.collect().ifEmpty([])
+    path stager from ch_stager_version.collect().ifEmpty([])
+
     output:
     path 'software_versions_mqc.yaml' into software_versions_yaml
     path "software_versions.csv"
@@ -1241,6 +1322,7 @@ process GET_SOFTWARE_VERSIONS {
     echo $workflow.manifest.version > v_pipeline.txt
     echo $workflow.nextflow.version > v_nextflow.txt
     qcat --version &> v_qcat.txt
+    NanoLyse --version &> v_nanolyse.txt
     NanoPlot --version &> v_nanoplot.txt
     fastqc --version > v_fastqc.txt
     minimap2 --version &> v_minimap2.txt
@@ -1251,10 +1333,6 @@ process GET_SOFTWARE_VERSIONS {
     echo \$(featureCounts -v 2>&1) > v_featurecounts.txt
     echo \$(R --version 2>&1) > v_r.txt
     Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
-    Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
-    Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
-    Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"
-    Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='v_stager.txt')"
     Rscript -e "library(BSgenome); write(x=as.character(packageVersion('BSgenome')), file='v_bsgenome.txt')"
     multiqc --version > v_multiqc.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
