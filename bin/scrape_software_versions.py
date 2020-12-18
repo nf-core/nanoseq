@@ -8,7 +8,7 @@ regexes = {
     'Nextflow'       : ['v_nextflow.txt'     , r"(\S+)"],
     'guppy'          : ['v_guppy.txt'        , r"Version (\S+)"],
     'qcat'           : ['v_qcat.txt'         , r"qcat (\S+)"],
-    'NanoLyse'       : ['v_NanoLyse.txt'     , r"NanoLyse (\S+)"],
+    'NanoLyse'       : ['v_nanolyse.txt'     , r"NanoLyse (\S+)"],
     'pycoQC'         : ['v_pycoqc.txt'       , r"pycoQC v(\S+)"],
     'NanoPlot'       : ['v_nanoplot.txt'     , r"NanoPlot (\S+)"],
     'FastQC'         : ['v_fastqc.txt'       , r"FastQC v(\S+)"],
