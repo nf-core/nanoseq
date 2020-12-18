@@ -1226,13 +1226,11 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             path counts from ch_gene_counts
             
             output:
-            path "*.results.txt"
-            path "v_deseq2.txt" into ch_deseq2_version        
+            path "*.txt"
 
             script:
             """
             run_deseq2.r $params.quantification_method $counts
-            Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
             """
         }
 
@@ -1250,30 +1248,15 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             path counts from ch_transcript_counts
 
             output:
-            path "*.results.txt"
-            path "v_drimseq.txt" into ch_drimseq_version
-            path "v_dexseq.txt" into ch_dexseq_version
-            path "v_stager.txt" into ch_stager_version
+            path "*.txt"
             
             script:
             """
             run_dexseq.r $params.quantification_method $counts
-            Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
-            Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"
-            Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='v_stager.txt')"
             """
         }
-    } else {
-      ch_deseq2_version                 = Channel.empty()
-      ch_dexseq_version                 = Channel.empty()
-      ch_stager_version                 = Channel.empty()
-      ch_drimseq_version                = Channel.empty()
     }
 } else {
-    ch_deseq2_version                   = Channel.empty()
-    ch_dexseq_version                   = Channel.empty()
-    ch_stager_version                   = Channel.empty()
-    ch_drimseq_version                  = Channel.empty()
     ch_featurecounts_transcript_multiqc = Channel.empty()
     ch_featurecounts_gene_multiqc       = Channel.empty()
 }
@@ -1310,10 +1293,6 @@ process GET_SOFTWARE_VERSIONS {
     input:
     path guppy from ch_guppy_version.collect().ifEmpty([])
     path pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    path deseq2 from ch_deseq2_version.collect().ifEmpty([])
-    path drimseq from ch_drimseq_version.collect().ifEmpty([])
-    path dexseq from ch_dexseq_version.collect().ifEmpty([])
-    path stager from ch_stager_version.collect().ifEmpty([])
 
     output:
     path 'software_versions_mqc.yaml' into software_versions_yaml
@@ -1335,6 +1314,10 @@ process GET_SOFTWARE_VERSIONS {
     echo \$(featureCounts -v 2>&1) > v_featurecounts.txt
     echo \$(R --version 2>&1) > v_r.txt
     Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
+    Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
+    Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
+    Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"
+    Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='v_stager.txt')"
     Rscript -e "library(BSgenome); write(x=as.character(packageVersion('BSgenome')), file='v_bsgenome.txt')"
     multiqc --version > v_multiqc.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
