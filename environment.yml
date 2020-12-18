@@ -28,9 +28,4 @@ dependencies:
   - bioconda::stringtie=2.1.4
   - bioconda::subread=2.0.1
   - bioconda::bioconductor-bambu=1.0.2
-  - bioconda::bioconductor-deseq2=1.30.0
-  - bioconda::bioconductor-drimseq=1.18.0
-  - bioconda::bioconductor-dexseq=1.36.0
-  - bioconda::bioconductor-stager=1.12.0
   - bioconda::bioconductor-bsgenome=1.58.0
-
