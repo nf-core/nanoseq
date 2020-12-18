@@ -8,6 +8,7 @@ regexes = {
     'Nextflow'       : ['v_nextflow.txt'     , r"(\S+)"],
     'guppy'          : ['v_guppy.txt'        , r"Version (\S+)"],
     'qcat'           : ['v_qcat.txt'         , r"qcat (\S+)"],
+    'NanoLyse'       : ['v_NanoLyse.txt'     , r"NanoLyse (\S+)"],
     'pycoQC'         : ['v_pycoqc.txt'       , r"pycoQC v(\S+)"],
     'NanoPlot'       : ['v_nanoplot.txt'     , r"NanoPlot (\S+)"],
     'FastQC'         : ['v_fastqc.txt'       , r"FastQC v(\S+)"],
@@ -32,6 +33,7 @@ results['nf-core/nanoseq'] = '<span style="color:#999999;\">N/A</span>'
 results['Nextflow']        = '<span style="color:#999999;\">N/A</span>'
 results['guppy']           = '<span style="color:#999999;\">N/A</span>'
 results['qcat']            = '<span style="color:#999999;\">N/A</span>'
+results['NanoLyse']        = '<span style="color:#999999;\">N/A</span>'
 results['pycoQC']          = '<span style="color:#999999;\">N/A</span>'
 results['NanoPlot']        = '<span style="color:#999999;\">N/A</span>'
 results['FastQC']          = '<span style="color:#999999;\">N/A</span>'
