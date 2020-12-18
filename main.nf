@@ -167,12 +167,13 @@ if (!params.skip_basecalling) {
         }
     }
 }
+
 if (params.run_nanolyse){
     if (!params.nanolyse_fasta){
         if (!isOffline()){
             process GET_NANOLYSE_FASTA {
                 output:
-                path "lambda.fasta.gz" into ch_nanolyse_fasta
+                path "*fasta.gz" into ch_nanolyse_fasta
 
                 script:
                 """
@@ -180,12 +181,13 @@ if (params.run_nanolyse){
                 """
             }
         } else {
-             exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NANOLYSE!"
+             exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
         }
     } else {
-        if (params.nanolyse_fasta) { ch_nanolyse_fasta = Channel.fromPath(params.nanolyse_fasta, checkIfExists: true) } else { exit 1, "Please specify a valid fasta file (usually lambda phage) for nanolyse to filter against!" }
+        ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true) } else { exit 1, "Please specify a valid fasta file (usually lambda phage) for NanoLyse to filter against!" }
     }
 }
+
 if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap2'"
@@ -257,6 +259,10 @@ if (params.skip_basecalling && !params.skip_demultiplexing) {
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Qcat Min Score']     = params.qcat_min_score
     summary['Qcat Detect Middle'] = params.qcat_detect_middle ? 'Yes': 'No'
+}
+if (params.run_nanolyse) {
+    summary['Run NanoLyse']       = params.run_nanolyse
+    summary['NanoLyse Fasta']     = params.nanolyse_fasta
 }
 if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
