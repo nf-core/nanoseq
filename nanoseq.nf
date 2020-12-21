@@ -201,8 +201,8 @@ workflow NANOSEQ{
         ch_guppy_summary = GUPPY.out.summary
         ch_fastq_qc = GUPPY.out.fastq
     } else {
+        ch_guppy_summary = Channel.empty()
         if (!params.skip_alignment){
-             ch_guppy_summary = Channel.empty()
              ch_sample
                  .map { it -> [ it[0], it[6] ]}
                  .set { ch_fastq_qc }
