@@ -47,8 +47,10 @@ def helpMessage() {
       --qcat_detect_middle [bool]         Search for adapters in the whole read '--detect-middle' used for qcat (Default: false)
       --skip_basecalling [bool]           Skip basecalling with Guppy (Default: false)
       --skip_demultiplexing [bool]        Skip demultiplexing with Guppy (Default: false)
+    
+    Raw read cleaning
       --run_nanolyse [bool]               Filter reads from FastQ files mapping to the lambda phage genome using NanoLyse (Default: false)
-      --nanolyse_fasta                    Provide a fasta file for nanolyse to filter against
+      --nanolyse_fasta [file]             Provide a fasta file for NanoLyse to use for filtering FastQ files (Default: false)
 
     Alignment
       --aligner [str]                     Specifies the aligner to use (available are: minimap2 or graphmap2). Both are capable of performing unspliced/spliced alignment (Default: 'minimap2')
@@ -165,12 +167,13 @@ if (!params.skip_basecalling) {
         }
     }
 }
+
 if (params.run_nanolyse){
     if (!params.nanolyse_fasta){
         if (!isOffline()){
             process GET_NANOLYSE_FASTA {
                 output:
-                path "lambda.fasta.gz" into ch_nanolyse_fasta
+                path "*fasta.gz" into ch_nanolyse_fasta
 
                 script:
                 """
@@ -178,12 +181,13 @@ if (params.run_nanolyse){
                 """
             }
         } else {
-             exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NANOLYSE!"
+             exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
         }
     } else {
-        if (params.nanolyse_fasta) { ch_nanolyse_fasta = Channel.fromPath(params.nanolyse_fasta, checkIfExists: true) } else { exit 1, "Please specify a valid fasta file (usually lambda phage) for nanolyse to filter against!" }
+        ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
     }
 }
+
 if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap2'"
@@ -255,6 +259,10 @@ if (params.skip_basecalling && !params.skip_demultiplexing) {
     summary['Barcode Kit ID']     = params.barcode_kit ?: 'Unspecified'
     summary['Qcat Min Score']     = params.qcat_min_score
     summary['Qcat Detect Middle'] = params.qcat_detect_middle ? 'Yes': 'No'
+}
+if (params.run_nanolyse) {
+    summary['Run NanoLyse']       = params.run_nanolyse
+    summary['NanoLyse Fasta']     = params.nanolyse_fasta
 }
 if (!params.skip_alignment) {
     summary['Aligner']            = params.aligner
@@ -444,6 +452,12 @@ if (!params.skip_basecalling) {
         """
     }
 
+    if (params.skip_demultiplexing) {
+        ch_sample_info
+            .map { it -> [ it[0], it[0], it[2], it[3], it[4], it[5] ] }
+            .set { ch_sample_info }
+    }
+    
     // Create channels = [ sample, fastq, fasta, gtf, is_transcripts, annotation_str ]
     ch_fastq
         .flatten()
@@ -542,14 +556,18 @@ if (!params.skip_basecalling) {
     ch_guppy_nanoplot_summary = Channel.empty()
 }
 
+/*
+ * DNA contaminant removal using NanoLyse
+ */
 if (params.run_nanolyse){
-    /*
-     * Control cleaning using nanolyse
-     */
     process NANOLYSE {
         tag "$sample"
         label 'process_medium'
-        publishDir "${params.outdir}/nanolyse", mode: params.publish_dir_mode
+        publishDir "${params.outdir}/nanolyse", mode: params.publish_dir_mode,
+            saveAs: { filename ->
+                            if (filename.endsWith(".log")) "log/$filename"
+                            else filename
+                    }
 
         input:
         tuple val(sample), path(fastq) from ch_fastq_nanolyse.map{ ch -> [ ch[0], ch[1] ] }
@@ -557,14 +575,15 @@ if (params.run_nanolyse){
     
         output:
         tuple val(sample), path("*.fastq.gz") into ch_nanolyse_fastq
+        path "*.log"
 
         script:
-        sample_fastq_gz = "$sample"+".fastq.gz"
-        lambda_fasta_gz = "lambda.fasta.gz"
         """
-        gunzip -c $fastq | NanoLyse -r $lambda_fasta_gz | gzip > $sample_fastq_gz
+        gunzip -c $fastq | NanoLyse -r $fasta | gzip > ${sample}.clean.fastq.gz
+        cp NanoLyse.log ${sample}.nanolyse.log
         """
     }
+
     ch_nanolyse_fastq
         .join(ch_sample_nanolyse)
         .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ] }
@@ -1224,13 +1243,11 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             path counts from ch_gene_counts
             
             output:
-            path "*.results.txt"
-            path "v_deseq2.txt" into ch_deseq2_version        
+            path "*.txt"
 
             script:
             """
             run_deseq2.r $params.quantification_method $counts
-            Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
             """
         }
 
@@ -1248,30 +1265,15 @@ if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol
             path counts from ch_transcript_counts
 
             output:
-            path "*.results.txt"
-            path "v_drimseq.txt" into ch_drimseq_version
-            path "v_dexseq.txt" into ch_dexseq_version
-            path "v_stager.txt" into ch_stager_version
+            path "*.txt"
             
             script:
             """
             run_dexseq.r $params.quantification_method $counts
-            Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
-            Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"
-            Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='v_stager.txt')"
             """
         }
-    } else {
-      ch_deseq2_version                 = Channel.empty()
-      ch_dexseq_version                 = Channel.empty()
-      ch_stager_version                 = Channel.empty()
-      ch_drimseq_version                = Channel.empty()
     }
 } else {
-    ch_deseq2_version                   = Channel.empty()
-    ch_dexseq_version                   = Channel.empty()
-    ch_stager_version                   = Channel.empty()
-    ch_drimseq_version                  = Channel.empty()
     ch_featurecounts_transcript_multiqc = Channel.empty()
     ch_featurecounts_gene_multiqc       = Channel.empty()
 }
@@ -1308,10 +1310,6 @@ process GET_SOFTWARE_VERSIONS {
     input:
     path guppy from ch_guppy_version.collect().ifEmpty([])
     path pycoqc from ch_pycoqc_version.collect().ifEmpty([])
-    path deseq2 from ch_deseq2_version.collect().ifEmpty([])
-    path drimseq from ch_drimseq_version.collect().ifEmpty([])
-    path dexseq from ch_dexseq_version.collect().ifEmpty([])
-    path stager from ch_stager_version.collect().ifEmpty([])
 
     output:
     path 'software_versions_mqc.yaml' into software_versions_yaml
@@ -1333,6 +1331,10 @@ process GET_SOFTWARE_VERSIONS {
     echo \$(featureCounts -v 2>&1) > v_featurecounts.txt
     echo \$(R --version 2>&1) > v_r.txt
     Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='v_bambu.txt')"
+    Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='v_deseq2.txt')"
+    Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='v_drimseq.txt')"
+    Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='v_dexseq.txt')"
+    Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='v_stager.txt')"
     Rscript -e "library(BSgenome); write(x=as.character(packageVersion('BSgenome')), file='v_bsgenome.txt')"
     multiqc --version > v_multiqc.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
@@ -1455,7 +1457,8 @@ workflow.onComplete {
     def email_html = html_template.toString()
 
     // Render the sendmail template
-    def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, projectDir: "$projectDir", mqcFile: mqc_report, mqcMaxSize: params.max_multiqc_email_size.toBytes() ]
+    def max_multiqc_email_size = params.max_multiqc_email_size as nextflow.util.MemoryUnit
+    def smail_fields = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, projectDir: "$projectDir", mqcFile: mqc_report, mqcMaxSize: max_multiqc_email_size.toBytes() ]
     def sf = new File("$projectDir/assets/sendmail_template.txt")
     def sendmail_template = engine.createTemplate(sf).make(smail_fields)
     def sendmail_html = sendmail_template.toString()
