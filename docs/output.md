@@ -50,13 +50,13 @@ The pipeline has been written to deal with the various scenarios where you would
 
 If you have a pre-basecalled fastq file then *qcat* will be used to perform the demultiplexing if you provide the `--skip_basecalling` parameter. If you would like to skip both of these steps entirely then you can provide `--skip_basecalling --skip_demultiplexing` when running the pipeline. As a result, the structure of the output folder will depend on which steps you have chosen to run in the pipeline.
 
-## Control cleaning
+## Removal of DNA contaminants
 
 <details markdown="1">
 <summary>Output files</summary>
 
-* `nanolyse/<sample_replicate>.fastq.gz`  
-  control-cleaned fastq output files.
+* `nanolyse/<SAMPLE>.clean.fastq.gz`  
+  FastQ file after the removal of reads mapping to DNA contaminants.
 
 </details>
 
@@ -64,9 +64,7 @@ If you have a pre-basecalled fastq file then *qcat* will be used to perform the 
 [NanoLyse](https://github.com/wdecoster/nanolyse)
 
 *Description*:  
-*NanoLyse* will be used to filter out control sequences used in library preparation, which are known portion of lambda phage, from fastq files.
-
-If you would like to run NanoLyse on your fastq files then you can provide `--run_nanolyse` when running the pipeline. As a result, you will get an output folder called `nanolyse` with `*.fastq.gz` files processed by NanoLyse. These control-cleaned fastq files will be used in downstream processes of the pipeline.
+If you would like to run NanoLyse on the raw FastQ files then you can provide `--run_nanolyse` when running the pipeline. By default, the pipeline will filter the raw reads relative to lambda phage but you can provide your own fasta file of "contaminants" with `--nanolyse_fasta`. The filtered FastQ files will be used in the downstream processes of the pipeline.
 
 ## Sequencing QC
 
