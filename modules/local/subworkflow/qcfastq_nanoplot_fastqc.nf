@@ -49,6 +49,6 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     nanoplot_txt
     nanoplot_log
 
-    fastqc_zip
-    fastqc_html
+//    fastqc_zip
+//    fastqc_html
 }

@@ -18,10 +18,13 @@ process GUPPY {
     }
 
     input:
-    tuple val(name), path(input_path)
+    path(input_path)
+    val name
+    path guppy_config
+    path guppy_model
     
     output:
-    tuple val(name), path("fastq/*.fastq.gz") , emit: fastq
+    path "fastq/*.fastq.gz"                   , emit: fastq
     path "basecalling/*.txt"                  , emit: summary
     path "basecalling/*"                      , emit: called
     path "*.version.txt"                      , emit: version

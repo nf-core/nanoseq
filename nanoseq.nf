@@ -195,38 +195,52 @@ workflow NANOSEQ{
 
     if (!params.skip_basecalling){
         ch_sample
-            .map { it -> [ it[0], it[6] ] }
-            .set { ch_sample_guppy }
-        GUPPY ( ch_sample_guppy )
+            .first()
+            .map { it[0] }
+            .set { ch_sample_name }
+        GUPPY ( ch_input_path, ch_sample_name, ch_guppy_config.ifEmpty([]), ch_guppy_model.ifEmpty([]) )
         ch_guppy_summary = GUPPY.out.summary
-        ch_fastq_qc = GUPPY.out.fastq
-    } else {
-        ch_guppy_summary = Channel.empty()
-        if (!params.skip_alignment){
-             ch_sample
-                 .map { it -> [ it[0], it[6] ]}
-                 .set { ch_fastq_qc }
-        }
-    }
+        GUPPY.out.fastq
+           .flatten()
+           .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
+           .join(ch_sample, by: 1) // join on barcode
+           .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
+           .set { ch_fastq }
+     }
+//    } else {
+//        ch_guppy_summary = Channel.empty()
+//        if (!params.skip_demultiplexing){
+//
+//        } else {
+//            if (!params.skip_alignment){
+//               ch_sample
+//                   .map { it -> [ it[0], it[6] ]}
+//                   .set { ch_fastq_qc }
+//            } else {
+//
+//            }
+//        }
+//    }
     if (!params.skip_qc){
-        if (!params.skip_bascalling){
+        if (!params.skip_basecalling){
             QCBASECALL_PYCOQC_NANOPLOT ( ch_guppy_summary , params.skip_pycoqc, params.skip_nanoplot )
         }
-        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq_qc, params.skip_nanoplot, params.skip_fastqc)        
+        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq, params.skip_nanoplot, params.skip_fastqc)        
     }
     if (!params.skip_alignment){
-       ch_sample
-           .join (ch_fastq_qc)
-           .map { it -> [ it[0], it[8], it[2], it[3], it[4], it[5] ] }
-           .set { ch_fastq_alignment }
-       PREPARE_GENOME ( ch_sample, ch_fastq_alignment )
+//       ch_sample
+//           .join (ch_fastq_qc)
+//           .map { it -> [ it[0], it[8], it[2], it[3], it[4], it[5] ] }
+//           .set { ch_fastq_alignment }
+
+       PREPARE_GENOME ( ch_fastq )
        ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
        ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
        if (params.aligner == 'minimap2') {
-          ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq_alignment )
+          ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq )
           ch_sortbam = ALIGN_MINIMAP2.out.ch_sortbam
        } else {
-          ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq_alignment )
+          ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
           ch_sortbam = ALIGN_GRAPHMAP2.out.ch_sortbam
        }
        if (!params.skip_bigwig){

@@ -9,12 +9,11 @@ include { GTF2BED          } from '../process/gtf2bed'               addParams( 
 
 workflow PREPARE_GENOME {
     take:
-    ch_sample
-    ch_fastq_alignment
+    ch_fastq
 
     main:
     // Get unique list of all fasta files
-    ch_sample
+    ch_fastq
         .filter { it[2] }
         .map { it -> [ it[2], it[5].toString() ] }  // [ fasta, annotation_str ]
         .unique()
@@ -27,7 +26,7 @@ workflow PREPARE_GENOME {
     ch_chrom_sizes = GET_CHROM_SIZES.out.sizes
 
     // Get unique list of all gtf files
-    ch_sample
+    ch_fastq
         .filter { it[3] }
         .map { it -> [ it[3], it[5] ] }  // [ gtf, annotation_str ]
         .unique()
@@ -40,11 +39,12 @@ workflow PREPARE_GENOME {
     ch_gtf_bed = GTF2BED.out.gtf_bed
 
     ch_chrom_sizes
-        .join(ch_gtf_bed, by: 1)
+        .join(ch_gtf_bed, by: 1, remainder:true)
         .map { it -> [ it[1], it[2], it[0] ] }
-        .cross(ch_fastq_alignment) { it -> it[-1] }
+        .cross(ch_fastq) { it -> it[-1] }
         .flatten()
         .collate(9)
+        .view()
         .map { it -> [ it[5], it[0], it[6], it[1], it[7], it[8] ]} // [ fasta, sizes, gtf, bed, is_transcripts, annotation_str ]
         .unique()
         .set { ch_fasta_index }
