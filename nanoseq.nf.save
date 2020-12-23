@@ -198,35 +198,19 @@ workflow NANOSEQ{
             .first()
             .map { it[0] }
             .set { ch_sample_name }
-
         GUPPY ( ch_input_path, ch_sample_name, ch_guppy_config.ifEmpty([]), ch_guppy_model.ifEmpty([]) )
         ch_guppy_summary = GUPPY.out.summary
-
-        if (params.skip_demultiplexing){
-            ch_sample
-                .map { it -> [ it[0], it[0], it[2], it[3], it[4], it[5] ] }
-                .set { ch_sample }
-        }
-
         GUPPY.out.fastq
            .flatten()
            .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
            .join(ch_sample, by: 1) // join on barcode
            .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
            .set { ch_fastq }
-    } else {
-        ch_guppy_summary = Channel.empty()
-        if (!params.skip_demultiplexing){
-            QCAT ( ch_input_path )
-            ch_fastq = Channel.empty()
-            QCAT.out.fastq
-               .flatten()
-               .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.'))] }
-               .join(ch_sample, by: 1) // join on barcode
-               .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
-               .set { ch_fastq } 
-        }
-      }
+     }
+//    } else {
+//        ch_guppy_summary = Channel.empty()
+//        if (!params.skip_demultiplexing){
+//
 //        } else {
 //            if (!params.skip_alignment){
 //               ch_sample
@@ -253,18 +237,19 @@ workflow NANOSEQ{
        ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
        ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
        if (params.aligner == 'minimap2') {
+          ch_fasta_index.view()
           ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq )
           ch_sortbam = ALIGN_MINIMAP2.out.ch_sortbam
        } else {
           ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
           ch_sortbam = ALIGN_GRAPHMAP2.out.ch_sortbam
        }
-       if (!params.skip_bigwig){
-          BEDTOOLS_UCSC_BIGWIG ( ch_sortbam )
-       }
-       if (!params.skip_bigbed){
-          BEDTOOLS_UCSC_BIGBED ( ch_sortbam )
-       }
+//       if (!params.skip_bigwig){
+//          BEDTOOLS_UCSC_BIGWIG ( ch_sortbam )
+//       }
+//       if (!params.skip_bigbed){
+//          BEDTOOLS_UCSC_BIGBED ( ch_sortbam )
+//       }
     }
 }
 

@@ -38,7 +38,7 @@ process QCAT {
                 --min-score $params.qcat_min_score \\
                 $detect_middle
             
-            ## Zip fastq files
-            pigz -p $task.cpus fastq/*
+            ## Zip fastq files (cannot find pigz command)
+            gzip fastq/*
     """
 }
