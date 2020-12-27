@@ -266,6 +266,12 @@ workflow NANOSEQ{
     if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
        if (params.quantification_method == 'stringtie2') {
           QUANTIFY_STRINGTIE_FEATURECOUNTS( ch_sample, ch_sortbam )
+          ch_gene_counts       = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_gene_counts
+          ch_transcript_counts = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_transcript_counts
+       }
+       if (!params.skip_differential_analysis) {
+          ch_gene_counts.view()
+          DIFFERENTIAL_DESEQ2_DEXSEQ( ch_gene_counts, ch_transcript_counts )
        }
     }
 }

@@ -44,7 +44,6 @@ workflow PREPARE_GENOME {
         .cross(ch_fastq) { it -> it[-1] }
         .flatten()
         .collate(9)
-        .view()
         .map { it -> [ it[5], it[0], it[6], it[1], it[7], it[8] ]} // [ fasta, sizes, gtf, bed, is_transcripts, annotation_str ]
         .unique()
         .set { ch_fasta_index }

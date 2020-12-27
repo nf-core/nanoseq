@@ -22,11 +22,8 @@ process DESEQ2 {
     path  "*.version.txt"       , emit: version
 
     script:
-    def software    = getSoftwareName(task.process)
-    def label_lower = params.multiqc_label.toLowerCase()
-    def label_upper = params.multiqc_label.toUpperCase()
     """
-    run_deseq2.r $params.quantification_methods $counts $options.args
-    Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='${software}.version.txt')"
+    run_deseq2.r $params.quantification_method $counts
+    Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='deseq2.version.txt')"
     """
 }
