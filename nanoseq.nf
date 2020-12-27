@@ -216,6 +216,7 @@ workflow NANOSEQ{
            .set { ch_fastq }
     } else {
         ch_guppy_summary = Channel.empty()
+        
         if (!params.skip_demultiplexing){
             QCAT ( ch_input_path )
             ch_fastq = Channel.empty()
@@ -225,30 +226,25 @@ workflow NANOSEQ{
                .join(ch_sample, by: 1) // join on barcode
                .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
                .set { ch_fastq } 
+        } else {
+            if (!params.skip_alignment){
+               ch_sample
+                   .map { it -> if (it[6].toString().endsWith('.gz')) [ it[0], it[6], it[2], it[1], it[4], it[5] ] }
+                   .set { ch_fastq }
+            } else {
+               ch_fastq = Channel.empty()
+            }
         }
-      }
-//        } else {
-//            if (!params.skip_alignment){
-//               ch_sample
-//                   .map { it -> [ it[0], it[6] ]}
-//                   .set { ch_fastq_qc }
-//            } else {
-//
-//            }
-//        }
-//    }
+    }
+
     if (!params.skip_qc){
         if (!params.skip_basecalling){
             QCBASECALL_PYCOQC_NANOPLOT ( ch_guppy_summary , params.skip_pycoqc, params.skip_nanoplot )
         }
         QCFASTQ_NANOPLOT_FASTQC ( ch_fastq, params.skip_nanoplot, params.skip_fastqc)        
     }
-    if (!params.skip_alignment){
-//       ch_sample
-//           .join (ch_fastq_qc)
-//           .map { it -> [ it[0], it[8], it[2], it[3], it[4], it[5] ] }
-//           .set { ch_fastq_alignment }
 
+    if (!params.skip_alignment){
        PREPARE_GENOME ( ch_fastq )
        ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
        ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
@@ -264,6 +260,12 @@ workflow NANOSEQ{
        }
        if (!params.skip_bigbed){
           BEDTOOLS_UCSC_BIGBED ( ch_sortbam )
+       }
+    }
+
+    if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
+       if (params.quantification_method == 'stringtie2') {
+          QUANTIFY_STRINGTIE_FEATURECOUNTS( ch_sample, ch_sortbam )
        }
     }
 }

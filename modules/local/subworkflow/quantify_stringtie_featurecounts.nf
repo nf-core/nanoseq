@@ -11,41 +11,53 @@ include { SUBREAD_FEATURECOUNTS } from '../process/subread_featurecounts'  addPa
 
 workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     take:
-    ch_sample_annotation
+    ch_sample
     ch_sortbam
 
     main:
-    ch_sample_annotation
-            .map  { it -> [ it[0], it[2], it[3] ] }
-            .join ( ch_sortbam )
-            .into { 
-                ch_sample_annotation
-                ch_sample_gtf
-                ch_sample_featurecounts
-            }
+    ch_sortbam
+        .map  { it -> [ it[0], it[3] ]}
+        .set  { ch_sortbam }
+
+    ch_sample
+        .map  { it -> [ it[0], it[2], it[3] ] }
+        .join ( ch_sortbam )
+        .set  { ch_sample }
 
     /*
      * Novel isoform detection with StringTie
      */
-    ch_stringtie_gtf        = STRINGTIE2 ( ch_sample_annotation )
+    STRINGTIE2 ( ch_sample )
+    ch_stringtie_gtf = STRINGTIE2.out.stringtie_gtf
 
-    ch_sample_gtf
-            .map { it -> [ it[2]] }
-            .unique()
-    
+    ch_sample
+        .map { it -> [ it[2] ] }
+        .unique()
+        .set { ch_sample_gtf }
+
     /*
      * Merge isoforms across samples caleed by StringTie
      */
-    ch_stringtie_merged_gtf = STRINGTIE2_MERGE ( ch_stringtie_gtf, ch_sample_gtf )
-
+    STRINGTIE2_MERGE ( ch_stringtie_gtf, ch_sample_gtf )
+    ch_stringtie_merged_gtf = STRINGTIE2_MERGE.out.merged_gtf
+    
     /*
      * Gene and transcript quantification with featureCounts
      */
-    SUBREAD_FEATURECOUNTS ( ch_stringtie_merged_gtf, ch_sample_featurecounts )
+    ch_sample
+        .map { it -> [ it[-1] ] }
+        .set { ch_sample }
+    SUBREAD_FEATURECOUNTS ( ch_stringtie_merged_gtf, ch_sample )
+    ch_gene_counts                      = SUBREAD_FEATURECOUNTS.out.gene_counts
+    ch_transcript_counts                = SUBREAD_FEATURECOUNTS.out.transcript_counts
+    ch_featurecounts_gene_multiqc       = SUBREAD_FEATURECOUNTS.out.featurecounts_gene_multiqc
+    ch_featurecounts_transcript_multiqc = SUBREAD_FEATURECOUNTS.out.featurecounts_transcript_multiqc
     
     emit:
-    ch_gene_counts                      = "counts_gene.txt"
-    ch_transcript_counts                = "counts_transcript.txt"
-    ch_featurecounts_gene_multiqc       = "counts_gene.txt.summary"
-    ch_featurecounts_transcript_multiqc = "counts_transcript.txt.summary"
+    ch_stringtie_gtf
+    ch_stringtie_merged_gtf
+    ch_gene_counts
+    ch_transcript_counts
+    ch_featurecounts_gene_multiqc
+    ch_featurecounts_transcript_multiqc
 }

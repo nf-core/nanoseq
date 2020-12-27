@@ -8,7 +8,7 @@ process SUBREAD_FEATURECOUNTS {
     label 'process_medium'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta.id) }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
     // Note: 2.7X indices incompatible with AWS iGenomes.
     conda     (params.enable_conda ? "bioconda::subread=2.0.1" : null)
@@ -52,6 +52,6 @@ process SUBREAD_FEATURECOUNTS {
          -a $gtf \\
          -o counts_transcript.txt \\
          $bams
-    echo \$(featureCounts -v 2>&1) | sed -e "s/featureCounts v//g" > ${software}.version.txt
+    echo \$(featureCounts -v 2>&1) | sed -e "s/featureCounts v//g" > featureCounts.version.txt
     """
 }
