@@ -17,7 +17,7 @@ process GRAPHMAP2_ALIGN {
     tuple val(sample), path(fastq), path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), path(index)
     
     output:
-    tuple val(sample), path(sizes), val(is_transcripts), path("*.sam"), emit: algin_sam
+    tuple val(sample), path(sizes), val(is_transcripts), path("*.sam"), emit: align_sam
 
     script:
     def preset    = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
