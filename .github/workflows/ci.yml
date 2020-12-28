@@ -58,7 +58,7 @@ jobs:
     if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
-      NXF_VER: '20.04.0'
+      NXF_VER: '20.11.0-edge'
       NXF_ANSI_LOG: false
     strategy:
       matrix:
@@ -100,7 +100,7 @@ jobs:
     if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
-      NXF_VER: '20.04.0'
+      NXF_VER: '20.11.0-edge'
       NXF_ANSI_LOG: false
     strategy:
       matrix:
@@ -142,7 +142,7 @@ jobs:
     if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
-      NXF_VER: '20.04.0'
+      NXF_VER: '20.11.0-edge'
       NXF_ANSI_LOG: false
     strategy:
       matrix:
