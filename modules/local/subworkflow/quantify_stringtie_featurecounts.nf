@@ -45,8 +45,8 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
      * Gene and transcript quantification with featureCounts
      */
     ch_sample
-        .map { it -> [ it[-1] ] }
-        .set { ch_sample }
+        .collect { it[-1]    }
+        .set     { ch_sample }
     SUBREAD_FEATURECOUNTS ( ch_stringtie_merged_gtf, ch_sample )
     ch_gene_counts                      = SUBREAD_FEATURECOUNTS.out.gene_counts
     ch_transcript_counts                = SUBREAD_FEATURECOUNTS.out.transcript_counts
