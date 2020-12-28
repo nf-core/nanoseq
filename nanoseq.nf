@@ -32,8 +32,9 @@ def isOffline() {
 
 def ch_guppy_model  = Channel.empty()
 def ch_guppy_config = Channel.empty()
-include { GET_TEST_DATA         } from './modules/local/process/get_test_data'         addParams( options: [:]                          )
-if (!params.skip_basecalling) {
+include { GET_TEST_DATA         } from './modules/local/process/get_test_data'         addParams( options: [:] )
+include { GET_NANOLYSE_FASTA    } from './modules/local/process/get_nanolyse_fasta'    addParams( options: [:] )
+if (!params.skip_basecalling) { 
 
     // Pre-download test-dataset to get files for '--input_path' parameter
     // Nextflow is unable to recursively download directories via HTTPS
@@ -86,6 +87,18 @@ if (!params.skip_basecalling) {
     }
 }
 
+if (params.run_nanolyse){
+    if (!params.nanolyse_fasta){
+        if (!isOffline()){
+            GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
+        } else {
+            exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
+        }
+    } else {
+        ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
+    }
+}
+
 if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
         exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap2'"
@@ -123,12 +136,14 @@ multiqc_options.args       += params.multiqc_title ? " --title \"$params.multiqc
 if (params.skip_alignment)  { multiqc_options['publish_dir'] = '' }
 
 // TO DO -- define options for the processes below
-def guppy_options   = modules['guppy']
-def qcat_options    = modules['qcat']
-def bambu_options   = modules['bambu']
+def guppy_options    = modules['guppy']
+def qcat_options     = modules['qcat']
+def nanolyse_options = modules['nanolyse']
+def bambu_options    = modules['bambu']
 
 include { GUPPY                 } from './modules/local/process/guppy'                 addParams( options: guppy_options                )
 include { QCAT                  } from './modules/local/process/qcat'                  addParams( options: qcat_options                 ) 
+include { NANOLYSE              } from './modules/local/process/nanolyse'              addParams( options: nanolyse_options             )
 include { BAM_RENAME            } from './modules/local/process/bam_rename'            addParams( options: [:]                          )
 include { BAMBU                 } from './modules/local/process/bambu'                 addParams( options: bambu_options                )
 include { GET_SOFTWARE_VERSIONS } from './modules/local/process/get_software_versions' addParams( options: [publish_files : ['csv':'']] )
@@ -235,6 +250,17 @@ workflow NANOSEQ{
                ch_fastq = Channel.empty()
             }
         }
+    }
+
+    if (params.run_nanolyse) {
+       ch_fastq
+           .map { it -> [ it[0], it[1] ] }
+           .set { ch_fastq_nanolyse }
+       NANOLYSE ( ch_fastq_nanolyse, ch_nanolyse_fasta )
+       NANOLYSE.out.nanolyse_fastq
+          .join( ch_sample )
+          .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ]}
+          .set { ch_fastq }
     }
 
     if (!params.skip_qc){
