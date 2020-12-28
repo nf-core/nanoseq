@@ -276,17 +276,26 @@ workflow NANOSEQ{
        ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
        if (params.aligner == 'minimap2') {
           ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq )
-          ch_sortbam = ALIGN_MINIMAP2.out.ch_sortbam
+          ch_view_sortbam = ALIGN_MINIMAP2.out.ch_sortbam
        } else {
           ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
-          ch_sortbam = ALIGN_GRAPHMAP2.out.ch_sortbam
+          ch_view_sortbam = ALIGN_GRAPHMAP2.out.ch_sortbam
        }
        if (!params.skip_bigwig){
-          BEDTOOLS_UCSC_BIGWIG ( ch_sortbam )
+          BEDTOOLS_UCSC_BIGWIG ( ch_view_sortbam )
        }
        if (!params.skip_bigbed){
-          BEDTOOLS_UCSC_BIGBED ( ch_sortbam )
+          BEDTOOLS_UCSC_BIGBED ( ch_view_sortbam )
        }
+       ch_view_sortbam
+          .map { it -> [ it[0], it[3] ] }
+          .set { ch_sortbam }
+    } else {
+       ch_sample
+           .map { it -> [ it[0], it[6] ] }
+           .set { ch_sample_bam }
+       BAM_RENAME ( ch_sample_bam )
+       ch_sortbam = BAM_RENAME.out.sortbam_quant
     }
 
     if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
@@ -296,7 +305,6 @@ workflow NANOSEQ{
           ch_transcript_counts = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_transcript_counts
        }
        if (!params.skip_differential_analysis) {
-          ch_gene_counts.view()
           DIFFERENTIAL_DESEQ2_DEXSEQ( ch_gene_counts, ch_transcript_counts )
        }
     }

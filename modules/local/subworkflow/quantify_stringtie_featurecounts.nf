@@ -15,9 +15,6 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     ch_sortbam
 
     main:
-    ch_sortbam
-        .map  { it -> [ it[0], it[3] ]}
-        .set  { ch_sortbam }
 
     ch_sample
         .map  { it -> [ it[0], it[2], it[3] ] }
