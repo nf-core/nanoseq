@@ -6,7 +6,7 @@ params.deseq2_options   = [:]
 params.dexseq_options   = [:]
 
 include { DESEQ2      } from '../process/deseq2'       addParams( options: params.deseq2_options )
-// include { DEXSEQ      } from '../process/dexseq'       addParams( options: params.dexseq_options )
+include { DEXSEQ      } from '../process/dexseq'       addParams( options: params.dexseq_options )
 
 
 workflow DIFFERENTIAL_DESEQ2_DEXSEQ {
@@ -24,9 +24,10 @@ workflow DIFFERENTIAL_DESEQ2_DEXSEQ {
     /*
      * DEXseq differential expression of transcripts
      */
- //   DEXSEQ ( ch_transcript_counts )
+    DEXSEQ ( ch_transcript_counts )
+    ch_dexseq_txt = DEXSEQ.out.dexseq_txt
     
     emit:
     ch_deseq2_txt
-//    ch_dexseq_txt
+    ch_dexseq_txt
 }

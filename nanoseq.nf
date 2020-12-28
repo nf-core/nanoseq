@@ -299,7 +299,15 @@ workflow NANOSEQ{
     }
 
     if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
-       if (params.quantification_method == 'stringtie2') {
+       if (params.quantification_method == 'bambu') {
+          ch_sample
+              .map { it -> [ it[2], it[3] ]}
+              .unique()
+              .set { ch_sample_annotation }          
+          BAMBU ( ch_sample_annotation, ch_sortbam.collect{ it [1] } )
+          ch_gene_counts       = BAMBU.out.ch_gene_counts
+          ch_transcript_counts = BAMBU.out.ch_transcript_counts
+       } else {
           QUANTIFY_STRINGTIE_FEATURECOUNTS( ch_sample, ch_sortbam )
           ch_gene_counts       = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_gene_counts
           ch_transcript_counts = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_transcript_counts

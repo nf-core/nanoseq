@@ -10,16 +10,16 @@ process BAMBU {
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:sample) }
 
-    conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-bambu=1.0.0" : null)
-    container "docker.io/bioconda::bioconductor-bambu=1.0.0" //need a multitool container for bambu and r-base on quay hub 
+    conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-bambu=1.0.2 bioconda::bioconductor-bsgenome=1.58.0" : null)
+    container "docker.io/yuukiiwa/nanoseq:bambu_bsgenome"
 
     input:
     tuple path(fasta), path(gtf)
-    path bams from ch_sortbam_quant.collect{ it[1] }
+    path bams
     
     output:
-    path "counts_gene.txt"          , emit: gene_counts
-    path "counts_transcript.txt"    , emit: transcript_counts
+    path "counts_gene.txt"          , emit: ch_gene_counts
+    path "counts_transcript.txt"    , emit: ch_transcript_counts
     path "extended_annotations.gtf" , emit: extended_gtf
 
     script:

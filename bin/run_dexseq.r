@@ -31,7 +31,7 @@ if (length(args) < 2) {
     stop("Please input the directory with the transcript level featureCounts results and the sample information file", call.=FALSE)
 } 
 transcriptquant <- args[1]
-path            <-args[2]
+path            <- args[2]
 
 ###################################################
 ###################################################
@@ -80,8 +80,8 @@ d <- dmDSdata(counts=count.matrix, samples=sampleinfo)
 # include transcripts expressed in min_samps_feature_prop samples with min_feature_prop;
 n_samp_gene <- length(sampleinfo$sample_id)/2
 n_samp_feature <- length(sampleinfo$sample_id)/2
-min_count_gene <- 5 
-min_count_feature <- 5
+min_count_gene <- 1 
+min_count_feature <- 1
 dFilter <- dmFilter(d,
                     min_samps_feature_expr = n_samp_feature, 
                     min_samps_feature_prop = n_samp_feature,
@@ -102,7 +102,7 @@ dxd <- DEXSeqDataSet(countData=round(as.matrix(counts(dFilter)[,-c(1:2)])),
                      design=formulaFullModel,
                      featureID = counts(dFilter)$feature_id,
                      groupID=counts(dFilter)$gene_id)
-
+print("a")
 dxd <- estimateSizeFactors(dxd)
 print('Size factor estimated')
 dxd <- estimateDispersions(dxd, formula = formulaFullModel)

@@ -12,12 +12,8 @@ process DEXSEQ {
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
     conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-dexseq=1.36.0 bioconda::bioconductor-drimseq=1.18.0 bioconda::bioconductor-stager=1.12.0" : null)
-    container "quay.io/biocontainers/mulled-v2-8849acf39a43cdd6c839a369a74c0adc823e2f91:ab110436faf952a33575c64dd74615a84011450b-0" 
-    // need a multitool container for r-base, dexseq, stager, drimseq and on quay hub 
-    
-    
-    when:
-    MULTIPLE_CONDITIONS && REPLICATES_EXIST
+    container "docker.io/yuukiiwa/nanoseq:dexseq" 
+    // need a multitool container for r-base, dexseq, stager, drimseq and on quay hub
 
     input:
     path counts
