@@ -136,10 +136,15 @@
                     "description": "Skip demultiplexing with Guppy/qcat.",
                     "fa_icon": "fas fa-fast-forward"
                 },
-                "skip_control_cleaning": {
+                "run_nanolyse": {
                     "type": "boolean",
-                    "description": "Skip control cleaning with NanoLyse.",
+                    "description": "Filter reads from FastQ files using NanoLyse",
                     "fa_icon": "fas fa-fast-forward"
+                },
+                "nanolyse_fasta": {
+                    "type": "string",
+                    "description": "Fasta file to be filtered against using NanoLyse",
+                    "fa_icon": "far fa-file-code"
                 }
             }
         },

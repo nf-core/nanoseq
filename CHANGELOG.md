@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* Update pipeline template to nf-core/tools `1.12`
-* Add the NanoLyse process and the `--skip_control_cleaning` flag
+* Update pipeline template to nf-core/tools `1.12.1`
+* [#77](https://github.com/nf-core/nanoseq/issues/77) - Skipped alignment steps
+* [#97](https://github.com/nf-core/nanoseq/issues/97) - Add optional DNA cleaning option
+
+### Parameters
+
+* Added `--run_nanolyse` to run NanoLyse for DNA cleaning of FastQ files
+* Added `--nanolyse_fasta` to provide a fasta file for nanolyse to filter against
 
 ### Software dependencies
 
@@ -16,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 |-------------------------|-------------|-------------|
 | `bioconductor-bambu`    | 1.0.0       | 1.0.2       |
 | `nanolyse`              |             | 1.2.0       |
+| `r-base`                | 4.0.3       | 4.0.2       |
+
+> **NB:** Dependency has been __updated__ if both old and new version information is present.  
+> **NB:** Dependency has been __added__ if just the new version information is present.  
+> **NB:** Dependency has been __removed__ if version information isn't present.  
 
 ## [1.1.0] - 2020-11-06
 

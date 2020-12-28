@@ -12,12 +12,12 @@ dependencies:
   - conda-forge::pygments=2.7.2
   - conda-forge::pigz=2.3.4
   - conda-forge::seaborn=0.10.1
-  - conda-forge::r-base=4.0.3
-  
-  - bioconda::nanolyse=1.2.0  
+  - conda-forge::r-base=4.0.2
+   
   - bioconda::fastqc=0.11.9
   - bioconda::multiqc=1.9
   - bioconda::qcat=1.1.0
+  - bioconda::nanolyse=1.2.0
   - bioconda::nanoplot=1.32.1
   - bioconda::samtools=1.11
   - bioconda::minimap2=2.17
@@ -33,4 +33,3 @@ dependencies:
   - bioconda::bioconductor-dexseq=1.36.0
   - bioconda::bioconductor-stager=1.12.0
   - bioconda::bioconductor-bsgenome=1.58.0
-
