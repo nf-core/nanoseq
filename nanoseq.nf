@@ -292,7 +292,7 @@ workflow NANOSEQ{
           .set { ch_sortbam }
     } else {
        ch_sample
-           .map { it -> [ it[0], it[6] ] }
+           .map { it -> if (it[6].toString().endsWith('.bam')) [ it[0], it[6] ] }
            .set { ch_sample_bam }
        BAM_RENAME ( ch_sample_bam )
        ch_sortbam = BAM_RENAME.out.sortbam_quant

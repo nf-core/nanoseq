@@ -14,7 +14,7 @@ process GRAPHMAP2_INDEX {
     container "quay.io/biocontainers/graphmap:0.6.3--he513fc3_0"
 
     input:
-    tuple path(fasta), path(sizes), path(gtf), val(bed), val(is_transcripts), val(annotation_str)
+    tuple path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str)
     
     output:
     tuple path(fasta), path(sizes), path(gtf), val(bed), val(is_transcripts), path("*.gmidx"), val(annotation_str), emit: index
