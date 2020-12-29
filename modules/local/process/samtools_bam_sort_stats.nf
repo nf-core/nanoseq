@@ -20,6 +20,7 @@ process SAMTOOLS_BAM_SORT_STATS {
     output:
     tuple val(sample), path(sizes), val(is_transcripts), path("*.sorted.bam"), path("*.sorted.bam.bai") ,emit: sortbam
     tuple path("*.flagstat"), path("*.idxstats"), path("*.stats")                                       ,emit: sortbam_stats_multiqc
+    path "*.version.txt"                                                                                ,emit: version
 
     script:
     """
@@ -29,5 +30,6 @@ process SAMTOOLS_BAM_SORT_STATS {
     samtools flagstat ${sample}.sorted.bam > ${sample}.sorted.bam.flagstat
     samtools idxstats ${sample}.sorted.bam > ${sample}.sorted.bam.idxstats
     samtools stats ${sample}.sorted.bam > ${sample}.sorted.bam.stats
+    samtools --version > samtools.version.txt
     """
 }

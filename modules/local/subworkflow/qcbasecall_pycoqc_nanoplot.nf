@@ -19,12 +19,12 @@ workflow QCBASECALL_PYCOQC_NANOPLOT {
      * QC using PycoQC
      */
     pycoqc_html    = Channel.empty()
-    pycoqc_json    = Channel.empty()
+    pycoqc_multiqc = Channel.empty()
     pycoqc_version = Channel.empty()
     if (!skip_pycoqc){
        PYCOQC ( ch_guppy_summary_txt )
        pycoqc_html    = PYCOQC.out.html
-       pycoqc_json    = PYCOQC.out.pycoqc_multiqc
+       pycoqc_multiqc = PYCOQC.out.pycoqc_multiqc
        pycoqc_version = PYCOQC.out.version
     }
 
@@ -45,7 +45,7 @@ workflow QCBASECALL_PYCOQC_NANOPLOT {
 
     emit:
     pycoqc_html
-    pycoqc_json
+    pycoqc_multiqc
     pycoqc_version
 
     nanoplot_png

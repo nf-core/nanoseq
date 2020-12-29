@@ -18,6 +18,7 @@ process BEDTOOLS_BAMBED {
     
     output:
     tuple val(sample), path(sizes), val(is_transcripts), path("*.bed12"), emit: bed12
+    path "*.version.txt"                                                , emit: version
 
     script:
     """
@@ -27,5 +28,6 @@ process BEDTOOLS_BAMBED {
         -cigar \\
         -i ${bam[0]} \\
         | bedtools sort > ${sample}.bed12
+    bedtools --version | sed -e "s/bedtools v//g" > bedtools.version.txt
     """
 }

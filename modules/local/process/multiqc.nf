@@ -14,14 +14,14 @@ process MULTIQC {
     container "quay.io/biocontainers/multiqc:1.9--pyh9f0ad1d_0"
 
     input:
-    path multiqc_config
-    path multiqc_custom_config
-    path ('pycoqc/*') from ch_pycoqc_multiqc.collect().ifEmpty([])
-    path ('fastqc/*') from ch_fastqc_multiqc.collect().ifEmpty([])
-    path ('samtools/*') from ch_sortbam_stats_multiqc.collect().ifEmpty([])
-    path ('featurecounts/gene/*') from ch_featurecounts_gene_multiqc.collect().ifEmpty([])
-    path ('featurecounts/transcript/*') from ch_featurecounts_transcript_multiqc.collect().ifEmpty([])
-    path ('software_versions/*') from software_versions_yaml.collect()
+    path ch_multiqc_config
+    path ch_multiqc_custom_config
+    path ch_pycoqc_multiqc
+    path ch_fastqc_multiqc
+    path ch_sortbam_stats_multiqc
+    path ch_featurecounts_gene_multiqc
+    path ch_featurecounts_transcript_multiqc
+    path software_versions_yaml
     path workflow_summary
     
     output:

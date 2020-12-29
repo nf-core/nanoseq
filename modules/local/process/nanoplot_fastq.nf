@@ -25,9 +25,11 @@ process NANOPLOT_FASTQ {
     path "*.html"              , emit: html
     path "*.txt"               , emit: txt
     path "*.log"               , emit: log
+    path "*.version.txt"       , emit: version
 
     script:
     """
     NanoPlot -t $task.cpus --fastq $fastq
+    NanoPlot --version &> nanoplot.version.txt
     """
 }

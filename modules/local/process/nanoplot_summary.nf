@@ -23,7 +23,7 @@ process NANOPLOT_SUMMARY {
     path "*.png"         , emit: png
     path "*.html"        , emit: html 
     path "*.txt"         , emit: txt  
-    path "*.log"         , emit: log  
+    path "*.log"         , emit: log
 
     script:
     """

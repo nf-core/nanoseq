@@ -18,6 +18,7 @@ process GRAPHMAP2_INDEX {
     
     output:
     tuple path(fasta), path(sizes), path(gtf), val(bed), val(is_transcripts), path("*.gmidx"), val(annotation_str), emit: index
+    path "*.version.txt"  ,emit: version
 
     script:
     def preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -31,5 +32,6 @@ process GRAPHMAP2_INDEX {
         -t $task.cpus \\
         -I \\
         -r $fasta
+    echo \$(graphmap2 2>&1) > graphmap2.version.txt
     """
 }

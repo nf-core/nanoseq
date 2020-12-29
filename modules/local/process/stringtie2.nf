@@ -28,6 +28,6 @@ process STRINGTIE2 {
         -L \\
         -G $gtf \\
         -o ${sample}.stringtie.gtf $bam
-    stringtie --version > stringtie.version.txt
+    stringtie --version > stringtie2.version.txt
     """
 }

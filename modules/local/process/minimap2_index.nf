@@ -18,6 +18,7 @@ process MINIMAP2_INDEX {
     
     output:
     tuple path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), path("*.mmi"), val(annotation_str), emit: index
+    path "*.version.txt"     ,emit: version
 
     script:
     def preset    = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -35,5 +36,6 @@ process MINIMAP2_INDEX {
         -d ${fasta}.mmi \\
         $fasta
     ps
+    minimap2 --version &> minimap2.version.txt
     """
 }

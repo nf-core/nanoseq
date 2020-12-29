@@ -16,7 +16,8 @@ workflow BEDTOOLS_UCSC_BIGWIG {
      * Convert BAM to BEDGraph
      */
      BEDTOOLS_GENOMECOV ( ch_sortbam )
-     ch_bedgraph = BEDTOOLS_GENOMECOV.out.bedgraph
+     ch_bedgraph      = BEDTOOLS_GENOMECOV.out.bedgraph
+     bedtools_version = BEDTOOLS_GENOMECOV.out.version
 
     /*
      * Convert BEDGraph to BigWig
@@ -27,4 +28,6 @@ workflow BEDTOOLS_UCSC_BIGWIG {
 
     emit:
     ch_bigwig
+    bedtools_version
+
 }

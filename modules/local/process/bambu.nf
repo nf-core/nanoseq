@@ -21,6 +21,8 @@ process BAMBU {
     path "counts_gene.txt"          , emit: ch_gene_counts
     path "counts_transcript.txt"    , emit: ch_transcript_counts
     path "extended_annotations.gtf" , emit: extended_gtf
+    path "bambu.version.txt"        , emit: bambu_version
+    path "r.version.txt"            , emit: r_version
 
     script:
     """
@@ -29,5 +31,7 @@ process BAMBU {
         --ncore=$task.cpus \\
         --annotation=$gtf \\
         --fasta=$fasta $bams
+    Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='bambu.version.txt')"
+    echo \$(R --version 2>&1) > r.version.txt
     """
 }

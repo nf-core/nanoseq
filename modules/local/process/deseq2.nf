@@ -19,11 +19,13 @@ process DESEQ2 {
     
     output:    
     path "*.txt"                , emit: deseq2_txt
-    path  "*.version.txt"       , emit: version
+    path "deseq2.version.txt"   , emit: deseq2_version
+    path "r.version.txt"        , emit: r_version
 
     script:
     """
     run_deseq2.r $params.quantification_method $counts
     Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='deseq2.version.txt')"
+    echo \$(R --version 2>&1) > r.version.txt
     """
 }

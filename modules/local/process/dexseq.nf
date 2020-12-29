@@ -20,7 +20,7 @@ process DEXSEQ {
     
     output:    
     path "*.txt"                , emit: dexseq_txt
-    path  "*.version.txt"       , emit: version
+    path  "*.version.txt"       , emit: dexseq_version
 
     script:
     def software    = getSoftwareName(task.process)
@@ -28,6 +28,6 @@ process DEXSEQ {
     def label_upper = params.multiqc_label.toUpperCase()
     """
     run_dexseq.r $params.quantification_method $counts
-    Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='${software}.version.txt')"
+    Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='dexseq.version.txt')"
     """
 }

@@ -25,7 +25,8 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
      * Novel isoform detection with StringTie
      */
     STRINGTIE2 ( ch_sample )
-    ch_stringtie_gtf = STRINGTIE2.out.stringtie_gtf
+    ch_stringtie_gtf   = STRINGTIE2.out.stringtie_gtf
+    stringtie2_version = STRINGTIE2.out.version
 
     ch_sample
         .map { it -> [ it[2] ] }
@@ -49,7 +50,8 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     ch_transcript_counts                = SUBREAD_FEATURECOUNTS.out.transcript_counts
     ch_featurecounts_gene_multiqc       = SUBREAD_FEATURECOUNTS.out.featurecounts_gene_multiqc
     ch_featurecounts_transcript_multiqc = SUBREAD_FEATURECOUNTS.out.featurecounts_transcript_multiqc
-    
+    featurecounts_version               = SUBREAD_FEATURECOUNTS.out.version
+
     emit:
     ch_stringtie_gtf
     ch_stringtie_merged_gtf
@@ -57,4 +59,6 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     ch_transcript_counts
     ch_featurecounts_gene_multiqc
     ch_featurecounts_transcript_multiqc
+    stringtie2_version
+    featurecounts_version
 }

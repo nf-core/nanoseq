@@ -14,11 +14,12 @@ process FASTQC {
     container "quay.io/biocontainers/fastqc:0.11.9--0"
     
     input:
-    tuple val (sample), path(fastq)
+    tuple val(sample), path(fastq)
     
     output:    
     path "*.zip"                , emit: zip
     path "*.html"               , emit: html
+    path "*.version.txt"        , emit: version
 
     script:
     """
@@ -27,5 +28,6 @@ process FASTQC {
         -q \\
         -t $task.cpus \\
         ${sample}.fastq.gz
+    fastqc --version > fastqc.version.txt
     """
 }

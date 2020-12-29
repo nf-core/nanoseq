@@ -20,7 +20,8 @@ workflow ALIGN_MINIMAP2 {
      * Create genome/transcriptome index
      */
     MINIMAP2_INDEX ( ch_fasta_index )
-    ch_index = MINIMAP2_INDEX.out.index
+    ch_index         = MINIMAP2_INDEX.out.index
+    minimap2_version = MINIMAP2_INDEX.out.version
 
     ch_index
         .cross(ch_fastq) { it -> it[-1] }
@@ -41,9 +42,12 @@ workflow ALIGN_MINIMAP2 {
     SAMTOOLS_BAM_SORT_STATS ( ch_align_sam )
     ch_sortbam               = SAMTOOLS_BAM_SORT_STATS.out.sortbam
     ch_sortbam_stats_multiqc = SAMTOOLS_BAM_SORT_STATS.out.sortbam_stats_multiqc
+    samtools_version         = SAMTOOLS_BAM_SORT_STATS.out.version
 
     emit:
+    minimap2_version
+
     ch_sortbam
     ch_sortbam_stats_multiqc
-//    samtools_version = BAM_SORT_SAMTOOLS.out.version  //    path: *.version.txt
+    samtools_version
 }

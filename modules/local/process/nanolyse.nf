@@ -21,10 +21,12 @@ process NANOLYSE {
     output:
     tuple val(sample), path("*.fastq.gz") ,emit: nanolyse_fastq
     path "*.log"                          ,emit: nanolyse_log
+    path "*.version.txt"                  ,emit: version
 
     script:
     """
     gunzip -c $fastq | NanoLyse -r $nanolyse_fasta | gzip > ${sample}.clean.fastq.gz
     cp NanoLyse.log ${sample}.nanolyse.log
+    NanoLyse --version &> nanolyse.version.txt
     """
 }

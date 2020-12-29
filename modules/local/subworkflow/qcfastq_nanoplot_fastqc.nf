@@ -20,27 +20,33 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     /*
      * FastQ QC using NanoPlot
      */
-    nanoplot_png    = Channel.empty()
-    nanoplot_html   = Channel.empty()
-    nanoplot_txt    = Channel.empty()
-    nanoplot_log    = Channel.empty()
+    nanoplot_png     = Channel.empty()
+    nanoplot_html    = Channel.empty()
+    nanoplot_txt     = Channel.empty()
+    nanoplot_log     = Channel.empty()
+    nanoplot_version = Channel.empty()
     if (!skip_nanoplot){
        NANOPLOT_FASTQ ( ch_fastq )
-       nanoplot_png    = NANOPLOT_FASTQ.out.png
-       nanoplot_html   = NANOPLOT_FASTQ.out.html
-       nanoplot_txt    = NANOPLOT_FASTQ.out.txt
-       nanoplot_log    = NANOPLOT_FASTQ.out.log
+       nanoplot_png     = NANOPLOT_FASTQ.out.png
+       nanoplot_html    = NANOPLOT_FASTQ.out.html
+       nanoplot_txt     = NANOPLOT_FASTQ.out.txt
+       nanoplot_log     = NANOPLOT_FASTQ.out.log
+       nanoplot_version = NANOPLOT_FASTQ.out.version
     }
 
     /*
      * FastQ QC using FASTQC
      */
-    fastqc_zip    = Channel.empty()
-    fastqc_html   = Channel.empty()
+    fastqc_zip     = Channel.empty()
+    fastqc_html    = Channel.empty()
+    fastqc_multiqc = Channel.empty()
+    fastqc_version = Channel.empty()
     if (!skip_fastqc){
        FASTQC ( ch_fastq )
-       fastqc_zip  = FASTQC.out.zip
-       fastqc_html = FASTQC.out.html  
+       fastqc_zip     = FASTQC.out.zip
+       fastqc_html    = FASTQC.out.html  
+       fastqc_multiqc = fastqc_multiqc.mix( fastqc_zip, fastqc_html )
+       fastqc_version = FASTQC.out.version
     }
     
     emit:
@@ -48,7 +54,10 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     nanoplot_html
     nanoplot_txt
     nanoplot_log
+    nanoplot_version
 
-//    fastqc_zip
-//    fastqc_html
+    fastqc_zip
+    fastqc_html
+    fastqc_version
+    fastqc_multiqc
 }
