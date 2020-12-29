@@ -11,7 +11,7 @@ process DEXSEQ {
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
-    conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-dexseq=1.36.0 bioconda::bioconductor-drimseq=1.18.0 bioconda::bioconductor-stager=1.12.0" : null)
+    conda     (params.enable_conda ? "conda-forge::r-base=4.0.2 bioconda::bioconductor-dexseq=1.36.0 bioconda::bioconductor-drimseq=1.18.0 bioconda::bioconductor-stager=1.12.0" : null)
     container "docker.io/yuukiiwa/nanoseq:dexseq" 
     // need a multitool container for r-base, dexseq, stager, drimseq and on quay hub
 

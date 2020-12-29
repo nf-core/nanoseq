@@ -13,7 +13,7 @@ include { SAMTOOLS_BAM_SORT_STATS } from '../process/samtools_bam_sort_stats'   
 workflow ALIGN_GRAPHMAP2 {
     take:
     ch_fasta_index // channel: [ val(meta), [ reads ] ]
-    ch_fastq_alignment
+    ch_fastq
     
     main:
     /*
@@ -23,12 +23,12 @@ workflow ALIGN_GRAPHMAP2 {
     ch_index = GRAPHMAP2_INDEX.out.index
 
     ch_index
-        .cross(ch_fastq_alignment) { it -> it[-1] }
+        .cross(ch_fastq) { it -> it[-1] }
         .flatten()
         .collate(13)
         .map { it -> [ it[7], it[8], it[0], it[1], it[2], it[3], it[4], it[5] ] } // [ sample, fastq, fasta, sizes, gtf, bed, is_transcripts, index ]
         .set { ch_index }
-
+    ch_index.view()
     /*
      * Map reads with GRAPHMAP2
      */
