@@ -26,7 +26,7 @@ workflow ALIGN_GRAPHMAP2 {
         .cross(ch_fastq) { it -> it[-1] }
         .flatten()
         .collate(13)
-        .map { it -> [ it[7], it[8], it[0], it[1], it[2], it[3], it[4], it[5] ] } // [ sample, fastq, fasta, sizes, gtf, bed, is_transcripts, index ]
+  //       .map { it -> [ it[7], it[8], it[0], it[1], it[2], it[3], it[4], it[5] ] } // [ sample, fastq, fasta, sizes, gtf, bed, is_transcripts, index ]
         .set { ch_index }
     ch_index.view()
     /*
