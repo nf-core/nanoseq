@@ -163,7 +163,7 @@ def graphmap2_align_options     = modules['graphmap2_align']
 def minimap2_index_options      = modules['minimap2_index']
 def minimap2_align_options      = modules['minimap2_align']
 def samtools_sort_options       = modules['samtools_sort']
-def bigwig_options              = modules['ucsc_bed12tobigwig'] 
+def bigwig_options              = modules['ucsc_bedgraphtobigwig'] 
 def bigbed_options              = modules['ucsc_bed12tobigbed']
 def stringtie2_options          = modules['stringtie2']
 def featurecounts_options       = modules['subread_featurecounts']
@@ -296,7 +296,7 @@ workflow NANOSEQ{
        } else {
           ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
           ch_view_sortbam = ALIGN_GRAPHMAP2.out.ch_sortbam
-          ch_software_versions = ch_software_versions.mix(ALIGN_GRPAHMAP2.out.graphmap2_version.first().ifEmpty(null))
+          ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
           ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.samtools_version.first().ifEmpty(null))
           ch_samtools_multiqc  = ALIGN_GRAPHMAP2.out.ch_sortbam_stats_multiqc.ifEmpty(null)
        }
