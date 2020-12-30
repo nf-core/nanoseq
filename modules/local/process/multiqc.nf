@@ -30,10 +30,9 @@ process MULTIQC {
     path "*_plots"             , optional:true, emit: plots
 
     script:
-    def software      = getSoftwareName(task.process)
     def custom_config = params.multiqc_config ? "--config $multiqc_custom_config" : ''
     """
-    multiqc -f $options.args $custom_config .
+    multiqc -f . $custom_config
     """
 }
 

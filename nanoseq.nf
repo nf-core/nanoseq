@@ -356,21 +356,21 @@ workflow NANOSEQ{
     }
 
     GET_SOFTWARE_VERSIONS ( ch_software_versions.map { it }.collect() )
-//    if (!params.skip_multiqc){
-//        workflow_summary    = Schema.params_summary_multiqc(workflow, params.summary_params)
-//        ch_workflow_summary = Channel.value(workflow_summary)      
-//        MULTIQC (
-//        ch_multiqc_config,
-//        ch_multiqc_custom_config.collect().ifEmpty([]),
-//        ch_pycoqc_multiqc.collect{it[1]}.ifEmpty([]),
-//        ch_fastqc_multiqc.collect{it[1]}.ifEmpty([]),
-//        ch_samtools_multiqc.collect{it[1]}.ifEmpty([]),
-//        ch_featurecounts_gene_multiqc.collect{it[1]}.ifEmpty([]),
-//        ch_featurecounts_transcript_multiqc.collect{it[1]}.ifEmpty([]),
-//        GET_SOFTWARE_VERSIONS.out.yaml,
-//        ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml')
-//        )
-//    }
+    if (!params.skip_multiqc){
+        workflow_summary    = Schema.params_summary_multiqc(workflow, params.summary_params)
+        ch_workflow_summary = Channel.value(workflow_summary).collectFile(name: 'workflow_summary_mqc.yaml')
+        MULTIQC (
+        ch_multiqc_config,
+        ch_multiqc_custom_config.collect().ifEmpty([]),
+        ch_pycoqc_multiqc.collect().ifEmpty([]),
+        ch_fastqc_multiqc.ifEmpty([]),
+        ch_samtools_multiqc.collect().ifEmpty([]),
+        ch_featurecounts_gene_multiqc.ifEmpty([]),
+        ch_featurecounts_transcript_multiqc.ifEmpty([]),
+        GET_SOFTWARE_VERSIONS.out.yaml,
+        ch_workflow_summary
+        )
+    }
 }
 
 ////////////////////////////////////////////////////
