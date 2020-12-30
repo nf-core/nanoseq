@@ -46,19 +46,19 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
         .collect { it[-1]    }
         .set     { ch_sample }
     SUBREAD_FEATURECOUNTS ( ch_stringtie_merged_gtf, ch_sample )
-    ch_gene_counts                      = SUBREAD_FEATURECOUNTS.out.gene_counts
-    ch_transcript_counts                = SUBREAD_FEATURECOUNTS.out.transcript_counts
-    ch_featurecounts_gene_multiqc       = SUBREAD_FEATURECOUNTS.out.featurecounts_gene_multiqc
-    ch_featurecounts_transcript_multiqc = SUBREAD_FEATURECOUNTS.out.featurecounts_transcript_multiqc
-    featurecounts_version               = SUBREAD_FEATURECOUNTS.out.version
+    ch_gene_counts                   = SUBREAD_FEATURECOUNTS.out.gene_counts
+    ch_transcript_counts             = SUBREAD_FEATURECOUNTS.out.transcript_counts
+    featurecounts_gene_multiqc       = SUBREAD_FEATURECOUNTS.out.featurecounts_gene_multiqc
+    featurecounts_transcript_multiqc = SUBREAD_FEATURECOUNTS.out.featurecounts_transcript_multiqc
+    featurecounts_version            = SUBREAD_FEATURECOUNTS.out.version
 
     emit:
     ch_stringtie_gtf
     ch_stringtie_merged_gtf
     ch_gene_counts
     ch_transcript_counts
-    ch_featurecounts_gene_multiqc
-    ch_featurecounts_transcript_multiqc
+    featurecounts_gene_multiqc
+    featurecounts_transcript_multiqc
     stringtie2_version
     featurecounts_version
 }
