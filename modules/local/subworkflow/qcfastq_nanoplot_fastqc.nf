@@ -15,7 +15,9 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     skip_fastqc    
 
     main:
-    ch_fastq.map{ ch -> [ ch[0], ch[1] ] }
+    ch_fastq
+       .map { ch -> [ ch[0], ch[1] ] }
+       .set { ch_fastq }
 
     /*
      * FastQ QC using NanoPlot

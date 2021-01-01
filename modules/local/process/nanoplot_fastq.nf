@@ -21,15 +21,15 @@ process NANOPLOT_FASTQ {
     tuple val(sample), path(fastq)
     
     output:
-    path "*.png"               , emit: png
-    path "*.html"              , emit: html
-    path "*.txt"               , emit: txt
-    path "*.log"               , emit: log
+    path "$sample/*.png"               , emit: png
+    path "$sample/*.html"              , emit: html
+    path "$sample/*.txt"               , emit: txt
+    path "$sample/*.log"               , emit: log
     path "*.version.txt"       , emit: version
 
     script:
     """
-    NanoPlot -t $task.cpus --fastq $fastq
+    NanoPlot -t $task.cpus --fastq $fastq --outdir $sample
     NanoPlot --version &> nanoplot.version.txt
     """
 }
