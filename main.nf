@@ -17,7 +17,7 @@ nextflow.enable.dsl = 2
 
 def json_schema = "$baseDir/nextflow_schema.json"
 if (params.help) {
-    def command = "nextflow run nf-core/nanoseq --input samplesheet.csv --genome GRCh37 -profile docker"
+    def command = "nextflow run nf-core/nanoseq --input samplesheet.csv -profile docker"
     log.info Schema.params_help(workflow, params, json_schema, command)
     exit 0
 }
@@ -32,6 +32,11 @@ log.info Schema.params_summary_log(workflow, params, json_schema)
 ////////////////////////////////////////////////////
 /* --          PARAMETER CHECKS                -- */
 ////////////////////////////////////////////////////
+
+// Check that conda channels are set-up correctly
+if (params.enable_conda) {
+    Checks.check_conda_channels(log)
+}
 
 // Check AWS batch settings
 Checks.aws_batch(workflow, params)

@@ -5,11 +5,6 @@
 params.summary_params = [:]
 
 ////////////////////////////////////////////////////
-/* --         DEFAULT PARAMETER VALUES         -- */
-////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////
 /* --          VALIDATE INPUTS                 -- */
 ////////////////////////////////////////////////////
 
@@ -32,14 +27,13 @@ def isOffline() {
 
 def ch_guppy_model  = Channel.empty()
 def ch_guppy_config = Channel.empty()
-include { GET_TEST_DATA         } from './modules/local/process/get_test_data'         addParams( options: [:] )
-include { GET_NANOLYSE_FASTA    } from './modules/local/process/get_nanolyse_fasta'    addParams( options: [:] )
 if (!params.skip_basecalling) { 
 
     // Pre-download test-dataset to get files for '--input_path' parameter
     // Nextflow is unable to recursively download directories via HTTPS
     if (workflow.profile.contains('test')) {
         if (!isOffline()) {
+            include { GET_TEST_DATA } from './modules/local/process/get_test_data' addParams( options: [:] )
             GET_TEST_DATA ().set { ch_input_path }
         } else {
             exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
@@ -90,6 +84,7 @@ if (!params.skip_basecalling) {
 if (params.run_nanolyse){
     if (!params.nanolyse_fasta){
         if (!isOffline()){
+            include { GET_NANOLYSE_FASTA    } from './modules/local/process/get_nanolyse_fasta' addParams( options: [:] )
             GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
         } else {
             exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."

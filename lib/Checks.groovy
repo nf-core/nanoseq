@@ -67,14 +67,6 @@ class Checks {
                  "==================================================================================="
     }
 
-    // Print a warning if both GTF and GFF have been provided
-    static void gtf_gff_warn(log) {
-        log.warn "=============================================================================\n" +
-                 "  Both '--gtf' and '--gff' parameters have been provided.\n" +
-                 "  Using GTF file as priority.\n" +
-                 "==================================================================================="
-    }
-
     // Print a warning if --skip_alignment has been provided
     static void skip_alignment_warn(log) {
         log.warn "=============================================================================\n" +
