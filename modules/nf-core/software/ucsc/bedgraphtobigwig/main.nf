@@ -25,7 +25,7 @@ process UCSC_BEDGRAPHTOBIGWIG {
 
     script:
     """
-    bedGraphToBigWig $bedgraph $sizes $sample.bigWig
+    bedGraphToBigWig $bedgraph $sizes ${sample}.bigWig
     echo $VERSION > bedGraphToBigWig.version.txt
     """
 }

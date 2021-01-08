@@ -6,9 +6,9 @@ params.index_options    = [:]
 params.align_options    = [:]
 params.samtools_options = [:]
 
-include { MINIMAP2_INDEX          } from '../process/minimap2_index'                       addParams( options: params.index_options    )
-include { MINIMAP2_ALIGN          } from '../process/minimap2_align'                       addParams( options: params.align_options    )
-include { SAMTOOLS_BAM_SORT_STATS } from '../process/samtools_bam_sort_stats'              addParams( options: params.samtools_options )
+include { MINIMAP2_INDEX          } from '../process/minimap2_index'        addParams( options: params.index_options    )
+include { MINIMAP2_ALIGN          } from '../process/minimap2_align'        addParams( options: params.align_options    )
+include { BAM_SORT_SAMTOOLS       } from './bam_sort_samtools'              addParams( options: params.samtools_options )
 
 workflow ALIGN_MINIMAP2 {
     take:
@@ -39,10 +39,10 @@ workflow ALIGN_MINIMAP2 {
     /*
      * Convert SAM to BAM, sort, index BAM file and run samtools stats, flagstat and idxstats
      */
-    SAMTOOLS_BAM_SORT_STATS ( ch_align_sam )
-    ch_sortbam               = SAMTOOLS_BAM_SORT_STATS.out.sortbam
-    ch_sortbam_stats_multiqc = SAMTOOLS_BAM_SORT_STATS.out.sortbam_stats_multiqc
-    samtools_version         = SAMTOOLS_BAM_SORT_STATS.out.version
+    BAM_SORT_SAMTOOLS ( ch_align_sam )
+    ch_sortbam               = BAM_SORT_SAMTOOLS.out.sortbam
+    ch_sortbam_stats_multiqc = BAM_SORT_SAMTOOLS.out.sortbam_stats_multiqc
+    samtools_version         = BAM_SORT_SAMTOOLS.out.version
 
     emit:
     minimap2_version

@@ -1,9 +1,12 @@
 // Import generic module functions
-include { saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName } from './functions'
 
 params.options = [:]
+def options    = initOptions(params.options)
 
-process SAMTOOLS_FLAGSTAT {
+process SAMTOOLS_VIEW_BAM {
+    tag "$sample"
+    label 'process_medium'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
@@ -12,16 +15,13 @@ process SAMTOOLS_FLAGSTAT {
     container "quay.io/biocontainers/samtools:1.10--h9402c20_2"
 
     input:
-    tuple val(meta), path(bam), path(bai)
+    tuple val(sample), path(sizes), val(is_transcripts), path(sam)
     
     output:
-    tuple val(meta), path("*.flagstat"), emit: flagstat
-    path  "*.version.txt"              , emit: version
+    tuple val(sample), path("*.bam") ,emit: bam
 
     script:
-    def software = getSoftwareName(task.process)
     """
-    samtools flagstat $bam > ${bam}.flagstat
-    echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//' > ${software}.version.txt
+    samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
     """
 }

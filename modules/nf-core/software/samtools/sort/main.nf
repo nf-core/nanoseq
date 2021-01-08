@@ -17,11 +17,11 @@ process SAMTOOLS_SORT {
     tuple val(sample), path(bam)
     
     output:
-    tuple val(sample), path("*.bam"), emit: bam
+    tuple val(sample), path("*.sorted.bam"), emit: bam
     path  "*.version.txt"         , emit: version
 
     script:
-    output_bam = "$sample"+".bam"
+    output_bam = "$sample"+".sorted.bam"
     """
     samtools sort $options.args -@ $task.cpus -o $output_bam -T $sample $bam
     echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//' > samtools.version.txt
