@@ -1,3 +1,5 @@
+import org.yaml.snakeyaml.Yaml
+
 /*
  * This file holds several functions used to perform standard checks for the nf-core pipeline template.
  */
