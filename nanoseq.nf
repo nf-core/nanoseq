@@ -375,6 +375,7 @@ workflow NANOSEQ{
           ch_gene_counts       = BAMBU.out.ch_gene_counts
           ch_transcript_counts = BAMBU.out.ch_transcript_counts
           ch_software_versions = ch_software_versions.mix(BAMBU.out.bambu_version.first().ifEmpty(null))
+          ch_software_versions = ch_software_versions.mix(BAMBU.out.bsgenome_version.first().ifEmpty(null))
           ch_r_version = ch_r_version.mix(BAMBU.out.r_version.first().ifEmpty(null))
        } else {
 
@@ -397,6 +398,8 @@ workflow NANOSEQ{
           DIFFERENTIAL_DESEQ2_DEXSEQ( ch_gene_counts, ch_transcript_counts )
           ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.first().ifEmpty(null))
           ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.dexseq_version.first().ifEmpty(null))
+          ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.drimseq_version.first().ifEmpty(null))
+          ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.stager_version.first().ifEmpty(null))
           ch_r_version = ch_r_version.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.r_version.first().ifEmpty(null))
        }
        ch_software_versions = ch_software_versions.mix(ch_r_version.first().ifEmpty(null))
