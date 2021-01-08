@@ -20,7 +20,9 @@ process DEXSEQ {
     
     output:    
     path "*.txt"                , emit: dexseq_txt
-    path  "*.version.txt"       , emit: dexseq_version
+    path "dexseq.version.txt"   , emit: dexseq_version
+    path "drimseq.version.txt"  , emit: drimseq_version
+    path "stager.version.txt"   , emit: stager_version
 
     script:
     def software    = getSoftwareName(task.process)
@@ -29,5 +31,7 @@ process DEXSEQ {
     """
     run_dexseq.r $params.quantification_method $counts
     Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='dexseq.version.txt')"
+    Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='drimseq.version.txt')"
+    Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='stager.version.txt')"
     """
 }

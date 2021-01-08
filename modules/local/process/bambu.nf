@@ -23,6 +23,7 @@ process BAMBU {
     path "extended_annotations.gtf" , emit: extended_gtf
     path "bambu.version.txt"        , emit: bambu_version
     path "r.version.txt"            , emit: r_version
+    path "bsgenome.version.txt"     , emit: bsgenome_version
 
     script:
     """
@@ -32,6 +33,7 @@ process BAMBU {
         --annotation=$gtf \\
         --fasta=$fasta $bams
     Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='bambu.version.txt')"
+    Rscript -e "library(BSgenome); write(x=as.character(packageVersion('BSgenome')), file='bsgenome.version.txt')"
     echo \$(R --version 2>&1) > r.version.txt
     """
 }

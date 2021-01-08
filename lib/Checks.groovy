@@ -1,8 +1,39 @@
+import org.yaml.snakeyaml.Yaml
+
 /*
  * This file holds several functions used to perform standard checks for the nf-core pipeline template.
  */
 
 class Checks {
+
+    static void check_conda_channels(log) {
+        Yaml parser = new Yaml()
+        def channels = []
+        try {
+            def config = parser.load("conda config --show channels".execute().text)
+            channels = config.channels
+        } catch(NullPointerException | IOException e) {
+            log.warn "Could not verify conda channel configuration."
+            return
+        }
+
+        // Check that all channels are present
+        def required_channels = ['conda-forge', 'bioconda', 'defaults']
+        def conda_check_failed = !required_channels.every { ch -> ch in channels }
+
+        // Check that they are in the right order
+        conda_check_failed |= !(channels.indexOf('conda-forge') < channels.indexOf('bioconda'))
+        conda_check_failed |= !(channels.indexOf('bioconda') < channels.indexOf('defaults'))
+
+        if (conda_check_failed) {
+            log.warn "=============================================================================\n" +
+                     "  There is a problem with your Conda configuration!\n\n" + 
+                     "  You will need to set-up the conda-forge and bioconda channels correctly.\n" +
+                     "  Please refer to https://bioconda.github.io/user/install.html#set-up-channels\n" +
+                     "  NB: The order of the channels matters!\n" +
+                     "==================================================================================="
+        }
+    }
 
     static void aws_batch(workflow, params) {
         if (workflow.profile.contains('awsbatch')) {
@@ -64,14 +95,6 @@ class Checks {
                  "  https://github.com/nf-core/rnaseq/issues/460.\n\n" +
                  "  If you would like to use the soft-masked Ensembl assembly instead please see:\n" +
                  "  https://github.com/nf-core/rnaseq/issues/159#issuecomment-501184312\n" +
-                 "==================================================================================="
-    }
-
-    // Print a warning if both GTF and GFF have been provided
-    static void gtf_gff_warn(log) {
-        log.warn "=============================================================================\n" +
-                 "  Both '--gtf' and '--gff' parameters have been provided.\n" +
-                 "  Using GTF file as priority.\n" +
                  "==================================================================================="
     }
 
