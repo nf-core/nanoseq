@@ -247,7 +247,6 @@ workflow NANOSEQ{
                .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
                .set { ch_fastq }
             ch_software_versions = ch_software_versions.mix(QCAT.out.version.ifEmpty(null))
-            ch_software_versions.view()
 
         } else {
             if (!params.skip_alignment){
@@ -361,6 +360,21 @@ workflow NANOSEQ{
     ch_featurecounts_gene_multiqc       = Channel.empty()
     ch_featurecounts_transcript_multiqc = Channel.empty()
     if (!params.skip_quantification && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
+
+       // Check that reference genome and annotation are the same for all samples if perfoming quantification
+       // Check if we have replicates and multiple conditions in the input samplesheet
+       REPLICATES_EXIST    = false
+       MULTIPLE_CONDITIONS = false
+       ch_sample.map{ it[2] }.unique().toList().set { fastas }
+       ch_sample.map{ it[3] }.unique().toList().set { gtfs }
+     // BUG: ".val" halts the pipeline ///////////////////////
+     //  if ( gtfs.map{it[0]} == false || fastas.map{it[0]} == false || gtfs.size().val != 1 || fasta.size().val != 1 ) {
+     //      exit 1, """Quantification can only be performed if all samples in the samplesheet have the same reference fasta and GTF file."
+     //              Please specify the '--skip_quantification' parameter if you wish to skip these steps."""
+     //  }
+     //  REPLICATES_EXIST    = ch_sample.map { it -> it[0].split('_')[-1].replaceAll('R','').toInteger() }.max().val > 1
+     //  MULTIPLE_CONDITIONS = ch_sample.map { it -> it[0].split('_')[0..-2].join('_') }.unique().count().val > 1
+
        ch_r_version = Channel.empty()
        if (params.quantification_method == 'bambu') {
           ch_sample

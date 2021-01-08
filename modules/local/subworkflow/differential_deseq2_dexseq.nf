@@ -29,11 +29,15 @@ workflow DIFFERENTIAL_DESEQ2_DEXSEQ {
     DEXSEQ ( ch_transcript_counts )
     ch_dexseq_txt  = DEXSEQ.out.dexseq_txt
     dexseq_version = DEXSEQ.out.dexseq_version
+    drimseq_version = DEXSEQ.out.drimseq_version
+    stager_version = DEXSEQ.out.stager_version
 
     emit:
     ch_deseq2_txt
     ch_dexseq_txt
     deseq2_version
     dexseq_version
+    drimseq_version
+    stager_version
     r_version
 }
