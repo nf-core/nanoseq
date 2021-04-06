@@ -20,27 +20,10 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: ['20.04.0', '']
+        nxf_ver: ['20.10.0']
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
-
-      - name: Check if Dockerfile or Conda environment changed
-        uses: technote-space/get-diff-action@v4
-        with:
-          FILES: |
-            Dockerfile
-            environment.yml
-
-      - name: Build new docker image
-        if: env.MATCHED_FILES
-        run: docker build --no-cache . -t nfcore/nanoseq:dev
-
-      - name: Pull docker image
-        if: ${{ !env.MATCHED_FILES }}
-        run: |
-          docker pull nfcore/nanoseq:dev
-          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
 
       - name: Install Nextflow
         env:
@@ -58,7 +41,7 @@ jobs:
     if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
-      NXF_VER: '20.04.0'
+      NXF_VER: '20.10.0'
       NXF_ANSI_LOG: false
     strategy:
       matrix:
@@ -66,23 +49,6 @@ jobs:
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
-
-      - name: Check if Dockerfile or Conda environment changed
-        uses: technote-space/get-diff-action@v4
-        with:
-          FILES: |
-            Dockerfile
-            environment.yml
-
-      - name: Build new docker image
-        if: env.MATCHED_FILES
-        run: docker build --no-cache . -t nfcore/nanoseq:dev
-
-      - name: Pull docker image
-        if: ${{ !env.MATCHED_FILES }}
-        run: |
-          docker pull nfcore/nanoseq:dev
-          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
 
       - name: Install Nextflow
         env:
@@ -100,7 +66,7 @@ jobs:
     if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
-      NXF_VER: '20.04.0'
+      NXF_VER: '20.10.0'
       NXF_ANSI_LOG: false
     strategy:
       matrix:
@@ -108,23 +74,6 @@ jobs:
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
-
-      - name: Check if Dockerfile or Conda environment changed
-        uses: technote-space/get-diff-action@v4
-        with:
-          FILES: |
-            Dockerfile
-            environment.yml
-
-      - name: Build new docker image
-        if: env.MATCHED_FILES
-        run: docker build --no-cache . -t nfcore/nanoseq:dev
-
-      - name: Pull docker image
-        if: ${{ !env.MATCHED_FILES }}
-        run: |
-          docker pull nfcore/nanoseq:dev
-          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
 
       - name: Install Nextflow
         env:
@@ -142,7 +91,7 @@ jobs:
     if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
-      NXF_VER: '20.04.0'
+      NXF_VER: '20.10.0'
       NXF_ANSI_LOG: false
     strategy:
       matrix:
@@ -150,23 +99,6 @@ jobs:
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
-
-      - name: Check if Dockerfile or Conda environment changed
-        uses: technote-space/get-diff-action@v4
-        with:
-          FILES: |
-            Dockerfile
-            environment.yml
-
-      - name: Build new docker image
-        if: env.MATCHED_FILES
-        run: docker build --no-cache . -t nfcore/nanoseq:dev
-
-      - name: Pull docker image
-        if: ${{ !env.MATCHED_FILES }}
-        run: |
-          docker pull nfcore/nanoseq:dev
-          docker tag nfcore/nanoseq:dev nfcore/nanoseq:dev
 
       - name: Install Nextflow
         env:
