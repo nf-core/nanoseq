@@ -14,10 +14,10 @@ process BEDTOOLS_BAMBED {
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     input:
-    tuple val(sample), path(sizes), val(is_transcripts), path(bam), path(bai)
+    tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai)
     
     output:
-    tuple val(sample), path(sizes), val(is_transcripts), path("*.bed12"), emit: bed12
+    tuple val(meta), path(sizes), val(is_transcripts), path("*.bed12"), emit: bed12
     path "*.version.txt"                                                , emit: version
 
     script:
@@ -27,7 +27,7 @@ process BEDTOOLS_BAMBED {
         -bed12 \\
         -cigar \\
         -i ${bam[0]} \\
-        | bedtools sort > ${sample}.bed12
+        | bedtools sort > ${meta.id}.bed12
     bedtools --version | sed -e "s/bedtools v//g" > bedtools.version.txt
     """
 }

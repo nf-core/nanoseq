@@ -16,7 +16,7 @@ process PYCOQC {
     !params.skip_basecalling && !params.skip_qc && !params.skip_pycoqc
 
     input:
-    path summary_txt
+    tuple val(meta), path(summary_txt)
     
     output:
     path "*.html"                      , emit: html

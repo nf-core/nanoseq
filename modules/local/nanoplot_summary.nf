@@ -17,7 +17,7 @@ process NANOPLOT_SUMMARY {
     !params.skip_basecalling && !params.skip_qc && !params.skip_nanoplot
 
     input:
-    path summary_txt
+    tuple val(meta), path(summary_txt)
     
     output:
     path "*.png"         , emit: png

@@ -11,10 +11,10 @@ process BEDTOOLS_GENOMECOV {
     container "quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0"
 
     input:
-    tuple val(sample), path(sizes), val(is_transcripts), path(bam), path(bai)
+    tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai)
 
     output:
-    tuple val(sample), path(sizes), path("*.bedGraph"), emit: bedgraph
+    tuple val(meta), path(sizes), path("*.bedGraph"), emit: bedgraph
     path "*.version.txt"                              , emit: version
 
     script:
@@ -25,7 +25,7 @@ process BEDTOOLS_GENOMECOV {
         -split \\
         -ibam ${bam[0]} \\
         -bg \\
-        | bedtools sort > ${sample}.bedGraph
+        | bedtools sort > ${meta.id}.bedGraph
     bedtools --version | sed -e "s/bedtools v//g" > bedtools.version.txt
     """
 }

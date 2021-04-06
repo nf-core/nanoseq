@@ -285,6 +285,7 @@ workflow NANOSEQ{
             QCBASECALL_PYCOQC_NANOPLOT ( ch_guppy_summary , params.skip_pycoqc, params.skip_nanoplot )
             ch_software_versions = ch_software_versions.mix(QCBASECALL_PYCOQC_NANOPLOT.out.pycoqc_version.first().ifEmpty(null))
             ch_pycoqc_multiqc    = QCBASECALL_PYCOQC_NANOPLOT.out.pycoqc_multiqc.ifEmpty([])
+            ch_pycoqc_multiqc.view()
         }
 
         /*
@@ -314,7 +315,7 @@ workflow NANOSEQ{
           ch_view_sortbam = ALIGN_MINIMAP2.out.ch_sortbam
           ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.first().ifEmpty(null))
           ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.samtools_version.first().ifEmpty(null))
-          ch_samtools_multiqc  = ALIGN_MINIMAP2.out.ch_sortbam_stats_multiqc.ifEmpty(null)
+          ch_samtools_multiqc  = ALIGN_MINIMAP2.out.ch_sortbam_stats_multiqc.ifEmpty([])
        } else {
 
           /*

@@ -5,16 +5,16 @@ params.options = [:]
 def options    = initOptions(params.options)
 
 process BAM_RENAME {
-    tag "$sample"
+    tag "$meta.id"
 
     input:
-    tuple val(sample), path(bam)
+    tuple val(meta), path(bam)
     
     output:
-    tuple val(sample), path("*.bam"), emit: sortbam_quant
+    tuple val(meta), path("*.bam"), emit: sortbam_quant
 
     script:
     """
-    [ ! -f ${sample}.bam ] && ln -s $bam ${sample}.bam
+    [ ! -f ${meta.id}.bam ] && ln -s $bam ${meta.id}.bam
     """
 }

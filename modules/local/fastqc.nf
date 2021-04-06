@@ -5,16 +5,17 @@ params.options       = [:]
 def options          = initOptions(params.options)
 
 process FASTQC {
+    tag "$meta.id"
     label "process_medium"
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'meta.id') }
 
     conda     (params.enable_conda ? "bioconda::fastqc=0.11.9" : null)
     container "quay.io/biocontainers/fastqc:0.11.9--0"
     
     input:
-    tuple val(sample), path(fastq)
+    tuple val(meta), path(fastq)
     
     output:    
     path "*.zip"                , emit: zip
@@ -23,11 +24,11 @@ process FASTQC {
 
     script:
     """
-    [ ! -f  ${sample}.fastq.gz ] && ln -s $fastq ${sample}.fastq.gz
+    [ ! -f  ${meta.id}.fastq.gz ] && ln -s $fastq ${meta.id}.fastq.gz
     fastqc \\
         -q \\
         -t $task.cpus \\
-        ${sample}.fastq.gz
+        ${meta.id}.fastq.gz
     fastqc --version > fastqc.version.txt
     """
 }

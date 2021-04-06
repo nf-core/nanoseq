@@ -5,19 +5,20 @@ params.options = [:]
 def options    = initOptions(params.options)
 
 process GRAPHMAP2_ALIGN {
+    tag "$meta.id"
     label 'process_high'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta.id) }
 
     conda     (params.enable_conda ? "bioconda::graphmap=0.6.3" : null)
     container "quay.io/biocontainers/graphmap:0.6.3--he513fc3_0"
 
     input:
-    tuple val(sample), path(fastq), path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), path(index)
+    tuple val(meta), path(fastq), path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), path(index)
     
     output:
-    tuple val(sample), path(sizes), val(is_transcripts), path("*.sam"), emit: align_sam
+    tuple val(meta), path(sizes), val(is_transcripts), path("*.sam"), emit: align_sam
 
     script:
     def preset    = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -32,7 +33,7 @@ process GRAPHMAP2_ALIGN {
         -r $fasta \\
         -i $index \\
         -d $fastq \\
-        -o ${sample}.sam \\
+        -o ${meta.id}.sam \\
         --extcigar
     """
 }

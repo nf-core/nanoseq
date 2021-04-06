@@ -19,15 +19,15 @@ process GUPPY {
 
     input:
     path(input_path)
-    val name
+    val meta
     path guppy_config
     path guppy_model
     
     output:
-    path "fastq/*.fastq.gz"                   , emit: fastq
-    path "basecalling/*.txt"                  , emit: summary
-    path "basecalling/*"                      , emit: called
-    path "*.version.txt"                      , emit: version
+    path "fastq/*.fastq.gz"                    , emit: fastq
+    tuple val(meta), path("basecalling/*.txt") , emit: summary
+    path "basecalling/*"                       , emit: called
+    path "*.version.txt"                       , emit: version
 
     script:
     def barcode_kit  = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
@@ -61,7 +61,7 @@ process GUPPY {
             cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
         done
     else
-        cat *.fastq.gz > ../fastq/${name}.fastq.gz
+        cat *.fastq.gz > ../fastq/${meta.id}.fastq.gz
     fi
     """
 }

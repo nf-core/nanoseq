@@ -5,23 +5,23 @@ params.options = [:]
 def options    = initOptions(params.options)
 
 process SAMTOOLS_VIEW_BAM {
-    tag "$sample"
+    tag "$meta.id"
     label 'process_medium'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'meta.id') }
 
     conda     (params.enable_conda ? "bioconda::samtools=1.10" : null)
     container "quay.io/biocontainers/samtools:1.10--h9402c20_2"
 
     input:
-    tuple val(sample), path(sizes), val(is_transcripts), path(sam)
+    tuple val(meta), path(sizes), val(is_transcripts), path(sam)
     
     output:
-    tuple val(sample), path("*.bam") ,emit: bam
+    tuple val(meta), path("*.bam") ,emit: bam
 
     script:
     """
-    samtools view -b -h -O BAM -@ $task.cpus -o ${sample}.bam $sam
+    samtools view -b -h -O BAM -@ $task.cpus -o ${meta.id}.bam $sam
     """
 }
