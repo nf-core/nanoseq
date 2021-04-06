@@ -4,8 +4,8 @@
 
 params.bigbed_options   = [:]
 
-include { BEDTOOLS_BAMBED     } from '../process/bedtools_bamtobed'        addParams( options: params.bigbed_options )
-include { UCSC_BED12TOBIGBED  } from '../process/ucsc_bed12tobigbed'       addParams( options: params.bigbed_options )
+include { BEDTOOLS_BAMBED     } from '../../modules/local/bedtools_bamtobed'        addParams( options: params.bigbed_options )
+include { UCSC_BED12TOBIGBED  } from '../../modules/local/ucsc_bed12tobigbed'       addParams( options: params.bigbed_options )
 
 workflow BEDTOOLS_UCSC_BIGBED {
     take:

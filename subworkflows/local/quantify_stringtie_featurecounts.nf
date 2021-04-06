@@ -5,9 +5,9 @@
 params.stringtie2_options      = [:]
 params.featurecounts_options   = [:]
 
-include { STRINGTIE2            } from '../process/stringtie2'             addParams( options: params.stringtie2_options   )
-include { STRINGTIE2_MERGE      } from '../process/stringtie2_merge'       addParams( options: params.stringtie2_options    )
-include { SUBREAD_FEATURECOUNTS } from '../process/subread_featurecounts'  addParams( options: params.featurecounts_options )
+include { STRINGTIE2            } from '../../modules/local/stringtie2'             addParams( options: params.stringtie2_options   )
+include { STRINGTIE2_MERGE      } from '../../modules/local/stringtie2_merge'       addParams( options: params.stringtie2_options    )
+include { SUBREAD_FEATURECOUNTS } from '../../modules/local/subread_featurecounts'  addParams( options: params.featurecounts_options )
 
 workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     take:

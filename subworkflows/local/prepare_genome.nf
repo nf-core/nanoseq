@@ -4,8 +4,8 @@
 
 params.genome_options   = [:]
 
-include { GET_CHROM_SIZES  } from '../process/get_chrom_sizes'       addParams( options: params.genome_options )
-include { GTF2BED          } from '../process/gtf2bed'               addParams( options: params.genome_options )
+include { GET_CHROM_SIZES  } from '../../modules/local/get_chrom_sizes'       addParams( options: params.genome_options )
+include { GTF2BED          } from '../../modules/local/gtf2bed'               addParams( options: params.genome_options )
 
 workflow PREPARE_GENOME {
     take:

@@ -4,10 +4,10 @@
 
 params.options = [:]
 
-include { SAMTOOLS_VIEW_BAM  } from '../process/samtools_view_bam'                 addParams( options: params.options )
-include { SAMTOOLS_SORT      } from '../../nf-core/software/samtools/sort/main'    addParams( options: params.options )
-include { SAMTOOLS_INDEX     } from '../../nf-core/software/samtools/index/main'   addParams( options: params.options )
-include { BAM_STATS_SAMTOOLS } from '../../nf-core/subworkflow/bam_stats_samtools' addParams( options: params.options )
+include { SAMTOOLS_VIEW_BAM  } from '../../modules/local/samtools_view_bam'              addParams( options: params.options )
+include { SAMTOOLS_SORT      } from '../../modules/nf-core/software/samtools/sort/main'  addParams( options: params.options )
+include { SAMTOOLS_INDEX     } from '../../modules/nf-core/software/samtools/index/main' addParams( options: params.options )
+include { BAM_STATS_SAMTOOLS } from '../../subworkflows/nf-core/bam_stats_samtools'      addParams( options: params.options )
 
 workflow BAM_SORT_SAMTOOLS {
     take:

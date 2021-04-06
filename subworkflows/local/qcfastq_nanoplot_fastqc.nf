@@ -5,8 +5,8 @@
 params.nanoplot_fastq_options = [:]
 params.fastqc_options         = [:]
 
-include { NANOPLOT_FASTQ     } from '../process/nanoplot_fastq'            addParams( options: params.nanoplot_fastq_options )
-include { FASTQC             } from '../process/fastqc'                    addParams( options: params.fastqc_options )
+include { NANOPLOT_FASTQ     } from '../../modules/local/nanoplot_fastq'            addParams( options: params.nanoplot_fastq_options )
+include { FASTQC             } from '../../modules/local/fastqc'                    addParams( options: params.fastqc_options )
 
 workflow QCFASTQ_NANOPLOT_FASTQC {
     take:

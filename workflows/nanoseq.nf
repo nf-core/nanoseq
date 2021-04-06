@@ -33,7 +33,7 @@ if (!params.skip_basecalling) {
     // Nextflow is unable to recursively download directories via HTTPS
     if (workflow.profile.contains('test')) {
         if (!isOffline()) {
-            include { GET_TEST_DATA } from './modules/local/process/get_test_data' addParams( options: [:] )
+            include { GET_TEST_DATA } from '../modules/local/get_test_data' addParams( options: [:] )
             GET_TEST_DATA ().set { ch_input_path }
         } else {
             exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
@@ -84,7 +84,7 @@ if (!params.skip_basecalling) {
 if (params.run_nanolyse){
     if (!params.nanolyse_fasta){
         if (!isOffline()){
-            include { GET_NANOLYSE_FASTA    } from './modules/local/process/get_nanolyse_fasta' addParams( options: [:] )
+            include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta' addParams( options: [:] )
             GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
         } else {
             exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
@@ -136,13 +136,13 @@ def qcat_options     = modules['qcat']
 def nanolyse_options = modules['nanolyse']
 def bambu_options    = modules['bambu']
 
-include { GUPPY                 } from './modules/local/process/guppy'                 addParams( options: guppy_options                )
-include { QCAT                  } from './modules/local/process/qcat'                  addParams( options: qcat_options                 ) 
-include { NANOLYSE              } from './modules/local/process/nanolyse'              addParams( options: nanolyse_options             )
-include { BAM_RENAME            } from './modules/local/process/bam_rename'            addParams( options: [:]                          )
-include { BAMBU                 } from './modules/local/process/bambu'                 addParams( options: bambu_options                )
-include { GET_SOFTWARE_VERSIONS } from './modules/local/process/get_software_versions' addParams( options: [publish_files : ['csv':'']] )
-include { MULTIQC               } from './modules/local/process/multiqc'               addParams( options: multiqc_options              )
+include { GUPPY                 } from '../modules/local/guppy'                 addParams( options: guppy_options                )
+include { QCAT                  } from '../modules/local/qcat'                  addParams( options: qcat_options                 ) 
+include { NANOLYSE              } from '../modules/local/nanolyse'              addParams( options: nanolyse_options             )
+include { BAM_RENAME            } from '../modules/local/bam_rename'            addParams( options: [:]                          )
+include { BAMBU                 } from '../modules/local/bambu'                 addParams( options: bambu_options                )
+include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' addParams( options: [publish_files : ['csv':'']] )
+include { MULTIQC               } from '../modules/local/multiqc'               addParams( options: multiqc_options              )
 
 /*
  * SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -165,16 +165,16 @@ def featurecounts_options       = modules['subread_featurecounts']
 def deseq2_options              = modules['deseq2']
 def dexseq_options              = modules['dexseq']
 
-include { INPUT_CHECK                      } from './modules/local/subworkflow/input_check'                       addParams( options: [:] )
-include { QCBASECALL_PYCOQC_NANOPLOT       } from './modules/local/subworkflow/qcbasecall_pycoqc_nanoplot'        addParams( pycoqc_options: pycoqc_options, nanoplot_summary_options: nanoplot_summary_options )
-include { QCFASTQ_NANOPLOT_FASTQC          } from './modules/local/subworkflow/qcfastq_nanoplot_fastqc'           addParams( nanoplot_fastq_options: nanoplot_fastq_options, fastqc_options: fastqc_options )
-include { PREPARE_GENOME                   } from './modules/local/subworkflow/prepare_genome'                    addParams( genome_options: genome_options )
-include { ALIGN_GRAPHMAP2                  } from './modules/local/subworkflow/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options, samtools_options: samtools_sort_options )
-include { ALIGN_MINIMAP2                   } from './modules/local/subworkflow/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options, samtools_options: samtools_sort_options )
-include { BEDTOOLS_UCSC_BIGWIG             } from './modules/local/subworkflow/bedtools_ucsc_bigwig'              addParams( bigwig_options: bigwig_options )
-include { BEDTOOLS_UCSC_BIGBED             } from './modules/local/subworkflow/bedtools_ucsc_bigbed'              addParams( bigbed_options: bigbed_options )
-include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from './modules/local/subworkflow/quantify_stringtie_featurecounts'  addParams( stringtie2_options: stringtie2_options, featurecounts_options: featurecounts_options )
-include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from './modules/local/subworkflow/differential_deseq2_dexseq'        addParams( deseq2_options: deseq2_options, dexseq_options: dexseq_options )
+include { INPUT_CHECK                      } from '../subworkflows/local/input_check'                       addParams( options: [:] )
+include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/local/qcbasecall_pycoqc_nanoplot'        addParams( pycoqc_options: pycoqc_options, nanoplot_summary_options: nanoplot_summary_options )
+include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq_nanoplot_fastqc'           addParams( nanoplot_fastq_options: nanoplot_fastq_options, fastqc_options: fastqc_options )
+include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'                    addParams( genome_options: genome_options )
+include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options, samtools_options: samtools_sort_options )
+include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options, samtools_options: samtools_sort_options )
+include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'              addParams( bigwig_options: bigwig_options )
+include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'              addParams( bigbed_options: bigbed_options )
+include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'  addParams( stringtie2_options: stringtie2_options, featurecounts_options: featurecounts_options )
+include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'        addParams( deseq2_options: deseq2_options, dexseq_options: dexseq_options )
 
 ////////////////////////////////////////////////////
 /* --    IMPORT NF-CORE MODULES/SUBWORKFLOWS   -- */

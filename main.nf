@@ -52,7 +52,7 @@ workflow {
     /*
      * SUBWORKFLOW: Run main nf-core/nanoseq analysis pipeline
      */
-    include { NANOSEQ } from './nanoseq' addParams( summary_params: summary_params )
+    include { NANOSEQ } from './workflows/nanoseq' addParams( summary_params: summary_params )
     NANOSEQ ()
 }
 
