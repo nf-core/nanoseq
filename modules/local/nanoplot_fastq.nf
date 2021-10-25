@@ -12,7 +12,7 @@ process NANOPLOT_FASTQ {
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'meta.id') }
 
     conda     (params.enable_conda ? "bioconda::nanoplot=1.32.1" : null)
-    container "quay.io/biocontainers/nanoplot:1.30.1--py_0"
+    container "quay.io/biocontainers/nanoplot:1.32.1--py_0"
 
     when:
     !params.skip_qc && !params.skip_nanoplot

@@ -393,7 +393,6 @@ workflow NANOSEQ{
           ch_software_versions = ch_software_versions.mix(BAMBU.out.bsgenome_version.first().ifEmpty(null))
           ch_r_version = ch_r_version.mix(BAMBU.out.r_version.first().ifEmpty(null))
        } else {
-
           /*
            * SUBWORKFLOW: Novel isoform detection with StringTie and Quantification with featureCounts
            */

@@ -11,7 +11,7 @@ process NANOPLOT_SUMMARY {
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process)) }
 
     conda     (params.enable_conda ? "bioconda::nanoplot=1.32.1" : null)
-    container "quay.io/biocontainers/nanoplot:1.30.1--py_0"
+    container "quay.io/biocontainers/nanoplot:1.32.1--py_0"
 
     when:
     !params.skip_basecalling && !params.skip_qc && !params.skip_nanoplot
