@@ -220,7 +220,7 @@ workflow NANOSEQ{
 
         if (params.skip_demultiplexing){
             ch_sample
-                .map { it -> [ it[0], it[0], it[2], it[3], it[4], it[5] ] }
+                .map { it -> [ it[0], it[0].id, it[2], it[3], it[4], it[5] ] }
                 .set { ch_sample }
         }
 
@@ -285,7 +285,6 @@ workflow NANOSEQ{
             QCBASECALL_PYCOQC_NANOPLOT ( ch_guppy_summary , params.skip_pycoqc, params.skip_nanoplot )
             ch_software_versions = ch_software_versions.mix(QCBASECALL_PYCOQC_NANOPLOT.out.pycoqc_version.first().ifEmpty(null))
             ch_pycoqc_multiqc    = QCBASECALL_PYCOQC_NANOPLOT.out.pycoqc_multiqc.ifEmpty([])
-            ch_pycoqc_multiqc.view()
         }
 
         /*
