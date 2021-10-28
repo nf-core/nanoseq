@@ -17,8 +17,8 @@ process BEDTOOLS_BAMBED {
     tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai)
     
     output:
-    tuple val(meta), path(sizes), val(is_transcripts), path("*.bed12"), emit: bed12
-    path "*.version.txt"                                                , emit: version
+    tuple val(meta), path(sizes), path("*.bed12") , emit: bed12
+    path "*.version.txt"                          , emit: version
 
     script:
     """

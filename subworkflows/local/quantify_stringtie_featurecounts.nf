@@ -5,9 +5,9 @@
 params.stringtie2_options      = [:]
 params.featurecounts_options   = [:]
 
-include { STRINGTIE2            } from '../../modules/local/stringtie2'             addParams( options: params.stringtie2_options   )
-include { STRINGTIE2_MERGE      } from '../../modules/local/stringtie2_merge'       addParams( options: params.stringtie2_options    )
-include { SUBREAD_FEATURECOUNTS } from '../../modules/local/subread_featurecounts'  addParams( options: params.featurecounts_options )
+include { STRINGTIE2            } from '../../modules/local/stringtie2'                      addParams( options: params.stringtie2_options   )
+include { STRINGTIE_MERGE       } from '../../modules/nf-core/modules/stringtie/merge/main'  addParams( options: params.stringtie2_options    )
+include { SUBREAD_FEATURECOUNTS } from '../../modules/local/subread_featurecounts'           addParams( options: params.featurecounts_options )
 
 workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     take:
@@ -36,9 +36,9 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     /*
      * Merge isoforms across samples caleed by StringTie
      */
-    STRINGTIE2_MERGE ( ch_stringtie_gtf.collect(), ch_sample_gtf )
-    ch_stringtie_merged_gtf = STRINGTIE2_MERGE.out.merged_gtf
-    
+    STRINGTIE_MERGE ( ch_stringtie_gtf.collect(), ch_sample_gtf )
+    ch_stringtie_merged_gtf = STRINGTIE_MERGE.out.gtf
+
     /*
      * Gene and transcript quantification with featureCounts
      */

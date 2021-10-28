@@ -4,8 +4,8 @@
 
 params.bigwig_options   = [:]
 
-include { BEDTOOLS_GENOMECOV    } from '../../modules/local/bedtools_genomecov'                     addParams( options: params.bigwig_options )
-include { UCSC_BEDGRAPHTOBIGWIG } from '../../modules/nf-core/software/ucsc/bedgraphtobigwig/main' addParams( options: params.bigwig_options )
+include { BEDTOOLS_GENOMECOV    } from '../../modules/local/bedtools_genomecov'    addParams( options: params.bigwig_options )
+include { UCSC_BEDGRAPHTOBIGWIG } from '../../modules/local/ucsc_bedgraphtobigwig' addParams( options: params.bigwig_options )
 
 workflow BEDTOOLS_UCSC_BIGWIG {
     take:

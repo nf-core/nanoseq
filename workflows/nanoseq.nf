@@ -136,21 +136,20 @@ def qcat_options     = modules['qcat']
 def nanolyse_options = modules['nanolyse']
 def bambu_options    = modules['bambu']
 
-include { GUPPY                 } from '../modules/local/guppy'                 addParams( options: guppy_options                )
-include { QCAT                  } from '../modules/local/qcat'                  addParams( options: qcat_options                 ) 
-include { NANOLYSE              } from '../modules/local/nanolyse'              addParams( options: nanolyse_options             )
-include { BAM_RENAME            } from '../modules/local/bam_rename'            addParams( options: [:]                          )
-include { BAMBU                 } from '../modules/local/bambu'                 addParams( options: bambu_options                )
-include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' addParams( options: [publish_files : ['csv':'']] )
-include { MULTIQC               } from '../modules/local/multiqc'               addParams( options: multiqc_options              )
+include { GUPPY                 } from '../modules/local/guppy'                   addParams( options: guppy_options                )
+include { QCAT                  } from '../modules/local/qcat'                    addParams( options: qcat_options                 ) 
+include { NANOLYSE              } from '../modules/nf-core/modules/nanolyse/main' addParams( options: nanolyse_options             )
+include { BAM_RENAME            } from '../modules/local/bam_rename'              addParams( options: [:]                          )
+include { BAMBU                 } from '../modules/local/bambu'                   addParams( options: bambu_options                )
+include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'   addParams( options: [publish_files : ['csv':'']] )
+include { MULTIQC               } from '../modules/local/multiqc'                 addParams( options: multiqc_options              )
 
 /*
  * SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
  */
 // TO DO -- define options for the subworkflows below
 def pycoqc_options              = modules['pycoqc']
-def nanoplot_summary_options    = modules['nanoplot_summary']
-def nanoplot_fastq_options      = modules['nanoplot_fastq']
+def nanoplot_options            = modules['nanoplot']
 def fastqc_options              = modules['fastqc']
 def genome_options              = modules['get_chrom_size']
 def graphmap2_index_options     = modules['graphmap2_index']
@@ -166,8 +165,6 @@ def deseq2_options              = modules['deseq2']
 def dexseq_options              = modules['dexseq']
 
 include { INPUT_CHECK                      } from '../subworkflows/local/input_check'                       addParams( options: [:] )
-include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/local/qcbasecall_pycoqc_nanoplot'        addParams( pycoqc_options: pycoqc_options, nanoplot_summary_options: nanoplot_summary_options )
-include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq_nanoplot_fastqc'           addParams( nanoplot_fastq_options: nanoplot_fastq_options, fastqc_options: fastqc_options )
 include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'                    addParams( genome_options: genome_options )
 include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options, samtools_options: samtools_sort_options )
 include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options, samtools_options: samtools_sort_options )
@@ -188,7 +185,8 @@ include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differe
 /*
  * SUBWORKFLOW: Consisting entirely of nf-core/modules (BAM_SORT_SAMTOOLS & BAM_STAT_SAMTOOLS are within two local subworkflows)
  */
-
+include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/nf-core/qcbasecall_pycoqc_nanoplot'      addParams( pycoqc_options: pycoqc_options, nanoplot_options: nanoplot_options )
+include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/nf-core/qcfastq_nanoplot_fastqc'         addParams( nanoplot_options: nanoplot_options, fastqc_options: fastqc_options )
 ////////////////////////////////////////////////////
 /* --           RUN MAIN WORKFLOW              -- */
 ////////////////////////////////////////////////////
@@ -267,11 +265,11 @@ workflow NANOSEQ{
         * MODULE: DNA contaminant removal using NanoLyse
         */
        NANOLYSE ( ch_fastq_nanolyse, ch_nanolyse_fasta )
-       NANOLYSE.out.nanolyse_fastq
+       NANOLYSE.out.fastq
           .join( ch_sample )
           .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ]}
           .set { ch_fastq }
-      ch_software_versions = ch_software_versions.mix(NANOLYSE.out.version.first().ifEmpty(null))
+      ch_software_versions = ch_software_versions.mix(NANOLYSE.out.versions.first().ifEmpty(null))
     }
 
     ch_pycoqc_multiqc = Channel.empty()
@@ -291,7 +289,9 @@ workflow NANOSEQ{
          * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
          */
         QCFASTQ_NANOPLOT_FASTQC ( ch_fastq, params.skip_nanoplot, params.skip_fastqc)
-        ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.nanoplot_version.first().ifEmpty(null))
+        if (params.skip_basecalling){
+            ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.nanoplot_version.first().ifEmpty(null))
+        }
         ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
         ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([]) 
     }
@@ -421,7 +421,7 @@ workflow NANOSEQ{
     /*
      * MODULE: Parse software version numbers
      */
-    GET_SOFTWARE_VERSIONS ( ch_software_versions.map { it }.collect() )
+//    GET_SOFTWARE_VERSIONS ( ch_software_versions.map { it }.collect() )
 
     if (!params.skip_multiqc){
         workflow_summary    = Schema.params_summary_multiqc(workflow, params.summary_params)
@@ -438,7 +438,7 @@ workflow NANOSEQ{
         ch_samtools_multiqc.collect().ifEmpty([]),
         ch_featurecounts_gene_multiqc.ifEmpty([]),
         ch_featurecounts_transcript_multiqc.ifEmpty([]),
-        GET_SOFTWARE_VERSIONS.out.yaml,
+//        GET_SOFTWARE_VERSIONS.out.yaml,
         ch_workflow_summary
         )
     }

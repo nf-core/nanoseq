@@ -19,10 +19,10 @@ process UCSC_BED12TOBIGBED {
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     input:
-    tuple val(meta), path(sizes), val(is_transcripts), path(bed12)
+    tuple val(meta), path(sizes),  path(bed12)
     
     output:
-    tuple val(meta), path(sizes), val(is_transcripts), path("*.bigBed"), emit: bigbed
+    tuple val(meta), path(sizes),  path("*.bigBed"), emit: bigbed
 
     script:
     """

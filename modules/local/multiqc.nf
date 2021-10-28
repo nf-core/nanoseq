@@ -21,7 +21,7 @@ process MULTIQC {
     path ch_sortbam_stats_multiqc
     path ch_featurecounts_gene_multiqc
     path ch_featurecounts_transcript_multiqc
-    path software_versions_yaml
+//    path software_versions_yaml
     path workflow_summary
     
     output:
