@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
@@ -21,9 +21,7 @@ process BAMBU {
     path "counts_gene.txt"          , emit: ch_gene_counts
     path "counts_transcript.txt"    , emit: ch_transcript_counts
     path "extended_annotations.gtf" , emit: extended_gtf
-    path "bambu.version.txt"        , emit: bambu_version
-    path "r.version.txt"            , emit: r_version
-    path "bsgenome.version.txt"     , emit: bsgenome_version
+    path "versions.yml"             , emit: versions
 
     script:
     """
@@ -32,8 +30,12 @@ process BAMBU {
         --ncore=$task.cpus \\
         --annotation=$gtf \\
         --fasta=$fasta $bams
-    Rscript -e "library(bambu); write(x=as.character(packageVersion('bambu')), file='bambu.version.txt')"
-    Rscript -e "library(BSgenome); write(x=as.character(packageVersion('BSgenome')), file='bsgenome.version.txt')"
-    echo \$(R --version 2>&1) > r.version.txt
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+        bioconductor-deseq2: \$(Rscript -e "library(bambu); cat(as.character(packageVersion('bambu')))")
+        bioconductor-deseq2: \$(Rscript -e "library(BSgenome); cat(as.character(packageVersion('BSgenome')))")
+    END_VERSIONS
     """
 }

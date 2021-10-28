@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 // def options    = initOptions(params.options)  //this line gives "Cannot get property 'args' on null object"
@@ -22,11 +22,15 @@ process UCSC_BEDGRAPHTOBIGWIG {
     
     output:
     tuple val(meta), path(sizes), path("*.bigWig"), emit: bigwig
-    path "*.version.txt"             , emit: version
+    path "versions.yml"                           , emit: versions
 
     script:
     """
     bedGraphToBigWig $bedgraph $sizes ${meta.id}.bigWig
-    echo $VERSION > bedGraphToBigWig.version.txt
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(echo $VERSION)
+    END_VERSIONS
     """
 }

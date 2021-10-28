@@ -24,6 +24,7 @@ workflow PREPARE_GENOME {
      */
     GET_CHROM_SIZES ( ch_fastq_sizes )
     ch_chrom_sizes = GET_CHROM_SIZES.out.sizes
+    samtools_version = GET_CHROM_SIZES.out.versions
 
     // Get unique list of all gtf files
     ch_fastq
@@ -37,6 +38,7 @@ workflow PREPARE_GENOME {
      */
     GTF2BED ( ch_fastq_gtf )
     ch_gtf_bed = GTF2BED.out.gtf_bed
+    gtf2bed_version = GTF2BED.out.versions
 
     ch_chrom_sizes
         .join(ch_gtf_bed, by: 1, remainder:true)
@@ -51,4 +53,6 @@ workflow PREPARE_GENOME {
     emit:
     ch_fasta_index
     ch_gtf_bed
+    samtools_version
+    gtf2bed_version
 }

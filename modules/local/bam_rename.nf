@@ -1,8 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
-
-params.options = [:]
-def options    = initOptions(params.options)
+include { saveFiles;; getProcessName } from './functions'
 
 process BAM_RENAME {
     tag "$meta.id"

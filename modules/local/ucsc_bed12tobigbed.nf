@@ -1,8 +1,10 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
+
+def VERSION = '377'
 
 process UCSC_BED12TOBIGBED {
     tag "$meta.id"
@@ -23,6 +25,7 @@ process UCSC_BED12TOBIGBED {
     
     output:
     tuple val(meta), path(sizes),  path("*.bigBed"), emit: bigbed
+    path "versions.yml"                            , emit: versions
 
     script:
     """
@@ -30,5 +33,10 @@ process UCSC_BED12TOBIGBED {
         $bed12 \\
         $sizes \\
         ${meta.id}.bigBed
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(echo $VERSION)
+    END_VERSIONS
     """
 }

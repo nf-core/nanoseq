@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
@@ -21,18 +21,24 @@ process MULTIQC {
     path ch_sortbam_stats_multiqc
     path ch_featurecounts_gene_multiqc
     path ch_featurecounts_transcript_multiqc
-//    path software_versions_yaml
+    path software_versions_yaml
     path workflow_summary
     
     output:
     path "*multiqc_report.html", emit: report
     path "*_data"              , emit: data
     path "*_plots"             , optional:true, emit: plots
+    path "versions.yml"        , emit: versions
 
     script:
     def custom_config = params.multiqc_config ? "--config $multiqc_custom_config" : ''
     """
     multiqc -f . $custom_config
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$( multiqc --version | sed -e "s/multiqc, version //g" )
+    END_VERSIONS
     """
 }
 

@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
@@ -18,7 +18,7 @@ process GRAPHMAP2_INDEX {
     
     output:
     tuple path(fasta), path(sizes), path(gtf), val(bed), val(is_transcripts), path("*.gmidx"), val(annotation_str), emit: index
-    path "*.version.txt"  ,emit: version
+    path "versions.yml" , emit: versions
 
     script:
     def preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -32,6 +32,10 @@ process GRAPHMAP2_INDEX {
         -t $task.cpus \\
         -I \\
         -r $fasta
-    echo \$(graphmap2 2>&1) > graphmap2.version.txt
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(echo \$(graphmap2 align 2>&1) | sed 's/^.*Version: v//; s/ .*\$//')
+    END_VERSIONS
     """
 }

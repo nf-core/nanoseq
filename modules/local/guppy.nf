@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
@@ -27,7 +27,7 @@ process GUPPY {
     path "fastq/*.fastq.gz"                    , emit: fastq
     tuple val(meta), path("basecalling/*.txt") , emit: summary
     path "basecalling/*"                       , emit: called
-    path "*.version.txt"                       , emit: version
+    path "versions.yml"                        , emit: versions
 
     script:
     def barcode_kit  = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
@@ -48,8 +48,12 @@ process GUPPY {
         $barcode_ends \\
         $config \\
        $model
-    guppy_basecaller --version &> guppy.version.txt
-    
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(echo \$(guppy_basecaller --version 2>&1) | sed -r 's/.{81}//')
+    END_VERSIONS
+
     ## Concatenate fastq files
     mkdir fastq
     cd basecalling

@@ -26,7 +26,7 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
      */
     STRINGTIE2 ( ch_sample )
     ch_stringtie_gtf   = STRINGTIE2.out.stringtie_gtf
-    stringtie2_version = STRINGTIE2.out.version
+    stringtie2_version = STRINGTIE2.out.versions
 
     ch_sample
         .map { it -> [ it[2] ] }
@@ -50,7 +50,7 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     ch_transcript_counts             = SUBREAD_FEATURECOUNTS.out.transcript_counts
     featurecounts_gene_multiqc       = SUBREAD_FEATURECOUNTS.out.featurecounts_gene_multiqc
     featurecounts_transcript_multiqc = SUBREAD_FEATURECOUNTS.out.featurecounts_transcript_multiqc
-    featurecounts_version            = SUBREAD_FEATURECOUNTS.out.version
+    featurecounts_version            = SUBREAD_FEATURECOUNTS.out.versions
 
     emit:
     ch_stringtie_gtf

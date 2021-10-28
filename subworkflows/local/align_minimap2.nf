@@ -21,7 +21,7 @@ workflow ALIGN_MINIMAP2 {
      */
     MINIMAP2_INDEX ( ch_fasta_index )
     ch_index         = MINIMAP2_INDEX.out.index
-    minimap2_version = MINIMAP2_INDEX.out.version
+    minimap2_version = MINIMAP2_INDEX.out.versions
 
     ch_index
         .cross(ch_fastq) { it -> it[-1] }
@@ -42,11 +42,10 @@ workflow ALIGN_MINIMAP2 {
     BAM_SORT_SAMTOOLS ( ch_align_sam )
     ch_sortbam               = BAM_SORT_SAMTOOLS.out.sortbam
     ch_sortbam_stats_multiqc = BAM_SORT_SAMTOOLS.out.sortbam_stats_multiqc
-    samtools_version         = BAM_SORT_SAMTOOLS.out.version
+    samtools_version         = BAM_SORT_SAMTOOLS.out.versions
 
     emit:
     minimap2_version
-
     ch_sortbam
     ch_sortbam_stats_multiqc
     samtools_version

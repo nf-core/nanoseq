@@ -31,10 +31,10 @@ workflow BAM_SORT_SAMTOOLS {
        .join ( BAM_STATS_SAMTOOLS.out.flagstat )
        .map  { it -> [ it[1], it[2], it[3] ] }
        .set  { sortbam_stats_multiqc }
-    version = BAM_STATS_SAMTOOLS.out.version
+    versions = BAM_STATS_SAMTOOLS.out.versions
 
     emit:
     sortbam
     sortbam_stats_multiqc
-    version
+    versions
 }

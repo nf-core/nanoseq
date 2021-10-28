@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
@@ -19,9 +19,15 @@ process SAMTOOLS_VIEW_BAM {
     
     output:
     tuple val(meta), path("*.bam") ,emit: bam
+    path "versions.yml"        , emit: versions
 
     script:
     """
     samtools view -b -h -O BAM -@ $task.cpus -o ${meta.id}.bam $sam
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+    END_VERSIONS
     """
 }

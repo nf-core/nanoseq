@@ -21,7 +21,7 @@ workflow ALIGN_GRAPHMAP2 {
      */
     GRAPHMAP2_INDEX ( ch_fasta_index )
     ch_index          = GRAPHMAP2_INDEX.out.index
-    graphmap2_version = GRAPHMAP2_INDEX.out.version 
+    graphmap2_version = GRAPHMAP2_INDEX.out.versions 
 
     ch_index
         .cross(ch_fastq) { it -> it[-1] }
@@ -42,7 +42,7 @@ workflow ALIGN_GRAPHMAP2 {
     BAM_SORT_SAMTOOLS ( ch_align_sam )
     ch_sortbam               = BAM_SORT_SAMTOOLS.out.sortbam
     ch_sortbam_stats_multiqc = BAM_SORT_SAMTOOLS.out.sortbam_stats_multiqc
-    samtools_version         = BAM_SORT_SAMTOOLS.out.version    
+    samtools_version         = BAM_SORT_SAMTOOLS.out.versions    
 
     emit:
     graphmap2_version

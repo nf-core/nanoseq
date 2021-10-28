@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 // params.options = [:]
 // def options    = initOptions(params.options)
@@ -18,7 +18,7 @@ process BEDTOOLS_BAMBED {
     
     output:
     tuple val(meta), path(sizes), path("*.bed12") , emit: bed12
-    path "*.version.txt"                          , emit: version
+    path "versions.yml"                           , emit: versions
 
     script:
     """
@@ -28,6 +28,9 @@ process BEDTOOLS_BAMBED {
         -cigar \\
         -i ${bam[0]} \\
         | bedtools sort > ${meta.id}.bed12
-    bedtools --version | sed -e "s/bedtools v//g" > bedtools.version.txt
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(bedtools --version | sed -e "s/bedtools v//g")
+    END_VERSIONS
     """
 }

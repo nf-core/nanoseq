@@ -17,16 +17,17 @@ workflow BEDTOOLS_UCSC_BIGBED {
      */
     BEDTOOLS_BAMBED ( ch_sortbam )
     ch_bed12         = BEDTOOLS_BAMBED.out.bed12
-    bedtools_version = BEDTOOLS_BAMBED.out.version
+    bedtools_version = BEDTOOLS_BAMBED.out.versions
 
     /*
      * Convert BED12 to BigBED
      */
     UCSC_BED12TOBIGBED ( ch_bed12 )
     ch_bigbed = UCSC_BED12TOBIGBED.out.bigbed
-
+    bed12tobigbed_version = UCSC_BED12TOBIGBED.out.versions
 
     emit:
     bedtools_version
     ch_bigbed
+    bed12tobigbed_version
 }

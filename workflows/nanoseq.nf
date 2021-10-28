@@ -138,7 +138,6 @@ def bambu_options    = modules['bambu']
 
 include { GUPPY                 } from '../modules/local/guppy'                   addParams( options: guppy_options                )
 include { QCAT                  } from '../modules/local/qcat'                    addParams( options: qcat_options                 ) 
-include { NANOLYSE              } from '../modules/nf-core/modules/nanolyse/main' addParams( options: nanolyse_options             )
 include { BAM_RENAME            } from '../modules/local/bam_rename'              addParams( options: [:]                          )
 include { BAMBU                 } from '../modules/local/bambu'                   addParams( options: bambu_options                )
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'   addParams( options: [publish_files : ['csv':'']] )
@@ -181,6 +180,8 @@ include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differe
  * MODULE: Installed directly from nf-core/modules
  */
 // TO DO -- define options for the processes below
+include { NANOLYSE                    } from '../modules/nf-core/modules/nanolyse/main' addParams( options: nanolyse_options             )
+include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main' addParams( options: [publish_files : ['_versions.yml':'']] )
 
 /*
  * SUBWORKFLOW: Consisting entirely of nf-core/modules (BAM_SORT_SAMTOOLS & BAM_STAT_SAMTOOLS are within two local subworkflows)
@@ -214,7 +215,7 @@ workflow NANOSEQ{
          */
         GUPPY ( ch_input_path, ch_sample_name, ch_guppy_config.ifEmpty([]), ch_guppy_model.ifEmpty([]) )
         ch_guppy_summary = GUPPY.out.summary
-        ch_software_versions = ch_software_versions.mix(GUPPY.out.version.ifEmpty(null))
+        ch_software_versions = ch_software_versions.mix(GUPPY.out.versions.ifEmpty(null))
 
         if (params.skip_demultiplexing){
             ch_sample
@@ -244,7 +245,7 @@ workflow NANOSEQ{
                .join(ch_sample, by: 1) // join on barcode
                .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
                .set { ch_fastq }
-            ch_software_versions = ch_software_versions.mix(QCAT.out.version.ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
 
         } else {
             if (!params.skip_alignment){
@@ -305,6 +306,8 @@ workflow NANOSEQ{
        PREPARE_GENOME ( ch_fastq )
        ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
        ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
+       ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
+       ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
        if (params.aligner == 'minimap2') {
 
           /*
@@ -335,6 +338,7 @@ workflow NANOSEQ{
            */
           BEDTOOLS_UCSC_BIGWIG ( ch_view_sortbam )
           ch_bedtools_version = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGWIG.out.bedtools_version.first().ifEmpty(null))
+          ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGWIG.out.bedgraphtobigwig_version.first().ifEmpty(null))
        }
        if (!params.skip_bigbed){
 
@@ -343,6 +347,7 @@ workflow NANOSEQ{
            */
           BEDTOOLS_UCSC_BIGBED ( ch_view_sortbam )
           ch_bedtools_version = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGBED.out.bedtools_version.first().ifEmpty(null))
+          ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGBED.out.bed12tobigbed_version.first().ifEmpty(null))
        }
        ch_software_versions = ch_software_versions.mix(ch_bedtools_version.first().ifEmpty(null))
 
@@ -388,9 +393,7 @@ workflow NANOSEQ{
           BAMBU ( ch_sample_annotation, ch_sortbam.collect{ it [1] } )
           ch_gene_counts       = BAMBU.out.ch_gene_counts
           ch_transcript_counts = BAMBU.out.ch_transcript_counts
-          ch_software_versions = ch_software_versions.mix(BAMBU.out.bambu_version.first().ifEmpty(null))
-          ch_software_versions = ch_software_versions.mix(BAMBU.out.bsgenome_version.first().ifEmpty(null))
-          ch_r_version = ch_r_version.mix(BAMBU.out.r_version.first().ifEmpty(null))
+          ch_software_versions = ch_software_versions.mix(BAMBU.out.versions.first().ifEmpty(null))
        } else {
           /*
            * SUBWORKFLOW: Novel isoform detection with StringTie and Quantification with featureCounts
@@ -411,17 +414,15 @@ workflow NANOSEQ{
           DIFFERENTIAL_DESEQ2_DEXSEQ( ch_gene_counts, ch_transcript_counts )
           ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.first().ifEmpty(null))
           ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.dexseq_version.first().ifEmpty(null))
-          ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.drimseq_version.first().ifEmpty(null))
-          ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.stager_version.first().ifEmpty(null))
-          ch_r_version = ch_r_version.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.r_version.first().ifEmpty(null))
        }
-       ch_software_versions = ch_software_versions.mix(ch_r_version.first().ifEmpty(null))
     }
 
     /*
      * MODULE: Parse software version numbers
      */
-//    GET_SOFTWARE_VERSIONS ( ch_software_versions.map { it }.collect() )
+    CUSTOM_DUMPSOFTWAREVERSIONS (
+        ch_software_versions.unique().collectFile()
+    )
 
     if (!params.skip_multiqc){
         workflow_summary    = Schema.params_summary_multiqc(workflow, params.summary_params)
@@ -438,7 +439,7 @@ workflow NANOSEQ{
         ch_samtools_multiqc.collect().ifEmpty([]),
         ch_featurecounts_gene_multiqc.ifEmpty([]),
         ch_featurecounts_transcript_multiqc.ifEmpty([]),
-//        GET_SOFTWARE_VERSIONS.out.yaml,
+        CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
         ch_workflow_summary
         )
     }
