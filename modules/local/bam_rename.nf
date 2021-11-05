@@ -1,5 +1,5 @@
 // Import generic module functions
-include { saveFiles;; getProcessName } from './functions'
+include { saveFiles; getProcessName } from './functions'
 
 process BAM_RENAME {
     tag "$meta.id"
