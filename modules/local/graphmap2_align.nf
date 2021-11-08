@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
@@ -19,6 +19,7 @@ process GRAPHMAP2_ALIGN {
     
     output:
     tuple val(meta), path(sizes), val(is_transcripts), path("*.sam"), emit: align_sam
+    path "versions.yml"           , emit: versions
 
     script:
     def preset    = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
@@ -35,5 +36,10 @@ process GRAPHMAP2_ALIGN {
         -d $fastq \\
         -o ${meta.id}.sam \\
         --extcigar
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(echo \$(graphmap2 align 2>&1) | sed 's/^.*Version: v//; s/ .*\$//')
+    END_VERSIONS
     """
 }

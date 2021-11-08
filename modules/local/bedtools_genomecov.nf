@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 //params.options = [:]
 //def options    = initOptions(params.options)
@@ -15,7 +15,7 @@ process BEDTOOLS_GENOMECOV {
 
     output:
     tuple val(meta), path(sizes), path("*.bedGraph"), emit: bedgraph
-    path "*.version.txt"                              , emit: version
+    path "versions.yml"                             , emit: versions
 
     script:
     split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
@@ -26,6 +26,9 @@ process BEDTOOLS_GENOMECOV {
         -ibam ${bam[0]} \\
         -bg \\
         | bedtools sort > ${meta.id}.bedGraph
-    bedtools --version | sed -e "s/bedtools v//g" > bedtools.version.txt
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(bedtools --version | sed -e "s/bedtools v//g")
+    END_VERSIONS
     """
 }

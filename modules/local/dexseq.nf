@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options       = [:]
 params.multiqc_label = ''
@@ -20,9 +20,7 @@ process DEXSEQ {
     
     output:    
     path "*.txt"                , emit: dexseq_txt
-    path "dexseq.version.txt"   , emit: dexseq_version
-    path "drimseq.version.txt"  , emit: drimseq_version
-    path "stager.version.txt"   , emit: stager_version
+    path "versions.yml"         , emit: versions
 
     script:
     def software    = getSoftwareName(task.process)
@@ -30,8 +28,13 @@ process DEXSEQ {
     def label_upper = params.multiqc_label.toUpperCase()
     """
     run_dexseq.r $params.quantification_method $counts
-    Rscript -e "library(DEXSeq); write(x=as.character(packageVersion('DEXSeq')), file='dexseq.version.txt')"
-    Rscript -e "library(DRIMSeq); write(x=as.character(packageVersion('DRIMSeq')), file='drimseq.version.txt')"
-    Rscript -e "library(stageR); write(x=as.character(packageVersion('stageR')), file='stager.version.txt')"
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+        bioconductor-deseq2: \$(Rscript -e "library(DEXSeq); cat(as.character(packageVersion('DEXSeq')))")
+        bioconductor-deseq2: \$(Rscript -e "library(DRIMSeq); cat(as.character(packageVersion('DRIMSeq')))")
+        bioconductor-deseq2: \$(Rscript -e "library(stageR); cat(as.character(packageVersion('stageR')))")
+    END_VERSIONS
     """
 }

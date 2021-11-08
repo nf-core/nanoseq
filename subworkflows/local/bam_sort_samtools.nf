@@ -5,8 +5,8 @@
 params.options = [:]
 
 include { SAMTOOLS_VIEW_BAM  } from '../../modules/local/samtools_view_bam'              addParams( options: params.options )
-include { SAMTOOLS_SORT      } from '../../modules/nf-core/software/samtools/sort/main'  addParams( options: params.options )
-include { SAMTOOLS_INDEX     } from '../../modules/nf-core/software/samtools/index/main' addParams( options: params.options )
+include { SAMTOOLS_SORT      } from '../../modules/nf-core/modules/samtools/sort/main'  addParams( options: params.options )
+include { SAMTOOLS_INDEX     } from '../../modules/nf-core/modules/samtools/index/main' addParams( options: params.options )
 include { BAM_STATS_SAMTOOLS } from '../../subworkflows/nf-core/bam_stats_samtools'      addParams( options: params.options )
 
 workflow BAM_SORT_SAMTOOLS {
@@ -31,10 +31,10 @@ workflow BAM_SORT_SAMTOOLS {
        .join ( BAM_STATS_SAMTOOLS.out.flagstat )
        .map  { it -> [ it[1], it[2], it[3] ] }
        .set  { sortbam_stats_multiqc }
-    version = BAM_STATS_SAMTOOLS.out.version
+    versions = BAM_STATS_SAMTOOLS.out.versions
 
     emit:
     sortbam
     sortbam_stats_multiqc
-    version
+    versions
 }

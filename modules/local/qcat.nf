@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
@@ -19,7 +19,7 @@ process QCAT {
     
     output:
     path "fastq/*.fastq.gz"               , emit: fastq
-    path "*.version.txt"                  , emit: version
+    path "versions.yml"                   , emit: versions
 
     script:
     def detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
@@ -42,6 +42,9 @@ process QCAT {
     ## Zip fastq files (cannot find pigz command)
     gzip fastq/*
 
-    qcat --version &> qcat.version.txt
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(qcat --version 2>&1 | sed 's/^.*qcat //; s/ .*\$//')
+    END_VERSIONS
     """
 }

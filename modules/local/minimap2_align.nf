@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
@@ -19,6 +19,7 @@ process MINIMAP2_ALIGN {
     
     output:
     tuple val(meta), path(sizes), val(is_transcripts), path("*.sam"), emit: align_sam
+    path "versions.yml" , emit: versions
 
     script:
     def preset    = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
@@ -35,5 +36,10 @@ process MINIMAP2_ALIGN {
         -t $task.cpus \\
         $index \\
         $fastq > ${meta.id}.sam
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(minimap2 --version 2>&1)
+    END_VERSIONS
     """
 }

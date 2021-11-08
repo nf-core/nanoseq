@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options = [:]
 def options    = initOptions(params.options)
@@ -20,7 +20,7 @@ process STRINGTIE2 {
     
     output:
     path "*.stringtie.gtf"       , emit: stringtie_gtf
-    path  "*.version.txt"        , emit: version
+    path  "versions.yml"         , emit: versions
 
     script:
     """
@@ -28,6 +28,10 @@ process STRINGTIE2 {
         -L \\
         -G $gtf \\
         -o ${meta.id}.stringtie.gtf $bam
-    stringtie --version > stringtie2.version.txt
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        ${getSoftwareName(task.process)}: \$(stringtie --version 2>&1)
+    END_VERSIONS
     """
 }

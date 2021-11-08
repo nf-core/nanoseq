@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
 
 params.options       = [:]
 params.multiqc_label = ''
@@ -19,13 +19,16 @@ process DESEQ2 {
     
     output:    
     path "*.txt"                , emit: deseq2_txt
-    path "deseq2.version.txt"   , emit: deseq2_version
-    path "r.version.txt"        , emit: r_version
+    path "versions.yml"         , emit: versions
 
     script:
     """
     run_deseq2.r $params.quantification_method $counts
-    Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='deseq2.version.txt')"
-    echo \$(R --version 2>&1) > r.version.txt
+
+    cat <<-END_VERSIONS > versions.yml
+    ${getProcessName(task.process)}:
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+        bioconductor-deseq2: \$(Rscript -e "library(DESeq2); cat(as.character(packageVersion('DESeq2')))")
+    END_VERSIONS
     """
 }

@@ -218,17 +218,17 @@ They are loaded in sequence, so later profiles can overwrite earlier profiles.
 If `-profile` is not specified, the pipeline will run locally and expect all software to be installed and available on the `PATH`. This is _not_ recommended.
 
 * `docker`
-  * A generic configuration profile to be used with [Docker](https://docker.com/)
-  * Pulls software from Docker Hub: [`nfcore/nanoseq`](https://hub.docker.com/r/nfcore/nanoseq/)
+    * A generic configuration profile to be used with [Docker](https://docker.com/)
+    * Pulls software from Docker Hub: [`nfcore/nanoseq`](https://hub.docker.com/r/nfcore/nanoseq/)
 * `singularity`
-  * A generic configuration profile to be used with [Singularity](https://sylabs.io/docs/)
-  * Pulls software from Docker Hub: [`nfcore/nanoseq`](https://hub.docker.com/r/nfcore/nanoseq/)
+    * A generic configuration profile to be used with [Singularity](https://sylabs.io/docs/)
+    * Pulls software from Docker Hub: [`nfcore/nanoseq`](https://hub.docker.com/r/nfcore/nanoseq/)
 * `podman`
-  * A generic configuration profile to be used with [Podman](https://podman.io/)
-  * Pulls software from Docker Hub: [`nfcore/nanoseq`](https://hub.docker.com/r/nfcore/nanoseq/)
+    * A generic configuration profile to be used with [Podman](https://podman.io/)
+    * Pulls software from Docker Hub: [`nfcore/nanoseq`](https://hub.docker.com/r/nfcore/nanoseq/)
 * `test`
-  * A profile with a complete configuration for automated testing
-  * Includes links to test data so needs no other parameters
+    * A profile with a complete configuration for automated testing
+    * Includes links to test data so needs no other parameters
 
 ### `-resume`
 
