@@ -188,6 +188,7 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/
  */
 include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/nf-core/qcbasecall_pycoqc_nanoplot'      addParams( pycoqc_options: pycoqc_options, nanoplot_options: nanoplot_options )
 include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/nf-core/qcfastq_nanoplot_fastqc'         addParams( nanoplot_options: nanoplot_options, fastqc_options: fastqc_options )
+
 ////////////////////////////////////////////////////
 /* --           RUN MAIN WORKFLOW              -- */
 ////////////////////////////////////////////////////

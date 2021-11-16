@@ -47,7 +47,7 @@ process GUPPY {
         $proc_options \\
         $barcode_ends \\
         $config \\
-       $model
+        $model
 
     cat <<-END_VERSIONS > versions.yml
     ${getProcessName(task.process)}:
