@@ -35,7 +35,6 @@ process MINIMAP2_INDEX {
         -t $task.cpus \\
         -d ${fasta}.mmi \\
         $fasta
-    ps
 
     cat <<-END_VERSIONS > versions.yml
     ${getProcessName(task.process)}:
