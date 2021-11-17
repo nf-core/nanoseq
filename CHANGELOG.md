@@ -3,10 +3,12 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v1.2.0dev - [date]
+## [2.0.0] - 2021-11-19
 
-### Added
+### Major enhancements
 
+* Pipeline has been re-implemented in [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html)
+* Software containers are now obtained from [Biocontainers](https://biocontainers.pro/#/registry)
 * Update pipeline template to nf-core/tools `1.12.1`
 * [#77](https://github.com/nf-core/nanoseq/issues/77) - Skipped alignment steps
 * [#97](https://github.com/nf-core/nanoseq/issues/97) - Add optional DNA cleaning option
