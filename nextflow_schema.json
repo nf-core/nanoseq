@@ -28,15 +28,13 @@
                 },
                 "protocol": {
                     "type": "string",
-                    "fa_icon": "fas fa-vials",
-                    "description": "Specifies the type of data that was sequenced i.e. 'DNA', 'cDNA' or 'directRNA'.",
+                    "fa_icon": "fas fa-file-csv",
+                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "format": "file-path",
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
                     "schema": "assets/schema_input.json",
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re//usage#samplesheet-input).",
-                    "fa_icon": "fas fa-file-csv"
+                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re//usage#samplesheet-input)."
                 },
                 "outdir": {
                     "type": "string",
