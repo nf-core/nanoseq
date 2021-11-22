@@ -22,7 +22,7 @@ Please note that the list above is alphabetised and is therefore not ranked in a
 
 ## Preamble
 
-> Note: This Code of Conduct (CoC) has been drafted by the nf-core Safety Officer and been edited after input from members of the nf-core team and others. "We", in this document, refers to the Safety Officer and members of the nf-core core team, both of whom are deemed to be members of the nf-core community and are therefore required to abide by this Code of Conduct. This document will amended periodically to keep it up-to-date, and in case of any dispute, the most current version will apply.
+> Note: This Code of Conduct (CoC) has been drafted by the nf-core Safety Officer and been edited after input from members of the nf-core team and others. "We", in this document, refers to the Safety Officer and members of the nf-core core team, both of whom are deemed to be members of the nf-core community and are therefore required to abide by this Code of Conduct. This document will be amended periodically to keep it up-to-date, and in case of any dispute, the most current version will apply.
 
 An up-to-date list of members of the nf-core core team can be found [here](https://nf-co.re/about). Our current safety officer is Renuka Kudva.
 
@@ -30,7 +30,7 @@ nf-core is a young and growing community that welcomes contributions from anyone
 
 We have therefore adopted this code of conduct (CoC), which we require all members of our community and attendees in nf-core events to adhere to in all our workspaces at all times. Workspaces include but are not limited to Slack, meetings on Zoom, Jitsi, YouTube live etc.
 
-Our CoC will be strictly enforced and the nf-core team reserve the right to exclude participants who do not comply with our guidelines from our workspaces and future nf-core activities.
+Our CoC will be strictly enforced and the nf-core team reserves the right to exclude participants who do not comply with our guidelines from our workspaces and future nf-core activities.
 
 We ask all members of our community to help maintain a supportive and productive workspace and to avoid behaviours that can make individuals feel unsafe or unwelcome. Please help us maintain and uphold this CoC.
 
@@ -44,7 +44,7 @@ The safety officer in consultation with the nf-core core team have the right and
 
 Members of the core team or the safety officer who violate the CoC will be required to recuse themselves pending investigation. They will not have access to any reports of the violations and be subject to the same actions as others in violation of the CoC.
 
-## When are where does this Code of Conduct apply?
+## When and where does this Code of Conduct apply?
 
 Participation in the nf-core community is contingent on following these guidelines in all our workspaces and events. This includes but is not limited to the following listed alphabetically and therefore in no order of preference:
 
