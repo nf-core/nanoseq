@@ -358,9 +358,6 @@
         },
         "skip_multiqc": {
             "type": "string"
-        },
-        "clusterOptions": {
-            "type": "string"
         }
     }
 }
