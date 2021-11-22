@@ -480,9 +480,6 @@
         }
     ],
     "properties": {
-        "protocol": {
-            "type": "string"
-        },
         "input_path": {
             "type": "string"
         },
