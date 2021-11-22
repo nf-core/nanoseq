@@ -183,6 +183,7 @@
                     "type": "boolean",
                     "fa_icon": "fas fa-save",
                     "description": "Save the '.sam' files from the alignment step - not done by default."
+                },
                 "skip_alignment": {
                     "description": "Skip alignment and downstream processes.",
                     "fa_icon": "fas fa-fast-forward"
