@@ -29,7 +29,7 @@
                 "protocol": {
                     "type": "string",
                     "fa_icon": "fas fa-vials",
-                    "description": "Specifies the type of data that was sequenced i.e. 'DNA', 'cDNA' or 'directRNA'."
+                    "description": "Specifies the type of data that was sequenced i.e. 'DNA', 'cDNA' or 'directRNA'.",
                     "format": "file-path",
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
