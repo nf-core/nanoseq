@@ -107,6 +107,8 @@ def qcat_options     = modules['qcat']
 def nanolyse_options = modules['nanolyse']
 def bambu_options    = modules['bambu']
 
+include { GET_TEST_DATA } from '../modules/local/get_test_data' addParams( options: [:] )
+include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta' addParams( options: [:] )
 include { GUPPY                 } from '../modules/local/guppy'                   addParams( options: guppy_options                )
 include { QCAT                  } from '../modules/local/qcat'                    addParams( options: qcat_options                 ) 
 include { BAM_RENAME            } from '../modules/local/bam_rename'              addParams( options: [:]                          )
@@ -186,7 +188,6 @@ workflow NANOSEQ{
         // Nextflow is unable to recursively download directories via HTTPS
         if (workflow.profile.contains('test')) {
             if (!isOffline()) {
-                include { GET_TEST_DATA } from '../modules/local/get_test_data' addParams( options: [:] )
                 GET_TEST_DATA ().set { ch_input_path }
             } else {
                 exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
@@ -251,7 +252,6 @@ workflow NANOSEQ{
 
        if (!params.nanolyse_fasta){
            if (!isOffline()){
-               include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta' addParams( options: [:] )
                GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
            } else {
                exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
