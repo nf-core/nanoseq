@@ -1,61 +1,55 @@
 #!/usr/bin/env nextflow
 /*
 ========================================================================================
-                         nf-core/nanoseq
+    nf-core/nanoseq
 ========================================================================================
- nf-core/nanoseq Analysis Pipeline.
- #### Homepage / Documentation
- https://github.com/nf-core/nanoseq
+    Github : https://github.com/nf-core/nanoseq
+    Website: https://nf-co.re/nanoseq
+    Slack  : https://nfcore.slack.com/channels/nanoseq
 ----------------------------------------------------------------------------------------
 */
 
 nextflow.enable.dsl = 2
 
-////////////////////////////////////////////////////
-/* --               PRINT HELP                 -- */
-////////////////////////////////////////////////////
+/*
+========================================================================================
+    VALIDATE & PRINT PARAMETER SUMMARY
+========================================================================================
+*/
 
-def json_schema = "$baseDir/nextflow_schema.json"
-if (params.help) {
-    def command = "nextflow run nf-core/nanoseq --input samplesheet.csv -profile docker"
-    log.info Schema.params_help(workflow, params, json_schema, command)
-    exit 0
-}
+WorkflowMain.initialise(workflow, params, log)
 
-////////////////////////////////////////////////////
-/* --         PRINT PARAMETER SUMMARY          -- */
-////////////////////////////////////////////////////
+/*
+========================================================================================
+    NAMED WORKFLOW FOR PIPELINE
+========================================================================================
+*/
 
-def summary_params = Schema.params_summary_map(workflow, params, json_schema)
-log.info Schema.params_summary_log(workflow, params, json_schema)
+include { NANOSEQ } from './workflows/nanoseq'
 
-////////////////////////////////////////////////////
-/* --          PARAMETER CHECKS                -- */
-////////////////////////////////////////////////////
-
-// Check that conda channels are set-up correctly
-if (params.enable_conda) {
-    Checks.check_conda_channels(log)
-}
-
-// Check AWS batch settings
-Checks.aws_batch(workflow, params)
-
-// Check the hostnames against configured profiles
-Checks.hostname(workflow, params, log)
-
-////////////////////////////////////////////////////
-/* --           RUN MAIN WORKFLOW              -- */
-////////////////////////////////////////////////////
-
-workflow {
-    /*
-     * SUBWORKFLOW: Run main nf-core/nanoseq analysis pipeline
-     */
-    include { NANOSEQ } from './workflows/nanoseq' addParams( summary_params: summary_params )
+//
+// WORKFLOW: Run main nf-core/nanoseq analysis pipeline
+//
+workflow NFCORE_NANOSEQ {
     NANOSEQ ()
 }
 
-////////////////////////////////////////////////////
-/* --                  THE END                 -- */
-////////////////////////////////////////////////////
+/*
+========================================================================================
+    RUN ALL WORKFLOWS
+========================================================================================
+*/
+
+//
+// WORKFLOW: Execute a single named workflow for the pipeline
+// See: https://github.com/nf-core/rnaseq/issues/619
+//
+workflow {
+    NFCORE_NANOSEQ ()
+}
+
+/*
+========================================================================================
+    THE END
+========================================================================================
+*/
