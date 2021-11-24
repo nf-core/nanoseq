@@ -28,22 +28,6 @@ def isOffline() {
 def ch_guppy_model  = Channel.empty()
 def ch_guppy_config = Channel.empty()
 if (!params.skip_basecalling) { 
-
-    // Pre-download test-dataset to get files for '--input_path' parameter
-    // Nextflow is unable to recursively download directories via HTTPS
-    if (workflow.profile.contains('test')) {
-        if (!isOffline()) {
-            include { GET_TEST_DATA } from '../modules/local/get_test_data' addParams( options: [:] )
-            GET_TEST_DATA ().set { ch_input_path }
-        } else {
-            exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
-        }
-    } else {
-        if (params.input_path) { 
-            ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true) 
-        } 
-    }
-
     // Need to stage guppy_config properly depending on whether its a file or string
     if (!params.guppy_config) {
         if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
@@ -78,19 +62,6 @@ if (!params.skip_basecalling) {
         } else {
             exit 1, "Please provide a barcode kit to demultiplex with qcat. Valid options: ${qcatBarcodeKitList}"
         }
-    }
-}
-
-if (params.run_nanolyse){
-    if (!params.nanolyse_fasta){
-        if (!isOffline()){
-            include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta' addParams( options: [:] )
-            GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
-        } else {
-            exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
-        }
-    } else {
-        ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
     }
 }
 
@@ -211,6 +182,20 @@ workflow NANOSEQ{
             .map { it[0] }
             .set { ch_sample_name }
 
+        // Pre-download test-dataset to get files for '--input_path' parameter
+        // Nextflow is unable to recursively download directories via HTTPS
+        if (workflow.profile.contains('test')) {
+            if (!isOffline()) {
+                include { GET_TEST_DATA } from '../modules/local/get_test_data' addParams( options: [:] )
+                GET_TEST_DATA ().set { ch_input_path }
+            } else {
+                exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
+            }
+        } else {
+            if (params.input_path) { 
+                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true) 
+            } 
+        }
         /*
          * MODULE: Basecalling and demultipexing using Guppy 
          */
@@ -263,6 +248,17 @@ workflow NANOSEQ{
        ch_fastq
            .map { it -> [ it[0], it[1] ] }
            .set { ch_fastq_nanolyse }
+
+       if (!params.nanolyse_fasta){
+           if (!isOffline()){
+               include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta' addParams( options: [:] )
+               GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
+           } else {
+               exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
+           }
+       } else {
+           ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
+       }
        /*
         * MODULE: DNA contaminant removal using NanoLyse
         */
