@@ -5,7 +5,7 @@ params.options       = [:]
 def options          = initOptions(params.options)
 
 process GET_TEST_DATA {
-    container "quay.io/biocontainers/wget:1.20.1"
+    container "docker.io/yuukiiwa/git:latest"
 
     output:    
     path "test-datasets/fast5/$barcoded"  , emit: ch_input_path
