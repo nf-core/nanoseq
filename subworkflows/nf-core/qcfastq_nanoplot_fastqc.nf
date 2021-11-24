@@ -12,12 +12,12 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     take:
     ch_fastq
     skip_nanoplot
-    skip_fastqc    
+    skip_fastqc
 
     main:
     ch_fastq
-       .map { ch -> [ ch[0], ch[1] ] }
-       .set { ch_fastq }
+        .map { ch -> [ ch[0], ch[1] ] }
+        .set { ch_fastq }
 
     /*
      * FastQ QC using NanoPlot
@@ -28,12 +28,12 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     nanoplot_log     = Channel.empty()
     nanoplot_version = Channel.empty()
     if (!skip_nanoplot){
-       NANOPLOT ( ch_fastq )
-       nanoplot_png     = NANOPLOT.out.png
-       nanoplot_html    = NANOPLOT.out.html
-       nanoplot_txt     = NANOPLOT.out.txt
-       nanoplot_log     = NANOPLOT.out.log
-       nanoplot_version = NANOPLOT.out.versions
+        NANOPLOT ( ch_fastq )
+        nanoplot_png     = NANOPLOT.out.png
+        nanoplot_html    = NANOPLOT.out.html
+        nanoplot_txt     = NANOPLOT.out.txt
+        nanoplot_log     = NANOPLOT.out.log
+        nanoplot_version = NANOPLOT.out.versions
     }
 
     /*
@@ -44,19 +44,19 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     fastqc_multiqc = Channel.empty()
     fastqc_version = Channel.empty()
     if (!skip_fastqc){
-       FASTQC ( ch_fastq )
-       fastqc_zip     = FASTQC.out.zip
-       fastqc_html    = FASTQC.out.html
-       fastqc_zip
-          .map { it -> [ it[1] ] }
-          .set { fastqc_zip_only }
-       fastqc_html
-          .map { it -> [ it[1] ] }
-          .set { fastqc_html_only }
-       fastqc_multiqc = fastqc_multiqc.mix( fastqc_zip_only, fastqc_html_only )
+        FASTQC ( ch_fastq )
+        fastqc_zip     = FASTQC.out.zip
+        fastqc_html    = FASTQC.out.html
+        fastqc_zip
+            .map { it -> [ it[1] ] }
+            .set { fastqc_zip_only }
+        fastqc_html
+            .map { it -> [ it[1] ] }
+            .set { fastqc_html_only }
+        fastqc_multiqc = fastqc_multiqc.mix( fastqc_zip_only, fastqc_html_only )
 //       fastqc_version = FASTQC.out.versions
     }
-    
+
     emit:
     nanoplot_png
     nanoplot_html

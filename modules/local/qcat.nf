@@ -16,7 +16,7 @@ process QCAT {
 
     input:
     path input_path
-    
+
     output:
     path "fastq/*.fastq.gz"               , emit: fastq
     path "versions.yml"                   , emit: versions
@@ -38,7 +38,7 @@ process QCAT {
     --kit $params.barcode_kit \\
     --min-score $params.qcat_min_score \\
     $detect_middle
-            
+
     ## Zip fastq files (cannot find pigz command)
     gzip fastq/*
 

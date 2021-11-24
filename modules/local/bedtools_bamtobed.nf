@@ -15,7 +15,7 @@ process BEDTOOLS_BAMBED {
 
     input:
     tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai)
-    
+
     output:
     tuple val(meta), path(sizes), path("*.bed12") , emit: bed12
     path "versions.yml"                           , emit: versions

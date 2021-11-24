@@ -19,7 +19,7 @@ process GET_CHROM_SIZES {
 
     output:
     tuple path('*.sizes'), val(name) , emit: sizes
-  //  path '*.fai'                     , emit: fai
+    //  path '*.fai'                     , emit: fai
     path  "versions.yml"            , emit: versions
 
     script:

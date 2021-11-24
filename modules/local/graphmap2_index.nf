@@ -15,7 +15,7 @@ process GRAPHMAP2_INDEX {
 
     input:
     tuple path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str)
-    
+
     output:
     tuple path(fasta), path(sizes), path(gtf), val(bed), val(is_transcripts), path("*.gmidx"), val(annotation_str), emit: index
     path "versions.yml" , emit: versions

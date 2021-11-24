@@ -16,7 +16,7 @@ process SAMTOOLS_VIEW_BAM {
 
     input:
     tuple val(meta), path(sizes), val(is_transcripts), path(sam)
-    
+
     output:
     tuple val(meta), path("*.bam") ,emit: bam
     path "versions.yml"        , emit: versions

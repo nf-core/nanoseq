@@ -19,7 +19,7 @@ process UCSC_BEDGRAPHTOBIGWIG {
 
     input:
     tuple val(meta), path(sizes), path(bedgraph)
-    
+
     output:
     tuple val(meta), path(sizes), path("*.bigWig"), emit: bigwig
     path "versions.yml"                           , emit: versions

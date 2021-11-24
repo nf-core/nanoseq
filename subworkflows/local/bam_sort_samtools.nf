@@ -12,7 +12,7 @@ include { BAM_STATS_SAMTOOLS } from '../../subworkflows/nf-core/bam_stats_samtoo
 workflow BAM_SORT_SAMTOOLS {
     take:
     ch_sam // channel: [ val(meta), [ bam ] ]
-    
+
     main:
     SAMTOOLS_VIEW_BAM  ( ch_sam )
 
@@ -20,17 +20,17 @@ workflow BAM_SORT_SAMTOOLS {
     SAMTOOLS_INDEX     ( SAMTOOLS_SORT.out.bam )
 
     ch_sam
-       .join( SAMTOOLS_SORT.out.bam )
-       .join( SAMTOOLS_INDEX.out.bai )
-       .map { it -> [ it[0], it[1], it[2], it[4], it[5] ] }
-       .set { sortbam }
+        .join( SAMTOOLS_SORT.out.bam )
+        .join( SAMTOOLS_INDEX.out.bai )
+        .map { it -> [ it[0], it[1], it[2], it[4], it[5] ] }
+        .set { sortbam }
 
     BAM_STATS_SAMTOOLS ( SAMTOOLS_SORT.out.bam.join(SAMTOOLS_INDEX.out.bai, by: [0]) )
     BAM_STATS_SAMTOOLS.out.stats
-       .join ( BAM_STATS_SAMTOOLS.out.idxstats )
-       .join ( BAM_STATS_SAMTOOLS.out.flagstat )
-       .map  { it -> [ it[1], it[2], it[3] ] }
-       .set  { sortbam_stats_multiqc }
+        .join ( BAM_STATS_SAMTOOLS.out.idxstats )
+        .join ( BAM_STATS_SAMTOOLS.out.flagstat )
+        .map  { it -> [ it[1], it[2], it[3] ] }
+        .set  { sortbam_stats_multiqc }
     versions = BAM_STATS_SAMTOOLS.out.versions
 
     emit:

@@ -9,7 +9,7 @@ include { CHECK_SAMPLESHEET } from '../../modules/local/check_samplesheet' addPa
 workflow INPUT_CHECK {
     take:
     samplesheet // file: /path/to/samplesheet.csv
-    
+
     main:
     CHECK_SAMPLESHEET ( samplesheet )
         .splitCsv ( header:true, sep:',' )

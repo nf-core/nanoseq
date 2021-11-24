@@ -16,7 +16,7 @@ process BAMBU {
     input:
     tuple path(fasta), path(gtf)
     path bams
-    
+
     output:
     path "counts_gene.txt"          , emit: ch_gene_counts
     path "counts_transcript.txt"    , emit: ch_transcript_counts

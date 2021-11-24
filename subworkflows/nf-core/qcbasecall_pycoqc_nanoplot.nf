@@ -13,7 +13,7 @@ workflow QCBASECALL_PYCOQC_NANOPLOT {
     ch_guppy_summary_txt // channel: [ val(meta), [ reads ] ]
     skip_pycoqc
     skip_nanoplot
-    
+
     main:
     /*
      * QC using PycoQC
@@ -22,13 +22,13 @@ workflow QCBASECALL_PYCOQC_NANOPLOT {
     pycoqc_multiqc = Channel.empty()
     pycoqc_version = Channel.empty()
     ch_guppy_summary_txt
-       .map { it -> [ it[1] ] }
-       .set { ch_pycoqc_input }
+        .map { it -> [ it[1] ] }
+        .set { ch_pycoqc_input }
     if (!skip_pycoqc){
-       PYCOQC ( ch_pycoqc_input )
-       pycoqc_html    = PYCOQC.out.html
-       pycoqc_multiqc = PYCOQC.out.json
-       pycoqc_version = PYCOQC.out.versions
+        PYCOQC ( ch_pycoqc_input )
+        pycoqc_html    = PYCOQC.out.html
+        pycoqc_multiqc = PYCOQC.out.json
+        pycoqc_version = PYCOQC.out.versions
     }
 
     /*
@@ -39,12 +39,12 @@ workflow QCBASECALL_PYCOQC_NANOPLOT {
     nanoplot_txt    = Channel.empty()
     nanoplot_log    = Channel.empty()
     if (!skip_nanoplot){
-       NANOPLOT ( ch_guppy_summary_txt )
-       nanoplot_png      = NANOPLOT.out.png
-       nanoplot_html     = NANOPLOT.out.html
-       nanoplot_txt      = NANOPLOT.out.txt
-       nanoplot_log      = NANOPLOT.out.log
-       nanoplot_versions = NANOPLOT.out.versions
+        NANOPLOT ( ch_guppy_summary_txt )
+        nanoplot_png      = NANOPLOT.out.png
+        nanoplot_html     = NANOPLOT.out.html
+        nanoplot_txt      = NANOPLOT.out.txt
+        nanoplot_log      = NANOPLOT.out.log
+        nanoplot_versions = NANOPLOT.out.versions
     }
 
     emit:

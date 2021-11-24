@@ -10,14 +10,14 @@ include { UCSC_BEDGRAPHTOBIGWIG } from '../../modules/local/ucsc_bedgraphtobigwi
 workflow BEDTOOLS_UCSC_BIGWIG {
     take:
     ch_sortbam // channel: [ val(meta), [ reads ] ]
-    
+
     main:
     /*
      * Convert BAM to BEDGraph
      */
-     BEDTOOLS_GENOMECOV ( ch_sortbam )
-     ch_bedgraph      = BEDTOOLS_GENOMECOV.out.bedgraph
-     bedtools_version = BEDTOOLS_GENOMECOV.out.versions
+    BEDTOOLS_GENOMECOV ( ch_sortbam )
+    ch_bedgraph      = BEDTOOLS_GENOMECOV.out.bedgraph
+    bedtools_version = BEDTOOLS_GENOMECOV.out.versions
 
     /*
      * Convert BEDGraph to BigWig

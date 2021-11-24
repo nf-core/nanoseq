@@ -16,7 +16,7 @@ process MINIMAP2_ALIGN {
 
     input:
     tuple val(meta), path(fastq), path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), path(index)
-    
+
     output:
     tuple val(meta), path(sizes), val(is_transcripts), path("*.sam"), emit: align_sam
     path "versions.yml" , emit: versions

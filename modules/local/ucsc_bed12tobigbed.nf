@@ -22,7 +22,7 @@ process UCSC_BED12TOBIGBED {
 
     input:
     tuple val(meta), path(sizes),  path(bed12)
-    
+
     output:
     tuple val(meta), path(sizes),  path("*.bigBed"), emit: bigbed
     path "versions.yml"                            , emit: versions

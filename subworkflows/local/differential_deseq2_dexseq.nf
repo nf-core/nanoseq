@@ -21,7 +21,7 @@ workflow DIFFERENTIAL_DESEQ2_DEXSEQ {
     DESEQ2 ( ch_gene_counts )
     ch_deseq2_txt  = DESEQ2.out.deseq2_txt
     deseq2_version = DESEQ2.out.versions
-  
+
     /*
      * DEXseq differential expression of transcripts
      */

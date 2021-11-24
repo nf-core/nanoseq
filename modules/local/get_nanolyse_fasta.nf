@@ -7,7 +7,7 @@ def options          = initOptions(params.options)
 process GET_NANOLYSE_FASTA {
     container "quay.io/biocontainers/wget:1.20.1"
 
-    output:    
+    output:
     path "*fasta.gz"  , emit: ch_nanolyse_fasta
 
     script:
