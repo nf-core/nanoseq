@@ -5,13 +5,19 @@ params.options       = [:]
 def options          = initOptions(params.options)
 
 process GET_NANOLYSE_FASTA {
-    container "quay.io/biocontainers/wget:1.20.1"
+
+    conda (params.enable_conda ? "conda-forge::sed=4.7" : null)
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://containers.biocontainers.pro/s3/SingImgsRepo/biocontainers/v1.2.0_cv1/biocontainers_v1.2.0_cv1.img' :
+        'biocontainers/biocontainers:v1.2.0_cv1' }"
 
     output:
     path "*fasta.gz"  , emit: ch_nanolyse_fasta
 
     script:
     """
-    wget https://github.com/wdecoster/nanolyse/raw/master/reference/lambda.fasta.gz
+    curl \\
+    -L https://github.com/wdecoster/nanolyse/raw/master/reference/lambda.fasta.gz \\
+    -o lambda.fasta.gz
     """
 }
