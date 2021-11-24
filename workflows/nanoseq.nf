@@ -308,7 +308,7 @@ workflow NANOSEQ{
         if (params.aligner == 'minimap2') {
 
             /*
-            * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files 
+            * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
             */
             ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq )
             ch_view_sortbam = ALIGN_MINIMAP2.out.ch_sortbam
@@ -426,7 +426,7 @@ workflow NANOSEQ{
         ch_workflow_summary = Channel.value(workflow_summary).collectFile(name: 'workflow_summary_mqc.yaml')
 
         /*
-        * MODULE: MultiQC 
+        * MODULE: MultiQC
         */
         MULTIQC (
         ch_multiqc_config,

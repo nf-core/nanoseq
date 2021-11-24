@@ -42,7 +42,7 @@ class Schema {
                                 description
                             parameter 2
                                 type
-                                 description
+                                description
             group 2
                 title
                     description

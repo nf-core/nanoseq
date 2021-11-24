@@ -37,8 +37,8 @@ process SUBREAD_FEATURECOUNTS {
         -a $gtf \\
         -o counts_gene.txt \\
         $bams
-  
-     featureCounts \\
+
+    featureCounts \\
         -L \\
         -O \\
         -f \\

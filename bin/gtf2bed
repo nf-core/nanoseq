@@ -42,9 +42,9 @@ while (<IN>) {
     my @f = split /\t/;
     if ($gff) {
         # most ver 2's stick gene names in the id field
-    		($id) = $f[8]=~ /\bID="([^"]+)"/;
+        ($id) = $f[8]=~ /\bID="([^"]+)"/;
         # most ver 3's stick unquoted names in the name field
-		    ($id) = $f[8]=~ /\bName=([^";]+)/ if !$id && $gff == 3;
+        ($id) = $f[8]=~ /\bName=([^";]+)/ if !$id && $gff == 3;
     } else {
         ($id) = $f[8]=~ /transcript_id "([^"]+)"/;
     }
@@ -56,8 +56,8 @@ while (<IN>) {
         # gff3 puts :\d in exons sometimes
         $id =~ s/:\d+$// if $gff == 3;
         push @{$exons{$id}}, \@f;
-		    # save lowest start
-		    $trans{$id} = \@f if !$trans{$id};
+        # save lowest start
+        $trans{$id} = \@f if !$trans{$id};
     } elsif ($f[2] eq 'start_codon') {
         #optional, output codon start/stop as "thick" region in bed
         $sc{$id}->[0] = $f[3];
