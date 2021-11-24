@@ -83,7 +83,7 @@ n_samp_feature <- length(sampleinfo$sample_id)/2
 min_count_gene <- 5
 min_count_feature <- 5
 dFilter <- dmFilter(d,
-                    min_samps_feature_expr = n_samp_feature, 
+                    min_samps_feature_expr = n_samp_feature,
                     min_samps_feature_prop = n_samp_feature,
                     min_samps_gene_expr = n_samp_gene,
                     min_feature_expr = min_count_feature,

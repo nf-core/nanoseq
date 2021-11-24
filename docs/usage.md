@@ -248,9 +248,9 @@ Whilst these default requirements will hopefully work for most people with most 
 
 ```nextflow
 process {
-  withName: star {
-    memory = 32.GB
-  }
+    withName: star {
+        memory = 32.GB
+    }
 }
 ```
 
