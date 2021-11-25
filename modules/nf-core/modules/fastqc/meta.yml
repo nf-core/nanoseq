@@ -15,6 +15,10 @@ tools:
             overrepresented sequences.
         homepage: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
         documentation: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/
+<<<<<<< HEAD
+=======
+        licence: ['GPL-2.0-only']
+>>>>>>> origin/dev
 input:
     - meta:
         type: map
@@ -40,10 +44,17 @@ output:
         type: file
         description: FastQC report archive
         pattern: "*_{fastqc.zip}"
+<<<<<<< HEAD
     - version:
         type: file
         description: File containing software version
         pattern: "*.{version.txt}"
+=======
+    - versions:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+>>>>>>> origin/dev
 authors:
     - "@drpatelh"
     - "@grst"

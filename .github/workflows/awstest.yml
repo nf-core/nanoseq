@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Launch workflow via tower
         uses: nf-core/tower-action@master
-        
+
         with:
           workspace_id: ${{ secrets.TOWER_WORKSPACE_ID }}
           bearer_token: ${{ secrets.TOWER_BEARER_TOKEN }}
@@ -24,5 +24,6 @@ jobs:
             {
               "outdir": "s3://${{ secrets.AWS_S3_BUCKET }}/nanoseq/results-${{ github.sha }}"
             }
+
           profiles: '[ "test", "aws_tower" ]'
 

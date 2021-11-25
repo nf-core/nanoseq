@@ -6,7 +6,155 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
+You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated file with 6 columns and a header row:
+
+| Column          | Description                                                                                                                                                                                                                                  |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `group`         | Group identifier for sample. This will be identical for replicate samples from the same experimental group.                                                                                                                                  |
+| `replicate`     | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                          |
+| `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                                                                                                                                        |
+| `input_file`    | Full path to FastQ file if previously demultiplexed or a BAM file if previously aligned. FastQ File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam".                              |
+| `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
+| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz".                                                                   |
+
+### Specifying a reference genome/transcriptome
+
+Each sample in the sample sheet can be mapped to its own reference genome or transcriptome. Please see below for additional details required to fill in the `genome` and `transcriptome` columns appropriately:
+
+* If both `genome` and `transcriptome` are not specified then the mapping will be skipped for that sample.
+* If both `genome` and `transcriptome` are specified as local fasta files then the transcriptome will be preferentially used for mapping.
+* If `genome` is specified as a local fasta file and `transcriptome` is left blank then mapping will be performed relative to the genome.
+* If `genome` isnt specified and `transcriptome` is provided as a fasta file then mapping will be performed relative to the transcriptome.
+* If `genome` is specified as an AWS iGenomes key then the `transcriptome` column can be blank. The associated gtf file for the `transcriptome` will be automatically obtained in order to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+* If `genome` is specified as a local fasta file and `transcriptome` is a specified as a local gtf file then both of these will be used to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+
+### Skip basecalling/demultiplexing
+
+As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without basecalling/demultiplexing.
+
+#### With basecalling and demultiplexing
+
+##### Example `samplesheet.csv` for barcoded fast5 inputs
+
+```bash
+group,replicate,barcode,input_file,genome,transcriptome
+WT_MOUSE,1,1,,mm10,
+WT_HUMAN,1,2,,hg19,
+WT_POMBE,1,3,,/path/to/local/genome.fa,
+WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
+WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+WT_UNKNOWN,3,6,,,
+```
+
+##### Example command for barcoded fast5 inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-DCS109 \
+    --barcode_kit EXP-NBD103 \
+    -profile <docker/singularity/institute>
+```
+
+#### With basecalling but not demultiplexing
+
+##### Example `samplesheet.csv` for non-barcoded fast5 inputs
+
+```bash
+group,replicate,barcode,input_file,genome,transcriptome
+SAMPLE,1,1,/path/to/local/genome.fa,,
+```
+
+> Only a single sample can be specified if you would like to skip demultiplexing
+
+##### Example command for non-barcoded fast5 inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-DCS108 \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
+
+#### With demultiplexing but not basecalling
+
+##### Example `samplesheet.csv` for non-demultiplexed fastq inputs
+
+```bash
+group,replicate,barcode,input_file,genome,transcriptome
+WT_MOUSE,1,1,,mm10,
+WT_HUMAN,1,2,,hg19,
+WT_POMBE,1,3,,/path/to/local/genome.fa,
+WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
+WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+WT_UNKNOWN,3,6,,,
+```
+
+##### Example command for non-demultiplexed fastq inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --input_path ./undemultiplexed.fastq.gz \
+    --barcode_kit 'NBD103/NBD104' \
+    --skip_basecalling \
+    -profile <docker/singularity/institute>
+```
+
+#### Without both basecalling and demultiplexing
+
+##### Example `samplesheet.csv` for demultiplexed fastq inputs
+
+```bash
+group,replicate,barcode,input_file,genome,transcriptome
+WT,1,,SAM101A1.fastq.gz,hg19,
+WT,2,,SAM101A2.fastq.gz,hg19,
+KO,1,,SAM101A3.fastq.gz,hg19,
+KO,2,,SAM101A4.fastq.gz,hg19,
+```
+
+##### Example command for demultiplexed fastq inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
+
+##### Without basecalling, demultiplexing, and alignment
+
+##### Example `samplesheet.csv` for BAM inputs
+
+```bash
+group,replicate,barcode,input_file,genome,transcriptome
+WT,1,,SAM101A1.bam,hg19,
+WT,2,,SAM101A2.bam,hg19,
+KO,1,,SAM101A3.bam,hg19,
+KO,2,,SAM101A4.bam,hg19,
+```
+
+##### Example command for BAM inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    --skip_alignment \
+    -profile <docker/singularity/institute>
+```
 
 ## Samplesheet input
 
@@ -57,7 +205,14 @@ An [example samplesheet](../assets/samplesheet.csv) has been provided with the p
 The typical command for running the pipeline is as follows:
 
 ```console
-nextflow run nf-core/nanoseq --input samplesheet.csv --genome GRCh37 -profile docker
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-LSK109 \
+    --barcode_kit SQK-PBK004 \
+    -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -173,6 +328,7 @@ To bypass this error you would need to find exactly which resources are set by t
 
 ```nextflow
 process {
+<<<<<<< HEAD
     withName: STAR_ALIGN {
         memory = 100.GB
     }
@@ -213,6 +369,10 @@ params {
             publish_dir   = "my_star_directory"
             publish_files = ['out':'log', 'tab':'log', 'bam':'']
         }
+=======
+    withName: star {
+        memory = 32.GB
+>>>>>>> origin/dev
     }
 }
 ```
