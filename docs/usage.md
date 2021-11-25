@@ -328,7 +328,6 @@ To bypass this error you would need to find exactly which resources are set by t
 
 ```nextflow
 process {
-<<<<<<< HEAD
     withName: STAR_ALIGN {
         memory = 100.GB
     }
@@ -369,10 +368,6 @@ params {
             publish_dir   = "my_star_directory"
             publish_files = ['out':'log', 'tab':'log', 'bam':'']
         }
-=======
-    withName: star {
-        memory = 32.GB
->>>>>>> origin/dev
     }
 }
 ```

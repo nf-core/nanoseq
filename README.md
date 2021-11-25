@@ -72,31 +72,26 @@ On release, automated continuous integration tests run the pipeline on a [full-s
 ## Documentation
 
 The nf-core/nanoseq pipeline comes with documentation about the pipeline [usage](https://nf-co.re/nanoseq/usage), [parameters](https://nf-co.re/nanoseq/parameters) and [output](https://nf-co.re/nanoseq/output).
-    ```bash
-    nextflow run nf-core/nanoseq \
-        --input samplesheet.csv \
-        --protocol DNA \
-        --input_path ./fast5/ \
-        --flowcell FLO-MIN106 \
-        --kit SQK-LSK109 \
-        --barcode_kit SQK-PBK004 \
-        -profile <docker/singularity/podman/institute>
-    ```
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-LSK109 \
+    --barcode_kit SQK-PBK004 \
+    -profile <docker/singularity/podman/institute>
+```
 
 See [usage docs](https://nf-co.re/nanoseq/usage) for all of the available options when running the pipeline.
 
 An example input samplesheet for performing both basecalling and demultiplexing can be found [here](assets/samplesheet.csv).
-
-## Documentation
-
-The nf-core/nanoseq pipeline comes with documentation about the pipeline: [usage](https://nf-co.re/nanoseq/usage) and [output](https://nf-co.re/nanoseq/output).
 
 ## Credits
 
 nf-core/nanoseq was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from [The Bioinformatics & Biostatistics Group](https://www.crick.ac.uk/research/science-technology-platforms/bioinformatics-and-biostatistics/) for use at [The Francis Crick Institute](https://www.crick.ac.uk/), London. Other primary contributors include [Laura Wratten](https://github.com/lwratten), [Ying Chen](https://github.com/cying111), [Yuk Kei Wan](https://github.com/yuukiiwa) and [Jonathan Goeke](https://github.com/jonathangoeke) from the [Genome Institute of Singapore](https://www.a-star.edu.sg/gis), [Johannes Alneberg](https://github.com/alneberg) and [Franziska Bonath](https://github.com/FranBonath) from [SciLifeLab](https://www.scilifelab.se/), Sweden.
 
 Many thanks to others who have helped out along the way too, including (but not limited to): [@crickbabs](https://github.com/crickbabs), [@AnnaSyme](https://github.com/AnnaSyme).
-
 
 ## Contributions and Support
 
