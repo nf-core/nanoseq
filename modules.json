@@ -36,6 +36,11 @@
             "stringtie/merge": {
                 "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
             }
+        },
+       "local": {
+            "multiqc": {
+                "git_sha": "97505c6b4a7ad5729faf2ef8b68eff60630c0930"
+            }
         }
     }
 }
