@@ -72,6 +72,7 @@ On release, automated continuous integration tests run the pipeline on a [full-s
 ## Documentation
 
 The nf-core/nanoseq pipeline comes with documentation about the pipeline [usage](https://nf-co.re/nanoseq/usage), [parameters](https://nf-co.re/nanoseq/parameters) and [output](https://nf-co.re/nanoseq/output).
+
 ```bash
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
