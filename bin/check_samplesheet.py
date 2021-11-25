@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
+# TODO nf-core: Update the script to check the samplesheet
+# This script is based on the example at: https://raw.githubusercontent.com/nf-core/test-datasets/viralrecon/samplesheet/samplesheet_test_illumina_amplicon.csv
+
 import os
 import sys
+import errno
 import argparse
+
 
 def parse_args(args=None):
     Description = "Reformat nf-core/nanoseq samplesheet file and check its contents."
@@ -23,10 +28,12 @@ def make_dir(path):
                 raise exception
 
 
-def print_error(error, context='Line', context_str=''):
+def print_error(error, context="Line", context_str=""):
     error_str = "ERROR: Please check samplesheet -> {}".format(error)
-    if context != '' and context_str != '':
-        error_str = "ERROR: Please check samplesheet -> {}\n{}: '{}'".format(error, context.strip(), context_str.strip())
+    if context != "" and context_str != "":
+        error_str = "ERROR: Please check samplesheet -> {}\n{}: '{}'".format(
+            error, context.strip(), context_str.strip()
+        )
     print(error_str)
     sys.exit(1)
 

@@ -1,5 +1,5 @@
 //
-// This file holds several functions specific to the main.nf workflow in the nf-core/rnaseq pipeline
+// This file holds several functions specific to the main.nf workflow in the nf-core/nanoseq pipeline
 //
 
 class WorkflowMain {

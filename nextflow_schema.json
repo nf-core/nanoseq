@@ -28,11 +28,9 @@
                 },
                 "protocol": {
                     "type": "string",
-                    "fa_icon": "fas fa-file-csv",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "format": "file-path",
                     "mimetype": "text/csv",
-                    "pattern": "^\\S+\\.csv$",
                     "schema": "assets/schema_input.json",
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re//usage#samplesheet-input)."
                 },
@@ -307,6 +305,12 @@
                     "hidden": true,
                     "fa_icon": "fas fa-users-cog"
                 },
+                "config_profile_name": {
+                    "type": "string",
+                    "description": "Institutional config name.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                },
                 "config_profile_description": {
                     "type": "string",
                     "description": "Institutional config description.",
@@ -432,6 +436,13 @@
                     "fa_icon": "fas fa-cogs",
                     "hidden": true
                 },
+                "validate_params": {
+                    "type": "boolean",
+                    "description": "Boolean whether to validate parameters against the schema at runtime",
+                    "default": true,
+                    "fa_icon": "fas fa-check-square",
+                    "hidden": true
+                },
                 "show_hidden_params": {
                     "type": "boolean",
                     "fa_icon": "far fa-eye-slash",
@@ -444,6 +455,13 @@
                     "description": "Run this workflow with Conda. You can also use '-profile conda' instead of providing this parameter.",
                     "hidden": true,
                     "fa_icon": "fas fa-bacon"
+                },
+                "singularity_pull_docker_container": {
+                    "type": "boolean",
+                    "description": "Instead of directly downloading Singularity images for use with Singularity, force the workflow to pull and convert Docker containers instead.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-toolbox",
+                    "help_text": "This may be useful for example if you are unable to directly pull Singularity containers to run the pipeline due to http/https proxy issues."
                 }
             }
         }
@@ -468,13 +486,13 @@
             "$ref": "#/definitions/reference_genome_options"
         },
         {
-            "$ref": "#/definitions/generic_options"
+            "$ref": "#/definitions/institutional_config_options"
         },
         {
             "$ref": "#/definitions/max_job_request_options"
         },
         {
-            "$ref": "#/definitions/institutional_config_options"
+            "$ref": "#/definitions/generic_options"
         }
     ]
 }
