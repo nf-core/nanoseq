@@ -17,7 +17,7 @@ process SUBREAD_FEATURECOUNTS {
     input:
     path gtf
     path bams
-    
+
     output:
     path "counts_gene.txt"               , emit: gene_counts
     path "counts_transcript.txt"         , emit: transcript_counts
@@ -37,21 +37,21 @@ process SUBREAD_FEATURECOUNTS {
         -a $gtf \\
         -o counts_gene.txt \\
         $bams
-            
-     featureCounts \\
-         -L \\
-         -O \\
-         -f \\
-         --primary \\
-         --fraction \\
-         -F GTF \\
-         -g transcript_id \\
-         -t transcript \\
-         --extraAttributes gene_id \\
-         -T $task.cpus \\
-         -a $gtf \\
-         -o counts_transcript.txt \\
-         $bams
+
+    featureCounts \\
+        -L \\
+        -O \\
+        -f \\
+        --primary \\
+        --fraction \\
+        -F GTF \\
+        -g transcript_id \\
+        -t transcript \\
+        --extraAttributes gene_id \\
+        -T $task.cpus \\
+        -a $gtf \\
+        -o counts_transcript.txt \\
+        $bams
 
     cat <<-END_VERSIONS > versions.yml
     ${getProcessName(task.process)}:

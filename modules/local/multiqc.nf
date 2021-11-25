@@ -23,7 +23,7 @@ process MULTIQC {
     path ch_featurecounts_transcript_multiqc
     path software_versions_yaml
     path workflow_summary
-    
+
     output:
     path "*multiqc_report.html", emit: report
     path "*_data"              , emit: data

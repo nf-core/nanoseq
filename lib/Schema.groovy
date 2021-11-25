@@ -33,23 +33,23 @@ class Schema {
         def Map json_params = (Map) new JsonSlurper().parseText(json).get('definitions')
         /* Tree looks like this in nf-core schema
          * definitions <- this is what the first get('definitions') gets us
-             group 1
-               title
-               description
-                 properties
-                   parameter 1
-                     type
-                     description
-                   parameter 2
-                     type
-                     description
-             group 2
-               title
-               description
-                 properties
-                   parameter 1
-                     type
-                     description
+            group 1
+                title
+                    description
+                        properties
+                            parameter 1
+                                type
+                                description
+                            parameter 2
+                                type
+                                description
+            group 2
+                title
+                    description
+                        properties
+                            parameter 1
+                                type
+                                description
         */
         def params_map = new LinkedHashMap()
         json_params.each { key, val ->
@@ -110,7 +110,7 @@ class Schema {
      */
     private static LinkedHashMap params_summary_map(workflow, params, json_schema) {
         // Get a selection of core Nextflow workflow options
-        def Map workflow_summary = [:]        
+        def Map workflow_summary = [:]
         if (workflow.revision) {
             workflow_summary['revision'] = workflow.revision
         }
@@ -127,7 +127,7 @@ class Schema {
         workflow_summary['userName']     = workflow.userName
         workflow_summary['profile']      = workflow.profile
         workflow_summary['configFiles']  = workflow.configFiles.join(', ')
-        
+
         // Get pipeline parameters defined in JSON Schema
         def Map params_summary = [:]
         def blacklist  = ['hostnames']

@@ -18,7 +18,7 @@ class Completion {
         for (group in summary_params.keySet()) {
             summary << summary_params[group]
         }
-        
+
         def misc_fields = [:]
         misc_fields['Date Started']              = workflow.start
         misc_fields['Date Completed']            = workflow.complete
@@ -45,7 +45,7 @@ class Completion {
         email_fields['summary']             = summary << misc_fields
         email_fields['fail_percent_mapped'] = fail_percent_mapped.keySet()
         email_fields['min_mapped_reads']    = params.min_mapped_reads
-        
+
         // On success try attach the multiqc report
         def mqc_report = null
         try {
@@ -80,7 +80,7 @@ class Completion {
         def email_html    = html_template.toString()
 
         // Render the sendmail template
-        def max_multiqc_email_size = params.max_multiqc_email_size as nextflow.util.MemoryUnit 
+        def max_multiqc_email_size = params.max_multiqc_email_size as nextflow.util.MemoryUnit
         def smail_fields           = [ email: email_address, subject: subject, email_txt: email_txt, email_html: email_html, projectDir: "$projectDir", mqcFile: mqc_report, mqcMaxSize:  max_multiqc_email_size.toBytes()]
         def sf                     = new File("$projectDir/assets/sendmail_template.txt")
         def sendmail_template      = engine.createTemplate(sf).make(smail_fields)

@@ -27,11 +27,11 @@ class Checks {
 
         if (conda_check_failed) {
             log.warn "=============================================================================\n" +
-                     "  There is a problem with your Conda configuration!\n\n" + 
-                     "  You will need to set-up the conda-forge and bioconda channels correctly.\n" +
-                     "  Please refer to https://bioconda.github.io/user/install.html#set-up-channels\n" +
-                     "  NB: The order of the channels matters!\n" +
-                     "==================================================================================="
+            "  There is a problem with your Conda configuration!\n\n" +
+            "  You will need to set-up the conda-forge and bioconda channels correctly.\n" +
+            "  Please refer to https://bioconda.github.io/user/install.html#set-up-channels\n" +
+            "  NB: The order of the channels matters!\n" +
+            "==================================================================================="
         }
     }
 
@@ -54,10 +54,10 @@ class Checks {
                 hnames.each { hname ->
                     if (hostname.contains(hname) && !workflow.profile.contains(prof)) {
                         log.info "=${colors.yellow}====================================================${colors.reset}=\n" +
-                                  "${colors.yellow}WARN: You are running with `-profile $workflow.profile`\n" +
-                                  "      but your machine hostname is ${colors.white}'$hostname'${colors.reset}.\n" +
-                                  "      ${colors.yellow_bold}Please use `-profile $prof${colors.reset}`\n" +
-                                  "=${colors.yellow}====================================================${colors.reset}="
+                        "${colors.yellow}WARN: You are running with `-profile $workflow.profile`\n" +
+                        "      but your machine hostname is ${colors.white}'$hostname'${colors.reset}.\n" +
+                        "      ${colors.yellow_bold}Please use `-profile $prof${colors.reset}`\n" +
+                        "=${colors.yellow}====================================================${colors.reset}="
                     }
                 }
             }
@@ -67,43 +67,43 @@ class Checks {
     // Citation string
     private static String citation(workflow) {
         return "If you use ${workflow.manifest.name} for your analysis please cite:\n\n" +
-               "* The pipeline\n" + 
-               "  https://doi.org/10.5281/zenodo.3697959\n\n" +
-               "* The nf-core framework\n" +
-               "  https://dx.doi.org/10.1038/s41587-020-0439-x\n" +
-               "  https://rdcu.be/b1GjZ\n\n" +
-               "* Software dependencies\n" +
-               "  https://github.com/${workflow.manifest.name}/blob/master/CITATIONS.md"
+        "* The pipeline\n" +
+        "  https://doi.org/10.5281/zenodo.3697959\n\n" +
+        "* The nf-core framework\n" +
+        "  https://dx.doi.org/10.1038/s41587-020-0439-x\n" +
+        "  https://rdcu.be/b1GjZ\n\n" +
+        "* Software dependencies\n" +
+        "  https://github.com/${workflow.manifest.name}/blob/master/CITATIONS.md"
     }
 
     // Print a warning if using GRCh38 assembly from igenomes.config
     static void ncbi_genome_warn(log) {
         log.warn "=============================================================================\n" +
-                 "  When using '--genome GRCh38' the assembly is from the NCBI and NOT Ensembl.\n" +
-                 "  Auto-activating '--skip_biotype_qc' parameter to circumvent the issue below:\n" +
-                 "  https://github.com/nf-core/rnaseq/issues/460.\n\n" +
-                 "  If you would like to use the soft-masked Ensembl assembly instead please see:\n" +
-                 "  https://github.com/nf-core/rnaseq/issues/159#issuecomment-501184312\n" +
-                 "==================================================================================="
+        "  When using '--genome GRCh38' the assembly is from the NCBI and NOT Ensembl.\n" +
+        "  Auto-activating '--skip_biotype_qc' parameter to circumvent the issue below:\n" +
+        "  https://github.com/nf-core/rnaseq/issues/460.\n\n" +
+        "  If you would like to use the soft-masked Ensembl assembly instead please see:\n" +
+        "  https://github.com/nf-core/rnaseq/issues/159#issuecomment-501184312\n" +
+        "==================================================================================="
     }
 
     // Print a warning if using a UCSC assembly from igenomes.config
     static void ucsc_genome_warn(log) {
         log.warn "=============================================================================\n" +
-                 "  When using UCSC assemblies the 'gene_biotype' field is absent from the GTF file.\n" +
-                 "  Auto-activating '--skip_biotype_qc' parameter to circumvent the issue below:\n" +
-                 "  https://github.com/nf-core/rnaseq/issues/460.\n\n" +
-                 "  If you would like to use the soft-masked Ensembl assembly instead please see:\n" +
-                 "  https://github.com/nf-core/rnaseq/issues/159#issuecomment-501184312\n" +
-                 "==================================================================================="
+        "  When using UCSC assemblies the 'gene_biotype' field is absent from the GTF file.\n" +
+        "  Auto-activating '--skip_biotype_qc' parameter to circumvent the issue below:\n" +
+        "  https://github.com/nf-core/rnaseq/issues/460.\n\n" +
+        "  If you would like to use the soft-masked Ensembl assembly instead please see:\n" +
+        "  https://github.com/nf-core/rnaseq/issues/159#issuecomment-501184312\n" +
+        "==================================================================================="
     }
 
     // Print a warning if --skip_alignment has been provided
     static void skip_alignment_warn(log) {
         log.warn "=============================================================================\n" +
-                 "  '--skip_alignment' parameter has been provided.\n" +
-                 "  Skipping alignment, quantification and all downstream QC processes.\n" +
-                 "==================================================================================="
+        "  '--skip_alignment' parameter has been provided.\n" +
+        "  Skipping alignment, quantification and all downstream QC processes.\n" +
+        "==================================================================================="
     }
 
 }

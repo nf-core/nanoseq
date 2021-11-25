@@ -17,7 +17,7 @@ process STRINGTIE2 {
 
     input:
     tuple val(meta), path(fasta), path(gtf), path(bam)
-    
+
     output:
     path "*.stringtie.gtf"       , emit: stringtie_gtf
     path  "versions.yml"         , emit: versions

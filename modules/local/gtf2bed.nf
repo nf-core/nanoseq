@@ -17,7 +17,7 @@ process GTF2BED {
 
     input:
     tuple path(gtf), val(name)
-    
+
     output:
     tuple path('*.bed'), val(name) , emit: gtf_bed
     path "versions.yml", emit: versions

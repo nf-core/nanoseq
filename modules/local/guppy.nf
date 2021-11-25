@@ -11,10 +11,10 @@ process GUPPY {
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process)) }
 
     if (params.guppy_gpu) {
-      container = 'genomicpariscentre/guppy-gpu:4.0.14'
-      clusterOptions = params.gpu_cluster_options
+        container = 'genomicpariscentre/guppy-gpu:4.0.14'
+        clusterOptions = params.gpu_cluster_options
     } else {
-      container = 'genomicpariscentre/guppy:4.0.14'
+        container = 'genomicpariscentre/guppy:4.0.14'
     }
 
     input:
@@ -22,7 +22,7 @@ process GUPPY {
     val meta
     path guppy_config
     path guppy_model
-    
+
     output:
     path "fastq/*.fastq.gz"                    , emit: fastq
     tuple val(meta), path("basecalling/*.txt") , emit: summary

@@ -10,7 +10,7 @@ include { UCSC_BED12TOBIGBED  } from '../../modules/local/ucsc_bed12tobigbed' ad
 workflow BEDTOOLS_UCSC_BIGBED {
     take:
     ch_sortbam
-    
+
     main:
     /*
      * Convert BAM to BED12

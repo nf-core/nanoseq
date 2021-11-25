@@ -14,7 +14,7 @@ workflow ALIGN_MINIMAP2 {
     take:
     ch_fasta_index // channel: [ val(meta), [ reads ] ]
     ch_fastq
-    
+
     main:
     /*
      * Create genome/transcriptome index

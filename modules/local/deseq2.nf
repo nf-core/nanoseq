@@ -13,11 +13,11 @@ process DESEQ2 {
 
     conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-deseq2=1.28.0" : null)
     container "quay.io/biocontainers/mulled-v2-8849acf39a43cdd6c839a369a74c0adc823e2f91:ab110436faf952a33575c64dd74615a84011450b-0"
-    
+
     input:
     path counts
-    
-    output:    
+
+    output:
     path "*.txt"                , emit: deseq2_txt
     path "versions.yml"         , emit: versions
 
