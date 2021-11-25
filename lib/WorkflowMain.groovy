@@ -1,9 +1,5 @@
 //
-<<<<<<< HEAD
 // This file holds several functions specific to the main.nf workflow in the nf-core/nanoseq pipeline
-=======
-// This file holds several functions specific to the main.nf workflow in the nf-core/rnaseq pipeline
->>>>>>> origin/dev
 //
 
 class WorkflowMain {
@@ -13,14 +9,8 @@ class WorkflowMain {
     //
     public static String citation(workflow) {
         return "If you use ${workflow.manifest.name} for your analysis please cite:\n\n" +
-<<<<<<< HEAD
-            // TODO nf-core: Add Zenodo DOI for pipeline after first release
-            //"* The pipeline\n" +
-            //"  https://doi.org/10.5281/zenodo.XXXXXXX\n\n" +
-=======
             "* The pipeline\n" +
             "  https://doi.org/10.5281/zenodo.1400710\n\n" +
->>>>>>> origin/dev
             "* The nf-core framework\n" +
             "  https://doi.org/10.1038/s41587-020-0439-x\n\n" +
             "* Software dependencies\n" +
