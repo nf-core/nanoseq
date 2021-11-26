@@ -11,7 +11,11 @@ process GRAPHMAP2_INDEX {
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
     conda     (params.enable_conda ? "bioconda::graphmap=0.6.3" : null)
-    container "quay.io/biocontainers/graphmap:0.6.3--he513fc3_0"
+    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
+        container "https://depot.galaxyproject.org/singularity/graphmap:0.6.3--he513fc3_0"
+    } else {
+        container "quay.io/biocontainers/graphmap:0.6.3--he513fc3_0"
+    }
 
     input:
     tuple path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str)

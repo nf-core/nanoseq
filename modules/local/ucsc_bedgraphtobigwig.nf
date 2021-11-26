@@ -14,8 +14,11 @@ process UCSC_BEDGRAPHTOBIGWIG {
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'meta.id') }
 
     conda     (params.enable_conda ? "bioconda::ucsc-bedgraphtobigwig=377" : null)
-    container "quay.io/biocontainers/ucsc-bedgraphtobigwig:377--h446ed27_1"
-    if ({ task.exitStatus in [255] }) { errorStrategy = 'ignore' }
+    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
+        container "https://depot.galaxyproject.org/singularity/ucsc-bedtobigbed:377--h446ed27_1"
+    } else {
+        container "quay.io/biocontainers/ucsc-bedtobigbed:377--h446ed27_1"
+    }
 
     input:
     tuple val(meta), path(sizes), path(bedgraph)

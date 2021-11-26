@@ -3,6 +3,11 @@ include { saveFiles; getProcessName } from './functions'
 
 process BAM_RENAME {
     tag "$meta.id"
+    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
+        container "https://depot.galaxyproject.org/singularity/ubuntu:20.04"
+    } else {
+        container quay.io/baselibrary/ubuntu:20.04"
+    }
 
     input:
     tuple val(meta), path(bam)
