@@ -6,7 +6,7 @@ process BAM_RENAME {
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
         container "https://depot.galaxyproject.org/singularity/ubuntu:20.04"
     } else {
-        container "quay.io/baselibrary/ubuntu:20.04"
+        container "quay.io/baselibrary/ubuntu:latest"
     }
 
     input:
