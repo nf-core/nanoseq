@@ -2,7 +2,9 @@
 
 import os
 import sys
+import errno
 import argparse
+
 
 def parse_args(args=None):
     Description = "Reformat nf-core/nanoseq samplesheet file and check its contents."
@@ -23,10 +25,12 @@ def make_dir(path):
                 raise exception
 
 
-def print_error(error, context='Line', context_str=''):
+def print_error(error, context="Line", context_str=""):
     error_str = "ERROR: Please check samplesheet -> {}".format(error)
-    if context != '' and context_str != '':
-        error_str = "ERROR: Please check samplesheet -> {}\n{}: '{}'".format(error, context.strip(), context_str.strip())
+    if context != "" and context_str != "":
+        error_str = "ERROR: Please check samplesheet -> {}\n{}: '{}'".format(
+            error, context.strip(), context_str.strip()
+        )
     print(error_str)
     sys.exit(1)
 
@@ -109,7 +113,7 @@ def check_samplesheet(file_in, file_out):
                 if len(genome.split('.')) > 1:
                     if genome[-6:] != '.fasta' and genome[-3:] != '.fa' and genome[-9:] != '.fasta.gz' and genome[-6:] != '.fa.gz':
                         print_error("Genome entry does not have extension '.fasta', '.fa', '.fasta.gz' or '.fa.gz'!",'Line', line)
-                        
+
             ## Check transcriptome entries
             gtf = ''
             is_transcripts = '0'
@@ -134,11 +138,11 @@ def check_samplesheet(file_in, file_out):
                 sample_info_dict[group][replicate] = sample_info
             else:
                 print_error("Same replicate id provided multiple times!", 'Line', line)
-                
+
     ## Check all input files have the same extension
     if len(set(input_extensions)) > 1:
         print_error("All input files must have the same extension!", 'Multiple extensions found', ', '.join(set(input_extensions)))
-    
+
     ## Write validated samplesheet with appropriate columns
     if len(sample_info_dict) > 0:
         out_dir = os.path.dirname(file_out)

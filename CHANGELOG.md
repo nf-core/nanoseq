@@ -3,6 +3,33 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2021-11-26
+
+### Major enhancements
+
+* Pipeline has been re-implemented in [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html)
+* Software containers are now obtained from [Biocontainers](https://biocontainers.pro/#/registry)
+* Update pipeline template to nf-core/tools `1.12.1`
+* [#77](https://github.com/nf-core/nanoseq/issues/77) - Skipped alignment steps
+* [#97](https://github.com/nf-core/nanoseq/issues/97) - Add optional DNA cleaning option
+
+### Parameters
+
+* Added `--run_nanolyse` to run NanoLyse for DNA cleaning of FastQ files
+* Added `--nanolyse_fasta` to provide a fasta file for nanolyse to filter against
+
+### Software dependencies
+
+| Dependency              | Old version | New version |
+|-------------------------|-------------|-------------|
+| `bioconductor-bambu`    | 1.0.0       | 1.0.2       |
+| `nanolyse`              |             | 1.2.0       |
+| `r-base`                | 4.0.3       | 4.0.2       |
+
+> **NB:** Dependency has been __updated__ if both old and new version information is present.
+> **NB:** Dependency has been __added__ if just the new version information is present.
+> **NB:** Dependency has been __removed__ if version information isn't present.
+
 ## [1.1.0] - 2020-11-06
 
 ### Major enhancements
@@ -56,9 +83,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `subread`               | -           | 2.0.1       |
 | `psutil`                | -           | -           |
 
-> **NB:** Dependency has been __updated__ if both old and new version information is present.  
-> **NB:** Dependency has been __added__ if just the new version information is present.  
-> **NB:** Dependency has been __removed__ if version information isn't present.  
+> **NB:** Dependency has been __updated__ if both old and new version information is present.
+> **NB:** Dependency has been __added__ if just the new version information is present.
+> **NB:** Dependency has been __removed__ if version information isn't present.
 
 ## [1.0.0] - 2020-03-05
 
