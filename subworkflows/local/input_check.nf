@@ -4,14 +4,14 @@
 
 params.options = [:]
 
-include { CHECK_SAMPLESHEET } from '../../modules/local/check_samplesheet' addParams( options: params.options )
+include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check' addParams( options: params.options )
 
 workflow INPUT_CHECK {
     take:
     samplesheet // file: /path/to/samplesheet.csv
 
     main:
-    CHECK_SAMPLESHEET ( samplesheet )
+    SAMPLESHEET_CHECK ( samplesheet )
         .splitCsv ( header:true, sep:',' )
         .map { get_sample_info(it, params.genomes) }
         .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6], it[1] , it[7] ] }

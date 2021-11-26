@@ -101,7 +101,6 @@ def multiqc_options         = modules['multiqc']
 multiqc_options.args       += params.multiqc_title ? " --title \"$params.multiqc_title\"" : ''
 if (params.skip_alignment)  { multiqc_options['publish_dir'] = '' }
 
-// TO DO -- define options for the processes below
 def guppy_options    = modules['guppy']
 def qcat_options     = modules['qcat']
 def nanolyse_options = modules['nanolyse']
@@ -119,7 +118,6 @@ include { MULTIQC               } from '../modules/local/multiqc'               
 /*
  * SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
  */
-// TO DO -- define options for the subworkflows below
 def pycoqc_options              = modules['pycoqc']
 def nanoplot_options            = modules['nanoplot']
 def fastqc_options              = modules['fastqc']
@@ -152,7 +150,6 @@ include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differe
 /*
  * MODULE: Installed directly from nf-core/modules
  */
-// TO DO -- define options for the processes below
 include { NANOLYSE                    } from '../modules/nf-core/modules/nanolyse/main' addParams( options: nanolyse_options             )
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main' addParams( options: [publish_files : ['_versions.yml':'']] )
 
@@ -356,7 +353,7 @@ workflow NANOSEQ{
             .map { it -> if (it[6].toString().endsWith('.bam')) [ it[0], it[6] ] }
             .set { ch_sample_bam }
         BAM_RENAME ( ch_sample_bam )
-        ch_sortbam = BAM_RENAME.out.sortbam_quant
+        ch_sortbam = BAM_RENAME.out.bam
     }
 
     ch_featurecounts_gene_multiqc       = Channel.empty()

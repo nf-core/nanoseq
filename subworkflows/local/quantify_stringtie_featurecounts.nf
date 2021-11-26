@@ -34,7 +34,7 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
         .set { ch_sample_gtf }
 
     /*
-     * Merge isoforms across samples caleed by StringTie
+     * Merge isoforms across samples called by StringTie
      */
     STRINGTIE_MERGE ( ch_stringtie_gtf.collect(), ch_sample_gtf )
     ch_stringtie_merged_gtf = STRINGTIE_MERGE.out.gtf

@@ -8,7 +8,7 @@ process BAM_RENAME {
     tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("*.bam"), emit: sortbam_quant
+    tuple val(meta), path("*.bam"), emit: bam
 
     script:
     """
