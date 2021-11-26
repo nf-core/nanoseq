@@ -13,7 +13,11 @@ process GTF2BED {
 //        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:'genome', publish_id:'') }
 
     conda     (params.enable_conda ? "conda-forge::perl=5.26.2" : null)
-    container "quay.io/biocontainers/perl:5.26.2"
+    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
+        container "https://depot.galaxyproject.org/singularity/perl:5.26.2"
+    } else {
+        container "quay.io/biocontainers/perl:5.26.2"
+    }
 
     input:
     tuple path(gtf), val(name)

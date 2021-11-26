@@ -14,8 +14,11 @@ process UCSC_BED12TOBIGBED {
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:'bigBed', publish_id:'meta.id') }
 
     conda     (params.enable_conda ? "bioconda::ucsc-bedtobigbed=377" : null)
-    container "quay.io/biocontainers/ucsc-bedtobigbed:377--h446ed27_1"
-    if ({ task.exitStatus in [255] }) { errorStrategy = 'ignore' }
+    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
+        container "https://depot.galaxyproject.org/singularity/ucsc-bedtobigbed:377--h446ed27_1"
+    } else {
+        container "quay.io/biocontainers/ucsc-bedtobigbed:377--h446ed27_1"
+    }
 
     when:
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')

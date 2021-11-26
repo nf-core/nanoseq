@@ -12,7 +12,11 @@ process SUBREAD_FEATURECOUNTS {
 
     // Note: 2.7X indices incompatible with AWS iGenomes.
     conda     (params.enable_conda ? "bioconda::subread=2.0.1" : null)
-    container "quay.io/biocontainers/subread:2.0.1--hed695b0_0"
+    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
+        container "https://depot.galaxyproject.org/singularity/subread:2.0.1--hed695b0_0"
+    } else {
+        container "quay.io/biocontainers/subread:2.0.1--hed695b0_0"
+    }
 
     input:
     path gtf

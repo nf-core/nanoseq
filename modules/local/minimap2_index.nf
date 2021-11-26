@@ -11,7 +11,11 @@ process MINIMAP2_INDEX {
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
     conda     (params.enable_conda ? "bioconda::minimap2=2.17" : null)
-    container "quay.io/biocontainers/minimap2:2.17--hed695b0_3"
+    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
+        container "https://depot.galaxyproject.org/singularity/minimap2:2.17--hed695b0_3"
+    } else {
+        container "quay.io/biocontainers/minimap2:2.17--hed695b0_3"
+    }
 
     input:
     tuple path(fasta), path(sizes), val(gtf), val(bed), val(is_transcripts), val(annotation_str)
