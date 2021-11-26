@@ -1,5 +1,7 @@
 # nf-core/nanoseq: Output
 
+## :warning: Please read this documentation on the nf-core website: [https://nf-co.re/nanoseq/output](https://nf-co.re/nanoseq/output)
+
 ## Introduction
 
 This document describes the output produced by the pipeline. Most of the plots are taken from the MultiQC report, which summarises results at the end of the pipeline.
@@ -60,7 +62,7 @@ If you have a pre-basecalled fastq file then *qcat* will be used to perform the 
 [NanoLyse](https://github.com/wdecoster/nanolyse)
 
 *Description*:
-If you would like to run NanoLyse on the raw FastQ files then you can provide `--run_nanolyse` when running the pipeline. By default, the pipeline will filter the raw reads relative to lambda phage but you can provide your own fasta file of "contaminants" with `--nanolyse_fasta`. The filtered FastQ files will be used in the downstream processes of the pipeline.
+If you would like to run NanoLyse on the raw FastQ files then you can provide `--run_nanolyse` when running the pipeline. By default, the pipeline will filter the raw reads relative to lambda phage but you can provide your own fasta file of "contaminants" with `--nanolyse_fasta`. The filtered FastQ files will contain raw reads without the provided reference sequences (default: lambda phage sequences).
 
 ## Sequencing QC
 

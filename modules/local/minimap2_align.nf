@@ -25,7 +25,6 @@ process MINIMAP2_ALIGN {
     def preset    = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
     def kmer      = (params.protocol == 'directRNA') ? "-k14" : ""
     def stranded  = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
-    // TODO pipeline: Should be staging bed file properly as an input
     def junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
     """
     minimap2 \\

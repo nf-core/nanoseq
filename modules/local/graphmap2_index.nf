@@ -22,7 +22,6 @@ process GRAPHMAP2_INDEX {
 
     script:
     def preset = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
-    // TODO pipeline: Should be staging gtf file properly as an input
     def junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf $gtf" : ""
     """
     graphmap2 \\
