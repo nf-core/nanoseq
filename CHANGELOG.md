@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Major enhancements
 
 * The `UCSC_BEDGRAPHTOBIGWIG` process now uses the `ucsc-bedgraphtobigwig` container
-* The full-size and minimal AWS tests have successfully finished after changing to `ucsc-bedgraphtobigwig` container
+* The full-size and minimal AWS tests have successfully finished after changing to the `ucsc-bedgraphtobigwig` container
 
 ## [2.0.0] - 2021-11-26
 
