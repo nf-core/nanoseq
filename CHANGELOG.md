@@ -3,6 +3,13 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2021-11-29
+
+### Major enhancements
+
+* The `UCSC_BEDGRAPHTOBIGWIG` process now uses the `ucsc-bedgraphtobigwig` container
+* The full-size and minimal AWS tests have successfully finished after changing to the `ucsc-bedgraphtobigwig` container
+
 ## [2.0.0] - 2021-11-26
 
 ### Major enhancements
