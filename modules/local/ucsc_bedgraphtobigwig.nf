@@ -15,9 +15,9 @@ process UCSC_BEDGRAPHTOBIGWIG {
 
     conda     (params.enable_conda ? "bioconda::ucsc-bedgraphtobigwig=377" : null)
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/ucsc-bedtobigbed:377--h446ed27_1"
+        container "https://depot.galaxyproject.org/singularity/ucsc-bedgraphtobigwig:377--h446ed27_1"
     } else {
-        container "quay.io/biocontainers/ucsc-bedtobigbed:377--h446ed27_1"
+        container "quay.io/biocontainers/ucsc-bedgraphtobigwig:377--h446ed27_1"
     }
 
     input:
