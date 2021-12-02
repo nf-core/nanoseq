@@ -136,8 +136,9 @@ def dexseq_options              = modules['dexseq']
 
 include { INPUT_CHECK                      } from '../subworkflows/local/input_check'                       addParams( options: [:] )
 include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'                    addParams( genome_options: genome_options )
-include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options, samtools_options: samtools_sort_options )
-include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options, samtools_options: samtools_sort_options )
+include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options )
+include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options )
+include { BAM_SORT_SAMTOOLS                } from '../subworkflows/local/bam_sort_samtools'                 addParams( samtools_options: samtools_sort_options )
 include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'              addParams( bigwig_options: bigwig_options )
 include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'              addParams( bigbed_options: bigbed_options )
 include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'  addParams( stringtie2_options: stringtie2_options, featurecounts_options: featurecounts_options )
@@ -308,21 +309,26 @@ workflow NANOSEQ{
             * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
             */
             ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq )
-            ch_view_sortbam = ALIGN_MINIMAP2.out.ch_sortbam
+            ch_align_sam = ALIGN_MINIMAP2.out.ch_align_sam
             ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.samtools_version.first().ifEmpty(null))
-            ch_samtools_multiqc  = ALIGN_MINIMAP2.out.ch_sortbam_stats_multiqc.ifEmpty([])
         } else {
 
             /*
              * SUBWORKFLOW: Align fastq files with graphmap2 and sort bam files
              */
             ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
-            ch_view_sortbam = ALIGN_GRAPHMAP2.out.ch_sortbam
+            ch_align_sam = ALIGN_GRAPHMAP2.out.ch_align_sam
             ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.samtools_version.first().ifEmpty(null))
-            ch_samtools_multiqc  = ALIGN_GRAPHMAP2.out.ch_sortbam_stats_multiqc.ifEmpty([])
         }
+
+        //if (DNA structural variant){
+        //   Your merged samtools sort and index module
+        //}else{
+        BAM_SORT_SAMTOOLS ( ch_align_sam )
+        ch_view_sortbam = BAM_SORT_SAMTOOLS.out.sortbam
+        ch_software_versions = ch_software_versions.mix(BAM_SORT_SAMTOOLS.out.versions.first().ifEmpty(null))
+        ch_samtools_multiqc  = BAM_SORT_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
+        //}
 
         ch_bedtools_version = Channel.empty()
         if (!params.skip_bigwig){
