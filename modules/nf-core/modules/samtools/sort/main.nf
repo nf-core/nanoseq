@@ -28,7 +28,7 @@ process SAMTOOLS_SORT {
     script:
     def prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${meta.id}"
     """
-    samtools sort $options.args -@ $task.cpus -o ${prefix}.bam -T $prefix $bam
+    samtools sort $options.args -@ $task.cpus -o ${prefix}.sorted.bam -T $prefix $bam
     cat <<-END_VERSIONS > versions.yml
     ${getProcessName(task.process)}:
         ${getSoftwareName(task.process)}: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
