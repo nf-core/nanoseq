@@ -327,7 +327,7 @@ workflow NANOSEQ{
         BAM_SORT_SAMTOOLS ( ch_align_sam )
         ch_view_sortbam = BAM_SORT_SAMTOOLS.out.sortbam
         ch_software_versions = ch_software_versions.mix(BAM_SORT_SAMTOOLS.out.versions.first().ifEmpty(null))
-        ch_samtools_multiqc  = ALIGN_GRAPHMAP2.out.sortbam_stats_multiqc.ifEmpty([])
+        ch_samtools_multiqc  = BAM_SORT_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
         //}
 
         ch_bedtools_version = Channel.empty()

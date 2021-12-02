@@ -8,7 +8,6 @@ params.samtools_options = [:]
 
 include { MINIMAP2_INDEX          } from '../../modules/local/minimap2_index'        addParams( options: params.index_options    )
 include { MINIMAP2_ALIGN          } from '../../modules/local/minimap2_align'        addParams( options: params.align_options    )
-include { BAM_SORT_SAMTOOLS       } from './bam_sort_samtools'              addParams( options: params.samtools_options )
 
 workflow ALIGN_MINIMAP2 {
     take:
