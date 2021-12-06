@@ -10,7 +10,7 @@ process BAMBU {
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
-    conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-bambu=1.0.2 bioconda::bioconductor-bsgenome=1.58.0" : null)
+    conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-bambu=2.0.0 bioconda::bioconductor-bsgenome=1.58.0" : null)
     container "docker.io/yuukiiwa/nanoseq:bambu_bsgenome"
 
     input:
