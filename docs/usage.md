@@ -1,82 +1,204 @@
 # nf-core/nanoseq: Usage
 
-## Table of contents
+## :warning: Please read this documentation on the nf-core website: [https://nf-co.re/nanoseq/usage](https://nf-co.re/nanoseq/usage)
 
-* [Table of contents](#table-of-contents)
-* [Introduction](#introduction)
-* [Running the pipeline](#running-the-pipeline)
-  * [Updating the pipeline](#updating-the-pipeline)
-  * [Reproducibility](#reproducibility)
-* [Main arguments](#main-arguments)
-  * [`-profile`](#-profile)
-  * [`--input`](#--input)
-  * [`--protocol`](#--protocol)
-* [Basecalling and demultiplexing](#basecalling-and-demultiplexing)
-  * [`--input_path`](#--input_path)
-  * [`--flowcell`](#--flowcell)
-  * [`--kit`](#--kit)
-  * [`--barcode_kit`](#--barcode_kit)
-  * [`--guppy_config`](#--guppy_config)
-  * [`--guppy_model`](#--guppy_model)
-  * [`--guppy_gpu`](#--guppy_gpu)
-  * [`--guppy_gpu_runners`](#--guppy_gpu_runners)
-  * [`--guppy_cpu_threads`](#--guppy_cpu_threads)
-  * [`--gpu_device`](#--gpu_device)
-  * [`--gpu_cluster_options`](#--gpu_cluster_options)
-  * [`--qcat_min_score`](#--qcat_min_score)
-  * [`--qcat_detect_middle`](#--qcat_detect_middle)
-  * [`--skip_basecalling`](#--skip_basecalling)
-  * [`--skip_demultiplexing`](#--skip_demultiplexing)
-* [Alignments](#alignments)
-  * [`--aligner`](#--aligner)
-  * [`--stranded`](#--stranded)
-  * [`--save_align_intermeds`](#--save_align_intermeds)
-  * [`--skip_alignment`](#--skip_alignment)
-* [Transcript Quantification](#transcript-quantification)
-  * [`--transcriptquant`](#--transcriptquant)
-  * [`--skip_transcriptquant`](#--skip_transcriptquant)
-* [Coverage tracks](#coverage-tracks)
-* [Skipping QC steps](#skipping-qc-steps)
-* [Job resources](#job-resources)
-  * [Automatic resubmission](#automatic-resubmission)
-  * [Custom resource requests](#custom-resource-requests)
-* [AWS Batch specific parameters](#aws-batch-specific-parameters)
-  * [`--awsqueue`](#--awsqueue)
-  * [`--awsregion`](#--awsregion)
-  * [`--awscli`](#--awscli)
-* [Other command line parameters](#other-command-line-parameters)
-  * [`--outdir`](#--outdir)
-  * [`--email`](#--email)
-  * [`--email_on_fail`](#--email_on_fail)
-  * [`--max_multiqc_email_size`](#--max_multiqc_email_size)
-  * [`-name`](#-name)
-  * [`-resume`](#-resume)
-  * [`-c`](#-c)
-  * [`--custom_config_version`](#--custom_config_version)
-  * [`--custom_config_base`](#--custom_config_base)
-  * [`--max_memory`](#--max_memory)
-  * [`--max_time`](#--max_time)
-  * [`--max_cpus`](#--max_cpus)
-  * [`--plaintext_email`](#--plaintext_email)
-  * [`--monochrome_logs`](#--monochrome_logs)
-  * [`--multiqc_config`](#--multiqc_config)
-<!-- TOC END -->
+> _Documentation of pipeline parameters is generated automatically from the pipeline schema and can no longer be found in markdown files._
 
 ## Introduction
 
-Nextflow handles job submissions on SLURM or other environments, and supervises running the jobs. Thus the Nextflow process must run until the pipeline is finished. We recommend that you put the process running in the background through `screen` / `tmux` or similar tool. Alternatively you can run nextflow within a cluster job submitted your job scheduler.
+You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated file with 6 columns and a header row:
 
-It is recommended to limit the Nextflow Java virtual machines memory. We recommend adding the following line to your environment (typically in `~/.bashrc` or `~./bash_profile`):
+| Column          | Description                                                                                                                                                                                                                                  |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `group`         | Group identifier for sample. This will be identical for replicate samples from the same experimental group.                                                                                                                                  |
+| `replicate`     | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                          |
+| `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                                                                                                                                        |
+| `input_file`    | Full path to FastQ file if previously demultiplexed or a BAM file if previously aligned. FastQ File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam".                              |
+| `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
+| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz".                                                                   |
+
+### Specifying a reference genome/transcriptome
+
+Each sample in the sample sheet can be mapped to its own reference genome or transcriptome. Please see below for additional details required to fill in the `genome` and `transcriptome` columns appropriately:
+
+* If both `genome` and `transcriptome` are not specified then the mapping will be skipped for that sample.
+* If both `genome` and `transcriptome` are specified as local fasta files then the transcriptome will be preferentially used for mapping.
+* If `genome` is specified as a local fasta file and `transcriptome` is left blank then mapping will be performed relative to the genome.
+* If `genome` isnt specified and `transcriptome` is provided as a fasta file then mapping will be performed relative to the transcriptome.
+* If `genome` is specified as an AWS iGenomes key then the `transcriptome` column can be blank. The associated gtf file for the `transcriptome` will be automatically obtained in order to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+* If `genome` is specified as a local fasta file and `transcriptome` is a specified as a local gtf file then both of these will be used to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+
+### Skip basecalling/demultiplexing
+
+As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without basecalling/demultiplexing.
+
+#### With basecalling and demultiplexing
+
+##### Example `samplesheet.csv` for barcoded fast5 inputs
 
 ```bash
-NXF_OPTS='-Xms1g -Xmx4g'
+group,replicate,barcode,input_file,genome,transcriptome
+WT_MOUSE,1,1,,mm10,
+WT_HUMAN,1,2,,hg19,
+WT_POMBE,1,3,,/path/to/local/genome.fa,
+WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
+WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+WT_UNKNOWN,3,6,,,
 ```
+
+##### Example command for barcoded fast5 inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-DCS109 \
+    --barcode_kit EXP-NBD103 \
+    -profile <docker/singularity/institute>
+```
+
+#### With basecalling but not demultiplexing
+
+##### Example `samplesheet.csv` for non-barcoded fast5 inputs
+
+```bash
+group,replicate,barcode,input_file,genome,transcriptome
+SAMPLE,1,1,/path/to/local/genome.fa,,
+```
+
+> Only a single sample can be specified if you would like to skip demultiplexing
+
+##### Example command for non-barcoded fast5 inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --input_path ./fast5/ \
+    --flowcell FLO-MIN106 \
+    --kit SQK-DCS108 \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
+
+#### With demultiplexing but not basecalling
+
+##### Example `samplesheet.csv` for non-demultiplexed fastq inputs
+
+```bash
+group,replicate,barcode,input_file,genome,transcriptome
+WT_MOUSE,1,1,,mm10,
+WT_HUMAN,1,2,,hg19,
+WT_POMBE,1,3,,/path/to/local/genome.fa,
+WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
+WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+WT_UNKNOWN,3,6,,,
+```
+
+##### Example command for non-demultiplexed fastq inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --input_path ./undemultiplexed.fastq.gz \
+    --barcode_kit 'NBD103/NBD104' \
+    --skip_basecalling \
+    -profile <docker/singularity/institute>
+```
+
+#### Without both basecalling and demultiplexing
+
+##### Example `samplesheet.csv` for demultiplexed fastq inputs
+
+```bash
+group,replicate,barcode,input_file,genome,transcriptome
+WT,1,,SAM101A1.fastq.gz,hg19,
+WT,2,,SAM101A2.fastq.gz,hg19,
+KO,1,,SAM101A3.fastq.gz,hg19,
+KO,2,,SAM101A4.fastq.gz,hg19,
+```
+
+##### Example command for demultiplexed fastq inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
+
+##### Without basecalling, demultiplexing, and alignment
+
+##### Example `samplesheet.csv` for BAM inputs
+
+```bash
+group,replicate,barcode,input_file,genome,transcriptome
+WT,1,,SAM101A1.bam,hg19,
+WT,2,,SAM101A2.bam,hg19,
+KO,1,,SAM101A3.bam,hg19,
+KO,2,,SAM101A4.bam,hg19,
+```
+
+##### Example command for BAM inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    --skip_alignment \
+    -profile <docker/singularity/institute>
+```
+
+## Samplesheet input
+
+You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+
+```console
+--input '[path to samplesheet file]'
+```
+
+### Multiple runs of the same sample
+
+The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
+
+```console
+sample,fastq_1,fastq_2
+CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
+CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
+```
+
+### Full samplesheet
+
+The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
+
+A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
+
+```console
+sample,fastq_1,fastq_2
+CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
+CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
+TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
+TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
+TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
+TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
+```
+
+An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
 
-```bash
+```console
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol DNA \
@@ -91,7 +213,7 @@ This will launch the pipeline with the `docker` configuration profile. See below
 
 Note that the pipeline will create the following files in your working directory:
 
-```bash
+```console
 work            # Directory containing the nextflow working files
 results         # Finished results (configurable, see below)
 .nextflow_log   # Log file from Nextflow
@@ -102,25 +224,27 @@ results         # Finished results (configurable, see below)
 
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
-```bash
+```console
 nextflow pull nf-core/nanoseq
 ```
 
 ### Reproducibility
 
-It's a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
+It is a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
 
 First, go to the [nf-core/nanoseq releases page](https://github.com/nf-core/nanoseq/releases) and find the latest version number - numeric only (eg. `1.3.1`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.3.1`.
 
 This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future.
 
-## Main arguments
+## Core Nextflow arguments
+
+> **NB:** These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
 
 ### `-profile`
 
 Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments.
 
-Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity, Conda) - see below.
+Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity, Podman, Shifter, Charliecloud, Conda) - see below. When using Biocontainers, most of these software packaging methods pull Docker containers from quay.io e.g [FastQC](https://quay.io/repository/biocontainers/fastqc) except for Singularity which directly downloads Singularity images via https hosted by the [Galaxy project](https://depot.galaxyproject.org/singularity/) and Conda which downloads and installs software locally from [Bioconda](https://bioconda.github.io/).
 
 > We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility, however when this is not possible, Conda is also supported.
 
@@ -132,371 +256,20 @@ They are loaded in sequence, so later profiles can overwrite earlier profiles.
 If `-profile` is not specified, the pipeline will run locally and expect all software to be installed and available on the `PATH`. This is _not_ recommended.
 
 * `docker`
-  * A generic configuration profile to be used with [Docker](http://docker.com/)
-  * Pulls software from dockerhub: [`nfcore/nanoseq`](http://hub.docker.com/r/nfcore/nanoseq/)
+    * A generic configuration profile to be used with [Docker](https://docker.com/)
 * `singularity`
-  * A generic configuration profile to be used with [Singularity](http://singularity.lbl.gov/)
-  * Pulls software from DockerHub: [`nfcore/nanoseq`](http://hub.docker.com/r/nfcore/nanoseq/)
+    * A generic configuration profile to be used with [Singularity](https://sylabs.io/docs/)
+* `podman`
+    * A generic configuration profile to be used with [Podman](https://podman.io/)
+* `shifter`
+    * A generic configuration profile to be used with [Shifter](https://nersc.gitlab.io/development/shifter/how-to-use/)
+* `charliecloud`
+    * A generic configuration profile to be used with [Charliecloud](https://hpc.github.io/charliecloud/)
 * `conda`
-  * Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker or Singularity.
-  * A generic configuration profile to be used with [Conda](https://conda.io/docs/)
-  * Pulls most software from [Bioconda](https://bioconda.github.io/)
+    * A generic configuration profile to be used with [Conda](https://conda.io/docs/). Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker, Singularity, Podman, Shifter or Charliecloud.
 * `test`
-  * A profile with a complete configuration for automated testing
-  * Includes links to test data so needs no other parameters
-
-### `--input`
-
-You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns and a header row:
-
-| Column          | Description                                                                                                                |
-|-----------------|----------------------------------------------------------------------------------------------------------------------------|
-| `sample`        | Sample name without spaces.                                                                                                |
-| `sample_path`   | Full path to FastQ file if previously demultiplexed or to BAM file if previously aligned. FastQ File has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam". |
-| `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                      |
-| `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
-| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz". |
-| `condition` | Name of condition. If there are two or more conditions with at least three samples in each, then DESeq2 and DEXseq will be performed for differential expression analysis.|
-
-#### Specifying a reference genome/transcriptome
-
-Each sample in the sample sheet can be mapped to its own reference genome or transcriptome. Please see below for additional details required to fill in the `genome` and `transcriptome` columns appropriately:
-
-* If both `genome` and `transcriptome` are not specified then the mapping will be skipped for that sample.
-* If both `genome` and `transcriptome` are specified as local fasta files then the transcriptome will be preferentially used for mapping.
-* If `genome` is specified as a local fasta file and `transcriptome` is left blank then mapping will be performed relative to the genome.
-* If `genome` isnt specified and `transcriptome` is provided as a fasta file then mapping will be performed relative to the transcriptome.
-* If `genome` is specified as an AWS iGenomes key then the `transcriptome` column can be blank. The associated gtf file for the `transcriptome` will be automatically obtained in order to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
-* If `genome` is specified as a local fasta file and `transcriptome` is a specified as a local gtf file then both of these will be used to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
-
-#### Skip basecalling/demultiplexing
-
-As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without basecalling/demultiplexing.
-
-##### With basecalling and demultiplexing
-
-###### Example `samplesheet.csv`
-
-```bash
-sample,sample_path,barcode,genome,transcriptome
-Sample1,,1,mm10,
-Sample2,,2,hg19,
-Sample3,,3,/path/to/local/genome.fa,
-Sample4,,4,,/path/to/local/transcriptome.fa
-Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
-Sample6,,6,,
-```
-
-###### Example command
-
-```bash
-nextflow run nf-core/nanoseq \
-    --input samplesheet.csv \
-    --protocol cDNA \
-    --input_path ./fast5/ \
-    --flowcell FLO-MIN106 \
-    --kit SQK-DCS109 \
-    --barcode_kit EXP-NBD103 \
-    -profile <docker/singularity/institute>
-```
-
-##### With basecalling but not demultiplexing
-
-###### Example `samplesheet.csv`
-
-```bash
-sample,sample_path,barcode,genome,transcriptome
-Sample1,,1,/path/to/local/genome.fa,
-```
-
-> Only a single sample can be specified if you would like to skip demultiplexing
-
-###### Example command
-
-```bash
-nextflow run nf-core/nanoseq \
-    --input samplesheet.csv \
-    --protocol cDNA \
-    --input_path ./fast5/ \
-    --flowcell FLO-MIN106 \
-    --kit SQK-DCS108 \
-    --skip_demultiplexing \
-    -profile <docker/singularity/institute>
-```
-
-##### With demultiplexing but not basecalling
-
-###### Example `samplesheet.csv`
-
-```bash
-sample,sample_path,barcode,genome,transcriptome
-Sample1,,1,mm10,
-Sample2,,2,hg19,
-Sample3,,3,/path/to/local/genome.fa,
-Sample4,,4,,/path/to/local/transcriptome.fa
-Sample5,,5,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
-Sample6,,6,,
-```
-
-###### Example command
-
-```bash
-nextflow run nf-core/nanoseq \
-    --input samplesheet.csv \
-    --protocol DNA \
-    --input_path ./undemultiplexed.fastq.gz \
-    --barcode_kit 'NBD103/NBD104' \
-    --skip_basecalling \
-    -profile <docker/singularity/institute>
-```
-
-##### Without both basecalling and demultiplexing
-
-###### Example `samplesheet.csv`
-
-```bash
-sample,sample_path,barcode,genome,transcriptome
-Sample1,SAM101A1.fastq.gz,,mm10
-Sample2,SAM101A2.fastq.gz,,hg19
-Sample3,SAM101A3.fastq.gz,/path/to/local/genome.fa,
-Sample4,SAM101A4.fastq.gz,,
-```
-
-###### Example command
-
-```bash
-nextflow run nf-core/nanoseq \
-    --input samplesheet.csv \
-    --protocol cDNA \
-    --skip_basecalling \
-    --skip_demultiplexing \
-    -profile <docker/singularity/institute>
-```
-
-##### Without basecalling, demultiplexing, and alignment
-
-###### Example `samplesheet.csv`
-
-```bash
-sample,sample_path,barcode,genome,transcriptome
-Sample1,SAM101A1.bam,,hg19
-Sample2,SAM101A2.bam,,hg19
-Sample3,SAM101A3.bam,/path/to/local/genome.fa,/path/to/local/genes.gtf
-```
-
-###### Example command
-
-```bash
-nextflow run nf-core/nanoseq \
-    --input samplesheet.csv \
-    --protocol cDNA \
-    --skip_basecalling \
-    --skip_demultiplexing \
-    --skip_qc \
-    --skip_alignment \
-    -profile <docker/singularity/institute>
-```
-
-### `--protocol`
-
-Specifies the type of data that was sequenced i.e. "DNA", "cDNA" or "directRNA".
-
-## Basecalling and demultiplexing
-
-### `--input_path`
-
-Path to Nanopore run directory (e.g. `fastq_pass/`) or a basecalled fastq file that requires demultiplexing. The latter can only be provided in conjunction with the `--skip_basecalling` parameter.
-
-### `--flowcell`
-
-Flowcell used to perform the sequencing e.g. "FLO-MIN106". Not required if `--guppy_config` is specified.
-
-### `--kit`
-
-Kit used to perform the sequencing e.g. "SQK-LSK109". Not required if `--guppy_config` is specified.
-
-### `--barcode_kit`
-
-Barcode kit used to perform the sequencing e.g. "SQK-PBK004".
-
-If you would like to skip the basecalling (`--skip_basecalling`) but still perform the demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):
-
-| `qcat` barcode kit specifications | description                                                                   |
-|-----------------------------------|-------------------------------------------------------------------------------|
-| `Auto`                            | Auto detect barcoding kit                                                     |
-| `RBK001`                          | Rapid barcoding kit                                                           |
-| `RBK004`                          | Rapid barcoding kit v4                                                        |
-| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |
-| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |
-| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |
-| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |
-| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |
-| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |
-| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |
-| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |
-| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |
-
-### `--guppy_config`
-
-Config file used for basecalling that will be passed to Guppy via the "--config" parameter. Cannot be used in conjunction with `--flowcell` and `--kit`.
-This can be a local file (i.e. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data/` directory of Guppy.
-
-### `--guppy_model`
-
-Custom basecalling model file in `json` format that will be passed to Guppy via the "--model" parameter. Custom basecalling models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki). This can also be a string specifying a model stored in the `/opt/ont/guppy/data` directory of Guppy.
-
-### `--guppy_gpu`
-
-Whether to demultiplex with Guppy in GPU mode (default: false).
-
-### `--guppy_gpu_runners`
-
-Number of "--gpu_runners_per_device" used for Guppy when using `--guppy_gpu` (default: 6).
-
-### `--guppy_cpu_threads`
-
-Number of "--cpu_threads_per_caller" used for Guppy when using `--guppy_gpu` (default: 1).
-
-### `--gpu_device`
-
-Basecalling device specified to Guppy in GPU mode using "--device" (default: 'auto').
-
-### `--gpu_cluster_options`
-
-Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').
-
-### `--qcat_min_score`
-
-Specify the minimum quality score for qcat in the range 0-100 (default: 60).
-
-### `--qcat_detect_middle`
-
-Search for adapters in the whole read by applying the '--detect-middle' parameter in qcat (default: false).
-
-### `--skip_basecalling`
-
-Skip basecalling with Guppy.
-
-### `--skip_demultiplexing`
-
-Skip demultiplexing with Guppy/qcat.
-
-## Alignments
-
-### `--stranded`
-
-Specifies if the data is strand-specific. Automatically activated when using `--protocol directRNA` (default: false).
-
-When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap2`:
-
-| `nanoseq` input              | `minimap2` presets  | `graphmap2` presets |
-|------------------------------|---------------------|--------------------|
-| `--protocol DNA`             | -ax map-ont         | no presets         |
-| `--protocol cDNA`            | -ax splice          | -x rnaseq          |
-| `--protocol directRNA`       | -ax splice -uf -k14 | -x rnaseq          |
-| `--protocol cDNA --stranded` | -ax splice -uf      | -x rnaseq          |
-
-### `--aligner`
-
-Specifies the aligner to use i.e. `graphmap2` or `minimap2`.
-
-### `--save_align_intermeds`
-
-Save the `.sam` files from the alignment step - not done by default.
-
-### `--skip_alignment`
-
-Skip alignment and downstream processes.
-
-## Transcript Quantification
-
-### `--transcriptquant`
-
-Specifies the transcript quantification method to use i.e. `bambu` or `stringtie2`.
-
-### `--skip_transcriptquant`
-
-Skip transcript quantification processes.
-
-## Coverage tracks
-
-| Step                    | Description                            |
-|-------------------------|----------------------------------------|
-| `--skip_bigwig`         | Skip BigWig file generation            |
-| `--skip_bigbed`         | Skip BigBed file generation            |
-
-## Skipping QC steps
-
-The pipeline contains a number of quality control steps. Sometimes, it may not be desirable to run all of them if time and compute resources are limited.
-The following options make this easy:
-
-| Step                    | Description                          |
-|-------------------------|--------------------------------------|
-| `--skip_qc`             | Skip all QC steps apart from MultiQC |
-| `--skip_pycoqc`         | Skip pycoQC                          |
-| `--skip_nanoplot`       | Skip NanoPlot                        |
-| `--skip_fastqc`         | Skip FastQC                          |
-| `--skip_multiqc`        | Skip MultiQC                         |
-
-## Job resources
-
-### Automatic resubmission
-
-Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the steps in the pipeline, if the job exits with an error code of `143` (exceeded requested resources) it will automatically resubmit with higher requests (2 x original, then 3 x original). If it still fails after three times then the pipeline is stopped.
-
-### Custom resource requests
-
-Wherever process-specific requirements are set in the pipeline, the default value can be changed by creating a custom config file. See the files hosted at [`nf-core/configs`](https://github.com/nf-core/configs/tree/master/conf) for examples.
-
-If you are likely to be running `nf-core` pipelines regularly it may be a good idea to request that your custom config file is uploaded to the `nf-core/configs` git repository. Before you do this please can you test that the config file works with your pipeline of choice using the `-c` parameter (see definition below). You can then create a pull request to the `nf-core/configs` repository with the addition of your config file, associated documentation file (see examples in [`nf-core/configs/docs`](https://github.com/nf-core/configs/tree/master/docs)), and amending [`nfcore_custom.config`](https://github.com/nf-core/configs/blob/master/nfcore_custom.config) to include your custom profile.
-
-If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack).
-
-## AWS Batch specific parameters
-
-Running the pipeline on AWS Batch requires a couple of specific parameters to be set according to your AWS Batch configuration. Please use [`-profile awsbatch`](https://github.com/nf-core/configs/blob/master/conf/awsbatch.config) and then specify all of the following parameters.
-
-### `--awsqueue`
-
-The JobQueue that you intend to use on AWS Batch.
-
-### `--awsregion`
-
-The AWS region in which to run your job. Default is set to `eu-west-1` but can be adjusted to your needs.
-
-### `--awscli`
-
-The [AWS CLI](https://www.nextflow.io/docs/latest/awscloud.html#aws-cli-installation) path in your custom AMI. Default: `/home/ec2-user/miniconda/bin/aws`.
-
-Please make sure to also set the `-w/--work-dir` and `--outdir` parameters to a S3 storage bucket of your choice - you'll get an error message notifying you if you didn't.
-
-## Other command line parameters
-
-<!-- TODO nf-core: Describe any other command line flags here -->
-
-### `--outdir`
-
-The output directory where the results will be saved.
-
-### `--email`
-
-Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.
-
-### `--email_on_fail`
-
-This works exactly as with `--email`, except emails are only sent if the workflow is not successful.
-
-### `--max_multiqc_email_size`
-
-Threshold size for MultiQC report to be attached in notification email. If file generated by pipeline exceeds the threshold, it will not be attached (Default: 25MB).
-
-### `-name`
-
-Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
-
-This is used in the MultiQC report (if not default) and in the summary HTML / e-mail (always).
-
-**NB:** Single hyphen (core Nextflow option)
+    * A profile with a complete configuration for automated testing
+    * Includes links to test data so needs no other parameters
 
 ### `-resume`
 
@@ -504,69 +277,157 @@ Specify this when restarting a pipeline. Nextflow will used cached results from 
 
 You can also supply a run name to resume a specific run: `-resume [run-name]`. Use the `nextflow log` command to show previous run names.
 
-**NB:** Single hyphen (core Nextflow option)
-
 ### `-c`
 
-Specify the path to a specific config file (this is a core NextFlow command).
+Specify the path to a specific config file (this is a core Nextflow command). See the [nf-core website documentation](https://nf-co.re/usage/configuration) for more information.
 
-**NB:** Single hyphen (core Nextflow option)
+## Custom configuration
 
-Note - you can use this to override pipeline defaults.
+### Resource requests
 
-### `--custom_config_version`
+Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the steps in the pipeline, if the job exits with any of the error codes specified [here](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18) it will automatically be resubmitted with higher requests (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
 
-Provide git commit id for custom Institutional configs hosted at `nf-core/configs`. This was implemented for reproducibility purposes. Default: `master`.
+For example, if the nf-core/rnaseq pipeline is failing after multiple re-submissions of the `STAR_ALIGN` process due to an exit code of `137` this would indicate that there is an out of memory issue:
 
-```bash
-## Download and use config file with following git commid id
---custom_config_version d52db660777c4bf36546ddb188ec530c3ada1b96
+```console
+[62/149eb0] NOTE: Process `RNASEQ:ALIGN_STAR:STAR_ALIGN (WT_REP1)` terminated with an error exit status (137) -- Execution is retried (1)
+Error executing process > 'RNASEQ:ALIGN_STAR:STAR_ALIGN (WT_REP1)'
+
+Caused by:
+    Process `RNASEQ:ALIGN_STAR:STAR_ALIGN (WT_REP1)` terminated with an error exit status (137)
+
+Command executed:
+    STAR \
+        --genomeDir star \
+        --readFilesIn WT_REP1_trimmed.fq.gz  \
+        --runThreadN 2 \
+        --outFileNamePrefix WT_REP1. \
+        <TRUNCATED>
+
+Command exit status:
+    137
+
+Command output:
+    (empty)
+
+Command error:
+    .command.sh: line 9:  30 Killed    STAR --genomeDir star --readFilesIn WT_REP1_trimmed.fq.gz --runThreadN 2 --outFileNamePrefix WT_REP1. <TRUNCATED>
+Work dir:
+    /home/pipelinetest/work/9d/172ca5881234073e8d76f2a19c88fb
+
+Tip: you can replicate the issue by changing to the process work dir and entering the command `bash .command.run`
 ```
 
-### `--custom_config_base`
+To bypass this error you would need to find exactly which resources are set by the `STAR_ALIGN` process. The quickest way is to search for `process STAR_ALIGN` in the [nf-core/rnaseq Github repo](https://github.com/nf-core/rnaseq/search?q=process+STAR_ALIGN). We have standardised the structure of Nextflow DSL2 pipelines such that all module files will be present in the `modules/` directory and so based on the search results the file we want is `modules/nf-core/software/star/align/main.nf`. If you click on the link to that file you will notice that there is a `label` directive at the top of the module that is set to [`label process_high`](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/modules/nf-core/software/star/align/main.nf#L9). The [Nextflow `label`](https://www.nextflow.io/docs/latest/process.html#label) directive allows us to organise workflow processes in separate groups which can be referenced in a configuration file to select and configure subset of processes having similar computing requirements. The default values for the `process_high` label are set in the pipeline's [`base.config`](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L33-L37) which in this case is defined as 72GB. Providing you haven't set any other standard nf-core parameters to __cap__ the [maximum resources](https://nf-co.re/usage/configuration#max-resources) used by the pipeline then we can try and bypass the `STAR_ALIGN` process failure by creating a custom config file that sets at least 72GB of memory, in this case increased to 100GB. The custom config below can then be provided to the pipeline via the [`-c`](#-c) parameter as highlighted in previous sections.
 
-If you're running offline, nextflow will not be able to fetch the institutional config files
-from the internet. If you don't need them, then this is not a problem. If you do need them,
-you should download the files from the repo and tell nextflow where to find them with the
-`custom_config_base` option. For example:
-
-```bash
-## Download and unzip the config files
-cd /path/to/my/configs
-wget https://github.com/nf-core/configs/archive/master.zip
-unzip master.zip
-
-## Run the pipeline
-cd /path/to/my/data
-nextflow run /path/to/pipeline/ --custom_config_base /path/to/my/configs/configs-master/
+```nextflow
+process {
+    withName: STAR_ALIGN {
+        memory = 100.GB
+    }
+}
 ```
 
-> Note that the nf-core/tools helper package has a `download` command to download all required pipeline
-> files + singularity containers + institutional configs in one go for you, to make this process easier.
+> **NB:** We specify just the process name i.e. `STAR_ALIGN` in the config file and not the full task name string that is printed to screen in the error message or on the terminal whilst the pipeline is running i.e. `RNASEQ:ALIGN_STAR:STAR_ALIGN`. You may get a warning suggesting that the process selector isn't recognised but you can ignore that if the process name has been specified correctly. This is something that needs to be fixed upstream in core Nextflow.
 
-### `--max_memory`
+### Tool-specific options
 
-Use to set a top-limit for the default memory requirement for each process.
-Should be a string in the format integer-unit. eg. `--max_memory '8.GB'`
+For the ultimate flexibility, we have implemented and are using Nextflow DSL2 modules in a way where it is possible for both developers and users to change tool-specific command-line arguments (e.g. providing an additional command-line argument to the `STAR_ALIGN` process) as well as publishing options (e.g. saving files produced by the `STAR_ALIGN` process that aren't saved by default by the pipeline). In the majority of instances, as a user you won't have to change the default options set by the pipeline developer(s), however, there may be edge cases where creating a simple custom config file can improve the behaviour of the pipeline if for example it is failing due to a weird error that requires setting a tool-specific parameter to deal with smaller / larger genomes.
 
-### `--max_time`
+The command-line arguments passed to STAR in the `STAR_ALIGN` module are a combination of:
 
-Use to set a top-limit for the default time requirement for each process.
-Should be a string in the format integer-unit. eg. `--max_time '2.h'`
+* Mandatory arguments or those that need to be evaluated within the scope of the module, as supplied in the [`script`](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/modules/nf-core/software/star/align/main.nf#L49-L55) section of the module file.
 
-### `--max_cpus`
+* An [`options.args`](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/modules/nf-core/software/star/align/main.nf#L56) string of non-mandatory parameters that is set to be empty by default in the module but can be overwritten when including the module in the sub-workflow / workflow context via the `addParams` Nextflow option.
 
-Use to set a top-limit for the default CPU requirement for each process.
-Should be a string in the format integer-unit. eg. `--max_cpus 1`
+The nf-core/rnaseq pipeline has a sub-workflow (see [terminology](https://github.com/nf-core/modules#terminology)) specifically to align reads with STAR and to sort, index and generate some basic stats on the resulting BAM files using SAMtools. At the top of this file we import the `STAR_ALIGN` module via the Nextflow [`include`](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/subworkflows/nf-core/align_star.nf#L10) keyword and by default the options passed to the module via the `addParams` option are set as an empty Groovy map [here](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/subworkflows/nf-core/align_star.nf#L5); this in turn means `options.args` will be set to empty by default in the module file too. This is an intentional design choice and allows us to implement well-written sub-workflows composed of a chain of tools that by default run with the bare minimum parameter set for any given tool in order to make it much easier to share across pipelines and to provide the flexibility for users and developers to customise any non-mandatory arguments.
 
-### `--plaintext_email`
+When including the sub-workflow above in the main pipeline workflow we use the same `include` statement, however, we now have the ability to overwrite options for each of the tools in the sub-workflow including the [`align_options`](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/workflows/rnaseq.nf#L225) variable that will be used specifically to overwrite the optional arguments passed to the `STAR_ALIGN` module. In this case, the options to be provided to `STAR_ALIGN` have been assigned sensible defaults by the developer(s) in the pipeline's [`modules.config`](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/modules.config#L70-L74) and can be accessed and customised in the [workflow context](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/workflows/rnaseq.nf#L201-L204) too before eventually passing them to the sub-workflow as a Groovy map called `star_align_options`. These options will then be propagated from `workflow -> sub-workflow -> module`.
 
-Set to receive plain-text e-mails instead of HTML formatted.
+As mentioned at the beginning of this section it may also be necessary for users to overwrite the options passed to modules to be able to customise specific aspects of the way in which a particular tool is executed by the pipeline. Given that all of the default module options are stored in the pipeline's `modules.config` as a [`params` variable](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/modules.config#L24-L25) it is also possible to overwrite any of these options via a custom config file.
 
-### `--monochrome_logs`
+Say for example we want to append an additional, non-mandatory parameter (i.e. `--outFilterMismatchNmax 16`) to the arguments passed to the `STAR_ALIGN` module. Firstly, we need to copy across the default `args` specified in the [`modules.config`](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/modules.config#L71) and create a custom config file that is a composite of the default `args` as well as the additional options you would like to provide. This is very important because Nextflow will overwrite the default value of `args` that you provide via the custom config.
 
-Set to disable colourful command line output and live life in monochrome.
+As you will see in the example below, we have:
 
-### `--multiqc_config`
+* appended `--outFilterMismatchNmax 16` to the default `args` used by the module.
+* changed the default `publish_dir` value to where the files will eventually be published in the main results directory.
+* appended `'bam':''` to the default value of `publish_files` so that the BAM files generated by the process will also be saved in the top-level results directory for the module. Note: `'out':'log'` means any file/directory ending in `out` will now be saved in a separate directory called `my_star_directory/log/`.
 
-Specify a path to a custom MultiQC configuration file.
+```nextflow
+params {
+    modules {
+        'star_align' {
+            args          = "--quantMode TranscriptomeSAM --twopassMode Basic --outSAMtype BAM Unsorted --readFilesCommand zcat --runRNGseed 0 --outFilterMultimapNmax 20 --alignSJDBoverhangMin 1 --outSAMattributes NH HI AS NM MD --quantTranscriptomeBan Singleend --outFilterMismatchNmax 16"
+            publish_dir   = "my_star_directory"
+            publish_files = ['out':'log', 'tab':'log', 'bam':'']
+        }
+    }
+}
+```
+
+### Updating containers
+
+The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. If for some reason you need to use a different version of a particular tool with the pipeline then you just need to identify the `process` name and override the Nextflow `container` definition for that process using the `withName` declaration. For example, in the [nf-core/viralrecon](https://nf-co.re/viralrecon) pipeline a tool called [Pangolin](https://github.com/cov-lineages/pangolin) has been used during the COVID-19 pandemic to assign lineages to SARS-CoV-2 genome sequenced samples. Given that the lineage assignments change quite frequently it doesn't make sense to re-release the nf-core/viralrecon everytime a new version of Pangolin has been released. However, you can override the default container used by the pipeline by creating a custom config file and passing it as a command-line argument via `-c custom.config`.
+
+1. Check the default version used by the pipeline in the module file for [Pangolin](https://github.com/nf-core/viralrecon/blob/a85d5969f9025409e3618d6c280ef15ce417df65/modules/nf-core/software/pangolin/main.nf#L14-L19)
+2. Find the latest version of the Biocontainer available on [Quay.io](https://quay.io/repository/biocontainers/pangolin?tag=latest&tab=tags)
+3. Create the custom config accordingly:
+
+    * For Docker:
+
+        ```nextflow
+        process {
+            withName: PANGOLIN {
+                container = 'quay.io/biocontainers/pangolin:3.0.5--pyhdfd78af_0'
+            }
+        }
+        ```
+
+    * For Singularity:
+
+        ```nextflow
+        process {
+            withName: PANGOLIN {
+                container = 'https://depot.galaxyproject.org/singularity/pangolin:3.0.5--pyhdfd78af_0'
+            }
+        }
+        ```
+
+    * For Conda:
+
+        ```nextflow
+        process {
+            withName: PANGOLIN {
+                conda = 'bioconda::pangolin=3.0.5'
+            }
+        }
+        ```
+
+> **NB:** If you wish to periodically update individual tool-specific results (e.g. Pangolin) generated by the pipeline then you must ensure to keep the `work/` directory otherwise the `-resume` ability of the pipeline will be compromised and it will restart from scratch.
+
+### nf-core/configs
+
+In most cases, you will only need to create a custom config as a one-off but if you and others within your organisation are likely to be running nf-core pipelines regularly and need to use the same settings regularly it may be a good idea to request that your custom config file is uploaded to the `nf-core/configs` git repository. Before you do this please can you test that the config file works with your pipeline of choice using the `-c` parameter. You can then create a pull request to the `nf-core/configs` repository with the addition of your config file, associated documentation file (see examples in [`nf-core/configs/docs`](https://github.com/nf-core/configs/tree/master/docs)), and amending [`nfcore_custom.config`](https://github.com/nf-core/configs/blob/master/nfcore_custom.config) to include your custom profile.
+
+See the main [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more information about creating your own configuration files.
+
+If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
+
+## Running in the background
+
+Nextflow handles job submissions and supervises the running jobs. The Nextflow process must run until the pipeline is finished.
+
+The Nextflow `-bg` flag launches Nextflow in the background, detached from your terminal so that the workflow does not stop if you log out of your session. The logs are saved to a file.
+
+Alternatively, you can use `screen` / `tmux` or similar tool to create a detached session which you can log back into at a later time.
+Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs).
+
+## Nextflow memory requirements
+
+In some cases, the Nextflow Java virtual machines can start to request a large amount of memory.
+We recommend adding the following line to your environment to limit this (typically in `~/.bashrc` or `~./bash_profile`):
+
+```console
+NXF_OPTS='-Xms1g -Xmx4g'
+```
