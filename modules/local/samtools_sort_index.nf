@@ -39,3 +39,4 @@ process SAMTOOLS_SORT_INDEX {
     END_VERSIONS
     """
 }
+

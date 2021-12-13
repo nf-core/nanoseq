@@ -8,7 +8,7 @@ include { SNIFFLES                  } from '../../modules/local/sniffles'      a
 
 workflow SV_SNIFFLES {
     take:
-    ch_view_sortbam 
+    ch_view_sortbam
 
     main:
     /*
@@ -21,3 +21,4 @@ workflow SV_SNIFFLES {
     ch_sv_calls
 
 }
+

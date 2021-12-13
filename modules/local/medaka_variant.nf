@@ -19,7 +19,7 @@ process MEDAKA {
     }
 
     input:
-    tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai) // 
+    tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai) //
     path(fasta)
 
     output:
