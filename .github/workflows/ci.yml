@@ -48,7 +48,7 @@ jobs:
       NXF_ANSI_LOG: false
     strategy:
       matrix:
-        profiles: [test_bc_nodx, test_nobc_dx, test_nobc_nodx, test_nobc_nodx_noaln]
+        profiles: [test_bc_nodx, test_nobc_dx, test_nobc_nodx_vc, test_nobc_nodx, test_nobc_nodx_noaln]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
