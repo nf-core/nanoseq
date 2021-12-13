@@ -140,7 +140,6 @@ include { INPUT_CHECK                      } from '../subworkflows/local/input_c
 include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'                    addParams( genome_options: genome_options )
 include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options )
 include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options )
-include { BAM_SORT_SAMTOOLS                } from '../subworkflows/local/bam_sort_samtools'                 addParams( samtools_options: samtools_sort_options )
 include { BAM_SORT_INDEX_SAMTOOLS          } from '../subworkflows/local/bam_sort_index_samtools'           addParams( samtools_options: samtools_sort_options )
 include { VC_MEDAKA                        } from '../subworkflows/local/vc_medaka'                         addParams( medaka_vc_options: medaka_vc_options )
 include { SV_SNIFFLES                      } from '../subworkflows/local/sv_sniffles'                       addParams( sniffles_sv_options: sniffles_sv_options )
@@ -327,27 +326,15 @@ workflow NANOSEQ{
             ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
         }
 
-        if (params.call_variants) {
-           /*
-            * SUBWORKFLOW: View, then  sort, and index bam files using one module
-            */
-            BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam )
-            ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
-            ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.versions.first().ifEmpty(null))
-            ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
-        } else {
+        /*
+        * SUBWORKFLOW: View, then  sort, and index bam files
+        */
+        BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam, params.call_variants )
+        ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
+        ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.versions.first().ifEmpty(null))
+        ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
 
-            /*
-            * SUBWORKFLOW: View, then sort and index bam files using two modules
-            */
-            BAM_SORT_SAMTOOLS ( ch_align_sam )
-            ch_view_sortbam = BAM_SORT_SAMTOOLS.out.sortbam
-            ch_software_versions = ch_software_versions.mix(BAM_SORT_SAMTOOLS.out.versions.first().ifEmpty(null))
-            ch_samtools_multiqc  = BAM_SORT_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
-        }
-
-
-        if (params.call_variants && params.protocol == 'DNA') { 
+        if (params.call_variants && params.protocol == 'DNA') {
             /*
             * SUBWORKFLOW: Call variants with medaka
             */
@@ -356,7 +343,7 @@ workflow NANOSEQ{
             ch_medaka_vc = VC_MEDAKA.out.ch_variant_calls
         }
 
-        if (params.call_variants && params.protocol == 'DNA') { 
+        if (params.call_variants && params.protocol == 'DNA') {
             /*
             * SUBWORKFLOW: Call structural variants with sniffles
             */

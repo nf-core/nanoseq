@@ -500,6 +500,9 @@
             "$ref": "#/definitions/alignment_options"
         },
         {
+            "$ref": "#/definitions/variant_calling_options"
+        },
+        {
             "$ref": "#/definitions/differential_analysis_options"
         },
         {
