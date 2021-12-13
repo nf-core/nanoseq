@@ -187,6 +187,29 @@
                 }
             }
         },
+        "variant_calling_options": {
+            "title": "Variant calling options",
+            "description": "Options to adjust pameters and filtering criteria for varinat calling.",
+            "default": "",
+            "fa_icon": "fas fa-align-center",
+            "properties": {
+                "call_variants": {
+                    "type": "boolean",
+                    "description": "Specifies if variants will be called.",
+                    "fa_icon": "fas fa-exchange-alt"
+                },
+                "split_mnps": {
+                    "type": "boolean",
+                    "description": "Specifies if MNPs will be split into SNPs.",
+                    "fa_icon": "fas fa-file-alt"
+                },
+                "phase_vcf": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-exchange-alt",
+                    "description": "Specifies if vcf will be phased."
+                }
+            }
+        },
         "differential_analysis_options": {
             "title": "Differential analysis options",
             "description": "Options to adjust quantification and differential analysis",

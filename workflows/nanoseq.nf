@@ -106,8 +106,8 @@ def qcat_options     = modules['qcat']
 def nanolyse_options = modules['nanolyse']
 def bambu_options    = modules['bambu']
 
-include { GET_TEST_DATA } from '../modules/local/get_test_data' addParams( options: [:] )
-include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta' addParams( options: [:] )
+include { GET_TEST_DATA         } from '../modules/local/get_test_data'           addParams( options: [:]                          )
+include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'      addParams( options: [:]                          )
 include { GUPPY                 } from '../modules/local/guppy'                   addParams( options: guppy_options                )
 include { QCAT                  } from '../modules/local/qcat'                    addParams( options: qcat_options                 )
 include { BAM_RENAME            } from '../modules/local/bam_rename'              addParams( options: [:]                          )
@@ -126,6 +126,8 @@ def graphmap2_index_options     = modules['graphmap2_index']
 def graphmap2_align_options     = modules['graphmap2_align']
 def minimap2_index_options      = modules['minimap2_index']
 def minimap2_align_options      = modules['minimap2_align']
+def medaka_vc_options           = modules['medaka_vc']
+def sniffles_sv_options         = modules['sniffles_sv']
 def samtools_sort_options       = modules['samtools_sort']
 def bigwig_options              = modules['ucsc_bedgraphtobigwig']
 def bigbed_options              = modules['ucsc_bed12tobigbed']
@@ -139,6 +141,9 @@ include { PREPARE_GENOME                   } from '../subworkflows/local/prepare
 include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options )
 include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options )
 include { BAM_SORT_SAMTOOLS                } from '../subworkflows/local/bam_sort_samtools'                 addParams( samtools_options: samtools_sort_options )
+include { BAM_SORT_INDEX_SAMTOOLS          } from '../subworkflows/local/bam_sort_index_samtools'           addParams( samtools_options: samtools_sort_options )
+include { VC_MEDAKA                        } from '../subworkflows/local/vc_medaka'                         addParams( medaka_vc_options: medaka_vc_options )
+include { SV_SNIFFLES                      } from '../subworkflows/local/sv_sniffles'                       addParams( sniffles_sv_options: sniffles_sv_options )
 include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'              addParams( bigwig_options: bigwig_options )
 include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'              addParams( bigbed_options: bigbed_options )
 include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'  addParams( stringtie2_options: stringtie2_options, featurecounts_options: featurecounts_options )
@@ -304,12 +309,12 @@ workflow NANOSEQ{
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
         if (params.aligner == 'minimap2') {
-
             /*
             * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
             */
             ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq )
             ch_align_sam = ALIGN_MINIMAP2.out.ch_align_sam
+            ch_index = ALIGN_MINIMAP2.out.ch_index
             ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.first().ifEmpty(null))
         } else {
 
@@ -318,17 +323,47 @@ workflow NANOSEQ{
              */
             ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
             ch_align_sam = ALIGN_GRAPHMAP2.out.ch_align_sam
+            ch_index = ALIGN_GRAPHMAP2.out.ch_index
             ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
         }
 
-        //if (DNA structural variant){
-        //   Your merged samtools sort and index module
-        //}else{
-        BAM_SORT_SAMTOOLS ( ch_align_sam )
-        ch_view_sortbam = BAM_SORT_SAMTOOLS.out.sortbam
-        ch_software_versions = ch_software_versions.mix(BAM_SORT_SAMTOOLS.out.versions.first().ifEmpty(null))
-        ch_samtools_multiqc  = BAM_SORT_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
-        //}
+        if (params.call_variants) {
+           /*
+            * SUBWORKFLOW: View, then  sort, and index bam files using one module
+            */
+            BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam )
+            ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
+            ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.versions.first().ifEmpty(null))
+            ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
+        } else {
+
+            /*
+            * SUBWORKFLOW: View, then sort and index bam files using two modules
+            */
+            BAM_SORT_SAMTOOLS ( ch_align_sam )
+            ch_view_sortbam = BAM_SORT_SAMTOOLS.out.sortbam
+            ch_software_versions = ch_software_versions.mix(BAM_SORT_SAMTOOLS.out.versions.first().ifEmpty(null))
+            ch_samtools_multiqc  = BAM_SORT_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
+        }
+
+
+        if (params.call_variants && params.protocol == 'DNA') { 
+            /*
+            * SUBWORKFLOW: Call variants with medaka
+            */
+            ch_medaka_version = Channel.empty()
+            VC_MEDAKA ( ch_view_sortbam, ch_index.map{ it [2] } )
+            ch_medaka_vc = VC_MEDAKA.out.ch_variant_calls
+        }
+
+        if (params.call_variants && params.protocol == 'DNA') { 
+            /*
+            * SUBWORKFLOW: Call structural variants with sniffles
+            */
+            ch_sniffles_version = Channel.empty()
+            SV_SNIFFLES ( ch_view_sortbam )
+            ch_sniffles_sv = SV_SNIFFLES.out.ch_sv_calls
+        }
 
         ch_bedtools_version = Channel.empty()
         if (!params.skip_bigwig){

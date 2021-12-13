@@ -5,7 +5,7 @@
 params.stringtie2_options      = [:]
 params.featurecounts_options   = [:]
 
-include { STRINGTIE2            } from '../../modules/local/stringtie2'                      addParams( options: params.stringtie2_options   )
+include { STRINGTIE2            } from '../../modules/local/stringtie2'                      addParams( options: params.stringtie2_options    )
 include { STRINGTIE_MERGE       } from '../../modules/nf-core/modules/stringtie/merge/main'  addParams( options: params.stringtie2_options    )
 include { SUBREAD_FEATURECOUNTS } from '../../modules/local/subread_featurecounts'           addParams( options: params.featurecounts_options )
 

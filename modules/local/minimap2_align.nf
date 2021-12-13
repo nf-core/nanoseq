@@ -30,12 +30,14 @@ process MINIMAP2_ALIGN {
     def kmer      = (params.protocol == 'directRNA') ? "-k14" : ""
     def stranded  = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
     def junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
+    def md        = (params.call_variants && params.protocol == 'DNA') ? "--MD" : ""
     """
     minimap2 \\
         $preset \\
         $kmer \\
         $stranded \\
         $junctions \\
+        $md \\
         -t $task.cpus \\
         $index \\
         $fastq > ${meta.id}.sam

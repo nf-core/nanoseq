@@ -28,7 +28,7 @@ workflow ALIGN_GRAPHMAP2 {
         .collate(13)
         .map { it -> [ it[6], it[7], it[0], it[1], it[2], it[3], it[10], it[4] ] } // [ sample, fastq, fasta, sizes, gtf, bed, is_transcripts, index ]
         .set { ch_index }
-
+        
     /*
      * Map reads with GRAPHMAP2
      */
@@ -36,6 +36,7 @@ workflow ALIGN_GRAPHMAP2 {
     ch_align_sam = GRAPHMAP2_ALIGN.out.align_sam
 
     emit:
+    ch_index
     graphmap2_version
     ch_align_sam
 }

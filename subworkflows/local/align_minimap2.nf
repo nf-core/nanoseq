@@ -36,6 +36,7 @@ workflow ALIGN_MINIMAP2 {
     ch_align_sam = MINIMAP2_ALIGN.out.align_sam
 
     emit:
+    ch_index
     minimap2_version
     ch_align_sam
 }
