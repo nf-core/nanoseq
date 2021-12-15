@@ -141,8 +141,7 @@ include { PREPARE_GENOME                   } from '../subworkflows/local/prepare
 include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options )
 include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options )
 include { BAM_SORT_INDEX_SAMTOOLS          } from '../subworkflows/local/bam_sort_index_samtools'           addParams( samtools_options: samtools_sort_options )
-include { VC_MEDAKA                        } from '../subworkflows/local/vc_medaka'                         addParams( medaka_vc_options: medaka_vc_options )
-include { SV_SNIFFLES                      } from '../subworkflows/local/sv_sniffles'                       addParams( sniffles_sv_options: sniffles_sv_options )
+include { DNA_VARIANT_CALLING              } from '../subworkflows/local/dna_variant_calling'               addParams( medaka_vc_options: medaka_vc_options, sniffles_sv_options: sniffles_sv_options)
 include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'              addParams( bigwig_options: bigwig_options )
 include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'              addParams( bigbed_options: bigbed_options )
 include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'  addParams( stringtie2_options: stringtie2_options, featurecounts_options: featurecounts_options )
@@ -334,22 +333,13 @@ workflow NANOSEQ{
         ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.versions.first().ifEmpty(null))
         ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
 
-        if (params.call_variants && params.protocol == 'DNA') {
+        if (params.call_variants && params.protocol == 'DNA') { 
             /*
-            * SUBWORKFLOW: Call variants with medaka
+            * SUBWORKFLOW: DNA variant calling
             */
             ch_medaka_version = Channel.empty()
-            VC_MEDAKA ( ch_view_sortbam, ch_index.map{ it [2] } )
-            ch_medaka_vc = VC_MEDAKA.out.ch_variant_calls
-        }
-
-        if (params.call_variants && params.protocol == 'DNA') {
-            /*
-            * SUBWORKFLOW: Call structural variants with sniffles
-            */
             ch_sniffles_version = Channel.empty()
-            SV_SNIFFLES ( ch_view_sortbam )
-            ch_sniffles_sv = SV_SNIFFLES.out.ch_sv_calls
+            DNA_VARIANT_CALLING ( ch_view_sortbam, ch_index.map{ it [2] }, params.skip_medaka, params.skip_sniffles )
         }
 
         ch_bedtools_version = Channel.empty()

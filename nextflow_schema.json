@@ -187,9 +187,9 @@
                 }
             }
         },
-        "variant_calling_options": {
-            "title": "Variant calling options",
-            "description": "Options to adjust pameters and filtering criteria for varinat calling.",
+        "dna_variant_calling_options": {
+            "title": "DNA variant calling options",
+            "description": "Options to adjust pameters and filtering criteria for DNA varinat calling.",
             "default": "",
             "fa_icon": "fas fa-align-center",
             "properties": {
@@ -207,6 +207,16 @@
                     "type": "boolean",
                     "fa_icon": "fas fa-exchange-alt",
                     "description": "Specifies if vcf will be phased."
+                },
+                "skip_medaka": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip variant calling with sniffles."
+                },
+                "skip_sniffles": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip variant calling with sniffles."
                 }
             }
         },
@@ -500,7 +510,7 @@
             "$ref": "#/definitions/alignment_options"
         },
         {
-            "$ref": "#/definitions/variant_calling_options"
+            "$ref": "#/definitions/dna_variant_calling_options"
         },
         {
             "$ref": "#/definitions/differential_analysis_options"
