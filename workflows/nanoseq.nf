@@ -333,7 +333,7 @@ workflow NANOSEQ{
         ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.versions.first().ifEmpty(null))
         ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
 
-        if (params.call_variants && params.protocol == 'DNA') { 
+        if (params.call_variants && params.protocol == 'DNA') {
             /*
             * SUBWORKFLOW: DNA variant calling
             */
