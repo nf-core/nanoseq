@@ -154,6 +154,7 @@
                     "fa_icon": "fas fa-fast-forward"
                 },
                 "nanolyse_fasta": {
+                    "type": "string",
                     "description": "Fasta file to be filtered against using NanoLyse",
                     "fa_icon": "far fa-file-code"
                 }
@@ -161,11 +162,13 @@
         },
         "alignment_options": {
             "title": "Alignment options",
+            "type": "object",
             "description": "Options to adjust parameters and filtering criteria for read alignments.",
             "default": "",
             "fa_icon": "fas fa-map-signs",
             "properties": {
                 "aligner": {
+                    "type": "string",
                     "default": "minimap2",
                     "description": "Specifies the aligner to use i.e. 'minimap2' or 'graphmap2'.",
                     "fa_icon": "fas fa-align-center"
@@ -182,6 +185,7 @@
                     "description": "Save the '.sam' files from the alignment step - not done by default."
                 },
                 "skip_alignment": {
+                    "type": "boolean",
                     "description": "Skip alignment and downstream processes.",
                     "fa_icon": "fas fa-fast-forward"
                 }
@@ -189,6 +193,7 @@
         },
         "dna_variant_calling_options": {
             "title": "DNA variant calling options",
+            "type": "object",
             "description": "Options to adjust pameters and filtering criteria for DNA varinat calling.",
             "default": "",
             "fa_icon": "fas fa-align-center",
@@ -222,11 +227,13 @@
         },
         "differential_analysis_options": {
             "title": "Differential analysis options",
+            "type": "object",
             "description": "Options to adjust quantification and differential analysis",
             "default": "",
             "fa_icon": "fas fa-calculator",
             "properties": {
                 "quantification_method": {
+                    "type": "string",
                     "default": "bambu",
                     "description": "Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.",
                     "fa_icon": "fas fa-bezier-curve"
