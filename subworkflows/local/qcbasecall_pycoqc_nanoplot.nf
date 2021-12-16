@@ -6,7 +6,7 @@ params.pycoqc_options             = [:]
 params.nanoplot_summary_options   = [:]
 
 include { PYCOQC      } from '../../modules/nf-core/modules/pycoqc/main'     addParams( options: params.pycoqc_options )
-include { NANOPLOT    } from '../../modules/nf-core/modules/nanoplot/main'   addParams( options: params.nanoplot_summary_options )
+include { NANOPLOT    } from '../../modules/local/nanoplot.nf'                addParams( options: params.nanoplot_summary_options )
 
 workflow QCBASECALL_PYCOQC_NANOPLOT {
     take:

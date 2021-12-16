@@ -146,6 +146,8 @@ include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtool
 include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'              addParams( bigbed_options: bigbed_options )
 include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'  addParams( stringtie2_options: stringtie2_options, featurecounts_options: featurecounts_options )
 include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'        addParams( deseq2_options: deseq2_options, dexseq_options: dexseq_options )
+include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/local/qcbasecall_pycoqc_nanoplot'        addParams( pycoqc_options: pycoqc_options, nanoplot_options: nanoplot_options )
+include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq_nanoplot_fastqc'           addParams( nanoplot_options: nanoplot_options, fastqc_options: fastqc_options )
 
 ////////////////////////////////////////////////////
 /* --    IMPORT NF-CORE MODULES/SUBWORKFLOWS   -- */
@@ -160,8 +162,6 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/
 /*
  * SUBWORKFLOW: Consisting entirely of nf-core/modules (BAM_SORT_SAMTOOLS & BAM_STAT_SAMTOOLS are within two local subworkflows)
  */
-include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/nf-core/qcbasecall_pycoqc_nanoplot'      addParams( pycoqc_options: pycoqc_options, nanoplot_options: nanoplot_options )
-include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/nf-core/qcfastq_nanoplot_fastqc'         addParams( nanoplot_options: nanoplot_options, fastqc_options: fastqc_options )
 
 ////////////////////////////////////////////////////
 /* --           RUN MAIN WORKFLOW              -- */
