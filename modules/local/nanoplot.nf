@@ -20,9 +20,9 @@ process NANOPLOT {
     script:
     def args = task.ext.args ?: ''
     def input_file = ("$ontfile".endsWith(".fastq.gz")) ? "--fastq ${ontfile}" :
-                     ("$ontfile".endsWith(".txt")) ? "--summary ${ontfile}" : ''
+                    ("$ontfile".endsWith(".txt")) ? "--summary ${ontfile}" : ''
     def output_dir = ("$ontfile".endsWith(".fastq.gz")) ? "fastq/${meta.id}" :
-                     ("$ontfile".endsWith(".txt")) ? "summary" : ''
+                    ("$ontfile".endsWith(".txt")) ? "summary" : ''
     output_html = output_dir+"/*.html"
     output_png  = output_dir+"/*.png"
     output_txt  = output_dir+"/*.txt"
