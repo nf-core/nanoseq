@@ -100,19 +100,12 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 // MODULE: Loaded from modules/local/
 //
 
-// Don't overwrite global params.modules, create a copy instead and use that within the main script.
-def modules = params.modules.clone()
-
-multiqc_options.args       += params.multiqc_title ? " --title \"$params.multiqc_title\"" : ''
-if (params.skip_alignment)  { multiqc_options['publish_dir'] = '' }
-
 include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
 include { GUPPY                 } from '../modules/local/guppy'
 include { QCAT                  } from '../modules/local/qcat'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
 include { BAMBU                 } from '../modules/local/bambu'
-include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'
 include { MULTIQC               } from '../modules/local/multiqc'
 
 //
@@ -356,7 +349,7 @@ workflow NANOSEQ{
         ch_sample
             .map { it -> if (it[6].toString().endsWith('.bam')) [ it[0], it[6] ] }
             .set { ch_sample_bam }
-        BAM_RENAME ( ch_sample_bam )
+        BAM_RENAME ( ch_sample )
         ch_sortbam = BAM_RENAME.out.bam
     }
 
