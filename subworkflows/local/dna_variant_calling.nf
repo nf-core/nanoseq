@@ -1,11 +1,9 @@
 /*
  * DNA variant calling
  */
-params.medaka_vc_options    = [:]
-params.sniffles_sv_options    = [:]
 
-include { MEDAKA                  } from '../../modules/local/medaka_variant'      addParams( options: params.medaka_vc_options    )
-include { SNIFFLES                  } from '../../modules/local/sniffles'      addParams( options: params.sniffles_sv_options    )
+include { MEDAKA_VARIANT            } from '../../modules/local/medaka_variant'
+include { SNIFFLES                  } from '../../modules/local/sniffles'
 
 workflow DNA_VARIANT_CALLING {
 
@@ -47,7 +45,6 @@ workflow DNA_VARIANT_CALLING {
         */
         SNIFFLES( ch_view_sortbam )
         ch_sv_calls = SNIFFLES.out.sv_calls
-    } else{
     }
 
     emit:

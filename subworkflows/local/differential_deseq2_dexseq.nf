@@ -2,11 +2,8 @@
  * Differential Expression Analysis with DESeq2 and DEXSeq
  */
 
-params.deseq2_options   = [:]
-params.dexseq_options   = [:]
-
-include { DESEQ2      } from '../../modules/local/deseq2'       addParams( options: params.deseq2_options )
-include { DEXSEQ      } from '../../modules/local/dexseq'       addParams( options: params.dexseq_options )
+include { DESEQ2      } from '../../modules/local/deseq2'
+include { DEXSEQ      } from '../../modules/local/dexseq'
 
 
 workflow DIFFERENTIAL_DESEQ2_DEXSEQ {

@@ -1,22 +1,11 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-params.options = [:]
-def options    = initOptions(params.options)
-
 process QCAT {
     tag "$input_path"
     label 'process_medium'
-    publishDir "${params.outdir}",
-        mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:input_path) }
 
     conda     (params.enable_conda ? "bioconda::qcat=1.1.0" : null)
-    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/qcat:1.1.0--py_0"
-    } else {
-        container "quay.io/biocontainers/qcat:1.1.0--py_0"
-    }
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/qcat:1.1.0--py_0' :
+        'quay.io/biocontainers/qcat:1.1.0--py_0' }"
 
     input:
     path input_path
@@ -47,8 +36,8 @@ process QCAT {
     gzip fastq/*
 
     cat <<-END_VERSIONS > versions.yml
-    ${getProcessName(task.process)}:
-        ${getSoftwareName(task.process)}: \$(qcat --version 2>&1 | sed 's/^.*qcat //; s/ .*\$//')
+    "${task.process}":
+        qcat: \$(qcat --version 2>&1 | sed 's/^.*qcat //; s/ .*\$//')
     END_VERSIONS
     """
 }

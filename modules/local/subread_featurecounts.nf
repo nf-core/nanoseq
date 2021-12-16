@@ -1,22 +1,11 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-params.options = [:]
-def options    = initOptions(params.options)
-
 process SUBREAD_FEATURECOUNTS {
     label 'process_medium'
-    publishDir "${params.outdir}",
-        mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
     // Note: 2.7X indices incompatible with AWS iGenomes.
     conda     (params.enable_conda ? "bioconda::subread=2.0.1" : null)
-    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/subread:2.0.1--hed695b0_0"
-    } else {
-        container "quay.io/biocontainers/subread:2.0.1--hed695b0_0"
-    }
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/subread:2.0.1--hed695b0_0' :
+        'quay.io/biocontainers/subread:2.0.1--hed695b0_0' }"
 
     input:
     path gtf
@@ -58,8 +47,8 @@ process SUBREAD_FEATURECOUNTS {
         $bams
 
     cat <<-END_VERSIONS > versions.yml
-    ${getProcessName(task.process)}:
-        ${getSoftwareName(task.process)}: \$( echo \$(featureCounts -v 2>&1) | sed -e "s/featureCounts v//g")
+    "${task.process}":
+        featureCounts: \$( echo \$(featureCounts -v 2>&1) | sed -e "s/featureCounts v//g")
     END_VERSIONS
     """
 }
