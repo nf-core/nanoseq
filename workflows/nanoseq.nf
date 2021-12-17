@@ -145,9 +145,6 @@ workflow NANOSEQ{
     /*
      * SUBWORKFLOW: Read in samplesheet, validate and stage input files
      */
-    left = Channel.from(['X', 1], ['Y', 2], ['Z', 3], ['P', 7])
-    right= Channel.from(['Z', 6], ['Y', 5], ['X', 4])
-    left.join(right).view()
     INPUT_CHECK ( ch_input )
         .set { ch_sample }
 
@@ -425,7 +422,7 @@ workflow NANOSEQ{
         ch_featurecounts_gene_multiqc.ifEmpty([]),
         ch_featurecounts_transcript_multiqc.ifEmpty([]),
         CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
-        ch_workflow_summary
+        ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml')
         )
     }
 }
