@@ -2,12 +2,8 @@
  * Alignment with MINIMAP2
  */
 
-params.index_options    = [:]
-params.align_options    = [:]
-params.samtools_options = [:]
-
-include { MINIMAP2_INDEX          } from '../../modules/local/minimap2_index'        addParams( options: params.index_options    )
-include { MINIMAP2_ALIGN          } from '../../modules/local/minimap2_align'        addParams( options: params.align_options    )
+include { MINIMAP2_INDEX          } from '../../modules/local/minimap2_index'
+include { MINIMAP2_ALIGN          } from '../../modules/local/minimap2_align'
 
 workflow ALIGN_MINIMAP2 {
     take:

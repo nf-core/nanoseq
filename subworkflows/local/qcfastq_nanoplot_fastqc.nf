@@ -2,11 +2,8 @@
  * FastQ QC with NanoPlot and fastqc
  */
 
-params.nanoplot_fastq_options = [:]
-params.fastqc_options         = [:]
-
-include { NANOPLOT     } from '../../modules/nf-core/modules/nanoplot/main'  addParams( options: params.nanoplot_fastq_options )
-include { FASTQC       } from '../../modules/nf-core/modules/fastqc/main'    addParams( options: params.fastqc_options )
+include { NANOPLOT     } from '../../modules/local/nanoplot'
+include { FASTQC       } from '../../modules/nf-core/modules/fastqc/main'
 
 workflow QCFASTQ_NANOPLOT_FASTQC {
     take:
