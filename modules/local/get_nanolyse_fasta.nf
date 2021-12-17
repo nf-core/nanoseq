@@ -1,9 +1,3 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-params.options       = [:]
-def options          = initOptions(params.options)
-
 process GET_NANOLYSE_FASTA {
 
     conda (params.enable_conda ? "conda-forge::sed=4.7" : null)

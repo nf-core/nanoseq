@@ -2,13 +2,11 @@
  * Sort, index BAM file and run samtools stats, flagstat and idxstats
  */
 
-params.options = [:]
-
-include { SAMTOOLS_VIEW_BAM  } from '../../modules/local/samtools_view_bam'              addParams( options: params.options )
-include { SAMTOOLS_SORT      } from '../../modules/nf-core/modules/samtools/sort/main'  addParams( options: params.options )
-include { SAMTOOLS_INDEX     } from '../../modules/nf-core/modules/samtools/index/main' addParams( options: params.options )
-include { SAMTOOLS_SORT_INDEX } from '../../modules/local/samtools_sort_index'            addParams( options: params.options )
-include { BAM_STATS_SAMTOOLS } from '../../subworkflows/nf-core/bam_stats_samtools'      addParams( options: params.options )
+include { SAMTOOLS_VIEW_BAM  } from '../../modules/local/samtools_view_bam'
+include { SAMTOOLS_SORT      } from '../../modules/nf-core/modules/samtools/sort/main'
+include { SAMTOOLS_INDEX     } from '../../modules/nf-core/modules/samtools/index/main'
+include { SAMTOOLS_SORT_INDEX } from '../../modules/local/samtools_sort_index'
+include { BAM_STATS_SAMTOOLS } from '../../subworkflows/nf-core/bam_stats_samtools'
 
 workflow BAM_SORT_INDEX_SAMTOOLS {
     take:
