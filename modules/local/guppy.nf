@@ -1,14 +1,5 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-params.options = [:]
-def options    = initOptions(params.options)
-
 process GUPPY {
     label 'process_medium'
-    publishDir "${params.outdir}",
-        mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process)) }
 
     if (params.guppy_gpu) {
         container = 'genomicpariscentre/guppy-gpu:4.0.14'
@@ -50,8 +41,8 @@ process GUPPY {
         $model
 
     cat <<-END_VERSIONS > versions.yml
-    ${getProcessName(task.process)}:
-        ${getSoftwareName(task.process)}: \$(echo \$(guppy_basecaller --version 2>&1) | sed -r 's/.{81}//')
+    "${task.process}":
+        guppy: \$(echo \$(guppy_basecaller --version 2>&1) | sed -r 's/.{81}//')
     END_VERSIONS
 
     ## Concatenate fastq files

@@ -2,12 +2,8 @@
  * Alignment with GRAPHMAP2
  */
 
-params.index_options    = [:]
-params.align_options    = [:]
-params.samtools_options = [:]
-
-include { GRAPHMAP2_INDEX         } from '../../modules/local/graphmap2_index'       addParams( options: params.index_options    )
-include { GRAPHMAP2_ALIGN         } from '../../modules/local/graphmap2_align'       addParams( options: params.align_options    )
+include { GRAPHMAP2_INDEX         } from '../../modules/local/graphmap2_index'
+include { GRAPHMAP2_ALIGN         } from '../../modules/local/graphmap2_align'
 
 workflow ALIGN_GRAPHMAP2 {
     take:
@@ -36,6 +32,7 @@ workflow ALIGN_GRAPHMAP2 {
     ch_align_sam = GRAPHMAP2_ALIGN.out.align_sam
 
     emit:
+    ch_index
     graphmap2_version
     ch_align_sam
 }

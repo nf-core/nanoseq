@@ -1,17 +1,8 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-params.options = [:]
-def options    = initOptions(params.options)
-
 process BAMBU {
     label 'process_medium'
-    publishDir "${params.outdir}",
-        mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
     conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-bambu=2.0.0 bioconda::bioconductor-bsgenome=1.58.0" : null)
-    container "docker.io/yuukiiwa/nanoseq:bambu_bsgenome"
+    container "docker.io/yuukiiwa/nanoseq:bambu_bsgenome" //not on biocontainers; does not have a singularity container
 
     input:
     tuple path(fasta), path(gtf)
@@ -32,10 +23,10 @@ process BAMBU {
         --fasta=$fasta $bams
 
     cat <<-END_VERSIONS > versions.yml
-    ${getProcessName(task.process)}:
+    "${task.process}":
         r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-        bioconductor-deseq2: \$(Rscript -e "library(bambu); cat(as.character(packageVersion('bambu')))")
-        bioconductor-deseq2: \$(Rscript -e "library(BSgenome); cat(as.character(packageVersion('BSgenome')))")
+        bioconductor-bambu: \$(Rscript -e "library(bambu); cat(as.character(packageVersion('bambu')))")
+        bioconductor-bsgenome: \$(Rscript -e "library(BSgenome); cat(as.character(packageVersion('BSgenome')))")
     END_VERSIONS
     """
 }

@@ -2,10 +2,8 @@
  * Convert BAM to BigBed
  */
 
-params.bigbed_options   = [:]
-
-include { BEDTOOLS_BAMBED     } from '../../modules/local/bedtools_bamtobed'  addParams( options: params.bigbed_options )
-include { UCSC_BED12TOBIGBED  } from '../../modules/local/ucsc_bed12tobigbed' addParams( options: params.bigbed_options )
+include { BEDTOOLS_BAMBED     } from '../../modules/local/bedtools_bamtobed'
+include { UCSC_BED12TOBIGBED  } from '../../modules/local/ucsc_bed12tobigbed'
 
 workflow BEDTOOLS_UCSC_BIGBED {
     take:
