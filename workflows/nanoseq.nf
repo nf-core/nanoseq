@@ -435,8 +435,12 @@ workflow NANOSEQ{
 ////////////////////////////////////////////////////
 
 workflow.onComplete {
-//    Completion.email(workflow, params, params.summary_params, log, multiqc_report)
-    Completion.summary(workflow, params, log)
+    if (params.email) {
+        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+        //Completion.email(workflow, params, params.summary_params, log, multiqc_report)
+    }
+//    Completion.summary(workflow, params, log)
+    NfcoreTemplate.summary(workflow, params, log)
 }
 
 ////////////////////////////////////////////////////
