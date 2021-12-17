@@ -2,7 +2,7 @@
 /* --         LOCAL PARAMETER VALUES           -- */
 ////////////////////////////////////////////////////
 
-params.summary_params = [:]
+def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
 ////////////////////////////////////////////////////
 /* --          VALIDATE INPUTS                 -- */
@@ -410,8 +410,8 @@ workflow NANOSEQ{
     )
 
     if (!params.skip_multiqc){
-        workflow_summary    = Schema.params_summary_multiqc(workflow, params.summary_params)
-        ch_workflow_summary = Channel.value(workflow_summary).collectFile(name: 'workflow_summary_mqc.yaml')
+        workflow_summary    = WorkflowNanoseq.paramsSummaryMultiqc(workflow, summary_params)
+        ch_workflow_summary = Channel.value(workflow_summary)
 
         /*
         * MODULE: MultiQC
