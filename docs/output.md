@@ -207,7 +207,7 @@ If multiple conditions and multiple replicates are available then the pipeline i
 <details markdown="1">
 <summary>Output files</summary>
 
-* `minimap2/medaka/<SAMPLE>/round_1.vcf        `
+* `minimap2/medaka/<SAMPLE>/round_1.vcf`
     VCF file with small variants for each sample.
 * `minimap2/sniffles/<sample>_sniffles.vcf`
     VCF files with unflitered structural variants.
