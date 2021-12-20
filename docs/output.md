@@ -212,6 +212,8 @@ If multiple conditions and multiple replicates are available then the pipeline i
 * `minimap2/sniffles/<sample>_sniffles.vcf`
     VCF files with unflitered structural variants.
 
+</details>
+
 *Documentation*:
 [Medaka](https://github.com/nanoporetech/medaka), [Sniffles](https://github.com/fritzsedlazeck/Sniffles)
 
