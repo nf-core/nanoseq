@@ -202,6 +202,22 @@ After genomic alignment, novel transcripts can be reconstructed using tools such
 *Description*:
 If multiple conditions and multiple replicates are available then the pipeline is able to run differential analysis on gene and transcripts with DESeq2 and DEXSeq, respectively. These steps won't be run if you provide the `--skip_quantification` or `--skip_differential_analysis` parameters or if all of the samples in the samplesheet don't have the same fasta and GTF reference files.
 
+## Variant calling
+
+<details markdown="1">
+<summary>Output files</summary>
+
+* `minimap2/medaka/<SAMPLE>/round_1.vcf        `
+    VCF file with small variants for each sample.
+* `minimap2/sniffles/<sample>_sniffles.vcf`
+    VCF files with unflitered structural variants.
+
+*Documentation*:
+[Medaka](https://github.com/nanoporetech/medaka), [Sniffles](https://github.com/fritzsedlazeck/Sniffles)
+
+*Description*:
+If the protocol is set to `--protocol DNA` and the *Minimap2* aligner was used, then the `--call_variants` parameter can be envoked to call small variants and structural variants using Medaka and Sniffles, respectively. These steps won't be run if you provide the `--skip_medaka` or `--skip_sniffles` parameters.
+
 ## MultiQC
 
 <details markdown="1">
