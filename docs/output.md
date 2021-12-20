@@ -218,7 +218,7 @@ If multiple conditions and multiple replicates are available then the pipeline i
 [Medaka](https://github.com/nanoporetech/medaka), [Sniffles](https://github.com/fritzsedlazeck/Sniffles)
 
 *Description*:
-If the protocol is set to `--protocol DNA` and the *Minimap2* aligner was used, then the `--call_variants` parameter can be envoked to call small variants and structural variants using Medaka and Sniffles, respectively. These steps won't be run if you provide the `--skip_medaka` or `--skip_sniffles` parameters.
+If the protocol is set to `--protocol DNA` and the *Minimap2* aligner was used, then the `--call_variants` parameter can be invoked to call small variants and structural variants using Medaka and Sniffles, respectively. These steps won't be run if you provide the `--skip_medaka` or `--skip_sniffles` parameters.
 
 ## MultiQC
 
