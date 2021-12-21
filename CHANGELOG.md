@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Parameters
 
 * Added `--call_variants` to detect DNA variants
-* Added `--split_mnps` to 
+* Added `--split_mnps` to
 * Added `--phase_vcf` to
 * Added `--skip_medaka` to skip `medaka variant`
 * Added `--skip_sniffles` to skip `sniffles`
