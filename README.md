@@ -41,12 +41,14 @@ On release, automated continuous integration tests run the pipeline on a [full-s
     * Each sample can be mapped to its own reference genome if multiplexed in this way
     * Convert SAM to co-ordinate sorted BAM and obtain mapping metrics ([`SAMtools`](http://www.htslib.org/doc/samtools.html))
 6. Create bigWig ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/)) and bigBed ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedToBigBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)) coverage tracks for visualisation
-7. RNA-specific downstream analysis:
+7. DNA-specific downstream analysis:
+    * DNA variant calling ([`medaka`](https://github.com/nanoporetech/medaka) and/or [`sniffles`](https://github.com/fritzsedlazeck/Sniffles))
+8. RNA-specific downstream analysis:
     * Transcript reconstruction and quantification ([`bambu`](https://bioconductor.org/packages/release/bioc/html/bambu.html) or [`StringTie2`](https://ccb.jhu.edu/software/stringtie/))
         * bambu performs both transcript reconstruction and quantification.
         * When StringTie2 is chosen, each sample can be processed individually and combined. After which, [`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/) will be used for both gene and transcript quantification.
-    * Differential expression analysis ([`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) or [`DEXSeq`](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html))
-8. Present QC for raw read and alignment results ([`MultiQC`](https://multiqc.info/docs/))
+    * Differential expression analysis ([`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) and/or [`DEXSeq`](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html))
+9. Present QC for raw read and alignment results ([`MultiQC`](https://multiqc.info/docs/))
 
 ## Quick Start
 
