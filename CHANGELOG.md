@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Bump minimum Nextflow version from 21.04.0 -> 21.10.3
 * Update pipeline template to nf-core/tools `2.2`
 * Update `bambu` version from `1.0.2` to `2.0.0`
+* Update `multiqc` version from `1.10.1` to `1.11`
 
 ### Parameters
 
@@ -29,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `bioconductor-bambu`    | 1.0.2       | 2.0.0       |
 | `bioconductor-bsgenome` | 1.58.0      | 1.62.0      |
 | `medaka`                |             | 1.4.4       |
+| `multiqc`               | 1.10.1      | 1.11        |
 | `sniffles`              |             | 1.0.12      |
 
 > **NB:** Dependency has been __updated__ if both old and new version information is present.
