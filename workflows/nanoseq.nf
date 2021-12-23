@@ -2,7 +2,7 @@
 /* --         LOCAL PARAMETER VALUES           -- */
 ////////////////////////////////////////////////////
 
-params.summary_params = [:]
+def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
 ////////////////////////////////////////////////////
 /* --          VALIDATE INPUTS                 -- */
@@ -94,54 +94,30 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 /* --    IMPORT LOCAL MODULES/SUBWORKFLOWS     -- */
 ////////////////////////////////////////////////////
 
-// Don't overwrite global params.modules, create a copy instead and use that within the main script.
-def modules = params.modules.clone()
-
-def multiqc_options         = modules['multiqc']
-multiqc_options.args       += params.multiqc_title ? " --title \"$params.multiqc_title\"" : ''
-if (params.skip_alignment)  { multiqc_options['publish_dir'] = '' }
-
-def guppy_options    = modules['guppy']
-def qcat_options     = modules['qcat']
-def nanolyse_options = modules['nanolyse']
-def bambu_options    = modules['bambu']
-
-include { GET_TEST_DATA } from '../modules/local/get_test_data' addParams( options: [:] )
-include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta' addParams( options: [:] )
-include { GUPPY                 } from '../modules/local/guppy'                   addParams( options: guppy_options                )
-include { QCAT                  } from '../modules/local/qcat'                    addParams( options: qcat_options                 )
-include { BAM_RENAME            } from '../modules/local/bam_rename'              addParams( options: [:]                          )
-include { BAMBU                 } from '../modules/local/bambu'                   addParams( options: bambu_options                )
-include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'   addParams( options: [publish_files : ['csv':'']] )
-include { MULTIQC               } from '../modules/local/multiqc'                 addParams( options: multiqc_options              )
+include { GET_TEST_DATA         } from '../modules/local/get_test_data'
+include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
+include { GUPPY                 } from '../modules/local/guppy'
+include { QCAT                  } from '../modules/local/qcat'
+include { BAM_RENAME            } from '../modules/local/bam_rename'
+include { BAMBU                 } from '../modules/local/bambu'
+include { MULTIQC               } from '../modules/local/multiqc'
 
 /*
  * SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
  */
-def pycoqc_options              = modules['pycoqc']
-def nanoplot_options            = modules['nanoplot']
-def fastqc_options              = modules['fastqc']
-def genome_options              = modules['get_chrom_size']
-def graphmap2_index_options     = modules['graphmap2_index']
-def graphmap2_align_options     = modules['graphmap2_align']
-def minimap2_index_options      = modules['minimap2_index']
-def minimap2_align_options      = modules['minimap2_align']
-def samtools_sort_options       = modules['samtools_sort']
-def bigwig_options              = modules['ucsc_bedgraphtobigwig']
-def bigbed_options              = modules['ucsc_bed12tobigbed']
-def stringtie2_options          = modules['stringtie2']
-def featurecounts_options       = modules['subread_featurecounts']
-def deseq2_options              = modules['deseq2']
-def dexseq_options              = modules['dexseq']
 
-include { INPUT_CHECK                      } from '../subworkflows/local/input_check'                       addParams( options: [:] )
-include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'                    addParams( genome_options: genome_options )
-include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options, samtools_options: samtools_sort_options )
-include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options, samtools_options: samtools_sort_options )
-include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'              addParams( bigwig_options: bigwig_options )
-include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'              addParams( bigbed_options: bigbed_options )
-include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'  addParams( stringtie2_options: stringtie2_options, featurecounts_options: featurecounts_options )
-include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'        addParams( deseq2_options: deseq2_options, dexseq_options: dexseq_options )
+include { INPUT_CHECK                      } from '../subworkflows/local/input_check'
+include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'
+include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/local/qcbasecall_pycoqc_nanoplot'
+include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq_nanoplot_fastqc'
+include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'
+include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'
+include { BAM_SORT_INDEX_SAMTOOLS          } from '../subworkflows/local/bam_sort_index_samtools'
+include { DNA_VARIANT_CALLING              } from '../subworkflows/local/dna_variant_calling'
+include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'
+include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'
+include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'
+include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'
 
 ////////////////////////////////////////////////////
 /* --    IMPORT NF-CORE MODULES/SUBWORKFLOWS   -- */
@@ -150,14 +126,12 @@ include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differe
 /*
  * MODULE: Installed directly from nf-core/modules
  */
-include { NANOLYSE                    } from '../modules/nf-core/modules/nanolyse/main' addParams( options: nanolyse_options             )
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main' addParams( options: [publish_files : ['_versions.yml':'']] )
+include { NANOLYSE                    } from '../modules/nf-core/modules/nanolyse/main'
+include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
 
 /*
  * SUBWORKFLOW: Consisting entirely of nf-core/modules (BAM_SORT_SAMTOOLS & BAM_STAT_SAMTOOLS are within two local subworkflows)
  */
-include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/nf-core/qcbasecall_pycoqc_nanoplot'      addParams( pycoqc_options: pycoqc_options, nanoplot_options: nanoplot_options )
-include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/nf-core/qcfastq_nanoplot_fastqc'         addParams( nanoplot_options: nanoplot_options, fastqc_options: fastqc_options )
 
 ////////////////////////////////////////////////////
 /* --           RUN MAIN WORKFLOW              -- */
@@ -303,25 +277,39 @@ workflow NANOSEQ{
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
         if (params.aligner == 'minimap2') {
-
             /*
             * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
             */
             ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq )
-            ch_view_sortbam = ALIGN_MINIMAP2.out.ch_sortbam
+            ch_align_sam = ALIGN_MINIMAP2.out.ch_align_sam
+            ch_index = ALIGN_MINIMAP2.out.ch_index
             ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.samtools_version.first().ifEmpty(null))
-            ch_samtools_multiqc  = ALIGN_MINIMAP2.out.ch_sortbam_stats_multiqc.ifEmpty([])
         } else {
 
             /*
              * SUBWORKFLOW: Align fastq files with graphmap2 and sort bam files
              */
             ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
-            ch_view_sortbam = ALIGN_GRAPHMAP2.out.ch_sortbam
+            ch_align_sam = ALIGN_GRAPHMAP2.out.ch_align_sam
+            ch_index = ALIGN_GRAPHMAP2.out.ch_index
             ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.samtools_version.first().ifEmpty(null))
-            ch_samtools_multiqc  = ALIGN_GRAPHMAP2.out.ch_sortbam_stats_multiqc.ifEmpty([])
+        }
+
+        /*
+        * SUBWORKFLOW: View, then  sort, and index bam files
+        */
+        BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam, params.call_variants )
+        ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
+        ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.versions.first().ifEmpty(null))
+        ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
+
+        if (params.call_variants && params.protocol == 'DNA') {
+            /*
+            * SUBWORKFLOW: DNA variant calling
+            */
+            ch_medaka_version = Channel.empty()
+            ch_sniffles_version = Channel.empty()
+            DNA_VARIANT_CALLING ( ch_view_sortbam, ch_index.map{ it [2] }, params.skip_medaka, params.skip_sniffles )
         }
 
         ch_bedtools_version = Channel.empty()
@@ -419,8 +407,8 @@ workflow NANOSEQ{
     )
 
     if (!params.skip_multiqc){
-        workflow_summary    = Schema.params_summary_multiqc(workflow, params.summary_params)
-        ch_workflow_summary = Channel.value(workflow_summary).collectFile(name: 'workflow_summary_mqc.yaml')
+        workflow_summary    = WorkflowNanoseq.paramsSummaryMultiqc(workflow, summary_params)
+        ch_workflow_summary = Channel.value(workflow_summary)
 
         /*
         * MODULE: MultiQC
@@ -434,7 +422,7 @@ workflow NANOSEQ{
         ch_featurecounts_gene_multiqc.ifEmpty([]),
         ch_featurecounts_transcript_multiqc.ifEmpty([]),
         CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
-        ch_workflow_summary
+        ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml')
         )
     }
 }
@@ -444,8 +432,12 @@ workflow NANOSEQ{
 ////////////////////////////////////////////////////
 
 workflow.onComplete {
-//    Completion.email(workflow, params, params.summary_params, log, multiqc_report)
-    Completion.summary(workflow, params, log)
+    if (params.email) {
+        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+        //Completion.email(workflow, params, params.summary_params, log, multiqc_report)
+    }
+//    Completion.summary(workflow, params, log)
+    NfcoreTemplate.summary(workflow, params, log)
 }
 
 ////////////////////////////////////////////////////

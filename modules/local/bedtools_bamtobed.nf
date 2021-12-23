@@ -1,18 +1,10 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-// params.options = [:]
-// def options    = initOptions(params.options)
-
 process BEDTOOLS_BAMBED {
     label 'process_medium'
 
     conda     (params.enable_conda ? "bioconda::bedtools=2.29.2" : null)
-    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/bedtools:2.29.2--hc088bd4_0"
-    } else {
-        container "quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0"
-    }
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/bedtools:2.29.2--hc088bd4_0' :
+        'quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0' }"
 
     when:
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
@@ -33,8 +25,8 @@ process BEDTOOLS_BAMBED {
         -i ${bam[0]} \\
         | bedtools sort > ${meta.id}.bed12
     cat <<-END_VERSIONS > versions.yml
-    ${getProcessName(task.process)}:
-        ${getSoftwareName(task.process)}: \$(bedtools --version | sed -e "s/bedtools v//g")
+    "${task.process}":
+        bedtools: \$(bedtools --version | sed -e "s/bedtools v//g")
     END_VERSIONS
     """
 }

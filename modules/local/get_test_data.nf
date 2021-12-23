@@ -1,9 +1,3 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-params.options       = [:]
-def options          = initOptions(params.options)
-
 process GET_TEST_DATA {
     container "docker.io/yuukiiwa/git:latest"
 

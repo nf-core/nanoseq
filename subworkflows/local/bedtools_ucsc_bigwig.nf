@@ -2,10 +2,8 @@
  * Convert BAM to BigWig
  */
 
-params.bigwig_options   = [:]
-
-include { BEDTOOLS_GENOMECOV    } from '../../modules/local/bedtools_genomecov'    addParams( options: params.bigwig_options )
-include { UCSC_BEDGRAPHTOBIGWIG } from '../../modules/local/ucsc_bedgraphtobigwig' addParams( options: params.bigwig_options )
+include { BEDTOOLS_GENOMECOV    } from '../../modules/local/bedtools_genomecov'
+include { UCSC_BEDGRAPHTOBIGWIG } from '../../modules/local/ucsc_bedgraphtobigwig'
 
 workflow BEDTOOLS_UCSC_BIGWIG {
     take:
