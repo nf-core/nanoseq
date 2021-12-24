@@ -11,7 +11,7 @@ workflow RNA_FUSIONS_JAFFAL {
 
     if (jaffal_ref_dir) {
         ch_jaffal_ref_dir = file(params.jaffal_ref_dir, checkIfExists: true)
-    } else { 
+    } else {
         GET_JAFFAL_REF()
         UNTAR( GET_JAFFAL_REF.out.ch_jaffal_ref )
         ch_jaffal_ref_dir = UNTAR.out.untar
@@ -19,13 +19,13 @@ workflow RNA_FUSIONS_JAFFAL {
     ch_jaffal_ref_dir.view()
 
     ch_sample
-       .map { it -> [ it[0], it[6] ]}
-       .set { ch_jaffal_input }
+        .map { it -> [ it[0], it[6] ]}
+        .set { ch_jaffal_input }
 
     /*
-     * Align current signals to reference with Nanopolish
-     */
-     JAFFAL( ch_jaffal_input, ch_jaffal_ref_dir )
+    * Align current signals to reference with Nanopolish
+    */
+    JAFFAL( ch_jaffal_input, ch_jaffal_ref_dir )
 
 //    emit:
 //    ch_nanopolish_outputs

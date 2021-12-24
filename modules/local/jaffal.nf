@@ -9,7 +9,7 @@ process JAFFAL {
     input:
     tuple val(meta), path(fastq)
     path jaffal_ref_dir
-    
+
     output:
     tuple val(meta), path("*.fasta") ,emit: jaffal_fastq
     path "*.csv"                     ,emit: jaffal_results
