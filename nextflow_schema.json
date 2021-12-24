@@ -250,6 +250,49 @@
                 }
             }
         },
+        "rna_fusion_analysis_options": {
+            "title": "RNA fusion analysis options",
+            "type": "object",
+            "description": "Options to adjust the RNA fusion analysis",
+            "fa_icon": "fas fa-calculator",
+            "properties": {
+                "jaffal_ref_dir": {
+                    "type": "string",
+                    "default": "for_jaffal",
+                    "description": "Specifies the reference directory for JAFFAL.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
+                "skip_fusion_analysis": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip differential analysis with DESeq2 and DEXSeq."
+                }
+            }
+        },
+        "rna_modification_analysis_options": {
+            "title": "RNA modification analysis options",
+            "type": "object",
+            "description": "Options to adjust the RNA modification analysis",
+            "default": "",
+            "fa_icon": "fas fa-calculator",
+            "properties": {
+                "skip_modification_analysis": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip RNA modification analysis."
+                },
+                "skip_xpore": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip differential modification analysis with xpore."
+                },
+                "skip_m6anet": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip m6A detection with m6anet."
+                }
+            }
+        },
         "process_skipping_options": {
             "title": "Process skipping options",
             "type": "object",
@@ -492,6 +535,12 @@
         },
         {
             "$ref": "#/definitions/differential_analysis_options"
+        },
+        {
+            "$ref": "#/definitions/rna_fusion_analysis_options"
+        },
+        {
+            "$ref": "#/definitions/rna_modification_analysis_options"
         },
         {
             "$ref": "#/definitions/process_skipping_options"

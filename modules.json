@@ -32,6 +32,9 @@
             },
             "stringtie/merge": {
                 "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+            },
+            "untar": {
+                "git_sha": "20d8250d9f39ddb05dfb437603aaf99b5c0b2b41"
             }
         }
     }
