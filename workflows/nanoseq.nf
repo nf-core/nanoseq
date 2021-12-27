@@ -118,6 +118,7 @@ include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtool
 include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'
 include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'
 include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'
+include { RNA_MODIFICATION_XPORE_M6ANET    } from '../subworkflows/local/rna_modifications_xpore_m6anet'
 include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fusions_jaffal'
 
 ////////////////////////////////////////////////////
@@ -337,6 +338,9 @@ workflow NANOSEQ{
         ch_view_sortbam
             .map { it -> [ it[0], it[3] ] }
             .set { ch_sortbam }
+        ch_view_sortbam
+            .map { it -> [ it[0], it[3], it[4] ] }
+            .set { ch_nanopolish_sortbam }
     } else {
         ch_sample
             .map { it -> if (it[6].toString().endsWith('.bam')) [ it[0], it[6] ] }
@@ -398,6 +402,13 @@ workflow NANOSEQ{
             ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.first().ifEmpty(null))
             ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.dexseq_version.first().ifEmpty(null))
         }
+    }
+
+    if (!params.skip_modification_analysis && params.protocol == 'directRNA') {
+        /*
+         * SUBWORKFLOW: RNA modification detection with xPore and m6anet
+         */
+        RNA_MODIFICATION_XPORE_M6ANET( ch_sample, ch_nanopolish_sortbam )
     }
 
     if (!params.skip_fusion_analysis && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {

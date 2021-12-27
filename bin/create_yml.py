@@ -24,7 +24,7 @@ for condition in dict:
     r=0
     for sample in dict[condition]:
         r+=1
-        outfile.write('        rep'+str(r)+': '+sample+'/xpore'+'\n')
+        outfile.write('        rep'+str(r)+': '+sample+'\n')
 
 outfile.write('\n'+'out: ./diffmod_outputs'+'\n'+'\n')
 
