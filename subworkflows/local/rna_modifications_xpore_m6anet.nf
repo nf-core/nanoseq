@@ -12,9 +12,9 @@ workflow RNA_MODIFICATION_XPORE_M6ANET {
     main:
 
     ch_sample
-         .join(ch_nanopolish_sortbam)
-         .map { it -> [ it[0], it[2], it[3], it[7], it[6], it[8], it[9] ] }
-         .set { ch_nanopolish_input }
+        .join(ch_nanopolish_sortbam)
+        .map { it -> [ it[0], it[2], it[3], it[7], it[6], it[8], it[9] ] }
+        .set { ch_nanopolish_input }
 
     /*
      * Align current signals to reference with Nanopolish

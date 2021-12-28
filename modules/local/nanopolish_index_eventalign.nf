@@ -9,14 +9,14 @@ process NANOPOLISH_INDEX_EVENTALIGN {
 
     input:
     tuple val(meta), path(genome), path(gtf), path(fast5), path(fastq), path(bam), path(bai)
-    
+
     output:
     tuple val(meta), path(genome), path(gtf), path("*eventalign.txt"), path("*summary.txt"), emit: nanopolish_outputs
     path "versions.yml"        , emit: versions
 
     script:
     sample_summary = "$meta.id" +"_summary.txt"
-    sample_eventalign = "$meta.id" +"_eventalign.txt" 
+    sample_eventalign = "$meta.id" +"_eventalign.txt"
     """
     nanopolish index -d $fast5 $fastq
     nanopolish eventalign  --reads $fastq --bam $bam --genome $genome --scale-events --signal-index --summary $sample_summary --threads $params.guppy_cpu_threads > $sample_eventalign

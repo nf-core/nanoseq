@@ -8,7 +8,7 @@ process M6ANET_INFERENCE {
 
     input:
     tuple val(meta), path(input_dir)
-    
+
     output:
     path "*", emit: m6anet_outputs
     path "versions.yml"        , emit: versions

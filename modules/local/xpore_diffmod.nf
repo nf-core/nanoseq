@@ -6,7 +6,7 @@ process XPORE_DIFFMOD {
 
     input:
     val dataprep_dirs
-    
+
     output:
     path "diffmod*", emit: diffmod_outputs
     path "versions.yml"        , emit: versions

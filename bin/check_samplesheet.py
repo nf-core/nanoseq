@@ -94,6 +94,7 @@ def check_samplesheet(file_in, file_out):
                     barcode = 'barcode%s' % (barcode.zfill(2))
 
             ## Check input file extension
+            nanopolish_fast5 = ''
             if input_file:
                 if input_file.find(" ") != -1:
                     print_error("Input file contains spaces!", 'Line', line)
