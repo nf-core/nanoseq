@@ -19,7 +19,7 @@ process NANOPOLISH_INDEX_EVENTALIGN {
     sample_eventalign = "$meta.id" +"_eventalign.txt"
     """
     nanopolish index -d $fast5 $fastq
-    nanopolish eventalign  --reads $fastq --bam $bam --genome $genome --scale-events --signal-index --summary $sample_summary --threads $params.guppy_cpu_threads > $sample_eventalign
+    nanopolish eventalign  --reads $fastq --bam $bam --genome $genome --scale-events --signal-index --summary $sample_summary --threads $task.cpus > $sample_eventalign
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

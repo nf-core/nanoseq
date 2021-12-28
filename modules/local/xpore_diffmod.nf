@@ -15,7 +15,7 @@ process XPORE_DIFFMOD {
     diffmod_config = "--config $workflow.workDir/*/*/diffmod_config.yml"
     """
     create_yml.py diffmod_config.yml $dataprep_dirs
-    xpore diffmod $diffmod_config --n_processes $params.max_cpus
+    xpore diffmod $diffmod_config --n_processes $task.cpus
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

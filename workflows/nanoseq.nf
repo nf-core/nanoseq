@@ -144,10 +144,34 @@ def multiqc_report      = []
 
 workflow NANOSEQ{
 
+    // Pre-download test-dataset to get files for '--input_path' parameter
+    // Nextflow is unable to recursively download directories via HTTPS
+    if (workflow.profile.contains('test') && !workflow.profile.contains('vc')){
+        if (!params.skip_basecalling || !params.skip_modification_analysis) {
+            if (!isOffline()) {
+                GET_TEST_DATA ().set { ch_input_path }
+            } else {
+                exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
+            }
+        } else {
+            if (params.input_path) {
+                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+            } else {
+                ch_input_path = 'not_changed'
+            }
+        }
+    } else {
+        if (params.input_path) {
+            ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+        } else {
+            ch_input_path = 'not_changed'
+        }
+    }
+
     /*
      * SUBWORKFLOW: Read in samplesheet, validate and stage input files
      */
-    INPUT_CHECK ( ch_input )
+    INPUT_CHECK ( ch_input, ch_input_path )
         .set { ch_sample }
 
     ch_software_versions = Channel.empty()
@@ -157,19 +181,6 @@ workflow NANOSEQ{
             .map { it[0] }
             .set { ch_sample_name }
 
-        // Pre-download test-dataset to get files for '--input_path' parameter
-        // Nextflow is unable to recursively download directories via HTTPS
-        if (workflow.profile.contains('test')) {
-            if (!isOffline()) {
-                GET_TEST_DATA ().set { ch_input_path }
-            } else {
-                exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
-            }
-        } else {
-            if (params.input_path) {
-                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
-            }
-        }
         /*
          * MODULE: Basecalling and demultipexing using Guppy
          */

@@ -12,6 +12,7 @@ def parse_args(args=None):
 
     parser = argparse.ArgumentParser(description=Description, epilog=Epilog)
     parser.add_argument("FILE_IN", help="Input samplesheet file.")
+    parser.add_argument("UPDATED_PATH", help="Input path for test_nobc_nodx_rnamod")
     parser.add_argument("FILE_OUT", help="Output file.")
     return parser.parse_args(args)
 
@@ -35,7 +36,7 @@ def print_error(error, context="Line", context_str=""):
     sys.exit(1)
 
 
-def check_samplesheet(file_in, file_out):
+def check_samplesheet(file_in, updated_path, file_out):
     """
     This function checks that the samplesheet follows the following structure:
 
@@ -105,6 +106,8 @@ def check_samplesheet(file_in, file_out):
                 elif input_file.endswith(".bam"):
                     input_extensions.append("*.bam")
                 else:
+                    if updated_path != "not_changed":
+                        input_file='/'.join([updated_path,input_file.split("/")[-1]])
                     list_dir         = os.listdir(input_file)
                     nanopolish_fast5 = input_file
                     if not (all(fname.endswith('.fast5') for fname in list_dir)):
@@ -186,7 +189,7 @@ def check_samplesheet(file_in, file_out):
 
 def main(args=None):
     args = parse_args(args)
-    check_samplesheet(args.FILE_IN, args.FILE_OUT)
+    check_samplesheet(args.FILE_IN, args.UPDATED_PATH, args.FILE_OUT)
 
 
 if __name__ == '__main__':

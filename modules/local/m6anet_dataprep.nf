@@ -16,6 +16,6 @@ process M6ANET_DATAPREP {
     m6anet-dataprep \\
     --eventalign $eventalign \\
     --out_dir $meta.id \\
-    --n_processes $params.max_cpus
+    --n_processes $task.cpus
     """
 }

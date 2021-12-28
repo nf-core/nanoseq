@@ -16,7 +16,7 @@ process M6ANET_INFERENCE {
     script:
     def out_dir = meta.id+"_results"
     """
-    m6anet-run_inference --input_dir $input_dir --out_dir $out_dir  --batch_size 512 --n_processes $params.max_cpus --num_iterations 5 --device cpu
+    m6anet-run_inference --input_dir $input_dir --out_dir $out_dir  --batch_size 512 --n_processes $task.cpus --num_iterations 5 --device cpu
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

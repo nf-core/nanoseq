@@ -16,7 +16,7 @@ process XPORE_DATAPREP {
     xpore dataprep \\
     --eventalign $eventalign \\
     --out_dir $meta.id \\
-    --n_processes $params.max_cpus \\
+    --n_processes $task.cpus \\
     --genome --gtf_or_gff $gtf --transcript_fasta $genome
     """
 }
