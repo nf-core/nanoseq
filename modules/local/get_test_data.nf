@@ -2,7 +2,7 @@ process GET_TEST_DATA {
     container "docker.io/yuukiiwa/git:latest"
 
     output:
-    path "test-datasets/fast5/$barcoded/*"  , emit: ch_input_path
+    path "test-datasets/fast5/$barcoded/"  , emit: ch_input_path
 
     script:
     barcoded = workflow.profile.contains('test_bc_nodx') ? "nonbarcoded" : "barcoded"
