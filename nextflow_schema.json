@@ -63,9 +63,8 @@
             "properties": {
                 "input_path": {
                     "type": "string",
-                    "format": "file-path",
-                    "description": "Path to Nanopore run directory files (e.g. 'fastq_pass/*') or a basecalled fastq file that requires demultiplexing. The latter can only be provided in conjunction with the '--skip_basecalling' parameter.",
-                    "fa_icon": "far fa-file-code"
+                    "description": "Path to Nanopore run directory (e.g. 'fastq_pass/') or a basecalled fastq file that requires demultiplexing. The latter can only be provided in conjunction with the '--skip_basecalling' parameter.",
+                    "fa_icon": "fas fa-folder-open"
                 },
                 "flowcell": {
                     "type": "string",

@@ -9,7 +9,7 @@ process GUPPY {
     }
 
     input:
-    path(input_path), stageAs: 'input_path/*'
+    path(input_path)
     val meta
     path guppy_config
     path guppy_model
@@ -30,7 +30,7 @@ process GUPPY {
     if (params.guppy_model)  model  = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
     """
     guppy_basecaller \\
-        --input_path input_path \\
+        --input_path $input_path \\
         --save_path ./basecalling \\
         --records_per_fastq 0 \\
         --compress_fastq \\
