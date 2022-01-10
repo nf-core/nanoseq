@@ -307,9 +307,9 @@ workflow NANOSEQ{
             /*
             * SUBWORKFLOW: DNA variant calling
             */
-            ch_medaka_version = Channel.empty()
-            ch_sniffles_version = Channel.empty()
             DNA_VARIANT_CALLING ( ch_view_sortbam, ch_index.map{ it [2] }, params.skip_medaka, params.skip_sniffles )
+            ch_software_versions = ch_software_versions.mix(DNA_VARIANT_CALLING.out.sniffles_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(DNA_VARIANT_CALLING.out.medaka_version.first().ifEmpty(null))
         }
 
         ch_bedtools_version = Channel.empty()
