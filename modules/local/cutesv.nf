@@ -19,12 +19,12 @@ process CUTESV {
     """
     cuteSV \
         ${bam} \
-        ${fasta} \ 
+        ${fasta} \
         ${meta.id}_cuteSV.vcf \
         . \
         --threads $task.cpus \
         --sample ${meta.id} \
-        --genotype 
+        --genotype
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
