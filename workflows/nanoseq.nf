@@ -149,7 +149,14 @@ workflow NANOSEQ{
     if (workflow.profile.contains('test') && !workflow.profile.contains('vc')){
         if (!params.skip_basecalling || !params.skip_modification_analysis) {
             if (!isOffline()) {
-                GET_TEST_DATA ().set { ch_input_path }
+                GET_TEST_DATA ()
+                if (params.skip_modification_analysis){
+                    GET_TEST_DATA.out.ch_input_fast5s_path
+                        .set { ch_input_path }
+                } else {
+                    GET_TEST_DATA.out.ch_input_dir_path
+                        .set { ch_input_path }
+                }
             } else {
                 exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
             }

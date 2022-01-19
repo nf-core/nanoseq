@@ -2,11 +2,11 @@ process GET_TEST_DATA {
     container "docker.io/yuukiiwa/git:latest"
 
     output:
-    path "test-datasets/fast5/$barcoded/*"  , emit: ch_input_path
+    path "test-datasets/fast5/$barcoded/*"  , emit: ch_input_fast5s_path
+    path "test-datasets/modification_fast5_fastq/$barcoded/"   , emit: ch_input_dir_path
 
     script:
-    subdir = workflow.profile.contains('test_nobc_nodx_rnamod') ? "modification_fast5_fastq" : "fast5"
-    barcoded = (workflow.profile.contains('test_bc_nodx') || workflow.profile.contains('test_nobc_nodx_rnamod')) ? "nonbarcoded" : "barcoded"
+    barcoded = (workflow.profile.contains('test_bc_nodx') || workflow.profile.contains('rnamod')) ? "nonbarcoded" : "barcoded"
     """
     git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
     """
