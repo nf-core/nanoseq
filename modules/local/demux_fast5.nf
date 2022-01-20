@@ -32,9 +32,10 @@ process DEMUX_FAST5 {
 	--input  $input_fast5_path \\
 	--save_path ./demultiplexed_fast5 \\
 	--summary_file $input_summary
+	
 	cat <<-END_VERSIONS > versions.yml
 	${getProcessName(task.process)}:
-		${getSoftwareName(task.process)}: \$(echo \$(python -c\'import ont_fast5_api;print(ont_fast5_api.__version__)\'))
+	    ${getSoftwareName(task.process)}: \$(echo \$(python -c\'import ont_fast5_api;print(ont_fast5_api.__version__)\'))
 	END_VERSIONS
 	"""
 }

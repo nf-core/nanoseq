@@ -27,7 +27,6 @@ process GUPPY {
 	path "fastq/*.fastq.gz"                    , emit: fastq
 	tuple val(meta), path("basecalling/*.txt") , emit: summary
 	path "basecalling/*"                       , emit: called
-	path "workspace"					   	   , optional:true, emit: fast5, type: 'dir' 	
 	path "versions.yml"                        , emit: versions
 
 	script:
@@ -39,7 +38,6 @@ process GUPPY {
 	if (params.guppy_config) config = file(params.guppy_config).exists() ? "--config ./$guppy_config" : "--config $params.guppy_config"
 	def model    = ""
 	if (params.guppy_model)  model  = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
-	def fast5_out = params.output_fast5 ? "--fast5_out " : ""
 	"""
 	guppy_basecaller \\
 		--input_path $input_path \\
@@ -51,12 +49,11 @@ process GUPPY {
 		$barcode_ends \\
 		$config \\
 		$trim_barcodes \\
-		$fast5_out \\
 		$model
 
 	cat <<-END_VERSIONS > versions.yml
 	${getProcessName(task.process)}:
-		${getSoftwareName(task.process)}: \$(echo \$(guppy_basecaller --version 2>&1) | sed -r 's/.{81}//')
+	    ${getSoftwareName(task.process)}: \$(echo \$(guppy_basecaller --version 2>&1) | sed -r 's/.{81}//')
 	END_VERSIONS
 
 	## Concatenate fastq files
@@ -71,11 +68,6 @@ process GUPPY {
 		done
 	else
 		cat *.fastq.gz > ../fastq/${meta.id}.fastq.gz
-	fi
-	##remove workspace from basecalling direcoties
-	if [ "\$(find . -type d -name "workspace" )" != "" ]
-	then
-		mv workspace ../
 	fi
 	"""
 }
