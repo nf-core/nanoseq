@@ -101,14 +101,12 @@ def multiqc_options         = modules['multiqc']
 multiqc_options.args       += params.multiqc_title ? " --title \"$params.multiqc_title\"" : ''
 if (params.skip_alignment)  { multiqc_options['publish_dir'] = '' }
 
-def guppy_options    = modules['guppy']
 def qcat_options     = modules['qcat']
 def nanolyse_options = modules['nanolyse']
 def bambu_options    = modules['bambu']
 
 include { GET_TEST_DATA } from '../modules/local/get_test_data' addParams( options: [:] )
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta' addParams( options: [:] )
-include { GUPPY                 } from '../modules/local/guppy'                   addParams( options: guppy_options                )
 include { QCAT                  } from '../modules/local/qcat'                    addParams( options: qcat_options                 )
 include { BAM_RENAME            } from '../modules/local/bam_rename'              addParams( options: [:]                          )
 include { BAMBU                 } from '../modules/local/bambu'                   addParams( options: bambu_options                )
@@ -118,6 +116,8 @@ include { MULTIQC               } from '../modules/local/multiqc'               
 /*
  * SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
  */
+def guppy_options               = modules['guppy']
+def demux_fast5_options         = modules['demux_fast5']
 def pycoqc_options              = modules['pycoqc']
 def nanoplot_options            = modules['nanoplot']
 def fastqc_options              = modules['fastqc']
@@ -135,6 +135,7 @@ def deseq2_options              = modules['deseq2']
 def dexseq_options              = modules['dexseq']
 
 include { INPUT_CHECK                      } from '../subworkflows/local/input_check'                       addParams( options: [:] )
+include { GUPPY_BASECALL_DEMULTIPLEX       } from '../subworkflows/local/guppy_basecall_demultiplex'       addParams( guppy_options: guppy_options, demux_fast5_options: demux_fast5_options )
 include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'                    addParams( genome_options: genome_options )
 include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options, samtools_options: samtools_sort_options )
 include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options, samtools_options: samtools_sort_options )
@@ -195,24 +196,26 @@ workflow NANOSEQ{
             }
         }
         /*
-         * MODULE: Basecalling and demultipexing using Guppy
+         * SUBWORKFLOW: Basecalling and demultiplexing fast5 using Guppy and ont_fast5_api
          */
-        GUPPY ( ch_input_path, ch_sample_name, ch_guppy_config.ifEmpty([]), ch_guppy_model.ifEmpty([]) )
-        ch_guppy_summary = GUPPY.out.summary
-        ch_software_versions = ch_software_versions.mix(GUPPY.out.versions.ifEmpty(null))
+        GUPPY_BASECALL_DEMULTIPLEX ( ch_input_path, ch_sample_name, ch_guppy_config.ifEmpty([]), ch_guppy_model.ifEmpty([]), ch_sample )
+        ch_guppy_summary = GUPPY_BASECALL_DEMULTIPLEX.out.ch_guppy_summary
+		ch_software_versions = ch_software_versions.mix(GUPPY_BASECALL_DEMULTIPLEX.out.guppy_version.first().ifEmpty(null))
+		ch_fastq = GUPPY_BASECALL_DEMULTIPLEX.out.ch_fastq
+		
+		ch_software_versions = ch_software_versions.mix(GUPPY_BASECALL_DEMULTIPLEX.out.dumex_fast5_version.ifEmpty(null)) 
+        // if (params.skip_demultiplexing){
+            // ch_sample
+                // .map { it -> [ it[0], it[0].id, it[2], it[3], it[4], it[5] ] }
+                // .set { ch_sample }
+        // }
 
-        if (params.skip_demultiplexing){
-            ch_sample
-                .map { it -> [ it[0], it[0].id, it[2], it[3], it[4], it[5] ] }
-                .set { ch_sample }
-        }
-
-        GUPPY.out.fastq
-            .flatten()
-            .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
-            .join(ch_sample, by: 1) // join on barcode
-            .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
-            .set { ch_fastq }
+        // GUPPY.out.fastq
+            // .flatten()
+            // .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
+            // .join(ch_sample, by: 1) // join on barcode
+            // .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
+            // .set { ch_fastq }
     } else {
         ch_guppy_summary = Channel.empty()
 

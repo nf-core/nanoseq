@@ -87,6 +87,16 @@
                     "fa_icon": "fas fa-barcode",
                     "description": "Require barcode on both ends for Guppy basecaller."
                 },
+                "trim_barcodes": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-barcode",
+                    "description": "Wether to trim the barcodes from the output sequences in the FastQ files from Guppy basecaller."
+                },
+                "output_fast5": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-folder-open",
+                    "description": "Output fast5 files. if `--skip_demultiplexing_fast5` is set, output fast5 files will be saved as is."
+                },
                 "guppy_config": {
                     "type": "string",
                     "help_text": "Cannot be used in conjunction with `--flowcell` and `--kit`. This can be a local file (e.g. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data/` directory of Guppy.",
@@ -146,6 +156,11 @@
                 "skip_demultiplexing": {
                     "type": "boolean",
                     "description": "Skip demultiplexing with Guppy/qcat.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+				"skip_demultiplexing_fast5": {
+                    "type": "boolean",
+                    "description": "Skip demultiplexing of fast5 files with Guppy/demux_fast5.",
                     "fa_icon": "fas fa-fast-forward"
                 },
                 "run_nanolyse": {
