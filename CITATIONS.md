@@ -26,6 +26,8 @@
 * [Minimap2](https://pubmed.ncbi.nlm.nih.gov/29750242/)
     > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PMID: 29750242; PMCID: PMC6137996.
 
+* [Medaka](https://github.com/nanoporetech/medaka)
+
 * [MultiQC](https://www.ncbi.nlm.nih.gov/pubmed/27312411/)
     > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
 
@@ -42,6 +44,9 @@
 
 * [SAMtools](https://www.ncbi.nlm.nih.gov/pubmed/19505943/)
     > Li H, Handsaker B, Wysoker A, Fennell T, Ruan J, Homer N, Marth G, Abecasis G, Durbin R; 1000 Genome Project Data Processing Subgroup. The Sequence Alignment/Map format and SAMtools. Bioinformatics. 2009 Aug 15;25(16):2078-9. doi: 10.1093/bioinformatics/btp352. Epub 2009 Jun 8. PubMed PMID: 19505943; PubMed Central PMCID: PMC2723002.
+
+* [Sniffles](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5990442/)
+    > Sedlazeck FJ, Rescheneder P, Smolka M, Fang H, Nattestad M, von Haeseler A, Schatz MC. Accurate detection of complex structural variations using single-molecule sequencing. Nat Methods. 2018 Jun;15(6):461-468. doi: 10 1038/s41592-018-0001-7. Epub 2018 Apr 30. PMID: 29713083; PMCID: PMC5990442.
 
 * [StringTie2](https://www.ncbi.nlm.nih.gov/pubmed/31842956/)
     > Kovaka S, Zimin AV, Pertea GM, Razaghi R, Salzberg SL, Pertea M. Transcriptome assembly from long-read RNA-seq alignments with StringTie2 Genome Biol. 2019 Dec 16;20(1):278. doi: 10.1186/s13059-019-1910-1. PubMed PMID: 31842956; PubMed Central PMCID: PMC6912988.

@@ -3,12 +3,50 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.2] - date
+## [3.0.1] - ?
 
 ### Major enhancements
 
 * Add `demux_fast5` module to output demultiplexed fast5 files when `--output_demultiplex_fast5` is set 
 * Add `--trim_barcodes` in Guppy basecaller to trim the barcodes fromm output fastq
+=======
+## [3.0.0] - ?
+
+### Major enhancements
+
+* Add DNA variant calling functionality
+* Port pipeline to the updated Nextflow DSL2 syntax adopted on nf-core/modules
+    * Removed `--publish_dir_mode` as it is no longer required for the new syntax
+* Bump minimum Nextflow version from 21.04.0 -> 21.10.3
+* Update pipeline template to nf-core/tools `2.2`
+* Update `bambu` version from `1.0.2` to `2.0.0`
+* Update `multiqc` version from `1.10.1` to `1.11`
+
+### Parameters
+
+* Added `--call_variants` to detect DNA variants
+* Added `--split_mnps` to split multi-nucleotide polymorphisms into single nucleotide polymorphisms
+* Added `--phase_vcf` to output a phased vcf
+* Added `--skip_medaka` to skip `medaka_variant`
+* Added `--skip_sniffles` to skip `sniffles`
+
+### Software dependencies
+
+| Dependency              | Old version | New version |
+|-------------------------|-------------|-------------|
+| `bioconductor-bambu`    | 1.0.2       | 2.0.0       |
+| `bioconductor-bsgenome` | 1.58.0      | 1.62.0      |
+| `medaka`                |             | 1.4.4       |
+| `multiqc`               | 1.10.1      | 1.11        |
+| `sniffles`              |             | 1.0.12      |
+
+### Bug fix
+
+* The `GET_TEST_DATA` process now uses checks for any file in the path.
+
+> **NB:** Dependency has been __updated__ if both old and new version information is present.
+> **NB:** Dependency has been __added__ if just the new version information is present.
+> **NB:** Dependency has been __removed__ if version information isn't present.
 
 ## [2.0.1] - 2021-11-29
 

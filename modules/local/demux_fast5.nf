@@ -1,9 +1,3 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-params.options = [:]
-def options    = initOptions(params.options)
-
 process DEMUX_FAST5 {
 	label 'process_medium'
 	publishDir "${params.outdir}",
@@ -19,7 +13,7 @@ process DEMUX_FAST5 {
 	}
 
 	input:
-	path(input_fast5_path)
+	path(input_path), stageAs: 'input_path/*'
 	tuple val(meta), path(input_summary)
 
 	output:
@@ -29,13 +23,13 @@ process DEMUX_FAST5 {
 	script:
 	"""
 	demux_fast5 \\
-	--input  $input_fast5_path \\
+	--input  input_path \\
 	--save_path ./demultiplexed_fast5 \\
 	--summary_file $input_summary
 	
 	cat <<-END_VERSIONS > versions.yml
-	${getProcessName(task.process)}:
-	    ${getSoftwareName(task.process)}: \$(echo \$(python -c\'import ont_fast5_api;print(ont_fast5_api.__version__)\'))
+	"${task.process}":
+	    demux_fast5: \$(echo \$(python -c\'import ont_fast5_api;print(ont_fast5_api.__version__)\'))
 	END_VERSIONS
 	"""
 }

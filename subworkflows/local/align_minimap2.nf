@@ -2,13 +2,8 @@
  * Alignment with MINIMAP2
  */
 
-params.index_options    = [:]
-params.align_options    = [:]
-params.samtools_options = [:]
-
-include { MINIMAP2_INDEX          } from '../../modules/local/minimap2_index'        addParams( options: params.index_options    )
-include { MINIMAP2_ALIGN          } from '../../modules/local/minimap2_align'        addParams( options: params.align_options    )
-include { BAM_SORT_SAMTOOLS       } from './bam_sort_samtools'              addParams( options: params.samtools_options )
+include { MINIMAP2_INDEX          } from '../../modules/local/minimap2_index'
+include { MINIMAP2_ALIGN          } from '../../modules/local/minimap2_align'
 
 workflow ALIGN_MINIMAP2 {
     take:
@@ -36,17 +31,8 @@ workflow ALIGN_MINIMAP2 {
     MINIMAP2_ALIGN ( ch_index )
     ch_align_sam = MINIMAP2_ALIGN.out.align_sam
 
-    /*
-     * Convert SAM to BAM, sort, index BAM file and run samtools stats, flagstat and idxstats
-     */
-    BAM_SORT_SAMTOOLS ( ch_align_sam )
-    ch_sortbam               = BAM_SORT_SAMTOOLS.out.sortbam
-    ch_sortbam_stats_multiqc = BAM_SORT_SAMTOOLS.out.sortbam_stats_multiqc
-    samtools_version         = BAM_SORT_SAMTOOLS.out.versions
-
     emit:
+    ch_index
     minimap2_version
-    ch_sortbam
-    ch_sortbam_stats_multiqc
-    samtools_version
+    ch_align_sam
 }
