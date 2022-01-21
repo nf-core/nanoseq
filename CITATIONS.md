@@ -23,6 +23,12 @@
 
 * [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
+* [JAFFAL](https://doi.org/10.1186/s13059-021-02588-5)
+    > Davidson NM, et al., JAFFAL: detecting fusion genes with long-read transcriptome sequencing. Genome Biology (2022)
+
+* [m6anet](https://www.biorxiv.org/content/10.1101/2021.09.20.461055v1)
+    > Hendra C, et al., Detection of m6A from direct RNA sequencing using a Multiple Instance Learning framework. bioRXiv (2021)
+
 * [Minimap2](https://pubmed.ncbi.nlm.nih.gov/29750242/)
     > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PMID: 29750242; PMCID: PMC6137996.
 
@@ -53,6 +59,9 @@
 
 * [UCSC tools](https://www.ncbi.nlm.nih.gov/pubmed/20639541/)
     > Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics. 2010 Sep 1;26(17):2204-7. doi: 10.1093/bioinformatics/btq351. Epub 2010 Jul 17. PubMed PMID: 20639541; PubMed Central PMCID: PMC2922891.
+
+* [xPore](https://doi.org/10.1038/s41587-021-00949-w)
+    > Pratanwanich PN, et al.,Identification of differential RNA modifications from nanopore direct RNA sequencing with xPore. Nat Biotechnol (2021)
 
 ## R packages
 

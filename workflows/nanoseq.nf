@@ -118,6 +118,8 @@ include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtool
 include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'
 include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'
 include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'
+include { RNA_MODIFICATION_XPORE_M6ANET    } from '../subworkflows/local/rna_modifications_xpore_m6anet'
+include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fusions_jaffal'
 
 ////////////////////////////////////////////////////
 /* --    IMPORT NF-CORE MODULES/SUBWORKFLOWS   -- */
@@ -142,10 +144,41 @@ def multiqc_report      = []
 
 workflow NANOSEQ{
 
+    // Pre-download test-dataset to get files for '--input_path' parameter
+    // Nextflow is unable to recursively download directories via HTTPS
+    if (workflow.profile.contains('test') && !workflow.profile.contains('vc')){
+        if (!params.skip_basecalling || !params.skip_modification_analysis) {
+            if (!isOffline()) {
+                GET_TEST_DATA ()
+                if (params.skip_modification_analysis){
+                    GET_TEST_DATA.out.ch_input_fast5s_path
+                        .set { ch_input_path }
+                } else {
+                    GET_TEST_DATA.out.ch_input_dir_path
+                        .set { ch_input_path }
+                }
+            } else {
+                exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
+            }
+        } else {
+            if (params.input_path) {
+                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+            } else {
+                ch_input_path = 'not_changed'
+            }
+        }
+    } else {
+        if (params.input_path) {
+            ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+        } else {
+            ch_input_path = 'not_changed'
+        }
+    }
+
     /*
      * SUBWORKFLOW: Read in samplesheet, validate and stage input files
      */
-    INPUT_CHECK ( ch_input )
+    INPUT_CHECK ( ch_input, ch_input_path )
         .set { ch_sample }
 
     ch_software_versions = Channel.empty()
@@ -155,19 +188,6 @@ workflow NANOSEQ{
             .map { it[0] }
             .set { ch_sample_name }
 
-        // Pre-download test-dataset to get files for '--input_path' parameter
-        // Nextflow is unable to recursively download directories via HTTPS
-        if (workflow.profile.contains('test')) {
-            if (!isOffline()) {
-                GET_TEST_DATA ().set { ch_input_path }
-            } else {
-                exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
-            }
-        } else {
-            if (params.input_path) {
-                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
-            }
-        }
         /*
          * MODULE: Basecalling and demultipexing using Guppy
          */
@@ -336,6 +356,9 @@ workflow NANOSEQ{
         ch_view_sortbam
             .map { it -> [ it[0], it[3] ] }
             .set { ch_sortbam }
+        ch_view_sortbam
+            .map { it -> [ it[0], it[3], it[4] ] }
+            .set { ch_nanopolish_sortbam }
     } else {
         ch_sample
             .map { it -> if (it[6].toString().endsWith('.bam')) [ it[0], it[6] ] }
@@ -397,6 +420,21 @@ workflow NANOSEQ{
             ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.first().ifEmpty(null))
             ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.dexseq_version.first().ifEmpty(null))
         }
+    }
+
+    if (!params.skip_modification_analysis && params.protocol == 'directRNA') {
+        /*
+         * SUBWORKFLOW: RNA modification detection with xPore and m6anet
+         */
+        RNA_MODIFICATION_XPORE_M6ANET( ch_sample, ch_nanopolish_sortbam )
+    }
+
+    if (!params.skip_fusion_analysis && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
+
+        /*
+        * SUBWORKFLOW: RNA_FUSIONS_JAFFAL
+        */
+        RNA_FUSIONS_JAFFAL( ch_sample, params.jaffal_ref_dir )
     }
 
     /*

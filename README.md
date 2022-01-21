@@ -48,6 +48,8 @@ On release, automated continuous integration tests run the pipeline on a [full-s
         * bambu performs both transcript reconstruction and quantification.
         * When StringTie2 is chosen, each sample can be processed individually and combined. After which, [`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/) will be used for both gene and transcript quantification.
     * Differential expression analysis ([`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) and/or [`DEXSeq`](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html))
+    * RNA modification detection ([`xpore`](https://github.com/GoekeLab/xpore) and/or [`m6anet`](https://github.com/GoekeLab/m6anet))
+    * RNA fusion detection ([`JAFFAL`](https://github.com/Oshlack/JAFFA))
 9. Present QC for raw read and alignment results ([`MultiQC`](https://multiqc.info/docs/))
 
 ## Quick Start
