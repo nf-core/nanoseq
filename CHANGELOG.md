@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Add `demux_fast5` module to output demultiplexed fast5 files when `--output_demultiplex_fast5` is set 
 * Add `--trim_barcodes` in Guppy basecaller to trim the barcodes fromm output fastq
-=======
+
 ## [3.0.0] - ?
 
 ### Major enhancements
