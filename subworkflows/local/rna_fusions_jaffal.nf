@@ -1,3 +1,7 @@
+/*
+ * RNA FUSION DETECTION WITH JAFFAL
+ */
+
 include { GET_JAFFAL_REF } from '../../modules/local/get_jaffal_ref'
 include { UNTAR          } from '../../modules/nf-core/modules/untar/main'
 include { JAFFAL         } from '../../modules/local/jaffal'
@@ -27,8 +31,4 @@ workflow RNA_FUSIONS_JAFFAL {
     */
     JAFFAL( ch_jaffal_input, ch_jaffal_ref_dir )
 
-//    emit:
-//    ch_nanopolish_outputs
-//    ch_dataprep_dirs
-//    nanopolish_version
 }

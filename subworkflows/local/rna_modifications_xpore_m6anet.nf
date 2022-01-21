@@ -1,3 +1,7 @@
+/*
+ * RNA MODIFICATION DETECTION WITH XPORE AND M6ANET
+ */
+
 include { NANOPOLISH_INDEX_EVENTALIGN } from '../../modules/local/nanopolish_index_eventalign'
 include { XPORE_DATAPREP        } from '../../modules/local/xpore_dataprep'
 include { XPORE_DIFFMOD         } from '../../modules/local/xpore_diffmod'

@@ -1,8 +1,10 @@
 process XPORE_DIFFMOD {
     label 'process_medium'
 
-//  conda     (params.enable_conda ? "bioconda::nanopolish==0.13.2" : null) // need to get xpore onto conda
-    container "docker.io/yuukiiwa/xpore:2.1"
+    conda     (params.enable_conda ? "bioconda::xpore=2.1.0" : null)
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/xpore:2.1--pyh5e36f6f_0' :
+        'quay.io/biocontainers/xpore:2.1--pyh5e36f6f_0' }"
 
     input:
     val dataprep_dirs
