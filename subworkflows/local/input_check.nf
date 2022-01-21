@@ -7,9 +7,10 @@ include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check'
 workflow INPUT_CHECK {
     take:
     samplesheet // file: /path/to/samplesheet.csv
+    input_path
 
     main:
-    SAMPLESHEET_CHECK ( samplesheet )
+    SAMPLESHEET_CHECK ( samplesheet, input_path )
         .csv
         .splitCsv ( header:true, sep:',' )
         .map { get_sample_info(it, params.genomes) }
@@ -21,7 +22,7 @@ workflow INPUT_CHECK {
 }
 
 // Function to resolve fasta and gtf file if using iGenomes
-// Returns [ sample, input_file, barcode, fasta, gtf, is_transcripts, annotation_str ]
+// Returns [ sample, input_file, barcode, fasta, gtf, is_transcripts, annotation_str, nanopolish_fast5 ]
 def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     def meta = [:]
     meta.id  = sample.sample
@@ -42,5 +43,5 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     input_file = sample.input_file ? file(sample.input_file, checkIfExists: true) : null
     gtf        = sample.gtf        ? file(sample.gtf, checkIfExists: true)        : gtf
 
-    return [ meta, input_file, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString() ]
+    return [ meta, input_file, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString(), sample.nanopolish_fast5 ]
 }
