@@ -12,6 +12,7 @@ process XPORE_DATAPREP {
 
     output:
     tuple val(meta), path("$meta.id"), emit: dataprep_outputs
+    path "versions.yml"        , emit: versions
 
     script:
     """
@@ -20,5 +21,10 @@ process XPORE_DATAPREP {
     --out_dir $meta.id \\
     --n_processes $task.cpus \\
     --genome --gtf_or_gff $gtf --transcript_fasta $genome
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        xpore: \$( xpore --version | sed -e 's/xpore version //g' )
+    END_VERSIONS
     """
 }

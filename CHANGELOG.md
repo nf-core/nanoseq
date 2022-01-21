@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Major enhancements
 
 * Add DNA variant calling functionality
+* Add RNA modification and fusion detection functionalities
 * Port pipeline to the updated Nextflow DSL2 syntax adopted on nf-core/modules
     * Removed `--publish_dir_mode` as it is no longer required for the new syntax
 * Bump minimum Nextflow version from 21.04.0 -> 21.10.3
@@ -22,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added `--phase_vcf` to output a phased vcf
 * Added `--skip_medaka` to skip `medaka_variant`
 * Added `--skip_sniffles` to skip `sniffles`
+* Added `--skip_modification_analysis` to skip RNA modification detection
+* Added `--skip_xpore` to skip `xpore`
+* Added `--skip_m6anet` to skip `m6anet`
+* Added `--skip_fusion_analysis` to skip RNA fusion detection
+* Added `--jaffal_ref_dir` to indicate the reference directory path required by `JAFFAL`
 
 ### Software dependencies
 
@@ -29,9 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 |-------------------------|-------------|-------------|
 | `bioconductor-bambu`    | 1.0.2       | 2.0.0       |
 | `bioconductor-bsgenome` | 1.58.0      | 1.62.0      |
+| `jaffa`                 |             | 2.0         |
+| `m6anet`                |             | 1.0         |
 | `medaka`                |             | 1.4.4       |
 | `multiqc`               | 1.10.1      | 1.11        |
 | `sniffles`              |             | 1.0.12      |
+| `xpore`                 |             | 2.1         |
 
 ### Bug fix
 

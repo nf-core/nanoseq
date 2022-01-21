@@ -152,6 +152,24 @@ The [bigWig](https://genome.ucsc.edu/goldenpath/help/bigWig.html) format is in a
 
 The creation of these files can be bypassed by setting the parameters `--skip_bigwig`/`--skip_bigbed`.
 
+## Variant calling
+
+<details markdown="1">
+<summary>Output files</summary>
+
+* `minimap2/medaka/<SAMPLE>/round_1.vcf`
+    VCF file with small variants for each sample.
+* `minimap2/sniffles/<sample>_sniffles.vcf`
+    VCF files with unflitered structural variants.
+
+</details>
+
+*Documentation*:
+[Medaka](https://github.com/nanoporetech/medaka), [Sniffles](https://github.com/fritzsedlazeck/Sniffles)
+
+*Description*:
+If the protocol is set to `--protocol DNA` and the *Minimap2* aligner was used, then the `--call_variants` parameter can be invoked to call small variants and structural variants using Medaka and Sniffles, respectively. These steps won't be run if you provide the `--skip_medaka` or `--skip_sniffles` parameters.
+
 ## Transcript Reconstruction and Quantification
 
 <details markdown="1">
@@ -191,8 +209,8 @@ After genomic alignment, novel transcripts can be reconstructed using tools such
 <details markdown="1">
 <summary>Output files</summary>
 
-* `<QUANTIFICATION_METHOD>/deseq2/deseq2.results.txt` - a `.txt` file that can contains differential expression results for genes.
-* `<QUANTIFICATION_METHOD>/dexseq/dexseq.results.txt` - a `.txt` file that can contains differential expression results for transcripts.
+* `<QUANTIFICATION_METHOD>/deseq2/deseq2.results.txt` - a `.txt` file that contains differential expression results for genes.
+* `<QUANTIFICATION_METHOD>/dexseq/dexseq.results.txt` - a `.txt` file that contains differential expression results for transcripts.
 
 </details>
 
@@ -202,23 +220,37 @@ After genomic alignment, novel transcripts can be reconstructed using tools such
 *Description*:
 If multiple conditions and multiple replicates are available then the pipeline is able to run differential analysis on gene and transcripts with DESeq2 and DEXSeq, respectively. These steps won't be run if you provide the `--skip_quantification` or `--skip_differential_analysis` parameters or if all of the samples in the samplesheet don't have the same fasta and GTF reference files.
 
-## Variant calling
+## RNA modification analysis
 
 <details markdown="1">
 <summary>Output files</summary>
 
-* `minimap2/medaka/<SAMPLE>/round_1.vcf`
-    VCF file with small variants for each sample.
-* `minimap2/sniffles/<sample>_sniffles.vcf`
-    VCF files with unflitered structural variants.
+* `rna_modifications/xpore/diffmod/diffmod_outputs/diffmod.table` - a `.csv` file that contains differentially modified sites.
+* `rna_modifications/m6anet/inference/<sample_name>/data.result.csv.gz` - a `.csv` file that contains detected m6A sites.
 
 </details>
 
 *Documentation*:
-[Medaka](https://github.com/nanoporetech/medaka), [Sniffles](https://github.com/fritzsedlazeck/Sniffles)
+[xPore](https://xpore.readthedocs.io/en/latest/), [m6anet](https://m6anet.readthedocs.io/en/latest/)
 
 *Description*:
-If the protocol is set to `--protocol DNA` and the *Minimap2* aligner was used, then the `--call_variants` parameter can be invoked to call small variants and structural variants using Medaka and Sniffles, respectively. These steps won't be run if you provide the `--skip_medaka` or `--skip_sniffles` parameters.
+If multiple conditions are available then the pipeline is able to run differential modification analysis with xPore. These steps won't be run if you provide the `--skip_modification_analysis` or `--skip_xpore` or `--skip_m6anet` parameters.
+
+## RNA fusion analysis
+
+<details markdown="1">
+<summary>Output files</summary>
+
+* `jaffal/jaffa_results.csv` - a `.csv` file that contains detected RNA fusion results.
+* `jaffal/jaffa_results.fasta` - a `.fasta` file that contains the sequence of the detected RNA fusions.
+
+</details>
+
+*Documentation*:
+[jaffal](https://github.com/Oshlack/JAFFA/wiki)
+
+*Description*:
+This step won't be run if you provide the `--skip_fusion_analysis` parameter.
 
 ## MultiQC
 

@@ -10,6 +10,7 @@ process M6ANET_DATAPREP {
 
     output:
     tuple val(meta), path("$meta.id"), emit: dataprep_outputs
+    path "versions.yml"        , emit: versions
 
     script:
     """
@@ -17,5 +18,10 @@ process M6ANET_DATAPREP {
     --eventalign $eventalign \\
     --out_dir $meta.id \\
     --n_processes $task.cpus
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        m6anet: \$( echo 'm6anet 1.0' )
+    END_VERSIONS
     """
 }
