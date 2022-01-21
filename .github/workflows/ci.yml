@@ -105,7 +105,7 @@ jobs:
       NXF_ANSI_LOG: false
     strategy:
       matrix:
-        parameters: [--quantification_method 'stringtie2', --skip_quantification, --skip_differential_analysis]
+        parameters: [--quantification_method 'stringtie2', --skip_quantification]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
