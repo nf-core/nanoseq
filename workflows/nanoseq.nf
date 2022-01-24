@@ -17,70 +17,70 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 
 // Function to check if running offline
 def isOffline() {
-    try {
-        return NXF_OFFLINE as Boolean
-    }
-    catch( Exception e ) {
-        return false
-    }
+	try {
+		return NXF_OFFLINE as Boolean
+	}
+	catch( Exception e ) {
+		return false
+	}
 }
 
 def ch_guppy_model  = Channel.empty()
 def ch_guppy_config = Channel.empty()
 if (!params.skip_basecalling) {
-    // Need to stage guppy_config properly depending on whether its a file or string
-    if (!params.guppy_config) {
-        if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
-        if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!"      }
-    } else if (file(params.guppy_config).exists()) {
-        ch_guppy_config = Channel.fromPath(params.guppy_config)
-    }
+	// Need to stage guppy_config properly depending on whether its a file or string
+	if (!params.guppy_config) {
+		if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
+		if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!"      }
+	} else if (file(params.guppy_config).exists()) {
+		ch_guppy_config = Channel.fromPath(params.guppy_config)
+	}
 
-    // Need to stage guppy_model properly depending on whether its a file or string
-    if (params.guppy_model) {
-        if (file(params.guppy_model).exists()) {
-            ch_guppy_model = Channel.fromPath(params.guppy_model)
-        }
-    }
+	// Need to stage guppy_model properly depending on whether its a file or string
+	if (params.guppy_model) {
+		if (file(params.guppy_model).exists()) {
+			ch_guppy_model = Channel.fromPath(params.guppy_model)
+		}
+	}
 
 } else {
-    if (!params.skip_demultiplexing) {
-        if (!params.barcode_kit) {
-            params.barcode_kit = 'Auto'
-        }
+	if (!params.skip_demultiplexing) {
+		if (!params.barcode_kit) {
+			params.barcode_kit = 'Auto'
+		}
 
-        def qcatBarcodeKitList = ['Auto', 'RBK001', 'RBK004', 'NBD103/NBD104',
-                                'NBD114', 'NBD104/NBD114', 'PBC001', 'PBC096',
-                                'RPB004/RLB001', 'PBK004/LWB001', 'RAB204', 'VMK001', 'DUAL']
+		def qcatBarcodeKitList = ['Auto', 'RBK001', 'RBK004', 'NBD103/NBD104',
+								'NBD114', 'NBD104/NBD114', 'PBC001', 'PBC096',
+								'RPB004/RLB001', 'PBK004/LWB001', 'RAB204', 'VMK001', 'DUAL']
 
-        if (params.barcode_kit && qcatBarcodeKitList.contains(params.barcode_kit)) {
-            if (params.input_path) {
-                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
-            } else {
-                exit 1, "Please specify a valid input fastq file to perform demultiplexing!"
-            }
-        } else {
-            exit 1, "Please provide a barcode kit to demultiplex with qcat. Valid options: ${qcatBarcodeKitList}"
-        }
-    }
+		if (params.barcode_kit && qcatBarcodeKitList.contains(params.barcode_kit)) {
+			if (params.input_path) {
+				ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+			} else {
+				exit 1, "Please specify a valid input fastq file to perform demultiplexing!"
+			}
+		} else {
+			exit 1, "Please provide a barcode kit to demultiplex with qcat. Valid options: ${qcatBarcodeKitList}"
+		}
+	}
 }
 
 if (!params.skip_alignment) {
-    if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
-        exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap2'"
-    }
-    if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
-        exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
-    }
+	if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
+		exit 1, "Invalid aligner option: ${params.aligner}. Valid options: 'minimap2', 'graphmap2'"
+	}
+	if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
+		exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
+	}
 }
 
 if (!params.skip_quantification) {
-    if (params.quantification_method != 'bambu' && params.quantification_method != 'stringtie2') {
-        exit 1, "Invalid transcript quantification option: ${params.quantification_method}. Valid options: 'bambu', 'stringtie2'"
-    }
-    if (params.protocol != 'cDNA' && params.protocol != 'directRNA') {
-        exit 1, "Invalid protocol option if performing quantification: ${params.protocol}. Valid options: 'cDNA', 'directRNA'"
-    }
+	if (params.quantification_method != 'bambu' && params.quantification_method != 'stringtie2') {
+		exit 1, "Invalid transcript quantification option: ${params.quantification_method}. Valid options: 'bambu', 'stringtie2'"
+	}
+	if (params.protocol != 'cDNA' && params.protocol != 'directRNA') {
+		exit 1, "Invalid protocol option if performing quantification: ${params.protocol}. Valid options: 'cDNA', 'directRNA'"
+	}
 }
 
 ////////////////////////////////////////////////////
@@ -97,6 +97,7 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
 include { GUPPY                 } from '../modules/local/guppy'
+include { DEMUX_FAST5           } from '../modules/local/demux_fast5'
 include { QCAT                  } from '../modules/local/qcat'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
 include { BAMBU                 } from '../modules/local/bambu'
@@ -207,6 +208,16 @@ workflow NANOSEQ{
             .join(ch_sample, by: 1) // join on barcode
             .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
             .set { ch_fastq }
+			
+		if (params.output_demultiplex_fast5) {
+
+			/*
+			* MODULE: Demultiplex fast5 files using ont_fast5_api/demux_fast5
+			*/
+			DEMUX_FAST5 ( ch_input_path, ch_guppy_summary )
+			ch_software_versions = ch_software_versions.mix(DEMUX_FAST5.out.versions.ifEmpty(null))
+		}
+
     } else {
         ch_guppy_summary = Channel.empty()
 

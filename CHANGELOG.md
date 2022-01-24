@@ -3,6 +3,13 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] - ?
+
+### Major enhancements
+
+* Add `demux_fast5` module to output demultiplexed fast5 files when `--output_demultiplex_fast5` is set
+* Add `--trim_barcodes` in Guppy basecaller to trim the barcodes fromm output fastq
+
 ## [3.0.0] - ?
 
 ### Major enhancements

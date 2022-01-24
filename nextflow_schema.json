@@ -88,6 +88,11 @@
                     "fa_icon": "fas fa-barcode",
                     "description": "Require barcode on both ends for Guppy basecaller."
                 },
+                "trim_barcodes": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-barcode",
+                    "description": "Wether to trim the barcodes from the output sequences in the FastQ files from Guppy basecaller."
+                },
                 "guppy_config": {
                     "type": "string",
                     "help_text": "Cannot be used in conjunction with `--flowcell` and `--kit`. This can be a local file (e.g. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data/` directory of Guppy.",
@@ -128,6 +133,11 @@
                     "description": "Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').",
                     "fa_icon": "fas fa-fish"
                 },
+				"output_demultiplex_fast5": {
+                    "type": "boolean",
+                    "description": "Output emultiplex fast5 files with demux_fast5.",
+                    "fa_icon": "fas fa-file-code"
+                },
                 "qcat_min_score": {
                     "type": "integer",
                     "default": 60,
@@ -149,6 +159,7 @@
                     "description": "Skip demultiplexing with Guppy/qcat.",
                     "fa_icon": "fas fa-fast-forward"
                 },
+				
                 "run_nanolyse": {
                     "type": "boolean",
                     "description": "Filter reads from FastQ files using NanoLyse",
