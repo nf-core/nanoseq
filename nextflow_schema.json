@@ -133,7 +133,7 @@
                     "description": "Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').",
                     "fa_icon": "fas fa-fish"
                 },
-				"output_demultiplex_fast5": {
+                "output_demultiplex_fast5": {
                     "type": "boolean",
                     "description": "Output emultiplex fast5 files with demux_fast5.",
                     "fa_icon": "fas fa-file-code"
@@ -159,7 +159,6 @@
                     "description": "Skip demultiplexing with Guppy/qcat.",
                     "fa_icon": "fas fa-fast-forward"
                 },
-				
                 "run_nanolyse": {
                     "type": "boolean",
                     "description": "Filter reads from FastQ files using NanoLyse",
