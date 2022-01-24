@@ -50,11 +50,11 @@ process GUPPY {
     mkdir fastq
     cd basecalling
     if [ "\$(find . -type d -name "barcode*" )" != "" ]
-        then
-        for dir in pass/barcode*/
+    then
+        for dir in barcode*/
         do
-            dir=\$(basename \${dir%*/})
-            cat pass/\$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
+            dir=\${dir%*/}
+            cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
         done
     else
         cat *.fastq.gz > ../fastq/${meta.id}.fastq.gz
