@@ -1,24 +1,22 @@
 /*
- * DNA variant calling
+ * Variant calling
  */
 
 include { MEDAKA_VARIANT                  } from '../../modules/local/medaka_variant'
 include { SNIFFLES                  } from '../../modules/local/sniffles'
 //include { CUTESV                  } from '../../modules/local/cutesv'
 
-workflow DNA_VARIANT_CALLING {
+workflow VARIANT_CALLING {
 
     main:
     take:
     ch_view_sortbam
     ch_index
-    skip_medaka
-    skip_sniffles
 
     main:
     ch_variant_calls = Channel.empty()
     medaka_version = Channel.empty()
-    if (!skip_medaka){
+    if (params.variant_caller == 'medaka'){
         /*
         * Split into a different channel for each chromosome
         */
@@ -43,23 +41,9 @@ workflow DNA_VARIANT_CALLING {
     }
     ch_sv_calls = Channel.empty()
     sniffles_version = Channel.empty()
-    if (!skip_sniffles){
-        /*
-        * Call structural variants
-        */
-        SNIFFLES( ch_view_sortbam )
-        ch_sv_calls = SNIFFLES.out.sv_calls
-        sniffles_version = SNIFFLES.out.versions
-
-    } else{
-    }
 
     emit:
     ch_variant_calls
     medaka_version
-    ch_sv_calls
-    sniffles_version
-
-
 
 }

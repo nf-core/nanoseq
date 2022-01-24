@@ -21,8 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added `--call_variants` to detect DNA variants
 * Added `--split_mnps` to split multi-nucleotide polymorphisms into single nucleotide polymorphisms
 * Added `--phase_vcf` to output a phased vcf
-* Added `--skip_medaka` to skip `medaka_variant`
-* Added `--skip_sniffles` to skip `sniffles`
+* Added `--skip_vc` to skip `variant_calling`
+* Added `--skip_sv` to skip `structural_variant_calling`
+* Added `--variant_caller` to specify variant caller.
+* Added `--structural_variant_caller` to specify structural variant caller
 * Added `--skip_modification_analysis` to skip RNA modification detection
 * Added `--skip_xpore` to skip `xpore`
 * Added `--skip_m6anet` to skip `m6anet`
@@ -35,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 |-------------------------|-------------|-------------|
 | `bioconductor-bambu`    | 1.0.2       | 2.0.0       |
 | `bioconductor-bsgenome` | 1.58.0      | 1.62.0      |
+| `cutesv`                |             | 1.0.12      |
 | `jaffa`                 |             | 2.0         |
 | `m6anet`                |             | 1.0         |
 | `medaka`                |             | 1.4.4       |

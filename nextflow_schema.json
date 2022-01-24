@@ -192,8 +192,8 @@
                 }
             }
         },
-        "dna_variant_calling_options": {
-            "title": "DNA variant calling options",
+        "variant_calling_options": {
+            "title": "Variant calling options",
             "type": "object",
             "description": "Options to adjust pameters and filtering criteria for DNA varinat calling.",
             "default": "",
@@ -201,8 +201,20 @@
             "properties": {
                 "call_variants": {
                     "type": "boolean",
-                    "description": "Specifies if variants will be called.",
+                    "description": "Specifies if variant calling will executed.",
                     "fa_icon": "fas fa-exchange-alt"
+                },
+                "variant_caller": {
+                    "type": "string",
+                    "default": "medaka",
+                    "description": "Specifies the variant caller to be used to call small variants (available are: medaka). Only available '--call_variants' is set and the protocol is DNA.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
+                "structural_variant_caller": {
+                    "type": "string",
+                    "default": "sniffles",
+                    "description": "Specifies the variant caller to be used to call structural variants (available are: sniffles and cutesv). Only available '--call_variants' is set and the protocol is DNA.",
+                    "fa_icon": "fas fa-bezier-curve"
                 },
                 "split_mnps": {
                     "type": "boolean",
@@ -214,15 +226,15 @@
                     "fa_icon": "fas fa-exchange-alt",
                     "description": "Specifies if vcf will be phased."
                 },
-                "skip_medaka": {
+                "skip_vc": {
                     "type": "boolean",
                     "fa_icon": "fas fa-fast-forward",
-                    "description": "Skip variant calling with sniffles."
+                    "description": "Skip variant calling."
                 },
-                "skip_sniffles": {
+                "skip_sv": {
                     "type": "boolean",
                     "fa_icon": "fas fa-fast-forward",
-                    "description": "Skip variant calling with sniffles."
+                    "description": "Skip structural variant calling."
                 }
             }
         },
@@ -532,7 +544,7 @@
             "$ref": "#/definitions/alignment_options"
         },
         {
-            "$ref": "#/definitions/dna_variant_calling_options"
+            "$ref": "#/definitions/variant_calling_options"
         },
         {
             "$ref": "#/definitions/differential_analysis_options"

@@ -74,6 +74,23 @@ if (!params.skip_alignment) {
     }
 }
 
+if (params.call_variants) {
+    if (params.protocol != 'DNA') {
+        exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA'"
+    }
+    if (!params.skip_vc && params.variant_caller != 'medaka') {
+        exit 1, "Invalid variant caller option: ${params.variant_caller}. Valid options: 'medaka'"
+    }
+    if (!params.skip_sv && params.structural_variant_caller != 'sniffles' && params.structural_variant_caller != 'cutesv') {
+        exit 1, "Invalid structural variant caller option: ${params.structural_variant_caller}. Valid options: 'sniffles', 'cutesv"
+    }
+}
+
+    if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
+        exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
+    }
+
+
 if (!params.skip_quantification) {
     if (params.quantification_method != 'bambu' && params.quantification_method != 'stringtie2') {
         exit 1, "Invalid transcript quantification option: ${params.quantification_method}. Valid options: 'bambu', 'stringtie2'"
@@ -113,7 +130,8 @@ include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq
 include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'
 include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'
 include { BAM_SORT_INDEX_SAMTOOLS          } from '../subworkflows/local/bam_sort_index_samtools'
-include { DNA_VARIANT_CALLING              } from '../subworkflows/local/dna_variant_calling'
+include { VARIANT_CALLING                  } from '../subworkflows/local/variant_calling'
+include { STRUCTURAL_VARIANT_CALLING       } from '../subworkflows/local/structural_variant_calling'
 include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'
 include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'
 include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'
@@ -325,11 +343,20 @@ workflow NANOSEQ{
 
         if (params.call_variants && params.protocol == 'DNA') {
             /*
-            * SUBWORKFLOW: DNA variant calling
+            * SUBWORKFLOW: Variant calling
             */
-            DNA_VARIANT_CALLING ( ch_view_sortbam, ch_index.map{ it [2] }, params.skip_medaka, params.skip_sniffles )
-            ch_software_versions = ch_software_versions.mix(DNA_VARIANT_CALLING.out.sniffles_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(DNA_VARIANT_CALLING.out.medaka_version.first().ifEmpty(null))
+            if(!params.skip_vc) {
+                VARIANT_CALLING ( ch_view_sortbam, ch_index.map{ it [2] } )
+                ch_software_versions = ch_software_versions.mix(VARIANT_CALLING.out.medaka_version.first().ifEmpty(null))
+            }
+            /*
+            * SUBWORKFLOW: Structural variant calling
+            */
+            if(!params.skip_sv) {
+                STRUCTURAL_VARIANT_CALLING ( ch_view_sortbam, ch_index.map{ it [2] } )
+                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.sniffles_version.first().ifEmpty(null))
+                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.cutesv_version.first().ifEmpty(null))
+            }
         }
 
         ch_bedtools_version = Channel.empty()
