@@ -2,10 +2,10 @@ process GUPPY {
     label 'process_medium'
 
     if (params.guppy_gpu) {
-        container = 'genomicpariscentre/guppy-gpu:5.0.16'
+        container = 'genomicpariscentre/guppy-gpu:4.0.14'
         clusterOptions = params.gpu_cluster_options
     } else {
-        container = 'genomicpariscentre/guppy:5.0.16'
+        container = 'genomicpariscentre/guppy:4.0.14'
     }
 
     input:
@@ -31,15 +31,15 @@ process GUPPY {
     if (params.guppy_model)  model  = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
     """
     guppy_basecaller \\
-    --input_path input_path \\
-    --save_path ./basecalling \\
-    --records_per_fastq 0 \\
-    --compress_fastq \\
-    $barcode_kit \\
-    $proc_options \\
-    $barcode_ends \\
-    $config \\
-    $model
+        --input_path input_path \\
+        --save_path ./basecalling \\
+        --records_per_fastq 0 \\
+        --compress_fastq \\
+        $barcode_kit \\
+        $proc_options \\
+        $barcode_ends \\
+        $config \\
+        $model
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
