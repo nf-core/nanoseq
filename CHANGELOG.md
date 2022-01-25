@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `m6anet`                |             | 1.0         |
 | `medaka`                |             | 1.4.4       |
 | `multiqc`               | 1.10.1      | 1.11        |
+| `ont_fast5_api`         |             | 4.0.0       |
 | `sniffles`              |             | 1.0.12      |
 | `xpore`                 |             | 2.1         |
 
