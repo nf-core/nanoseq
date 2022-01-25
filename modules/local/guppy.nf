@@ -2,10 +2,10 @@ process GUPPY {
     label 'process_medium'
 
     if (params.guppy_gpu) {
-        container = 'genomicpariscentre/guppy-gpu:4.0.14'
+        container = 'genomicpariscentre/guppy-gpu:5.0.16'
         clusterOptions = params.gpu_cluster_options
     } else {
-        container = 'genomicpariscentre/guppy:4.0.14'
+        container = 'genomicpariscentre/guppy:5.0.16'
     }
 
     input:
@@ -36,6 +36,7 @@ process GUPPY {
         --records_per_fastq 0 \\
         --compress_fastq \\
         $barcode_kit \\
+        $trim_barcodes \\
         $proc_options \\
         $barcode_ends \\
         $config \\
@@ -51,13 +52,13 @@ process GUPPY {
     cd basecalling
     if [ "\$(find . -type d -name "barcode*" )" != "" ]
     then
-        for dir in barcode*/
+        for dir in pass/barcode*/
         do
-            dir=\${dir%*/}
-            cat \$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
+            dir=\$(basename \${dir%*/})
+            cat pass/\$dir/*.fastq.gz > ../fastq/\$dir.fastq.gz
         done
     else
-        cat *.fastq.gz > ../fastq/${meta.id}.fastq.gz
+        cat pass/*.fastq.gz > ../fastq/${meta.id}.fastq.gz
     fi
     """
 }

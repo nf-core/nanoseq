@@ -1,8 +1,5 @@
 process DEMUX_FAST5 {
     label 'process_medium'
-    publishDir "${params.outdir}",
-        mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process)) }
 
     conda     (params.enable_conda ? "bioconda:ont-fast5-api:4.0.0--pyhdfd78af_0" : null)
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -28,7 +25,7 @@ process DEMUX_FAST5 {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-    demux_fast5: \$(echo \$(python -c\'import ont_fast5_api;print(ont_fast5_api.__version__)\'))
+        demux_fast5: \$(python -c 'import ont_fast5_api;print(ont_fast5_api.__version__)')
     END_VERSIONS
     """
 }
