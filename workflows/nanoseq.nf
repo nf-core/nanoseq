@@ -97,6 +97,7 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
 include { GUPPY                 } from '../modules/local/guppy'
+include { DEMUX_FAST5           } from '../modules/local/demux_fast5'
 include { QCAT                  } from '../modules/local/qcat'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
 include { BAMBU                 } from '../modules/local/bambu'
@@ -207,6 +208,13 @@ workflow NANOSEQ{
             .join(ch_sample, by: 1) // join on barcode
             .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
             .set { ch_fastq }
+        if (params.output_demultiplex_fast5) {
+            /*
+            * MODULE: Demultiplex fast5 files using ont_fast5_api/demux_fast5
+            */
+            DEMUX_FAST5 ( ch_input_path, ch_guppy_summary )
+            ch_software_versions = ch_software_versions.mix(DEMUX_FAST5.out.versions.ifEmpty(null))
+        }
     } else {
         ch_guppy_summary = Channel.empty()
 
