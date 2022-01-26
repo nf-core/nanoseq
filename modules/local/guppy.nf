@@ -21,6 +21,7 @@ process GUPPY {
     path "versions.yml"                        , emit: versions
 
     script:
+    def fast5_dir_path = workflow.profile.contains('test') ? "input_path" : "$input_path"
     def trim_barcodes = params.trim_barcodes ? "--trim_barcodes" : ""
     def barcode_kit  = params.barcode_kit ? "--barcode_kits $params.barcode_kit" : ""
     def barcode_ends = params.barcode_both_ends ? "--require_barcodes_both_ends" : ""
@@ -31,7 +32,7 @@ process GUPPY {
     if (params.guppy_model)  model  = file(params.guppy_model).exists() ? "--model ./$guppy_model" : "--model $params.guppy_model"
     """
     guppy_basecaller \\
-        --input_path input_path \\
+        --input_path $fast5_dir_path \\
         --save_path ./basecalling \\
         --records_per_fastq 0 \\
         --compress_fastq \\
