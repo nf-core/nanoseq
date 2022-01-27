@@ -17,9 +17,10 @@ process DEMUX_FAST5 {
     path "versions.yml"            , emit: versions
 
     script:
+    def fast5_dir_path = workflow.profile.contains('test') ? "input_path" : "$input_path"
     """
     demux_fast5 \\
-    --input  input_path \\
+    --input  $fast5_dir_path \\
     --save_path ./demultiplexed_fast5 \\
     --summary_file $input_summary
 
