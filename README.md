@@ -45,12 +45,12 @@ On release, automated continuous integration tests run the pipeline on a [full-s
     * RNA fusion detection ([`JAFFAL`](https://github.com/Oshlack/JAFFA))
 9. Present QC for raw read and alignment results ([`MultiQC`](https://multiqc.info/docs/))
 
-#### Functionality Overview
+### Functionality Overview
 
-A graphical overview of suggested routes through the pipeline depending on context can be seen below.
+A graphical overview of suggested routes through the pipeline depending on the desired output can be seen below.
 
 <p align="center">
-    <img src="docs/images/nanoseq_subwaymap_v3.0.png" alt="nf-core/nanoseq metro map" width="70%"
+    <img src="docs/images/nanoseq_subwaymap_v3.0.png" alt="nf-core/nanoseq metro map" width="90%"
 </p>
 
 
