@@ -53,7 +53,6 @@ A graphical overview of suggested routes through the pipeline depending on the d
     <img src="docs/images/nanoseq_subwaymap_v3.0.png" alt="nf-core/nanoseq metro map" width="90%"
 </p>
 
-
 ## Quick Start
 
 1. Install [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=21.10.3`)
