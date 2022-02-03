@@ -25,7 +25,7 @@ process SNIFFLES {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        sniffles: \$( echo \$(featureCounts -v 2>&1) | sed -e "s/featureCounts v//g") //need sniffles's version
+        sniffles: \$(sniffles --help 2>&1 | grep Version |sed 's/^.*Version: //')
     END_VERSIONS
     """
 }
