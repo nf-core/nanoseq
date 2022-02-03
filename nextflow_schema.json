@@ -91,7 +91,7 @@
                 "trim_barcodes": {
                     "type": "boolean",
                     "fa_icon": "fas fa-barcode",
-                    "description": "Wether to trim the barcodes from the output sequences in the FastQ files from Guppy basecaller."
+                    "description": "Whether to trim the barcodes from the output sequences in the FastQ files from Guppy basecaller."
                 },
                 "guppy_config": {
                     "type": "string",
@@ -135,7 +135,7 @@
                 },
                 "output_demultiplex_fast5": {
                     "type": "boolean",
-                    "description": "Output emultiplex fast5 files with demux_fast5.",
+                    "description": "Demultiplex fast5 files with demux_fast5.",
                     "fa_icon": "fas fa-file-code"
                 },
                 "qcat_min_score": {
