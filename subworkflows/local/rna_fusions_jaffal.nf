@@ -20,7 +20,6 @@ workflow RNA_FUSIONS_JAFFAL {
         UNTAR( GET_JAFFAL_REF.out.ch_jaffal_ref )
         ch_jaffal_ref_dir = UNTAR.out.untar
     }
-    ch_jaffal_ref_dir.view()
 
     ch_sample
         .map { it -> [ it[0], it[6] ]}

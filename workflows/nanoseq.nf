@@ -328,16 +328,16 @@ workflow NANOSEQ{
         */
         BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam, params.call_variants )
         ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
-        ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.versions.first().ifEmpty(null))
+        ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.samtools_versions.first().ifEmpty(null))
         ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
 
         if (params.call_variants && params.protocol == 'DNA') {
             /*
             * SUBWORKFLOW: DNA variant calling
             */
-            ch_medaka_version = Channel.empty()
-            ch_sniffles_version = Channel.empty()
             DNA_VARIANT_CALLING ( ch_view_sortbam, ch_index.map{ it [2] }, params.skip_medaka, params.skip_sniffles )
+            ch_software_versions = ch_software_versions.mix(DNA_VARIANT_CALLING.out.medaka_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(DNA_VARIANT_CALLING.out.sniffles_version.first().ifEmpty(null))
         }
 
         ch_bedtools_version = Channel.empty()

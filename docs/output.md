@@ -43,14 +43,14 @@ The directories listed below will be created in the output directory after the p
 </details>
 
 *Documentation*:
-[Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis), [demux_fasat5](https://github.com/nanoporetech/ont_fast5_api#demux_fast5), [qcat](https://github.com/nanoporetech/qcat)
+[Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis), [demux_fast5](https://github.com/nanoporetech/ont_fast5_api#demux_fast5), [qcat](https://github.com/nanoporetech/qcat)
 
 *Description*:
 The pipeline has been written to deal with the various scenarios where you would like to include/exclude the basecalling and demultiplexing steps. This will be dependent on what type of input data you would like to provide the pipeline. Additionally, if you would like to align your samples to a reference genome there are various options for providing this information. Please see [`usage.md`](usage.md#--input) for more details about the format of the input samplesheet, associated commands and how to provide reference genome data.
 
 *Guppy* will be used to basecall and demultiplex the data. Various options have been provided to customise specific parameters and to be able to run *Guppy* on GPUs.
 
-*demux_fasat5* will demultiplex the fast5 files, gives the *Guppy* summary file.
+*demux_fast5* will demultiplex the fast5 files, gives the *Guppy* summary file.
 
 If you have a pre-basecalled fastq file then *qcat* will be used to perform the demultiplexing if you provide the `--skip_basecalling` parameter. If you would like to skip both of these steps entirely then you can provide `--skip_basecalling --skip_demultiplexing` when running the pipeline. As a result, the structure of the output folder will depend on which steps you have chosen to run in the pipeline.
 
@@ -165,7 +165,7 @@ The creation of these files can be bypassed by setting the parameters `--skip_bi
 
 * `minimap2/medaka/<SAMPLE>/round_1.vcf`
     VCF file with small variants for each sample.
-* `minimap2/sniffles/<sample>_sniffles.vcf`
+* `minimap2/sniffles/<SAMPLE>_sniffles.vcf`
     VCF files with unflitered structural variants.
 
 </details>
