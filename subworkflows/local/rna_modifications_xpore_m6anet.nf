@@ -28,6 +28,7 @@ workflow RNA_MODIFICATION_XPORE_M6ANET {
     nanopolish_version    = NANOPOLISH_INDEX_EVENTALIGN.out.versions
 
     xpore_version = ''
+    ch_xpore_dataprep_dirs = ''
     if (!params.skip_xpore) {
         XPORE_DATAPREP( ch_nanopolish_outputs )
         ch_xpore_dataprep_dirs = XPORE_DATAPREP.out.dataprep_outputs

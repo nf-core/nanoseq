@@ -37,7 +37,7 @@ workflow QCBASECALL_PYCOQC_NANOPLOT {
     nanoplot_log    = Channel.empty()
     if (!skip_nanoplot){
         NANOPLOT ( ch_guppy_summary_txt )
-        nanoplot_png      = NANOPLOT.out.png
+        //nanoplot_png      = NANOPLOT.out.png
         nanoplot_html     = NANOPLOT.out.html
         nanoplot_txt      = NANOPLOT.out.txt
         nanoplot_log      = NANOPLOT.out.log

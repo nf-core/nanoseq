@@ -26,7 +26,7 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     nanoplot_version = Channel.empty()
     if (!skip_nanoplot){
         NANOPLOT ( ch_fastq )
-        nanoplot_png     = NANOPLOT.out.png
+        //nanoplot_png     = NANOPLOT.out.png
         nanoplot_html    = NANOPLOT.out.html
         nanoplot_txt     = NANOPLOT.out.txt
         nanoplot_log     = NANOPLOT.out.log
