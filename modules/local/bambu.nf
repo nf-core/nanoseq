@@ -1,7 +1,7 @@
 process BAMBU {
     label 'process_medium'
 
-    conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-bambu=2.0.0 bioconda::bioconductor-bsgenome=1.62.0" : null)
+    conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-bambu=2.0.3 bioconda::bioconductor-bsgenome=1.62.0" : null)
     container "docker.io/yuukiiwa/nanoseq:bambu_bsgenome" //not on biocontainers; does not have a singularity container
 
     input:
