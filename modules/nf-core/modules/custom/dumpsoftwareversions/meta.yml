@@ -5,7 +5,8 @@ keywords:
   - version
 tools:
   - custom:
-      description: Custom module used to dump software versions within the nf-core pipeline template
+      description: |
+      Custom module used to dump software versions within the nf-core pipeline template
       homepage: https://github.com/nf-core/tools
       documentation: https://github.com/nf-core/tools
       licence: ['MIT']

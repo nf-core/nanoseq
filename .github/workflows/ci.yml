@@ -1,5 +1,6 @@
 name: nf-core CI
-# This workflow runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
+# This workflow runs the pipeline with the minimal test dataset
+# to check that it completes without any syntax errors
 on:
   push:
     branches:
@@ -16,7 +17,8 @@ jobs:
   test:
     name: Run workflow tests
     # Only run on push if this is the nf-core dev branch (merged PRs)
-    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    if:
+    ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -35,7 +37,8 @@ jobs:
       - name: Install Nextflow
         env:
           NXF_VER: ${{ matrix.NXF_VER }}
-          # Uncomment only if the edge release is more recent than the latest stable release
+          # Uncomment only if the edge release is more recent than the latest stable
+          # release
           # See https://github.com/nextflow-io/nextflow/issues/2467
           # NXF_EDGE: ${{ matrix.NXF_EDGE }}
         run: |
@@ -48,14 +51,16 @@ jobs:
 
   profile:
     name: Run profile tests
-    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    if:
+    ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
       NXF_VER: '21.10.3'
       NXF_ANSI_LOG: false
     strategy:
       matrix:
-        profiles: [test_bc_nodx, test_nobc_dx, test_nobc_nodx_vc, test_nobc_nodx_stringtie, test_nobc_nodx_noaln, test_nobc_nodx_rnamod]
+        profiles: [test_bc_nodx, test_nobc_dx, test_nobc_nodx_vc,
+        test_nobc_nodx_stringtie, test_nobc_nodx_noaln, test_nobc_nodx_rnamod]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
@@ -73,14 +78,16 @@ jobs:
 
   parameters:
     name: Run parameter tests
-    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    if:
+    ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
       NXF_VER: '21.10.3'
       NXF_ANSI_LOG: false
     strategy:
       matrix:
-        parameters: [--aligner graphmap2, --skip_alignment, --skip_qc, --skip_quantification]
+        parameters: [--aligner graphmap2, --skip_alignment,
+        --skip_qc, --skip_quantification]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
