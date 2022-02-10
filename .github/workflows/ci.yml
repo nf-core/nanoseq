@@ -17,8 +17,7 @@ jobs:
   test:
     name: Run workflow tests
     # Only run on push if this is the nf-core dev branch (merged PRs)
-    if:
-    ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -51,8 +50,7 @@ jobs:
 
   profile:
     name: Run profile tests
-    if:
-    ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
       NXF_VER: '21.10.3'
@@ -78,8 +76,7 @@ jobs:
 
   parameters:
     name: Run parameter tests
-    if:
-    ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
       NXF_VER: '21.10.3'
