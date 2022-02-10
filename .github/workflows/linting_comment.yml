@@ -1,7 +1,9 @@
 
 name: nf-core linting comment
-# This workflow is triggered after the linting action is complete
-# It posts an automated comment to the PR, even if the PR is coming from a fork
+# This workflow is triggered after the
+# linting action is complete
+# It posts an automated comment to the PR,
+# even if the PR is coming from a fork
 on:
   workflow_run:
     workflows: ["nf-core linting"]
@@ -16,7 +18,8 @@ jobs:
           workflow_conclusion: completed
       - name: Get PR number
         id: pr_number
-        run: echo "::set-output name=pr_number::$(cat linting-logs/PR_number.txt)"
+        run: |
+        echo "::set-output name=pr_number::$(cat linting-logs/PR_number.txt)"
       - name: Post PR comment
         uses: marocchino/sticky-pull-request-comment@v2
         with:
