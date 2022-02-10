@@ -5,24 +5,24 @@ keywords:
     - uncompress
 tools:
     - untar:
-        description: |
-            Extract tar.gz files.
-        documentation: https://www.gnu.org/software/tar/manual/
-        licence: ['GPL-3.0-or-later']
+          description: |
+          Extract tar.gz files.
+          documentation: https://www.gnu.org/software/tar/manual/
+          licence: ['GPL-3.0-or-later']
 input:
     - archive:
-        type: file
-        description: File to be untar
-        pattern: "*.{tar}.{gz}"
+          type: file
+          description: File to be untar
+          pattern: "*.{tar}.{gz}"
 output:
     - untar:
-        type: file
-        description:
-        pattern: "*.*"
+          type: file
+          description:
+          pattern: "*.*"
     - versions:
-        type: file
-        description: File containing software versions
-        pattern: "versions.yml"
+          type: file
+          description: File containing software versions
+          pattern: "versions.yml"
 authors:
     - "@joseespinosa"
     - "@drpatelh"
