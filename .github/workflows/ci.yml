@@ -8,11 +8,9 @@ on:
   pull_request:
   release:
     types: [published]
-
 env:
   NXF_ANSI_LOG: false
   CAPSULE_LOG: none
-
 jobs:
   test:
     name: Run workflow tests
@@ -32,7 +30,6 @@ jobs:
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
-
       - name: Install Nextflow
         env:
           NXF_VER: ${{ matrix.NXF_VER }}
@@ -43,11 +40,9 @@ jobs:
         run: |
           wget -qO- get.nextflow.io | bash
           sudo mv nextflow /usr/local/bin/
-
       - name: Run pipeline with test data
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test,docker
-
   profile:
     name: Run profile tests
     if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
@@ -62,18 +57,15 @@ jobs:
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
-
       - name: Install Nextflow
         env:
           CAPSULE_LOG: none
         run: |
           wget -qO- get.nextflow.io | bash
           sudo mv nextflow /usr/local/bin/
-
       - name: Run pipeline with different profiles
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profiles }},docker
-
   parameters:
     name: Run parameter tests
     if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
@@ -88,14 +80,12 @@ jobs:
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
-
       - name: Install Nextflow
         env:
           CAPSULE_LOG: none
         run: |
           wget -qO- get.nextflow.io | bash
           sudo mv nextflow /usr/local/bin/
-
       - name: Run pipeline with different parameters
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test,docker ${{ matrix.parameters }}
