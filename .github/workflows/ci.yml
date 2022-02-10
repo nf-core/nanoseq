@@ -36,7 +36,7 @@ jobs:
       - name: Install Nextflow
         env:
           NXF_VER: ${{ matrix.NXF_VER }}
-          # Uncomment only if the edge release is more 
+          # Uncomment only if the edge release is more
           # recent than the latest stable
           # release
           # See https://github.com/nextflow-io/nextflow/issues/2467
