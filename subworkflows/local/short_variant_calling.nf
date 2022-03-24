@@ -1,5 +1,5 @@
 /*
- * Short variant calling
+ * Short variant calling test
  */
 
 include { GET_CHROM_NAMES                       } from '../../modules/local/get_chrom_names'
