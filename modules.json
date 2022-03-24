@@ -15,6 +15,9 @@
             "pycoqc": {
                 "git_sha": "49da8642876ae4d91128168cd0db4f1c858d7792"
             },
+            "samtools/faidx": {
+                "git_sha": "1ad73f1b2abdea9398680d6d20014838135c9a35"
+            },
             "samtools/flagstat": {
                 "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
             },
@@ -32,6 +35,12 @@
             },
             "stringtie/merge": {
                 "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+            },
+            "tabix/bgzip": {
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
+            },
+            "tabix/tabix": {
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             },
             "untar": {
                 "git_sha": "20d8250d9f39ddb05dfb437603aaf99b5c0b2b41"

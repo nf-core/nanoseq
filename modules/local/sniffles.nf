@@ -12,8 +12,8 @@ process SNIFFLES {
 
 
     output:
-    path "*_sniffles.vcf"               , emit: sv_calls // vcf files
-    path "versions.yml"                 , emit: versions
+    tuple val(meta), path("*_sniffles.vcf") , emit: sv_calls // vcf files
+    path "versions.yml"                     , emit: versions
 
 
     script:

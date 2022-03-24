@@ -4,6 +4,7 @@
 
 include { GET_CHROM_SIZES  } from '../../modules/local/get_chrom_sizes'
 include { GTF2BED          } from '../../modules/local/gtf2bed'
+include { SAMTOOLS_FAIDX   } from '../../modules/nf-core/modules/samtools/faidx/main'
 
 workflow PREPARE_GENOME {
     take:
@@ -47,8 +48,22 @@ workflow PREPARE_GENOME {
         .map { it -> [ it[5], it[0], it[6], it[1], it[7], it[8] ]} // [ fasta, sizes, gtf, bed, is_transcripts, annotation_str ]
         .unique()
         .set { ch_fasta_index }
+    
+    /*
+     * Convert GTF to BED12
+     */
+    ch_fastq
+        .filter { it[2] }
+        .map { it -> [ it[0], it[2] ] }  // [ gtf, annotation_str ]
+        .unique()
+        .set { ch_fasta }
+    
+    SAMTOOLS_FAIDX ( ch_fasta )
+    ch_fai = SAMTOOLS_FAIDX.out.fai
 
     emit:
+    ch_fasta
+    ch_fai
     ch_fasta_index
     ch_gtf_bed
     samtools_version

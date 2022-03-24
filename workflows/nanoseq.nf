@@ -78,8 +78,8 @@ if (params.call_variants) {
     if (params.protocol != 'DNA') {
         exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA'"
     }
-    if (!params.skip_vc && params.variant_caller != 'medaka') {
-        exit 1, "Invalid variant caller option: ${params.variant_caller}. Valid options: 'medaka'"
+    if (!params.skip_vc && params.variant_caller != 'medaka' && params.variant_caller != 'deepvariant') {
+        exit 1, "Invalid variant caller option: ${params.variant_caller}. Valid options: 'medaka' or 'deepvariant'"
     }
     if (!params.skip_sv && params.structural_variant_caller != 'sniffles' && params.structural_variant_caller != 'cutesv') {
         exit 1, "Invalid structural variant caller option: ${params.structural_variant_caller}. Valid options: 'sniffles', 'cutesv"
@@ -130,7 +130,7 @@ include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq
 include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'
 include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'
 include { BAM_SORT_INDEX_SAMTOOLS          } from '../subworkflows/local/bam_sort_index_samtools'
-include { VARIANT_CALLING                  } from '../subworkflows/local/variant_calling'
+include { SHORT_VARIANT_CALLING            } from '../subworkflows/local/short_variant_calling'
 include { STRUCTURAL_VARIANT_CALLING       } from '../subworkflows/local/structural_variant_calling'
 include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'
 include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'
@@ -312,6 +312,8 @@ workflow NANOSEQ{
         PREPARE_GENOME ( ch_fastq )
         ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
         ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
+        ch_fasta       = PREPARE_GENOME.out.ch_fasta
+        ch_fai         = PREPARE_GENOME.out.ch_fai
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
         if (params.aligner == 'minimap2') {
@@ -341,23 +343,24 @@ workflow NANOSEQ{
         ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.versions.first().ifEmpty(null))
         ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
 
-        if (params.call_variants && params.protocol == 'DNA') {
-            /*
-            * SUBWORKFLOW: Variant calling
-            */
-            if(!params.skip_vc) {
-                VARIANT_CALLING ( ch_view_sortbam, ch_index.map{ it [2] } )
-                ch_software_versions = ch_software_versions.mix(VARIANT_CALLING.out.medaka_version.first().ifEmpty(null))
-            }
-            /*
-            * SUBWORKFLOW: Structural variant calling
-            */
-            if(!params.skip_sv) {
-                STRUCTURAL_VARIANT_CALLING ( ch_view_sortbam, ch_index.map{ it [2] } )
-                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.sniffles_version.first().ifEmpty(null))
-                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.cutesv_version.first().ifEmpty(null))
-            }
+        /*
+        * SUBWORKFLOW: Short variant calling
+        */
+        if (params.call_variants && params.protocol == 'DNA' && !params.skip_vc) {
+            SHORT_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
+            ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.medaka_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.deepvariant_version.first().ifEmpty(null))
         }
+
+        /*
+        * SUBWORKFLOW: Structural variant calling
+        */
+        if (params.call_variants && params.protocol == 'DNA' && !params.skip_sv) {
+            STRUCTURAL_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
+            ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.sniffles_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.cutesv_version.first().ifEmpty(null))
+        }
+
 
         ch_bedtools_version = Channel.empty()
         if (!params.skip_bigwig){
