@@ -21,6 +21,7 @@ workflow STRUCTURAL_VARIANT_CALLING {
     main:
     ch_sv_calls_vcf     = Channel.empty()
     ch_sv_calls_vcf_tbi = Channel.empty()
+
     sniffles_version    = Channel.empty()
     cutesv_version      = Channel.empty()
     bgzip_version       = Channel.empty()

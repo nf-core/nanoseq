@@ -22,7 +22,7 @@ workflow BAM_SORT_INDEX_SAMTOOLS {
             .map { it -> [ it[0], it[1], it[2], it[4], it[5] ] }
             .set { sortbam }
         BAM_STATS_SAMTOOLS ( SAMTOOLS_SORT_INDEX.out.bam_bai )
-    } else{
+    } else {
         SAMTOOLS_SORT      ( SAMTOOLS_VIEW_BAM.out.bam )
         SAMTOOLS_INDEX     ( SAMTOOLS_SORT.out.bam )
         ch_sam

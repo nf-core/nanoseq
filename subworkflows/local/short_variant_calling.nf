@@ -9,8 +9,7 @@ include { TABIX_TABIX as MEDAKA_TABIX_VCF       } from '../../modules/nf-core/mo
 include { DEEPVARIANT                           } from '../../modules/local/deepvariant'
 include { TABIX_TABIX as DEEPVARIANT_TABIX_VCF  } from '../../modules/nf-core/modules/tabix/tabix/main'
 include { TABIX_TABIX as DEEPVARIANT_TABIX_GVCF } from '../../modules/nf-core/modules/tabix/tabix/main'
-include { SNIFFLES                              } from '../../modules/local/sniffles'
-include { CUTESV                                } from '../../modules/local/cutesv'
+include { PEPPER_MARGIN_DEEPVARIANT             } from '../../modules/local/pepper_margin_deepvariant'
 
 workflow SHORT_VARIANT_CALLING {
 
@@ -20,15 +19,16 @@ workflow SHORT_VARIANT_CALLING {
     ch_fai
 
     main:
-    ch_short_calls_vcf      = Channel.empty()
-    ch_short_calls_vcf_tbi  = Channel.empty()
-    ch_short_calls_gvcf     = Channel.empty()
-    ch_short_calls_gvcf_tbi = Channel.empty()
+    ch_short_calls_vcf              = Channel.empty()
+    ch_short_calls_vcf_tbi          = Channel.empty()
+    ch_short_calls_gvcf             = Channel.empty()
+    ch_short_calls_gvcf_tbi         = Channel.empty()
 
-    medaka_version          = Channel.empty()
-    deepvariant_version     = Channel.empty()
-    bgzip_version           = Channel.empty()
-    tabix_version           = Channel.empty()
+    medaka_version                  = Channel.empty()
+    deepvariant_version             = Channel.empty()
+    bgzip_version                   = Channel.empty()
+    tabix_version                   = Channel.empty()
+    peppermargindeepvariant_version = Channel.empty()
 
     /*
     * Get names of chromosomes from bam file
@@ -51,17 +51,10 @@ workflow SHORT_VARIANT_CALLING {
     [new_meta, bam, bai, chroms]
     }.set { ch_view_sortbam_split }
 
-    //ch_view_sortbam
-    //.combine( ch_chrom_names )
-    //.unique()
-    //.map{ meta, sizes, is_transcripts, bam, bai, chroms ->
-    //[meta, bam, bai, chroms ]
-    //}.set{ ch_view_sortbam_split }
-
     /*
     * Call short variants
     */
-    if (params.variant_caller == 'medaka'){
+    if (params.variant_caller == 'medaka') {
         /*
         * MEDAKA
         */
@@ -76,7 +69,7 @@ workflow SHORT_VARIANT_CALLING {
         ch_short_calls_vcf_tbi  = MEDAKA_TABIX_VCF.out.tbi
         tabix_version = MEDAKA_TABIX_VCF.out.versions
 
-    } else {
+    } else if (params.variant_caller == 'deepvariant') {
         /*
         * DEEPVARIANT
         */
@@ -92,9 +85,16 @@ workflow SHORT_VARIANT_CALLING {
         DEEPVARIANT_TABIX_GVCF( ch_short_calls_gvcf )
         ch_short_calls_gvcf_tbi  = DEEPVARIANT_TABIX_GVCF.out.tbi
         tabix_version = DEEPVARIANT_TABIX_VCF.out.versions
+    } else {
+        /*
+        * PEPPER_MARGIN_DEEPVARIANT
+        */
+        PEPPER_MARGIN_DEEPVARIANT( ch_view_sortbam_split, ch_fasta, ch_fai )
+        ch_short_calls_vcf = PEPPER_MARGIN_DEEPVARIANT.out.vcf
+        ch_short_calls_vcf_tbi = PEPPER_MARGIN_DEEPVARIANT.out.tbi
+        peppermargindeepvariant_version = PEPPER_MARGIN_DEEPVARIANT.out.versions
 
     }
-
 
     emit:
     ch_short_calls_vcf
@@ -105,5 +105,6 @@ workflow SHORT_VARIANT_CALLING {
     tabix_version
     medaka_version
     deepvariant_version
+    peppermargindeepvariant_version
 
 }
