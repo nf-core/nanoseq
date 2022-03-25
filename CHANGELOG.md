@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Add DNA variant calling functionality
 * Add RNA modification and fusion detection functionalities
+* Add `demux_fast5` module to output demultiplexed fast5 files when `--output_demultiplex_fast5` is set
+* Add `--trim_barcodes` in Guppy basecaller to trim the barcodes from output fastq
 * Port pipeline to the updated Nextflow DSL2 syntax adopted on nf-core/modules
     * Removed `--publish_dir_mode` as it is no longer required for the new syntax
 * Bump minimum Nextflow version from 21.04.0 -> 21.10.3
@@ -18,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Parameters
 
+* Added `--output_demultiplex_fast5` to output demultiplexed fast5
+* Added `--trim_barcodes` in Guppy basecaller to trim the barcodes from output fastq
 * Added `--call_variants` to detect DNA variants
 * Added `--split_mnps` to split multi-nucleotide polymorphisms into single nucleotide polymorphisms
 * Added `--phase_vcf` to output a phased vcf
@@ -42,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `m6anet`                |             | 1.0         |
 | `medaka`                |             | 1.4.4       |
 | `multiqc`               | 1.10.1      | 1.11        |
+| `ont_fast5_api`         |             | 4.0.0       |
 | `sniffles`              |             | 1.0.12      |
 | `xpore`                 |             | 2.1         |
 
