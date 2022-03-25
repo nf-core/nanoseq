@@ -19,12 +19,11 @@ workflow SHORT_VARIANT_CALLING {
     ch_fai
 
     main:
-    ch_versions                     = Channel.empty()
-
     ch_short_calls_vcf              = Channel.empty()
     ch_short_calls_vcf_tbi          = Channel.empty()
     ch_short_calls_gvcf             = Channel.empty()
     ch_short_calls_gvcf_tbi         = Channel.empty()
+    ch_versions                     = Channel.empty()
 
     /*
     * Get chromosomes from bam file for splitting calling
