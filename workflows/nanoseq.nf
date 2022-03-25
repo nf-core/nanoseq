@@ -348,7 +348,7 @@ workflow NANOSEQ{
         */
         if (params.call_variants && params.protocol == 'DNA' && !params.skip_vc) {
             SHORT_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
-            ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
         }
 
         /*
@@ -356,9 +356,8 @@ workflow NANOSEQ{
         */
         if (params.call_variants && params.protocol == 'DNA' && !params.skip_sv) {
             STRUCTURAL_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
-            ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
         }
-
 
         ch_bedtools_version = Channel.empty()
         if (!params.skip_bigwig){

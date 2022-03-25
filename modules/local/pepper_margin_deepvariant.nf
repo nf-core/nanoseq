@@ -25,9 +25,10 @@ process PEPPER_MARGIN_DEEPVARIANT {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}"
-    def regions = intervals ? "--regions ${intervals}" : ""
+    def args    = task.ext.args ?: ""
+    prefix      = task.ext.prefix ?: "${meta.id}"
+    //def regions = intervals ? "--regions ${intervals}" : ""
+    //def gvcf    = params.make_gvcf ? "--gvcf" : ""
 
     """
     mkdir -p "${prefix}"
@@ -42,7 +43,7 @@ process PEPPER_MARGIN_DEEPVARIANT {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        deepvariant: \$(echo \$(/opt/deepvariant/bin/run_deepvariant --version) | sed 's/^.*version //; s/ .*\$//' )
+        pepper_margin_deepvariant: \$(run_pepper_margin_deepvariant --version | sed 's/VERSION: //g')
     END_VERSIONS
     """
 }

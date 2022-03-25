@@ -26,12 +26,6 @@ workflow SHORT_VARIANT_CALLING {
     ch_short_calls_gvcf             = Channel.empty()
     ch_short_calls_gvcf_tbi         = Channel.empty()
 
-    medaka_version                  = Channel.empty()
-    deepvariant_version             = Channel.empty()
-    bgzip_version                   = Channel.empty()
-    tabix_version                   = Channel.empty()
-    peppermargindeepvariant_version = Channel.empty()
-
     /*
     * Get chromosomes from bam file for splitting calling
     */
