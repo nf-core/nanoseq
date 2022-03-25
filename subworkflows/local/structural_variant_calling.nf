@@ -21,7 +21,6 @@ workflow STRUCTURAL_VARIANT_CALLING {
     main:
     ch_sv_calls_vcf     = Channel.empty()
     ch_sv_calls_vcf_tbi = Channel.empty()
-    
     sniffles_version    = Channel.empty()
     cutesv_version      = Channel.empty()
     bgzip_version       = Channel.empty()
@@ -47,7 +46,7 @@ workflow STRUCTURAL_VARIANT_CALLING {
     new_meta.chr = chroms
     [new_meta, bam, bai, chroms]
     }.set { ch_view_sortbam_split }
-    
+
     /*
     * Call structural variants
     */
@@ -76,7 +75,7 @@ workflow STRUCTURAL_VARIANT_CALLING {
         CUTESV_BGZIP_VCF( CUTESV.out.sv_calls )
         ch_sv_calls_vcf = CUTESV_BGZIP_VCF.out.gz
         bgzip_version = CUTESV_BGZIP_VCF.out.versions
-        
+
         CUTESV_TABIX_VCF( ch_sv_calls_vcf )
         ch_sv_calls_tbi  = CUTESV_TABIX_VCF.out.tbi
         tabix_version = CUTESV_TABIX_VCF.out.versions

@@ -42,8 +42,8 @@ On release, automated continuous integration tests run the pipeline on a [full-s
     * Convert SAM to co-ordinate sorted BAM and obtain mapping metrics ([`SAMtools`](http://www.htslib.org/doc/samtools.html))
 6. Create bigWig ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/)) and bigBed ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedToBigBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)) coverage tracks for visualisation
 7. DNA-specific downstream analysis:
-    * DNA short variant calling ([`medaka`](https://github.com/nanoporetech/medaka))
-    * DNA structural variant calling ([`sniffles`](https://github.com/fritzsedlazeck/Sniffles))
+    * Short variant calling ([`medaka`](https://github.com/nanoporetech/medaka) or [`deepvariant`](https://github.com/google/deepvariant))
+    * Structural variant calling ([`sniffles`](https://github.com/fritzsedlazeck/Sniffles) [`cutesv`](https://github.com/tjiangHIT/cuteSV))
 8. RNA-specific downstream analysis:
     * Transcript reconstruction and quantification ([`bambu`](https://bioconductor.org/packages/release/bioc/html/bambu.html) or [`StringTie2`](https://ccb.jhu.edu/software/stringtie/))
         * bambu performs both transcript reconstruction and quantification.

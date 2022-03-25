@@ -50,7 +50,7 @@ workflow SHORT_VARIANT_CALLING {
     new_meta.chr = chroms
     [new_meta, bam, bai, chroms]
     }.set { ch_view_sortbam_split }
-    
+
     //ch_view_sortbam
     //.combine( ch_chrom_names )
     //.unique()
