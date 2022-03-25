@@ -22,10 +22,7 @@ workflow STRUCTURAL_VARIANT_CALLING {
     ch_sv_calls_vcf     = Channel.empty()
     ch_sv_calls_vcf_tbi = Channel.empty()
 
-    sniffles_version    = Channel.empty()
-    cutesv_version      = Channel.empty()
-    bgzip_version       = Channel.empty()
-    tabix_version       = Channel.empty()
+    ch_versions         = Channel.empty()
 
     /*
     * Get names of chromosomes from bam file
@@ -56,39 +53,36 @@ workflow STRUCTURAL_VARIANT_CALLING {
         * SNIFFLES
         */
         SNIFFLES( ch_view_sortbam )
-        sniffles_version = SNIFFLES.out.versions
+        ch_versions = ch_versions.mix(SNIFFLES.out.versions)
 
         SNIFFLES_BGZIP_VCF( SNIFFLES.out.sv_calls )
         ch_sv_calls_vcf = SNIFFLES_BGZIP_VCF.out.gz
-        bgzip_version = SNIFFLES_BGZIP_VCF.out.versions
+        ch_versions = ch_versions.mix(SNIFFLES_BGZIP_VCF.out.versions)
 
         SNIFFLES_TABIX_VCF( ch_sv_calls_vcf )
         ch_sv_calls_tbi  = SNIFFLES_TABIX_VCF.out.tbi
-        tabix_version = SNIFFLES_TABIX_VCF.out.versions
+        ch_versions = ch_versions.mix(SNIFFLES_TABIX_VCF.out.versions)
 
     } else {
         /*
         * CUTESV
         */
         CUTESV( ch_view_sortbam, ch_fasta )
-        cutesv_version = CUTESV.out.versions
+        ch_versions = ch_versions.mix(CUTESV.out.versions)
 
         CUTESV_BGZIP_VCF( CUTESV.out.sv_calls )
         ch_sv_calls_vcf = CUTESV_BGZIP_VCF.out.gz
-        bgzip_version = CUTESV_BGZIP_VCF.out.versions
+        ch_versions = ch_versions.mix(CUTESV_BGZIP_VCF.out.versions)
 
         CUTESV_TABIX_VCF( ch_sv_calls_vcf )
         ch_sv_calls_tbi  = CUTESV_TABIX_VCF.out.tbi
-        tabix_version = CUTESV_TABIX_VCF.out.versions
+        ch_versions = ch_versions.mix(CUTESV_TABIX_VCF.out.versions)
 
     }
 
     emit:
     ch_sv_calls_vcf
     ch_sv_calls_vcf_tbi
-    bgzip_version
-    tabix_version
-    sniffles_version
-    cutesv_version
+    ch_versions
 
 }

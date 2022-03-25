@@ -13,6 +13,12 @@
 * [BEDTools](https://www.ncbi.nlm.nih.gov/pubmed/20110278/)
     > Quinlan AR, Hall IM. BEDTools: a flexible suite of utilities for comparing genomic features. Bioinformatics. 2010 Mar 15;26(6):841-2. doi: 10.1093/bioinformatics/btq033. Epub 2010 Jan 28. PubMed PMID: 20110278; PubMed Central PMCID: PMC2832824.
 
+* [cuteSV](https://pubmed.ncbi.nlm.nih.gov/32746918/)
+    > Jiang T, Liu Y, Jiang Y, Li J, Gao Y, Cui Z, Liu Y, Liu B, Wang Y. Long-read-based human genomic structural variation detection with cuteSV. Genome Biol. 2020 Aug 3;21(1):189. doi: 10.1186/s13059-020-02107-y. PMID: 32746918; PMCID: PMC7477834.
+
+* [DeepVariant](https://pubmed.ncbi.nlm.nih.gov/30247488/)
+    > Poplin R, Chang PC, Alexander D, Schwartz S, Colthurst T, Ku A, Newburger D, Dijamco J, Nguyen N, Afshar PT, Gross SS, Dorfman L, McLean CY, DePristo MA. A universal SNP and small-indel variant caller using deep neural networks. Nat Biotechnol. 2018 Nov;36(10):983-987. doi: 10.1038/nbt.4235. Epub 2018 Sep 24. PMID: 30247488.
+
 * [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 
 * [featureCounts](https://www.ncbi.nlm.nih.gov/pubmed/24227677/)
@@ -42,6 +48,9 @@
 
 * [NanoPlot](https://pubmed.ncbi.nlm.nih.gov/29547981/)
     > De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018 Aug 1;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149. PubMed PMID: 29547981; PubMed Central PMCID: PMC6061794.
+
+* [PEPPER-Margin-DeepVariant](https://pubmed.ncbi.nlm.nih.gov/34725481/)
+    > Shafin K, Pesout T, Chang PC, Nattestad M, Kolesnikov A, Goel S, Baid G, Kolmogorov M, Eizenga JM, Miga KH, Carnevali P, Jain M, Carroll A, Paten B. Haplotype-aware variant calling with PEPPER-Margin-DeepVariant enables high accuracy in nanopore long-reads. Nat Methods. 2021 Nov;18(11):1322-1332. doi: 10.1038/s41592-021-01299-w. Epub 2021 Nov 1. PMID: 34725481; PMCID: PMC8571015.
 
 * [pycoQC](https://doi.org/10.21105/joss.01236)
     > Leger A, Leonardi T, (2019). pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software, 4(34), 1236.

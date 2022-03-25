@@ -19,6 +19,8 @@ workflow SHORT_VARIANT_CALLING {
     ch_fai
 
     main:
+    ch_versions                     = Channel.empty()
+
     ch_short_calls_vcf              = Channel.empty()
     ch_short_calls_vcf_tbi          = Channel.empty()
     ch_short_calls_gvcf             = Channel.empty()
@@ -31,7 +33,7 @@ workflow SHORT_VARIANT_CALLING {
     peppermargindeepvariant_version = Channel.empty()
 
     /*
-    * Get names of chromosomes from bam file
+    * Get chromosomes from bam file for splitting calling
     */
     GET_CHROM_NAMES( ch_view_sortbam )
     ch_chrom_names = GET_CHROM_NAMES.out.chrom_names
@@ -59,15 +61,15 @@ workflow SHORT_VARIANT_CALLING {
         * MEDAKA
         */
         MEDAKA_VARIANT( ch_view_sortbam_split, ch_fasta )
-        medaka_version = MEDAKA_VARIANT.out.versions
+        ch_versions = ch_versions.mix(medaka_version = MEDAKA_VARIANT.out.versions)
 
         MEDAKA_BGZIP_VCF( MEDAKA_VARIANT.out.vcf )
         ch_short_calls_vcf  = MEDAKA_BGZIP_VCF.out.gz
-        bgzip_version = MEDAKA_BGZIP_VCF.out.versions
+        ch_versions = ch_versions.mix(bgzip_version = MEDAKA_BGZIP_VCF.out.versions)
 
         MEDAKA_TABIX_VCF( ch_short_calls_vcf )
         ch_short_calls_vcf_tbi  = MEDAKA_TABIX_VCF.out.tbi
-        tabix_version = MEDAKA_TABIX_VCF.out.versions
+        ch_versions = ch_versions.mix(tabix_version = MEDAKA_TABIX_VCF.out.versions)
 
     } else if (params.variant_caller == 'deepvariant') {
         /*
@@ -76,15 +78,16 @@ workflow SHORT_VARIANT_CALLING {
         DEEPVARIANT( ch_view_sortbam_split, ch_fasta, ch_fai )
         ch_short_calls_vcf  = DEEPVARIANT.out.vcf
         ch_short_calls_gvcf = DEEPVARIANT.out.gvcf
-        deepvariant_version = DEEPVARIANT.out.versions
+        ch_versions = ch_versions.mix(DEEPVARIANT.out.versions)
 
         DEEPVARIANT_TABIX_VCF( ch_short_calls_vcf )
         ch_short_calls_vcf_tbi  = DEEPVARIANT_TABIX_VCF.out.tbi
-        tabix_version = DEEPVARIANT_TABIX_VCF.out.versions
+        ch_versions = ch_versions.mix(DEEPVARIANT_TABIX_VCF.out.versions)
 
         DEEPVARIANT_TABIX_GVCF( ch_short_calls_gvcf )
         ch_short_calls_gvcf_tbi  = DEEPVARIANT_TABIX_GVCF.out.tbi
-        tabix_version = DEEPVARIANT_TABIX_VCF.out.versions
+        ch_versions = ch_versions.mix(DEEPVARIANT_TABIX_VCF.out.versions)
+
     } else {
         /*
         * PEPPER_MARGIN_DEEPVARIANT
@@ -92,7 +95,7 @@ workflow SHORT_VARIANT_CALLING {
         PEPPER_MARGIN_DEEPVARIANT( ch_view_sortbam_split, ch_fasta, ch_fai )
         ch_short_calls_vcf = PEPPER_MARGIN_DEEPVARIANT.out.vcf
         ch_short_calls_vcf_tbi = PEPPER_MARGIN_DEEPVARIANT.out.tbi
-        peppermargindeepvariant_version = PEPPER_MARGIN_DEEPVARIANT.out.versions
+        ch_versions = ch_versions.mix(PEPPER_MARGIN_DEEPVARIANT.out.versions)
 
     }
 
@@ -101,10 +104,6 @@ workflow SHORT_VARIANT_CALLING {
     ch_short_calls_vcf_tbi
     ch_short_calls_gvcf
     ch_short_calls_gvcf_tbi
-    bgzip_version
-    tabix_version
-    medaka_version
-    deepvariant_version
-    peppermargindeepvariant_version
+    ch_versions
 
 }
