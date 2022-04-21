@@ -16,16 +16,19 @@ process NANOLYSE {
     path "*.log"                       , emit: log
     path "versions.yml"                , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     gunzip -c $fastq | NanoLyse -r $fasta | gzip > ${prefix}.fastq.gz
     mv NanoLyse.log ${prefix}.nanolyse.log
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         nanolyse: \$(NanoLyse --version 2>&1 | sed -e "s/NanoLyse //g")
     END_VERSIONS
     """
 }
-
