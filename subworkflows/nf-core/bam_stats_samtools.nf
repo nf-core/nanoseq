@@ -11,7 +11,7 @@ workflow BAM_STATS_SAMTOOLS {
     ch_bam_bai // channel: [ val(meta), [ bam ], [bai] ]
 
     main:
-    SAMTOOLS_STATS    ( ch_bam_bai, null )
+    SAMTOOLS_STATS    ( ch_bam_bai, false )
     SAMTOOLS_FLAGSTAT ( ch_bam_bai )
     SAMTOOLS_IDXSTATS ( ch_bam_bai )
 
