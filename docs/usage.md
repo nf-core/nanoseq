@@ -8,25 +8,25 @@
 
 You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated file with 6 columns and a header row:
 
-| Column          | Description                                                                                                                                                                                                                                  |
-|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `group`         | Group identifier for sample. This will be identical for replicate samples from the same experimental group.                                                                                                                                  |
-| `replicate`     | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                          |
-| `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                                                                                                                                        |
-| `input_file`    | Full path to FastQ file if previously demultiplexed, BAM file if previously aligned, or a path to a directory with subdirectories containing fastq or fast5 files. FastQ file has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam"                              |
-| `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz". |
-| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz".                                                                   |
+| Column          | Description                                                                                                                                                                                                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `group`         | Group identifier for sample. This will be identical for replicate samples from the same experimental group.                                                                                                                                                                              |
+| `replicate`     | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                                                                      |
+| `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                                                                                                                                                                                    |
+| `input_file`    | Full path to FastQ file if previously demultiplexed, BAM file if previously aligned, or a path to a directory with subdirectories containing fastq or fast5 files. FastQ file has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam" |
+| `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz".                                             |
+| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz".                                                                                                               |
 
 ### Specifying a reference genome/transcriptome
 
 Each sample in the sample sheet can be mapped to its own reference genome or transcriptome. Please see below for additional details required to fill in the `genome` and `transcriptome` columns appropriately:
 
-* If both `genome` and `transcriptome` are not specified then the mapping will be skipped for that sample.
-* If both `genome` and `transcriptome` are specified as local fasta files then the transcriptome will be preferentially used for mapping.
-* If `genome` is specified as a local fasta file and `transcriptome` is left blank then mapping will be performed relative to the genome.
-* If `genome` isnt specified and `transcriptome` is provided as a fasta file then mapping will be performed relative to the transcriptome.
-* If `genome` is specified as an AWS iGenomes key then the `transcriptome` column can be blank. The associated gtf file for the `transcriptome` will be automatically obtained in order to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
-* If `genome` is specified as a local fasta file and `transcriptome` is a specified as a local gtf file then both of these will be used to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+- If both `genome` and `transcriptome` are not specified then the mapping will be skipped for that sample.
+- If both `genome` and `transcriptome` are specified as local fasta files then the transcriptome will be preferentially used for mapping.
+- If `genome` is specified as a local fasta file and `transcriptome` is left blank then mapping will be performed relative to the genome.
+- If `genome` isnt specified and `transcriptome` is provided as a fasta file then mapping will be performed relative to the transcriptome.
+- If `genome` is specified as an AWS iGenomes key then the `transcriptome` column can be blank. The associated gtf file for the `transcriptome` will be automatically obtained in order to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+- If `genome` is specified as a local fasta file and `transcriptome` is a specified as a local gtf file then both of these will be used to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
 
 ### Skip basecalling/demultiplexing
 
