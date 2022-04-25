@@ -319,6 +319,7 @@ workflow NANOSEQ{
         /*
         * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
         */
+        ch_fastq.view()
         PREPARE_GENOME ( ch_fastq )
         ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
         ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
