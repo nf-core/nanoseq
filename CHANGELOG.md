@@ -20,20 +20,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Parameters
 
-* Added `--output_demultiplex_fast5` to output demultiplexed fast5
-* Added `--trim_barcodes` in Guppy basecaller to trim the barcodes from output fastq
-* Added `--call_variants` to detect DNA variants
-* Added `--split_mnps` to split multi-nucleotide polymorphisms into single nucleotide polymorphisms
-* Added `--phase_vcf` to output a phased vcf
-* Added `--skip_vc` to skip `variant_calling`
-* Added `--skip_sv` to skip `structural_variant_calling`
-* Added `--variant_caller` to specify variant caller.
-* Added `--structural_variant_caller` to specify structural variant caller
-* Added `--skip_modification_analysis` to skip RNA modification detection
-* Added `--skip_xpore` to skip `xpore`
-* Added `--skip_m6anet` to skip `m6anet`
-* Added `--skip_fusion_analysis` to skip RNA fusion detection
-* Added `--jaffal_ref_dir` to indicate the reference directory path required by `JAFFAL`
+- Added `--output_demultiplex_fast5` to output demultiplexed fast5
+- Added `--trim_barcodes` in Guppy basecaller to trim the barcodes from output fastq
+- Added `--call_variants` to detect DNA variants
+- Added `--split_mnps` to split multi-nucleotide polymorphisms into single nucleotide polymorphisms
+- Added `--phase_vcf` to output a phased vcf
+- Added `--skip_vc` to skip `variant_calling`
+- Added `--skip_sv` to skip `structural_variant_calling`
+- Added `--variant_caller` to specify variant caller.
+- Added `--structural_variant_caller` to specify structural variant caller
+- Added `--skip_modification_analysis` to skip RNA modification detection
+- Added `--skip_xpore` to skip `xpore`
+- Added `--skip_m6anet` to skip `m6anet`
+- Added `--skip_fusion_analysis` to skip RNA fusion detection
+- Added `--jaffal_ref_dir` to indicate the reference directory path required by `JAFFAL`
 
 ### Software dependencies
 
