@@ -4,13 +4,11 @@ import os
 import sys
 import errno
 import argparse
-import csv
-import logging
-import sys
-from collections import Counter
-from pathlib import Path
 
-logger = logging.getLogger()
+
+def parse_args(args=None):
+    Description = "Reformat nf-core/nanoseq samplesheet file and check its contents."
+    Epilog = "Example usage: python check_samplesheet.py <FILE_IN> <FILE_OUT>"
 
     parser = argparse.ArgumentParser(description=Description, epilog=Epilog)
     parser.add_argument("FILE_IN", help="Input samplesheet file.")
@@ -18,152 +16,35 @@ logger = logging.getLogger()
     parser.add_argument("FILE_OUT", help="Output file.")
     return parser.parse_args(args)
 
-class RowChecker:
-    """
-    Define a service that can validate and transform each given row.
 
-    Attributes:
-        modified (list): A list of dicts, where each dict corresponds to a previously
-            validated and transformed row. The order of rows is maintained.
+def make_dir(path):
+    if len(path) > 0:
+        try:
+            os.makedirs(path)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise exception
 
-    """
 
-    VALID_FORMATS = (
-        ".fq.gz",
-        ".fastq.gz",
-    )
-
-    def __init__(
-        self,
-        sample_col="sample",
-        first_col="fastq_1",
-        second_col="fastq_2",
-        single_col="single_end",
-        **kwargs,
-    ):
-        """
-        Initialize the row checker with the expected column names.
-
-        Args:
-            sample_col (str): The name of the column that contains the sample name
-                (default "sample").
-            first_col (str): The name of the column that contains the first (or only)
-                FASTQ file path (default "fastq_1").
-            second_col (str): The name of the column that contains the second (if any)
-                FASTQ file path (default "fastq_2").
-            single_col (str): The name of the new column that will be inserted and
-                records whether the sample contains single- or paired-end sequencing
-                reads (default "single_end").
-
-        """
-        super().__init__(**kwargs)
-        self._sample_col = sample_col
-        self._first_col = first_col
-        self._second_col = second_col
-        self._single_col = single_col
-        self._seen = set()
-        self.modified = []
-
-    def validate_and_transform(self, row):
-        """
-        Perform all validations on the given row and insert the read pairing status.
-
-        Args:
-            row (dict): A mapping from column headers (keys) to elements of that row
-                (values).
-
-        """
-        self._validate_sample(row)
-        self._validate_first(row)
-        self._validate_second(row)
-        self._validate_pair(row)
-        self._seen.add((row[self._sample_col], row[self._first_col]))
-        self.modified.append(row)
-
-    def _validate_sample(self, row):
-        """Assert that the sample name exists and convert spaces to underscores."""
-        assert len(row[self._sample_col]) > 0, "Sample input is required."
-        # Sanitize samples slightly.
-        row[self._sample_col] = row[self._sample_col].replace(" ", "_")
-
-    def _validate_first(self, row):
-        """Assert that the first FASTQ entry is non-empty and has the right format."""
-        assert len(row[self._first_col]) > 0, "At least the first FASTQ file is required."
-        self._validate_fastq_format(row[self._first_col])
-
-    def _validate_second(self, row):
-        """Assert that the second FASTQ entry has the right format if it exists."""
-        if len(row[self._second_col]) > 0:
-            self._validate_fastq_format(row[self._second_col])
-
-    def _validate_pair(self, row):
-        """Assert that read pairs have the same file extension. Report pair status."""
-        if row[self._first_col] and row[self._second_col]:
-            row[self._single_col] = False
-            assert (
-                Path(row[self._first_col]).suffixes == Path(row[self._second_col]).suffixes
-            ), "FASTQ pairs must have the same file extensions."
-        else:
-            row[self._single_col] = True
-
-    def _validate_fastq_format(self, filename):
-        """Assert that a given filename has one of the expected FASTQ extensions."""
-        assert any(filename.endswith(extension) for extension in self.VALID_FORMATS), (
-            f"The FASTQ file has an unrecognized extension: {filename}\n"
-            f"It should be one of: {', '.join(self.VALID_FORMATS)}"
+def print_error(error, context="Line", context_str=""):
+    error_str = "ERROR: Please check samplesheet -> {}".format(error)
+    if context != "" and context_str != "":
+        error_str = "ERROR: Please check samplesheet -> {}\n{}: '{}'".format(
+            error, context.strip(), context_str.strip()
         )
+    print(error_str)
+    sys.exit(1)
 
-    def validate_unique_samples(self):
-        """
-        Assert that the combination of sample name and FASTQ filename is unique.
-
-        In addition to the validation, also rename the sample if more than one sample,
-        FASTQ file combination exists.
-
-        """
-        assert len(self._seen) == len(self.modified), "The pair of sample name and FASTQ must be unique."
-        if len({pair[0] for pair in self._seen}) < len(self._seen):
-            counts = Counter(pair[0] for pair in self._seen)
-            seen = Counter()
-            for row in self.modified:
-                sample = row[self._sample_col]
-                seen[sample] += 1
-                if counts[sample] > 1:
-                    row[self._sample_col] = f"{sample}_T{seen[sample]}"
-
-
-def sniff_format(handle):
-    """
-    Detect the tabular format.
-
-    Args:
-        handle (text file): A handle to a `text file`_ object. The read position is
-        expected to be at the beginning (index 0).
-
-    Returns:
-        csv.Dialect: The detected tabular format.
-
-    .. _text file:
-        https://docs.python.org/3/glossary.html#term-text-file
 
 def check_samplesheet(file_in, updated_path, file_out):
     """
-    peek = handle.read(2048)
-    sniffer = csv.Sniffer()
-    if not sniffer.has_header(peek):
-        logger.critical(f"The given sample sheet does not appear to contain a header.")
-        sys.exit(1)
-    dialect = sniffer.sniff(peek)
-    handle.seek(0)
-    return dialect
-
-    group,replicate,barcode,input_file,genome,transcriptome
+    This function checks that the samplesheet follows the following structure:
+    group,replicate,barcode,input_file,fasta,gtf
     MCF7,1,,MCF7_directcDNA_replicate1.fastq.gz,genome.fa,
     MCF7,2,,MCF7_directcDNA_replicate3.fastq.gz,genome.fa,genome.gtf
     K562,1,,K562_directcDNA_replicate1.fastq.gz,genome.fa,
     K562,2,,K562_directcDNA_replicate4.fastq.gz,,transcripts.fa
     """
-    Check that the tabular samplesheet has the structure expected by nf-core pipelines.
 
     input_extensions = []
     sample_info_dict = {}
@@ -171,7 +52,7 @@ def check_samplesheet(file_in, updated_path, file_out):
 
         ## Check header
         MIN_COLS = 3
-        HEADER = ['group', 'replicate', 'barcode', 'input_file', 'genome', 'transcriptome']
+        HEADER = ['group', 'replicate', 'barcode', 'input_file', 'fasta', 'gtf']
         header = fin.readline().strip().split(",")
         if header[:len(HEADER)] != HEADER:
             print("ERROR: Please check samplesheet header -> {} != {}".format(",".join(header), ",".join(HEADER)))
@@ -190,7 +71,7 @@ def check_samplesheet(file_in, updated_path, file_out):
                 print_error("Invalid number of populated columns (minimum = {})!".format(MIN_COLS), 'Line', line)
 
             ## Check group name entries
-            group, replicate, barcode, input_file, genome, transcriptome = lspl[:len(HEADER)]
+            group, replicate, barcode, input_file, fasta, gtf = lspl[:len(HEADER)]
             if group:
                 if group.find(" ") != -1:
                     print_error("Group entry contains spaces!", 'Line', line)
@@ -237,7 +118,6 @@ def check_samplesheet(file_in, updated_path, file_out):
                             ## CHECK PROVIDED BASECALLED FASTQ
                             fastq_path       = input_file+'/fastq'
                             basecalled_fastq = [fn for fn in os.listdir(fastq_path) if fn.endswith(".fastq.gz") or fn.endswith(".fq.gz") ]
-                            print(basecalled_fastq)
                             if len(basecalled_fastq) != 1:
                                 print_error('Please input one basecalled fastq per sample.')
                             else:
@@ -249,31 +129,34 @@ def check_samplesheet(file_in, updated_path, file_out):
                             print_error('path does not end with ".fastq.gz", ".fq.gz", or ".bam" and is not an existing directory with correct fast5 and/or fastq inputs.')
 
             ## Check genome entries
-            if genome:
-                if genome.find(' ') != -1:
+            if fasta:
+                if fasta.find(' ') != -1:
                     print_error("Genome entry contains spaces!",'Line', line)
-                if len(genome.split('.')) > 1:
-                    if genome[-6:] != '.fasta' and genome[-3:] != '.fa' and genome[-9:] != '.fasta.gz' and genome[-6:] != '.fa.gz':
+                if len(fasta.split('.')) > 1:
+                    if fasta[-6:] != '.fasta' and fasta[-3:] != '.fa' and fasta[-9:] != '.fasta.gz' and fasta[-6:] != '.fa.gz':
                         print_error("Genome entry does not have extension '.fasta', '.fa', '.fasta.gz' or '.fa.gz'!",'Line', line)
 
             ## Check transcriptome entries
-            gtf = ''
+            #gtf = ''
             is_transcripts = '0'
-            if transcriptome:
-                if transcriptome.find(' ') != -1:
+            if gtf:
+                if gtf.find(' ') != -1:
                     print_error("Transcriptome entry contains spaces!",'Line',line)
-                if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-9:] != '.fasta.gz' and transcriptome[-6:] != '.fa.gz' and transcriptome[-4:] != '.gtf' and transcriptome[-7:] != '.gtf.gz':
-                    print_error("Transcriptome entry does not have extension '.fasta', '.fa', '.fasta.gz', '.fa.gz', '.gtf' or '.gtf.gz'!", 'Line', line)
-                if transcriptome[-4:] == '.gtf' or transcriptome[-7:] == '.gtf.gz':
-                    gtf = transcriptome
-                    if not genome:
-                        print_error("If genome isn't provided, transcriptome must be in fasta format for mapping!", 'Line', line)
-                else:
-                    is_transcripts = '1'
-                    genome = transcriptome
+                print(gtf[-4:])
+                if gtf[-4:] != '.gtf' and gtf[-7:] != '.gtf.gz':
+                    print_error("Transcriptome entry does not have extension '.gtf' or '.gtf.gz'!", 'Line', line)
+                #if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-9:] != '.fasta.gz' and transcriptome[-6:] != '.fa.gz' and transcriptome[-4:] != '.gtf' and transcriptome[-7:] != '.gtf.gz':
+                #    print_error("Transcriptome entry does not have extension '.fasta', '.fa', '.fasta.gz', '.fa.gz', '.gtf' or '.gtf.gz'!", 'Line', line)
+                #if transcriptome[-4:] == '.gtf' or transcriptome[-7:] == '.gtf.gz':
+                #    gtf = transcriptome
+                #    if not genome:
+                #        print_error("If genome isn't provided, transcriptome must be in fasta format for mapping!", 'Line', line)
+                #else:
+                #    is_transcripts = '1'
+                #    genome = transcriptome
 
             ## Create sample mapping dictionary = {group: {replicate : [ barcode, input_file, genome, gtf, is_transcripts, nanopolish_fast5 ]}}
-            sample_info = [barcode, input_file, genome, gtf, is_transcripts, nanopolish_fast5]
+            sample_info = [barcode, input_file, fasta, gtf, is_transcripts, nanopolish_fast5]
             if group not in sample_info_dict:
                 sample_info_dict[group] = {}
             if replicate not in sample_info_dict[group]:
@@ -291,7 +174,7 @@ def check_samplesheet(file_in, updated_path, file_out):
         make_dir(out_dir)
         with open(file_out, "w") as fout:
 
-            fout.write(",".join(['sample', 'barcode', 'input_file', 'genome', 'gtf', 'is_transcripts', 'nanopolish_fast5']) + "\n")
+            fout.write(",".join(['sample', 'barcode', 'input_file', 'fasta', 'gtf', 'is_transcripts', 'nanopolish_fast5']) + "\n")
             for sample in sorted(sample_info_dict.keys()):
 
                 ## Check that replicate ids are in format 1..<NUM_REPS>
