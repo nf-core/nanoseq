@@ -1,3 +1,5 @@
+
+   
 process SAMTOOLS_FAIDX {
     tag "$fasta"
     label 'process_low'
@@ -23,7 +25,6 @@ process SAMTOOLS_FAIDX {
     samtools \\
         faidx \\
         $fasta
-
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')

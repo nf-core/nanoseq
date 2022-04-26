@@ -1,6 +1,6 @@
-process SAMTOOLS_SORT_INDEX {
+process SAMTOOLS_SORT {
     tag "$meta.id"
-    label 'process_low'
+    label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::samtools=1.14" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -11,16 +11,14 @@ process SAMTOOLS_SORT_INDEX {
     tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("*sorted.bam"), path("*.bai")  , optional:true, emit: bam_bai
-    tuple val(meta), path("*sorted.bam"), path("*.csi")  , optional:true, emit: bam_csi
+    tuple val(meta), path("*.bam"), emit: bam
     path  "versions.yml"          , emit: versions
 
     script:
+    def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    samtools sort -@ $task.cpus -o ${meta.id}.sorted.bam -T $meta.id $bam
-
-    samtools index ${meta.id}.sorted.bam
-
+    samtools sort $args -@ $task.cpus -o ${prefix}.sorted.bam -T $prefix $bam
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
