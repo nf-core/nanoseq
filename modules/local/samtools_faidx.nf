@@ -1,5 +1,3 @@
-
-   
 process SAMTOOLS_FAIDX {
     tag "$fasta"
     label 'process_low'
