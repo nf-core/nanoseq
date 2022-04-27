@@ -1,4 +1,5 @@
 process GRAPHMAP2_INDEX {
+    tag "$fasta"
     label 'process_high'
 
     conda     (params.enable_conda ? "bioconda::graphmap=0.6.3" : null)

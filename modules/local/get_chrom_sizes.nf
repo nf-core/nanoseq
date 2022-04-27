@@ -1,4 +1,6 @@
 process GET_CHROM_SIZES {
+    tag "$fasta"
+    label 'process_medium'
 
     conda     (params.enable_conda ? "bioconda::samtools=1.10" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -10,8 +12,7 @@ process GET_CHROM_SIZES {
 
     output:
     tuple path('*.sizes'), val(name) , emit: sizes
-    //  path '*.fai'                     , emit: fai
-    path  "versions.yml"            , emit: versions
+    path "versions.yml"              , emit: versions
 
     script:
     """

@@ -1,4 +1,6 @@
 process GET_CHROM_NAMES {
+    tag "$meta.id"
+    label 'process_medium'
 
     conda     (params.enable_conda ? "bioconda::samtools=1.10" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -9,8 +11,8 @@ process GET_CHROM_NAMES {
     tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai)
 
     output:
-    path('chrom.names')              , emit: chrom_names
-    path  "versions.yml"             , emit: versions
+    path "chrom.names"              , emit: chrom_names
+    path "versions.yml"             , emit: versions
 
     script:
     """

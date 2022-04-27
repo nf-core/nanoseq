@@ -1,4 +1,5 @@
 process BEDTOOLS_GENOMECOV {
+    tag "$meta.id"
     label 'process_medium'
 
     conda     (params.enable_conda ? "bioconda::bedtools=2.29.2" : null)
