@@ -10,6 +10,9 @@ workflow INPUT_CHECK {
     input_path
 
     main:
+    /*
+     * Check samplesheet is valid
+     */
     SAMPLESHEET_CHECK ( samplesheet, input_path )
         .csv
         .splitCsv ( header:true, sep:',' )

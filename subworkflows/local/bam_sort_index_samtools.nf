@@ -14,6 +14,9 @@ workflow BAM_SORT_INDEX_SAMTOOLS {
     call_variants
 
     main:
+    /*
+     * Sam to bam conversion
+     */
     SAMTOOLS_VIEW_BAM  ( ch_sam )
     if ( call_variants ) {
         SAMTOOLS_SORT_INDEX ( SAMTOOLS_VIEW_BAM.out.bam )
@@ -33,6 +36,9 @@ workflow BAM_SORT_INDEX_SAMTOOLS {
         BAM_STATS_SAMTOOLS ( SAMTOOLS_SORT.out.bam.join(SAMTOOLS_INDEX.out.bai, by: [0]) )
     }
 
+    /*
+     * SUBWORKFLOW: Create stats using samtools
+     */
     BAM_STATS_SAMTOOLS.out.stats
         .join ( BAM_STATS_SAMTOOLS.out.idxstats )
         .join ( BAM_STATS_SAMTOOLS.out.flagstat )

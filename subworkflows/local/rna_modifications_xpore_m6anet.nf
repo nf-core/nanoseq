@@ -14,7 +14,6 @@ workflow RNA_MODIFICATION_XPORE_M6ANET {
     ch_nanopolish_sortbam
 
     main:
-
     ch_sample
         .join(ch_nanopolish_sortbam)
         .map { it -> [ it[0], it[2], it[3], it[7], it[6], it[8], it[9] ] }
@@ -30,11 +29,16 @@ workflow RNA_MODIFICATION_XPORE_M6ANET {
     xpore_version = ''
     ch_xpore_dataprep_dirs = ''
     if (!params.skip_xpore) {
+
+        /*
+         * Prepare data with xpore
+         */
         XPORE_DATAPREP( ch_nanopolish_outputs )
         ch_xpore_dataprep_dirs = XPORE_DATAPREP.out.dataprep_outputs
         ch_xpore_dataprep_dirs
             .map{ it -> it[1]+','+it[0].id }
             .set{ ch_xpore_diffmod_inputs }
+
         /*
          * Differential modification expression with xpore
          */
