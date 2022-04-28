@@ -156,8 +156,10 @@ WT,2,,/full/path/to/SAM101A2/,hg19.fasta,hg19.gtf
 KO,1,,/full/path/to/SAM101A3/,hg19.fasta,hg19.gtf
 KO,2,,/full/path/to/SAM101A4/,hg19.fasta,hg19.gtf
 ```
-Each of the FAST5 and FASTQ input directory should have the following structure:
-```
+
+##### Each of the FAST5 and FASTQ input directory should have the following structure:
+
+```bash
 <group_rep>
   ├── fast5
     ├── xxxxxxxxxxxxxxx1.fast5
