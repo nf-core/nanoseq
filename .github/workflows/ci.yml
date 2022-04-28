@@ -45,12 +45,13 @@ jobs:
       - name: Run pipeline with test data
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test,docker
+
   profile:
     name: Run profile tests
     if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
     runs-on: ubuntu-latest
     env:
-      NXF_VER: '21.10.3'
+      NXF_VER: "21.10.3"
       NXF_ANSI_LOG: false
     strategy:
       matrix:
