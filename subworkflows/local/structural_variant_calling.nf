@@ -2,7 +2,6 @@
  * Structural variant calling
  */
 
-include { GET_CHROM_NAMES                       } from '../../modules/local/get_chrom_names'
 include { SNIFFLES                              } from '../../modules/local/sniffles'
 include { TABIX_BGZIP as SNIFFLES_BGZIP_VCF     } from '../../modules/nf-core/modules/tabix/bgzip/main'
 include { TABIX_TABIX as SNIFFLES_TABIX_VCF     } from '../../modules/nf-core/modules/tabix/tabix/main'
@@ -23,27 +22,6 @@ workflow STRUCTURAL_VARIANT_CALLING {
     ch_sv_calls_vcf_tbi = Channel.empty()
 
     ch_versions         = Channel.empty()
-
-    /*
-    * Get chromosomes from bam file for splitting calling
-    */
-    GET_CHROM_NAMES( ch_view_sortbam )
-    ch_chrom_names = GET_CHROM_NAMES.out.chrom_names
-
-    /*
-     * Map chromosome names
-     */
-    ch_chrom_names
-        .splitCsv()
-        .combine( ch_view_sortbam )
-        .unique()
-        .map { chroms, meta, sizes, is_transcripts, bam, bai ->
-        new_meta = meta.clone()
-        new_meta.id = meta.id + "_" + chroms
-        new_meta.sample = meta.id
-        new_meta.chr = chroms
-        [new_meta, bam, bai, chroms]
-        }.set { ch_view_sortbam_split }
 
     /*
      * Call structural variants with sniffles

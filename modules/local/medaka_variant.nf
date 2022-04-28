@@ -8,7 +8,7 @@ process MEDAKA_VARIANT {
         'quay.io/biocontainers/medaka:1.4.4--py38h130def0_0' }"
 
     input:
-    tuple val(meta), path(input), path(index), val(intervals)
+    tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)
     path(fasta)
 
     output:
@@ -30,7 +30,6 @@ process MEDAKA_VARIANT {
         -i $input \\
         -o $output_dir \\
         -t $task.cpus \\
-        -r $meta.chr \\
         $split_mnps \\
         $phase_vcf
 

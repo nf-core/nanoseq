@@ -8,7 +8,7 @@ process SNIFFLES {
         'quay.io/biocontainers/sniffles:1.0.12--h8b12597_1' }"
 
     input:
-    tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai)
+    tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)
 
 
     output:
@@ -19,7 +19,7 @@ process SNIFFLES {
     script:
     """
     sniffles \
-        -m  $bam \
+        -m  $input \
         -v ${meta.id}_sniffles.vcf \
         -t $task.cpus
 

@@ -2,7 +2,6 @@
  * Short variant calling test
  */
 
-include { GET_CHROM_NAMES                       } from '../../modules/local/get_chrom_names'
 include { MEDAKA_VARIANT                        } from '../../modules/local/medaka_variant'
 include { TABIX_BGZIP as MEDAKA_BGZIP_VCF       } from '../../modules/nf-core/modules/tabix/bgzip/main'
 include { TABIX_TABIX as MEDAKA_TABIX_VCF       } from '../../modules/nf-core/modules/tabix/tabix/main'
@@ -26,27 +25,6 @@ workflow SHORT_VARIANT_CALLING {
     ch_versions                     = Channel.empty()
 
     /*
-    * Get chromosomes from bam file for splitting calling
-    */
-    GET_CHROM_NAMES( ch_view_sortbam )
-    ch_chrom_names = GET_CHROM_NAMES.out.chrom_names
-
-    /*
-    * Map chromosome names
-    */
-    ch_chrom_names
-        .splitCsv()
-        .combine( ch_view_sortbam )
-        .unique()
-        .map { chroms, meta, sizes, is_transcripts, bam, bai ->
-        new_meta = meta.clone()
-        new_meta.id = meta.id + "_" + chroms
-        new_meta.sample = meta.id
-        new_meta.chr = chroms
-        [new_meta, bam, bai, chroms]
-        }.set { ch_view_sortbam_split }
-
-    /*
      * Call short variants
      */
     if (params.variant_caller == 'medaka') {
@@ -54,7 +32,7 @@ workflow SHORT_VARIANT_CALLING {
         /*
          * Call short variants with medaka
          */
-        MEDAKA_VARIANT( ch_view_sortbam_split, ch_fasta )
+        MEDAKA_VARIANT( ch_view_sortbam, ch_fasta )
         ch_versions = ch_versions.mix(medaka_version = MEDAKA_VARIANT.out.versions)
 
         /*
@@ -76,7 +54,7 @@ workflow SHORT_VARIANT_CALLING {
         /*
         * Call variants with deepvariant
         */
-        DEEPVARIANT( ch_view_sortbam_split, ch_fasta, ch_fai )
+        DEEPVARIANT( ch_view_sortbam, ch_fasta, ch_fai )
         ch_short_calls_vcf  = DEEPVARIANT.out.vcf
         ch_short_calls_gvcf = DEEPVARIANT.out.gvcf
         ch_versions = ch_versions.mix(DEEPVARIANT.out.versions)
@@ -100,7 +78,7 @@ workflow SHORT_VARIANT_CALLING {
         /*
          * Call variants with pepper_margin_deepvariant (automatic zip + index, docker + singularity only)
          */
-        PEPPER_MARGIN_DEEPVARIANT( ch_view_sortbam_split, ch_fasta, ch_fai )
+        PEPPER_MARGIN_DEEPVARIANT( ch_view_sortbam, ch_fasta, ch_fai )
         ch_short_calls_vcf = PEPPER_MARGIN_DEEPVARIANT.out.vcf
         ch_short_calls_vcf_tbi = PEPPER_MARGIN_DEEPVARIANT.out.tbi
         ch_versions = ch_versions.mix(PEPPER_MARGIN_DEEPVARIANT.out.versions)

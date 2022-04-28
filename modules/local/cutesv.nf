@@ -8,7 +8,7 @@ process CUTESV {
         'quay.io/biocontainers/cutesv:1.0.12--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai)
+    tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)
     path(fasta)
 
     output:
@@ -18,7 +18,7 @@ process CUTESV {
     script:
     """
     cuteSV \
-        ${bam} \
+        ${input} \
         ${fasta} \
         ${meta.id}_cuteSV.vcf \
         . \

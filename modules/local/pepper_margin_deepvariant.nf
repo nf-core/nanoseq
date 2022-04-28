@@ -2,17 +2,12 @@ process PEPPER_MARGIN_DEEPVARIANT {
     tag "$meta.id"
     label 'process_high'
 
-
-    if (params.enable_conda) {
-        exit 1, "Conda environments cannot be used when using the PEPPER_MARGIN_DEEPVARIANT tool. Please use docker or singularity containers."
-    }
-
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'docker.io/kishwars/pepper_deepvariant:r0.8' :
         'docker.io/kishwars/pepper_deepvariant:r0.8' }"
 
     input:
-    tuple val(meta), path(input), path(index), val(intervals)
+    tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)
     path(fasta)
     path(fai)
 

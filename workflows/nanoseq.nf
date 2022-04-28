@@ -34,14 +34,11 @@ def isOffline() {
 def ch_guppy_model  = Channel.empty()
 def ch_guppy_config = Channel.empty()
 
-// Check protocol is a known type
 if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
     exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
 }
 
-// Check other parameters are sufficient/match
 if (!params.skip_basecalling) {
-    // Need to stage guppy_config properly depending on whether its a file or string
     if (!params.guppy_config) {
         if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
         if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!"      }
@@ -49,7 +46,6 @@ if (!params.skip_basecalling) {
         ch_guppy_config = Channel.fromPath(params.guppy_config)
     }
 
-    // Need to stage guppy_model properly depending on whether its a file or string
     if (params.guppy_model) {
         if (file(params.guppy_model).exists()) {
             ch_guppy_model = Channel.fromPath(params.guppy_model)
@@ -95,6 +91,9 @@ if (params.call_variants) {
     }
     if (!params.skip_sv && params.structural_variant_caller != 'sniffles' && params.structural_variant_caller != 'cutesv') {
         exit 1, "Invalid structural variant caller option: ${params.structural_variant_caller}. Valid options: 'sniffles', 'cutesv"
+    }
+    if (params.enable_conda && params.variant_caller != 'medaka') {
+        exit 1, "Conda environments cannot be used when using the deepvariant or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
     }
 }
 
@@ -363,20 +362,22 @@ workflow NANOSEQ{
         ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.samtools_versions.first().ifEmpty(null))
         ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
 
-        /*
-         * SUBWORKFLOW: Short variant calling
-         */
-        if (params.call_variants && params.protocol == 'DNA' && !params.skip_vc) {
-            SHORT_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
-            ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
-        }
+        if (params.call_variants && params.protocol == 'DNA') {
+            /*
+            * SUBWORKFLOW: Short variant calling
+            */
+            if (!params.skip_vc) {
+                SHORT_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
+                ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+            }
 
-        /*
-         * SUBWORKFLOW: Structural variant calling
-         */
-        if (params.call_variants && params.protocol == 'DNA' && !params.skip_sv) {
-            STRUCTURAL_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
-            ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+            /*
+            * SUBWORKFLOW: Structural variant calling
+            */
+            if (!params.skip_sv) {
+                STRUCTURAL_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
+                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+            }
         }
 
         ch_bedtools_version = Channel.empty()
