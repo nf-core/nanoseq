@@ -26,8 +26,8 @@ jobs:
           - NXF_VER: "21.10.3"
             NXF_EDGE: ""
           # Test latest edge release of Nextflow
-          #- NXF_VER: ""
-          #  NXF_EDGE: "1"
+          - NXF_VER: ""
+            NXF_EDGE: "1"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
@@ -58,7 +58,7 @@ jobs:
         profiles:
           - "test_bc_nodx"
           - "test_nobc_dx"
-          - "test_nobc_nodx_vc"
+          #- "test_nobc_nodx_vc"
           - "test_nobc_nodx_stringtie"
           - "test_nobc_nodx_noaln"
           - "test_nobc_nodx_rnamod"
