@@ -14,19 +14,8 @@ You will need to create a file with information about the samples in your experi
 | `replicate`     | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                                                                      |
 | `barcode`       | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                                                                                                                                                                                    |
 | `input_file`    | Full path to FastQ file if previously demultiplexed, BAM file if previously aligned, or a path to a directory with subdirectories containing fastq or fast5 files. FastQ file has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam" |
-| `genome`        | Genome fasta file for alignment. This can either be blank, a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz".                                             |
-| `transcriptome` | Transcriptome fasta/gtf file for alignment. This can either be blank or a local path. Must have the extension ".fasta", ".fasta.gz", ".fa", ".fa.gz", ".gtf" or ".gtf.gz".                                                                                                               |
-
-### Specifying a reference genome/transcriptome
-
-Each sample in the sample sheet can be mapped to its own reference genome or transcriptome. Please see below for additional details required to fill in the `genome` and `transcriptome` columns appropriately:
-
-- If both `genome` and `transcriptome` are not specified then the mapping will be skipped for that sample.
-- If both `genome` and `transcriptome` are specified as local fasta files then the transcriptome will be preferentially used for mapping.
-- If `genome` is specified as a local fasta file and `transcriptome` is left blank then mapping will be performed relative to the genome.
-- If `genome` isnt specified and `transcriptome` is provided as a fasta file then mapping will be performed relative to the transcriptome.
-- If `genome` is specified as an AWS iGenomes key then the `transcriptome` column can be blank. The associated gtf file for the `transcriptome` will be automatically obtained in order to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
-- If `genome` is specified as a local fasta file and `transcriptome` is a specified as a local gtf file then both of these will be used to create a transcriptome fasta file. However, the reads will only be mapped to the transcriptome if `--protocol cDNA` or `--protocol directRNA`. If `--protocol DNA` then the reads will still be mapped to the genome essentially ignoring the gtf file.
+| `fasta`        | Genome fasta file or transcriptome fasta for alignment. This can either be a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz".                                             |
+| `gtf` | Annotation gtf file. This can either be blank (if not running transcript quantification and/or RNA modification detection) or a local path. Must have the extension ".gtf".                                                                                                               |
 
 ### Skip basecalling/demultiplexing
 
@@ -37,7 +26,7 @@ As shown in the examples below, the accepted format of the file is slightly diff
 ##### Example `samplesheet.csv` for barcoded fast5 inputs
 
 ```bash
-group,replicate,barcode,input_file,genome,transcriptome
+group,replicate,barcode,input_file,fasta,gtf
 WT_MOUSE,1,1,,mm10,
 WT_HUMAN,1,2,,hg19,
 WT_POMBE,1,3,,/path/to/local/genome.fa,
@@ -64,7 +53,7 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for non-barcoded fast5 inputs
 
 ```bash
-group,replicate,barcode,input_file,genome,transcriptome
+group,replicate,barcode,input_file,fasta,gtf
 SAMPLE,1,1,/path/to/local/genome.fa,,
 ```
 
@@ -88,7 +77,7 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for non-demultiplexed fastq inputs
 
 ```bash
-group,replicate,barcode,input_file,genome,transcriptome
+group,replicate,barcode,input_file,fasta,gtf
 WT_MOUSE,1,1,,mm10,
 WT_HUMAN,1,2,,hg19,
 WT_POMBE,1,3,,/path/to/local/genome.fa,
@@ -114,7 +103,7 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for demultiplexed fastq inputs
 
 ```bash
-group,replicate,barcode,input_file,genome,transcriptome
+group,replicate,barcode,input_file,fasta,gtf
 WT,1,,SAM101A1.fastq.gz,hg19,
 WT,2,,SAM101A2.fastq.gz,hg19,
 KO,1,,SAM101A3.fastq.gz,hg19,
@@ -137,7 +126,7 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for BAM inputs
 
 ```bash
-group,replicate,barcode,input_file,genome,transcriptome
+group,replicate,barcode,input_file,fasta,gtf
 WT,1,,SAM101A1.bam,hg19,
 WT,2,,SAM101A2.bam,hg19,
 KO,1,,SAM101A3.bam,hg19,
@@ -156,43 +145,40 @@ nextflow run nf-core/nanoseq \
     -profile <docker/singularity/institute>
 ```
 
-## Samplesheet input
+##### RNA modification detection (please run basecalling prior)
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+##### Example `samplesheet.csv` for FAST5 and FASTQ input directories
 
-```console
---input '[path to samplesheet file]'
+```bash
+group,replicate,barcode,input_file,fasta,gtf
+WT,1,,/full/path/to/SAM101A1/,hg19.fasta,hg19.gtf
+WT,2,,/full/path/to/SAM101A2/,hg19.fasta,hg19.gtf
+KO,1,,/full/path/to/SAM101A3/,hg19.fasta,hg19.gtf
+KO,2,,/full/path/to/SAM101A4/,hg19.fasta,hg19.gtf
+```
+Each of the FAST5 and FASTQ input directory should have the following structure:
+```
+<group_rep>
+  ├── fast5
+    ├── xxxxxxxxxxxxxxx1.fast5
+    ├── xxxxxxxxxxxxxxx2.fast5
+    ├── .
+    ├── .
+    └── .
+  ├── fastq
+    └── <group_rep>_basecalled.fastq.gz
 ```
 
-### Multiple runs of the same sample
+##### Example command for RNA modification detection
 
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
-
-```console
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol directRNA \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
 ```
-
-### Full samplesheet
-
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
-
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
-
-```console
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
-TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
-```
-
-An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
 ## Running the pipeline
 
