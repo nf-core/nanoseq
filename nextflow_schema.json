@@ -202,7 +202,7 @@
         "variant_calling_options": {
             "title": "Variant calling options",
             "type": "object",
-            "description": "Options to adjust pameters and filtering criteria for DNA varinat calling.",
+            "description": "Options to adjust pameters for DNA varinat calling and structural variant calling.",
             "default": "",
             "fa_icon": "fas fa-align-center",
             "properties": {
@@ -214,24 +214,24 @@
                 "variant_caller": {
                     "type": "string",
                     "default": "medaka",
-                    "description": "Specifies the variant caller to be used to call small variants (available are: medaka). Only available '--call_variants' is set and the protocol is DNA.",
+                    "description": "Specifies the variant caller that will used to call small variants (available are: medaka, deepvariant, and pepper_margin_deepvariant). Variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`. Please note `deepvariant` and `pepper_margin_deepvariant` are only avaible if using singularity or docker.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
                 "structural_variant_caller": {
                     "type": "string",
                     "default": "sniffles",
-                    "description": "Specifies the variant caller to be used to call structural variants (available are: sniffles and cutesv). Only available '--call_variants' is set and the protocol is DNA.",
+                    "description": "Specifies the variant caller that will be used to call structural variants (available are: sniffles and cutesv). Structural variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
                 "split_mnps": {
                     "type": "boolean",
-                    "description": "Specifies if MNPs will be split into SNPs.",
+                    "description": "Specifies if MNPs will be split into SNPs when using medaka.",
                     "fa_icon": "fas fa-file-alt"
                 },
                 "phase_vcf": {
                     "type": "boolean",
                     "fa_icon": "fas fa-exchange-alt",
-                    "description": "Specifies if vcf will be phased."
+                    "description": "Specifies if vcf will be phased when using medaka."
                 },
                 "skip_vc": {
                     "type": "boolean",

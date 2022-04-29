@@ -12,8 +12,8 @@ process PEPPER_MARGIN_DEEPVARIANT {
     path(fai)
 
     output:
-    tuple val(meta), path("${prefix}/*vcf.gz")     ,  emit: vcf
-    tuple val(meta), path("${prefix}/*vcf.gz.tbi") ,  emit: tbi
+    tuple val(meta), path("*vcf.gz")     ,  emit: vcf
+    tuple val(meta), path("*vcf.gz.tbi") ,  emit: tbi
     path "versions.yml"                            ,  emit: versions
 
     when:
@@ -31,7 +31,7 @@ process PEPPER_MARGIN_DEEPVARIANT {
     run_pepper_margin_deepvariant call_variant \\
         -b "${input}" \\
         -f "${fasta}" \\
-        -o "${prefix}" \\
+        -o "." \\
         -p "${prefix}" \\
         -t ${task.cpus} \\
         $args
