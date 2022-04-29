@@ -35,7 +35,7 @@ The directories listed below are created in the output directory after the pipel
 </details>
 
 _Documentation_:
-[Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis), [demux](https://github.com/nanoporetech/ont_fast5_api#demux_fast5), [qcat](https://github.com/nanoporetech/qcat)
+[Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis), [demux_fast5](https://github.com/nanoporetech/ont_fast5_api#demux_fast5), [qcat](https://github.com/nanoporetech/qcat)
 
 _Description_:
 Nanoseq is designed to deal with various input data types. _Guppy_ can be used to basecall raw data which can then be demultiplexed using _demux_. Alternatively, _demux_ can be used to demultiplex FAST5 data that has already been basecalled. Various options are available to customising these steps, including running _Guppy_ on GPUs if they are available. If you already have a pre-basecalled FASTQ file then _qcat_ can used to perform demultiplexing. The `--skip_basecalling` and `--skip_demultiplexing` parameters can be used seperately or together to skip steps depending on your input data type. Please see [`usage.md`](usage.md#--input) for more details about the format of the input samplesheet. All potential outputs are shown here however some may not be produced depending on your inputs and the steps you have chosen to run.
