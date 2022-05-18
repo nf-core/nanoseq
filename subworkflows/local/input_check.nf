@@ -1,44 +1,50 @@
-//
-// Check input samplesheet and get read channels
-//
+/*
+ * Check input samplesheet and get read channels
+ */
 
 include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check'
 
 workflow INPUT_CHECK {
     take:
     samplesheet // file: /path/to/samplesheet.csv
+    input_path
 
     main:
-    SAMPLESHEET_CHECK ( samplesheet )
+    /*
+     * Check samplesheet is valid
+     */
+    SAMPLESHEET_CHECK ( samplesheet, input_path )
         .csv
         .splitCsv ( header:true, sep:',' )
-        .map { create_fastq_channel(it) }
-        .set { reads }
+        .map { get_sample_info(it, params.genomes) }
+        .map { it -> [ it[0], it[2], it[3], it[4], it[5], it[6], it[1] , it[7] ] }
+        .set { ch_sample }
 
     emit:
-    reads                                     // channel: [ val(meta), [ reads ] ]
-    versions = SAMPLESHEET_CHECK.out.versions // channel: [ versions.yml ]
+    ch_sample // [ sample, barcode, fasta, gtf, is_transcripts, annotation_str ]
 }
 
-// Function to get list of [ meta, [ fastq_1, fastq_2 ] ]
-def create_fastq_channel(LinkedHashMap row) {
-    // create meta map
+// Function to resolve fasta and gtf file if using iGenomes
+// Returns [ sample, input_file, barcode, fasta, gtf, is_transcripts, annotation_str, nanopolish_fast5 ]
+def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     def meta = [:]
-    meta.id         = row.sample
-    meta.single_end = row.single_end.toBoolean()
+    meta.id  = sample.sample
 
-    // add path(s) of the fastq file(s) to the meta map
-    def fastq_meta = []
-    if (!file(row.fastq_1).exists()) {
-        exit 1, "ERROR: Please check input samplesheet -> Read 1 FastQ file does not exist!\n${row.fastq_1}"
-    }
-    if (meta.single_end) {
-        fastq_meta = [ meta, [ file(row.fastq_1) ] ]
-    } else {
-        if (!file(row.fastq_2).exists()) {
-            exit 1, "ERROR: Please check input samplesheet -> Read 2 FastQ file does not exist!\n${row.fastq_2}"
+    // Resolve fasta and gtf file if using iGenomes
+    def fasta = false
+    def gtf   = false
+    if (sample.fasta) {
+        if (genomeMap && genomeMap.containsKey(sample.fasta)) {
+            fasta = file(genomeMap[sample.fasta].fasta, checkIfExists: true)
+            gtf   = file(genomeMap[sample.fasta].gtf, checkIfExists: true)
+        } else {
+            fasta = file(sample.fasta, checkIfExists: true)
         }
-        fastq_meta = [ meta, [ file(row.fastq_1), file(row.fastq_2) ] ]
     }
-    return fastq_meta
+
+    // Check if input file and gtf file exists
+    input_file = sample.input_file ? file(sample.input_file, checkIfExists: true) : null
+    gtf        = sample.gtf        ? file(sample.gtf, checkIfExists: true)        : gtf
+
+    return [ meta, input_file, sample.barcode, fasta, gtf, sample.is_transcripts.toBoolean(), fasta.toString()+';'+gtf.toString(), sample.nanopolish_fast5 ]
 }
