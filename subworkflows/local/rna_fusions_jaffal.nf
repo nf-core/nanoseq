@@ -12,11 +12,18 @@ workflow RNA_FUSIONS_JAFFAL {
     jaffal_ref_dir
 
     main:
-
     if (jaffal_ref_dir) {
         ch_jaffal_ref_dir = file(params.jaffal_ref_dir, checkIfExists: true)
     } else {
+
+        /*
+         * Get jaffel reference
+         */
         GET_JAFFAL_REF()
+
+        /*
+         * Untar jaffel reference
+         */
         UNTAR( GET_JAFFAL_REF.out.ch_jaffal_ref )
         ch_jaffal_ref_dir = UNTAR.out.untar
     }
@@ -26,8 +33,7 @@ workflow RNA_FUSIONS_JAFFAL {
         .set { ch_jaffal_input }
 
     /*
-    * Align current signals to reference with Nanopolish
+    * Align current signals to reference with jaffel
     */
     JAFFAL( ch_jaffal_input, ch_jaffal_ref_dir )
-
 }

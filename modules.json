@@ -4,37 +4,46 @@
     "repos": {
         "nf-core/modules": {
             "custom/dumpsoftwareversions": {
-                "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             },
             "fastqc": {
-                "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+                "git_sha": "49b18b1639f4f7104187058866a8fab33332bdfe"
             },
             "nanolyse": {
-                "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             },
             "pycoqc": {
-                "git_sha": "49da8642876ae4d91128168cd0db4f1c858d7792"
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             },
             "samtools/flagstat": {
-                "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+                "git_sha": "897c33d5da084b61109500ee44c01da2d3e4e773"
             },
             "samtools/idxstats": {
-                "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+                "git_sha": "897c33d5da084b61109500ee44c01da2d3e4e773"
             },
             "samtools/index": {
-                "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+                "git_sha": "897c33d5da084b61109500ee44c01da2d3e4e773"
             },
             "samtools/sort": {
-                "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+                "git_sha": "897c33d5da084b61109500ee44c01da2d3e4e773"
             },
             "samtools/stats": {
-                "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+                "git_sha": "897c33d5da084b61109500ee44c01da2d3e4e773"
             },
             "stringtie/merge": {
-                "git_sha": "3aacd46da2b221ed47aaa05c413a828538d2c2ae"
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
+            },
+            "tabix/bgzip": {
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
+            },
+            "tabix/bgziptabix": {
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
+            },
+            "tabix/tabix": {
+                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             },
             "untar": {
-                "git_sha": "20d8250d9f39ddb05dfb437603aaf99b5c0b2b41"
+                "git_sha": "9ae34a01d1747019fd37753ff4cafb05aec35a2b"
             }
         }
     }

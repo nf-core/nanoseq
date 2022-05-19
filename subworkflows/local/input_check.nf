@@ -10,6 +10,9 @@ workflow INPUT_CHECK {
     input_path
 
     main:
+    /*
+     * Check samplesheet is valid
+     */
     SAMPLESHEET_CHECK ( samplesheet, input_path )
         .csv
         .splitCsv ( header:true, sep:',' )
@@ -30,12 +33,12 @@ def get_sample_info(LinkedHashMap sample, LinkedHashMap genomeMap) {
     // Resolve fasta and gtf file if using iGenomes
     def fasta = false
     def gtf   = false
-    if (sample.genome) {
-        if (genomeMap && genomeMap.containsKey(sample.genome)) {
-            fasta = file(genomeMap[sample.genome].fasta, checkIfExists: true)
-            gtf   = file(genomeMap[sample.genome].gtf, checkIfExists: true)
+    if (sample.fasta) {
+        if (genomeMap && genomeMap.containsKey(sample.fasta)) {
+            fasta = file(genomeMap[sample.fasta].fasta, checkIfExists: true)
+            gtf   = file(genomeMap[sample.fasta].gtf, checkIfExists: true)
         } else {
-            fasta = file(sample.genome, checkIfExists: true)
+            fasta = file(sample.fasta, checkIfExists: true)
         }
     }
 

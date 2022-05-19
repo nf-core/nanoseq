@@ -36,11 +36,20 @@ def print_error(error, context="Line", context_str=""):
     sys.exit(1)
 
 
+def read_head(handle, num_lines=10):
+    """Read the specified number of lines from the current position in the file."""
+    lines = []
+    for idx, line in enumerate(handle):
+        if idx == num_lines:
+            break
+        lines.append(line)
+    return "".join(lines)
+
+
 def check_samplesheet(file_in, updated_path, file_out):
     """
     This function checks that the samplesheet follows the following structure:
-
-    group,replicate,barcode,input_file,genome,transcriptome
+    group,replicate,barcode,input_file,fasta,gtf
     MCF7,1,,MCF7_directcDNA_replicate1.fastq.gz,genome.fa,
     MCF7,2,,MCF7_directcDNA_replicate3.fastq.gz,genome.fa,genome.gtf
     K562,1,,K562_directcDNA_replicate1.fastq.gz,genome.fa,
@@ -53,7 +62,7 @@ def check_samplesheet(file_in, updated_path, file_out):
 
         ## Check header
         MIN_COLS = 3
-        HEADER = ['group', 'replicate', 'barcode', 'input_file', 'genome', 'transcriptome']
+        HEADER = ['group', 'replicate', 'barcode', 'input_file', 'fasta', 'gtf']
         header = fin.readline().strip().split(",")
         if header[:len(HEADER)] != HEADER:
             print("ERROR: Please check samplesheet header -> {} != {}".format(",".join(header), ",".join(HEADER)))
@@ -72,7 +81,7 @@ def check_samplesheet(file_in, updated_path, file_out):
                 print_error("Invalid number of populated columns (minimum = {})!".format(MIN_COLS), 'Line', line)
 
             ## Check group name entries
-            group, replicate, barcode, input_file, genome, transcriptome = lspl[:len(HEADER)]
+            group, replicate, barcode, input_file, fasta, gtf = lspl[:len(HEADER)]
             if group:
                 if group.find(" ") != -1:
                     print_error("Group entry contains spaces!", 'Line', line)
@@ -119,7 +128,6 @@ def check_samplesheet(file_in, updated_path, file_out):
                             ## CHECK PROVIDED BASECALLED FASTQ
                             fastq_path       = input_file+'/fastq'
                             basecalled_fastq = [fn for fn in os.listdir(fastq_path) if fn.endswith(".fastq.gz") or fn.endswith(".fq.gz") ]
-                            print(basecalled_fastq)
                             if len(basecalled_fastq) != 1:
                                 print_error('Please input one basecalled fastq per sample.')
                             else:
@@ -131,31 +139,34 @@ def check_samplesheet(file_in, updated_path, file_out):
                             print_error('path does not end with ".fastq.gz", ".fq.gz", or ".bam" and is not an existing directory with correct fast5 and/or fastq inputs.')
 
             ## Check genome entries
-            if genome:
-                if genome.find(' ') != -1:
+            if fasta:
+                if fasta.find(' ') != -1:
                     print_error("Genome entry contains spaces!",'Line', line)
-                if len(genome.split('.')) > 1:
-                    if genome[-6:] != '.fasta' and genome[-3:] != '.fa' and genome[-9:] != '.fasta.gz' and genome[-6:] != '.fa.gz':
+                if len(fasta.split('.')) > 1:
+                    if fasta[-6:] != '.fasta' and fasta[-3:] != '.fa' and fasta[-9:] != '.fasta.gz' and fasta[-6:] != '.fa.gz':
                         print_error("Genome entry does not have extension '.fasta', '.fa', '.fasta.gz' or '.fa.gz'!",'Line', line)
 
             ## Check transcriptome entries
-            gtf = ''
+            #gtf = ''
             is_transcripts = '0'
-            if transcriptome:
-                if transcriptome.find(' ') != -1:
+            if gtf:
+                if gtf.find(' ') != -1:
                     print_error("Transcriptome entry contains spaces!",'Line',line)
-                if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-9:] != '.fasta.gz' and transcriptome[-6:] != '.fa.gz' and transcriptome[-4:] != '.gtf' and transcriptome[-7:] != '.gtf.gz':
-                    print_error("Transcriptome entry does not have extension '.fasta', '.fa', '.fasta.gz', '.fa.gz', '.gtf' or '.gtf.gz'!", 'Line', line)
-                if transcriptome[-4:] == '.gtf' or transcriptome[-7:] == '.gtf.gz':
-                    gtf = transcriptome
-                    if not genome:
-                        print_error("If genome isn't provided, transcriptome must be in fasta format for mapping!", 'Line', line)
-                else:
-                    is_transcripts = '1'
-                    genome = transcriptome
+                print(gtf[-4:])
+                if gtf[-4:] != '.gtf' and gtf[-7:] != '.gtf.gz':
+                    print_error("Transcriptome entry does not have extension '.gtf' or '.gtf.gz'!", 'Line', line)
+                #if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-9:] != '.fasta.gz' and transcriptome[-6:] != '.fa.gz' and transcriptome[-4:] != '.gtf' and transcriptome[-7:] != '.gtf.gz':
+                #    print_error("Transcriptome entry does not have extension '.fasta', '.fa', '.fasta.gz', '.fa.gz', '.gtf' or '.gtf.gz'!", 'Line', line)
+                #if transcriptome[-4:] == '.gtf' or transcriptome[-7:] == '.gtf.gz':
+                #    gtf = transcriptome
+                #    if not genome:
+                #        print_error("If genome isn't provided, transcriptome must be in fasta format for mapping!", 'Line', line)
+                #else:
+                #    is_transcripts = '1'
+                #    genome = transcriptome
 
             ## Create sample mapping dictionary = {group: {replicate : [ barcode, input_file, genome, gtf, is_transcripts, nanopolish_fast5 ]}}
-            sample_info = [barcode, input_file, genome, gtf, is_transcripts, nanopolish_fast5]
+            sample_info = [barcode, input_file, fasta, gtf, is_transcripts, nanopolish_fast5]
             if group not in sample_info_dict:
                 sample_info_dict[group] = {}
             if replicate not in sample_info_dict[group]:
@@ -173,7 +184,7 @@ def check_samplesheet(file_in, updated_path, file_out):
         make_dir(out_dir)
         with open(file_out, "w") as fout:
 
-            fout.write(",".join(['sample', 'barcode', 'input_file', 'genome', 'gtf', 'is_transcripts', 'nanopolish_fast5']) + "\n")
+            fout.write(",".join(['sample', 'barcode', 'input_file', 'fasta', 'gtf', 'is_transcripts', 'nanopolish_fast5']) + "\n")
             for sample in sorted(sample_info_dict.keys()):
 
                 ## Check that replicate ids are in format 1..<NUM_REPS>

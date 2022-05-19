@@ -8,18 +8,18 @@ process SNIFFLES {
         'quay.io/biocontainers/sniffles:1.0.12--h8b12597_1' }"
 
     input:
-    tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai)
+    tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)
 
 
     output:
-    path "*_sniffles.vcf"               , emit: sv_calls // vcf files
-    path "versions.yml"                 , emit: versions
+    tuple val(meta), path("*_sniffles.vcf") , emit: sv_calls // vcf files
+    path "versions.yml"                     , emit: versions
 
 
     script:
     """
     sniffles \
-        -m  $bam \
+        -m  $input \
         -v ${meta.id}_sniffles.vcf \
         -t $task.cpus
 

@@ -8,26 +8,30 @@ process MEDAKA_VARIANT {
         'quay.io/biocontainers/medaka:1.4.4--py38h130def0_0' }"
 
     input:
-    tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai) //
+    tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)
     path(fasta)
 
     output:
-    path ("${meta.id}/round_1.vcf")    , emit: variant_calls // vcf files
-    path "versions.yml"        , emit: versions
+    tuple val(meta), path ("$output_vcf")    , emit: vcf // vcf files
+    path "versions.yml"                      , emit: versions
 
     script:
-    //def args       =  options.args      ?: ''
-    def split_mnps =  params.split_mnps ? "-l"                        : ''
-    def phase_vcf  =  params.phase_vcf  ? "-p"                        : ''
+    //def args             =  options.args        ?: ''
+    def split_mnps       =  params.split_mnps   ? "-l"                        : ''
+    def phase_vcf        =  params.phase_vcf    ? "-p"                        : ''
+
+    output_dir = "${meta.id}"
+    output_vcf = output_dir+"/round_1.vcf"
     """
+
     medaka_variant \\
         -d \\
         -f $fasta \\
-        -i $bam \\
-        -o ${meta.id}/ \\
+        -i $input \\
+        -o $output_dir \\
         -t $task.cpus \\
         $split_mnps \\
-        $phase_vcf \\
+        $phase_vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

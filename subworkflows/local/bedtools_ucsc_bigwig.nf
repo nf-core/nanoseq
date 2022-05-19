@@ -20,7 +20,6 @@ workflow BEDTOOLS_UCSC_BIGWIG {
     /*
      * Convert BEDGraph to BigWig
      */
-
     UCSC_BEDGRAPHTOBIGWIG ( ch_bedgraph )
     ch_bigwig = UCSC_BEDGRAPHTOBIGWIG.out.bigwig
     bedgraphtobigwig_version = UCSC_BEDGRAPHTOBIGWIG.out.versions

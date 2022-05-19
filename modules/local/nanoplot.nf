@@ -12,7 +12,7 @@ process NANOPLOT {
 
     output:
     tuple val(meta), path("$output_html"), emit: html
-    tuple val(meta), path("$output_png") , emit: png
+    //tuple val(meta), path("$output_png") , emit: png
     tuple val(meta), path("$output_txt") , emit: txt
     tuple val(meta), path("$output_log") , emit: log
     path  "versions.yml"           , emit: versions

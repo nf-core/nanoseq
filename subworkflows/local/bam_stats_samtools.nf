@@ -2,7 +2,7 @@
  * Run SAMtools stats, flagstat and idxstats
  */
 
-include { SAMTOOLS_STATS    } from '../../modules/nf-core/modules/samtools/stats/main'
+include { SAMTOOLS_STATS    } from '../../modules/local/samtools_stats'
 include { SAMTOOLS_IDXSTATS } from '../../modules/nf-core/modules/samtools/idxstats/main'
 include { SAMTOOLS_FLAGSTAT } from '../../modules/nf-core/modules/samtools/flagstat/main'
 
@@ -11,8 +11,19 @@ workflow BAM_STATS_SAMTOOLS {
     ch_bam_bai // channel: [ val(meta), [ bam ], [bai] ]
 
     main:
+    /*
+     * Stats with samtools
+     */
     SAMTOOLS_STATS    ( ch_bam_bai )
+
+    /*
+     * Flagstat with samtools
+     */
     SAMTOOLS_FLAGSTAT ( ch_bam_bai )
+
+    /*
+     * Idxstats with samtools
+     */
     SAMTOOLS_IDXSTATS ( ch_bam_bai )
 
     emit:

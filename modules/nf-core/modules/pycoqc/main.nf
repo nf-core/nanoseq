@@ -15,6 +15,9 @@ process PYCOQC {
     path "*.json"        , emit: json
     path  "versions.yml" , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def args = task.ext.args ?: ''
     """
@@ -23,10 +26,10 @@ process PYCOQC {
         -f $summary \\
         -o pycoqc.html \\
         -j pycoqc.json
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         pycoqc: \$(pycoQC --version 2>&1 | sed 's/^.*pycoQC v//; s/ .*\$//')
     END_VERSIONS
     """
 }
-

@@ -14,20 +14,20 @@ env:
 
 jobs:
   test:
-    name: Run workflow tests
+    name: Run pipeline with test data
     # Only run on push if this is the nf-core dev branch (merged PRs)
-    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
         # Nextflow versions
         include:
           # Test pipeline minimum Nextflow version
-          - NXF_VER: '21.10.3'
-            NXF_EDGE: ''
+          - NXF_VER: "21.10.3"
+            NXF_EDGE: ""
           # Test latest edge release of Nextflow
-          - NXF_VER: ''
-            NXF_EDGE: '1'
+          - NXF_VER: ""
+            NXF_EDGE: "1"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
@@ -44,18 +44,24 @@ jobs:
 
       - name: Run pipeline with test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --outdir ./results
 
   profile:
     name: Run profile tests
-    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
     runs-on: ubuntu-latest
     env:
-      NXF_VER: '21.10.3'
+      NXF_VER: "21.10.3"
       NXF_ANSI_LOG: false
     strategy:
       matrix:
-        profiles: [test_bc_nodx, test_nobc_dx, test_nobc_nodx_vc, test_nobc_nodx_stringtie, test_nobc_nodx_noaln, test_nobc_nodx_rnamod]
+        profiles:
+          - "test_bc_nodx"
+          - "test_nobc_dx"
+          - "test_nobc_nodx_vc"
+          - "test_nobc_nodx_stringtie"
+          - "test_nobc_nodx_noaln"
+          - "test_nobc_nodx_rnamod"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
@@ -69,18 +75,22 @@ jobs:
 
       - name: Run pipeline with different profiles
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profiles }},docker
+          nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profiles }},docker --outdir ./results
 
   parameters:
     name: Run parameter tests
-    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}
+    if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
     runs-on: ubuntu-latest
     env:
-      NXF_VER: '21.10.3'
+      NXF_VER: "21.10.3"
       NXF_ANSI_LOG: false
     strategy:
       matrix:
-        parameters: [--aligner graphmap2, --skip_alignment, --skip_qc, --skip_quantification]
+        parameters:
+          - "--aligner graphmap2"
+          - "--skip_alignment"
+          - "--skip_qc"
+          - "--skip_quantification"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
@@ -95,3 +105,5 @@ jobs:
       - name: Run pipeline with different parameters
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test,docker ${{ matrix.parameters }}
+
+#
