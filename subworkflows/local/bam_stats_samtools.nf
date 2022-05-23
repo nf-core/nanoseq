@@ -3,6 +3,7 @@
  */
 
 include { SAMTOOLS_STATS    } from '../../modules/local/samtools_stats'
+//include { SAMTOOLS_STATS    } from '../../modules/nf-core/modules/samtools/stats/main'
 include { SAMTOOLS_IDXSTATS } from '../../modules/nf-core/modules/samtools/idxstats/main'
 include { SAMTOOLS_FLAGSTAT } from '../../modules/nf-core/modules/samtools/flagstat/main'
 
