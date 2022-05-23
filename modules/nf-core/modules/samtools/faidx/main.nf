@@ -40,4 +40,3 @@ process SAMTOOLS_FAIDX {
     END_VERSIONS
     """
 }
-

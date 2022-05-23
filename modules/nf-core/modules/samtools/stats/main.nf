@@ -28,6 +28,7 @@ process SAMTOOLS_STATS {
         ${reference} \\
         ${input} \\
         > ${input}.stats
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
@@ -38,6 +39,7 @@ process SAMTOOLS_STATS {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${input}.stats
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
