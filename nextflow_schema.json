@@ -228,6 +228,11 @@
                     "description": "Specifies if MNPs will be split into SNPs when using medaka.",
                     "fa_icon": "fas fa-file-alt"
                 },
+                "deepvariant_gpu": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-exchange-alt",
+                    "description": "Specifies whether to call variants with pepper_margin_deepvariant in GPU mode.."
+                },
                 "phase_vcf": {
                     "type": "boolean",
                     "fa_icon": "fas fa-exchange-alt",

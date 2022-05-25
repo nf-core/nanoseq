@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `--call_variants` to detect DNA variants
 - Added `--split_mnps` to split multi-nucleotide polymorphisms into single nucleotide polymorphisms when using medaka
 - Added `--phase_vcf` to output a phased vcf when using medaka
+- Added `--deepvariant_gpu` to use gpu with docker pepper_margin_deepvariant
 - Added `--skip_vc` to skip `variant_calling`
 - Added `--skip_sv` to skip `structural_variant_calling`
 - Added `--variant_caller` to specify variant caller.
@@ -37,20 +38,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Software dependencies
 
-| Dependency                  | Old version | New version |
-| --------------------------- | ----------- | ----------- |
-| `bioconductor-bambu`        | 1.0.2       | 2.0.0       |
-| `bioconductor-bsgenome`     | 1.58.0      | 1.62.0      |
-| `cutesv`                    |             | 1.0.12      |
-| `deepvariant`               |             | 1.0.3       |
-| `jaffa`                     |             | 2.0         |
-| `m6anet`                    |             | 1.0         |
-| `medaka`                    |             | 1.4.4       |
-| `multiqc`                   | 1.10.1      | 1.11        |
-| `ont_fast5_api`             |             | 4.0.0       |
-| `pepper_margin_deepvariant` |             | 0.8         |
-| `sniffles`                  |             | 1.0.12      |
-| `xpore`                     |             | 2.1         |
+| Dependency                      | Old version | New version |
+| ------------------------------- | ----------- | ----------- |
+| `bioconductor-bambu`            | 1.0.2       | 2.0.0       |
+| `bioconductor-bsgenome`         | 1.58.0      | 1.62.0      |
+| `cutesv`                        |             | 1.0.12      |
+| `deepvariant`                   |             | 1.0.3       |
+| `jaffa`                         |             | 2.0         |
+| `m6anet`                        |             | 1.0         |
+| `medaka`                        |             | 1.4.4       |
+| `multiqc`                       | 1.10.1      | 1.11        |
+| `ont_fast5_api`                 |             | 4.0.0       |
+| `pepper_margin_deepvariant`     |             | 0.8         |
+| `pepper_margin_deepvariant_gpu` |             | 0.8         |
+| `sniffles`                      |             | 1.0.12      |
+| `xpore`                         |             | 2.1         |
 
 ### Bug fix
 
