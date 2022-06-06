@@ -231,7 +231,7 @@
                 "deepvariant_gpu": {
                     "type": "boolean",
                     "fa_icon": "fas fa-exchange-alt",
-                    "description": "Specifies whether to call variants with pepper_margin_deepvariant in GPU mode.."
+                    "description": "Specifies whether to call variants with pepper_margin_deepvariant in GPU mode."
                 },
                 "phase_vcf": {
                     "type": "boolean",
