@@ -357,7 +357,7 @@ workflow NANOSEQ{
         /*
         * SUBWORKFLOW: View, then  sort, and index bam files
         */
-        BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam, params.call_variants )
+        BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam, params.call_variants, ch_fasta )
         ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
         ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.samtools_versions.first().ifEmpty(null))
         ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])

@@ -4,7 +4,7 @@
 
 include { GET_CHROM_SIZES  } from '../../modules/local/get_chrom_sizes'
 include { GTF2BED          } from '../../modules/local/gtf2bed'
-include { SAMTOOLS_FAIDX   } from '../../modules/local/samtools_faidx'
+include { SAMTOOLS_FAIDX   } from '../../modules/nf-core/modules/samtools/faidx/main'
 
 workflow PREPARE_GENOME {
     take:
