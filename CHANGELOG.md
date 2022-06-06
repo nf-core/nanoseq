@@ -3,7 +3,7 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.0.0] - 2022-05-10
+## [3.0.0] - 2022-06-21
 
 ### Major enhancements
 
@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `ont_fast5_api`                 |             | 4.0.0       |
 | `pepper_margin_deepvariant`     |             | 0.8         |
 | `pepper_margin_deepvariant_gpu` |             | 0.8         |
+| `samtools`                      | 1.14        | 1.15        |
 | `sniffles`                      |             | 1.0.12      |
 | `xpore`                         |             | 2.1         |
 
