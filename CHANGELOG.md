@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `demux_fast5` module to output demultiplexed fast5 files when `--output_demultiplex_fast5` is set
 - Add `--trim_barcodes` in Guppy basecaller to trim the barcodes from output fastq
 - Port pipeline to the updated Nextflow DSL2 syntax adopted on nf-core/modules
-  - Removed `--publish_dir_mode` as it is no longer required for the new syntax
+- Removed `--publish_dir_mode` as it is no longer required for the new syntax
 - Bump minimum Nextflow version from 21.04.0 -> 21.10.3
 - Update pipeline template to nf-core/tools `2.2`
 - Update `bambu` version from `1.0.2` to `2.0.0`
