@@ -110,7 +110,7 @@ if (!params.skip_quantification) {
 /* --          CONFIG FILES                    -- */
 ////////////////////////////////////////////////////
 
-ch_multiqc_config        = file("$baseDir/assets/multiqc_config.yaml", checkIfExists: true)
+ch_multiqc_config        = file("$baseDir/assets/multiqc_config.yml", checkIfExists: true)
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config) : Channel.empty()
 
 ////////////////////////////////////////////////////
