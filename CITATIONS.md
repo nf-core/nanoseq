@@ -34,7 +34,7 @@
 
 - [JAFFAL](https://doi.org/10.1186/s13059-021-02588-5)
 
-  > Davidson NM, et al., JAFFAL: detecting fusion genes with long-read transcriptome sequencing. Genome Biology (2022)
+  > Davidson NM, Chen Y, Sadras T, Ryland GL, Blombery P, Ekert PG, Göke J, Oshlack A. JAFFAL: detecting fusion genes with long-read transcriptome sequencing. Genome Biol. 2022 Jan 6;23(1):10. doi: 10.1186/s13059-021-02588-5. PMID: 34991664; PMCID: PMC8739696.
 
 - [m6anet](https://www.biorxiv.org/content/10.1101/2021.09.20.461055v1)
 
@@ -85,7 +85,7 @@
   > Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics. 2010 Sep 1;26(17):2204-7. doi: 10.1093/bioinformatics/btq351. Epub 2010 Jul 17. PubMed PMID: 20639541; PubMed Central PMCID: PMC2922891.
 
 - [xPore](https://doi.org/10.1038/s41587-021-00949-w)
-  > Pratanwanich PN, et al.,Identification of differential RNA modifications from nanopore direct RNA sequencing with xPore. Nat Biotechnol (2021)
+  > Pratanwanich PN, Yao F, Chen Y, Koh CWQ, Wan YK, Hendra C, Poon P, Goh YT, Yap PML, Chooi JY, Chng WJ, Ng SB, Thiery A, Goh WSS, Göke J. Identification of differential RNA modifications from nanopore direct RNA sequencing with xPore. Nat Biotechnol. 2021 Nov;39(11):1394-1402. doi: 10.1038/s41587-021-00949-w. Epub 2021 Jul 19. PMID: 34282325.
 
 ## R packages
 
