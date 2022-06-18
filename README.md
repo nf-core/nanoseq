@@ -25,7 +25,7 @@ On release, automated continuous integration tests run the pipeline on a [full-s
 
 ## Pipeline Summary
 
-1. Basecalling and/or demultiplexing ([`Guppy`](https://nanoporetech.com/nanopore-sequencing-data-analysis), [`demux_fast5`](https://github.com/nanoporetech/ont_fast5_api#demux_fast5) or [`qcat`](https://github.com/nanoporetech/qcat); _optional_)
+1. Basecalling and/or demultiplexing ([`Guppy`](https://nanoporetech.com/nanopore-sequencing-data-analysis), [`demux_fast5`](https://github.com/nanoporetech/ont_fast5_api#demux_fast5), or [`qcat`](https://github.com/nanoporetech/qcat); _optional_)
 2. Sequencing QC ([`pycoQC`](https://github.com/a-slide/pycoQC), [`NanoPlot`](https://github.com/wdecoster/NanoPlot))
 3. Raw read DNA cleaning ([NanoLyse](https://github.com/wdecoster/nanolyse); _optional_)
 4. Raw read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot), [`FastQC`](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
