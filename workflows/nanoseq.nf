@@ -1,8 +1,10 @@
-////////////////////////////////////////////////////
-/* --         LOCAL PARAMETER VALUES           -- */
-////////////////////////////////////////////////////
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    VALIDATE INPUTS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
-params.summary_params = [:]
+def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
 ////////////////////////////////////////////////////
 /* --          VALIDATE INPUTS                 -- */
@@ -13,7 +15,11 @@ checkPathParamList = [ params.input, params.multiqc_config ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters (missing protocol or profile will exit the run.)
-if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+if (params.input) { 
+    ch_input = file(params.input) 
+} else {
+    exit 1, 'Input samplesheet not specified!'
+}
 
 // Function to check if running offline
 def isOffline() {
@@ -27,8 +33,12 @@ def isOffline() {
 
 def ch_guppy_model  = Channel.empty()
 def ch_guppy_config = Channel.empty()
+
+if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
+    exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
+}
+
 if (!params.skip_basecalling) {
-    // Need to stage guppy_config properly depending on whether its a file or string
     if (!params.guppy_config) {
         if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
         if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!"      }
@@ -36,13 +46,11 @@ if (!params.skip_basecalling) {
         ch_guppy_config = Channel.fromPath(params.guppy_config)
     }
 
-    // Need to stage guppy_model properly depending on whether its a file or string
     if (params.guppy_model) {
         if (file(params.guppy_model).exists()) {
             ch_guppy_model = Channel.fromPath(params.guppy_model)
         }
     }
-
 } else {
     if (!params.skip_demultiplexing) {
         if (!params.barcode_kit) {
@@ -74,6 +82,21 @@ if (!params.skip_alignment) {
     }
 }
 
+if (params.call_variants) {
+    if (params.protocol != 'DNA') {
+        exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA'"
+    }
+    if (!params.skip_vc && params.variant_caller != 'medaka' && params.variant_caller != 'deepvariant' && params.variant_caller != 'pepper_margin_deepvariant') {
+        exit 1, "Invalid variant caller option: ${params.variant_caller}. Valid options: 'medaka', 'deepvariant' or 'pepper_margin_deepvariant'"
+    }
+    if (!params.skip_sv && params.structural_variant_caller != 'sniffles' && params.structural_variant_caller != 'cutesv') {
+        exit 1, "Invalid structural variant caller option: ${params.structural_variant_caller}. Valid options: 'sniffles', 'cutesv"
+    }
+    if (!params.skip_vc && params.enable_conda && params.variant_caller != 'medaka') {
+        exit 1, "Conda environments cannot be used when using the deepvariant or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
+    }
+}
+
 if (!params.skip_quantification) {
     if (params.quantification_method != 'bambu' && params.quantification_method != 'stringtie2') {
         exit 1, "Invalid transcript quantification option: ${params.quantification_method}. Valid options: 'bambu', 'stringtie2'"
@@ -87,61 +110,41 @@ if (!params.skip_quantification) {
 /* --          CONFIG FILES                    -- */
 ////////////////////////////////////////////////////
 
-ch_multiqc_config        = file("$baseDir/assets/multiqc_config.yaml", checkIfExists: true)
+ch_multiqc_config        = file("$baseDir/assets/multiqc_config.yml", checkIfExists: true)
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config) : Channel.empty()
 
 ////////////////////////////////////////////////////
 /* --    IMPORT LOCAL MODULES/SUBWORKFLOWS     -- */
 ////////////////////////////////////////////////////
 
-// Don't overwrite global params.modules, create a copy instead and use that within the main script.
-def modules = params.modules.clone()
-
-def multiqc_options         = modules['multiqc']
-multiqc_options.args       += params.multiqc_title ? " --title \"$params.multiqc_title\"" : ''
-if (params.skip_alignment)  { multiqc_options['publish_dir'] = '' }
-
-def guppy_options    = modules['guppy']
-def qcat_options     = modules['qcat']
-def nanolyse_options = modules['nanolyse']
-def bambu_options    = modules['bambu']
-
-include { GET_TEST_DATA } from '../modules/local/get_test_data' addParams( options: [:] )
-include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta' addParams( options: [:] )
-include { GUPPY                 } from '../modules/local/guppy'                   addParams( options: guppy_options                )
-include { QCAT                  } from '../modules/local/qcat'                    addParams( options: qcat_options                 )
-include { BAM_RENAME            } from '../modules/local/bam_rename'              addParams( options: [:]                          )
-include { BAMBU                 } from '../modules/local/bambu'                   addParams( options: bambu_options                )
-include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'   addParams( options: [publish_files : ['csv':'']] )
-include { MULTIQC               } from '../modules/local/multiqc'                 addParams( options: multiqc_options              )
+include { GET_TEST_DATA         } from '../modules/local/get_test_data'
+include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
+include { GUPPY                 } from '../modules/local/guppy'
+include { DEMUX_FAST5           } from '../modules/local/demux_fast5'
+include { QCAT                  } from '../modules/local/qcat'
+include { BAM_RENAME            } from '../modules/local/bam_rename'
+include { BAMBU                 } from '../modules/local/bambu'
+include { MULTIQC               } from '../modules/local/multiqc'
 
 /*
  * SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
  */
-def pycoqc_options              = modules['pycoqc']
-def nanoplot_options            = modules['nanoplot']
-def fastqc_options              = modules['fastqc']
-def genome_options              = modules['get_chrom_size']
-def graphmap2_index_options     = modules['graphmap2_index']
-def graphmap2_align_options     = modules['graphmap2_align']
-def minimap2_index_options      = modules['minimap2_index']
-def minimap2_align_options      = modules['minimap2_align']
-def samtools_sort_options       = modules['samtools_sort']
-def bigwig_options              = modules['ucsc_bedgraphtobigwig']
-def bigbed_options              = modules['ucsc_bed12tobigbed']
-def stringtie2_options          = modules['stringtie2']
-def featurecounts_options       = modules['subread_featurecounts']
-def deseq2_options              = modules['deseq2']
-def dexseq_options              = modules['dexseq']
 
-include { INPUT_CHECK                      } from '../subworkflows/local/input_check'                       addParams( options: [:] )
-include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'                    addParams( genome_options: genome_options )
-include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'                   addParams( index_options: graphmap2_index_options, align_options: graphmap2_align_options, samtools_options: samtools_sort_options )
-include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'                    addParams( index_options: minimap2_index_options, align_options: minimap2_align_options, samtools_options: samtools_sort_options )
-include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'              addParams( bigwig_options: bigwig_options )
-include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'              addParams( bigbed_options: bigbed_options )
-include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'  addParams( stringtie2_options: stringtie2_options, featurecounts_options: featurecounts_options )
-include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'        addParams( deseq2_options: deseq2_options, dexseq_options: dexseq_options )
+include { INPUT_CHECK                      } from '../subworkflows/local/input_check'
+include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'
+include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/local/qcbasecall_pycoqc_nanoplot'
+include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq_nanoplot_fastqc'
+include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'
+include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'
+include { BAM_SORT_INDEX_SAMTOOLS          } from '../subworkflows/local/bam_sort_index_samtools'
+include { SHORT_VARIANT_CALLING            } from '../subworkflows/local/short_variant_calling'
+include { STRUCTURAL_VARIANT_CALLING       } from '../subworkflows/local/structural_variant_calling'
+include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'
+include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'
+include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'
+include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'
+include { RNA_MODIFICATION_XPORE_M6ANET    } from '../subworkflows/local/rna_modifications_xpore_m6anet'
+include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fusions_jaffal'
 
 ////////////////////////////////////////////////////
 /* --    IMPORT NF-CORE MODULES/SUBWORKFLOWS   -- */
@@ -150,14 +153,12 @@ include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differe
 /*
  * MODULE: Installed directly from nf-core/modules
  */
-include { NANOLYSE                    } from '../modules/nf-core/modules/nanolyse/main' addParams( options: nanolyse_options             )
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main' addParams( options: [publish_files : ['_versions.yml':'']] )
+include { NANOLYSE                    } from '../modules/nf-core/modules/nanolyse/main'
+include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
 
 /*
- * SUBWORKFLOW: Consisting entirely of nf-core/modules (BAM_SORT_SAMTOOLS & BAM_STAT_SAMTOOLS are within two local subworkflows)
+ * SUBWORKFLOW: Consisting entirely of nf-core/modules
  */
-include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/nf-core/qcbasecall_pycoqc_nanoplot'      addParams( pycoqc_options: pycoqc_options, nanoplot_options: nanoplot_options )
-include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/nf-core/qcfastq_nanoplot_fastqc'         addParams( nanoplot_options: nanoplot_options, fastqc_options: fastqc_options )
 
 ////////////////////////////////////////////////////
 /* --           RUN MAIN WORKFLOW              -- */
@@ -168,32 +169,54 @@ def multiqc_report      = []
 
 workflow NANOSEQ{
 
-    /*
-     * SUBWORKFLOW: Read in samplesheet, validate and stage input files
-     */
-    INPUT_CHECK ( ch_input )
-        .set { ch_sample }
-
-    ch_software_versions = Channel.empty()
-    if (!params.skip_basecalling){
-        ch_sample
-            .first()
-            .map { it[0] }
-            .set { ch_sample_name }
-
-        // Pre-download test-dataset to get files for '--input_path' parameter
-        // Nextflow is unable to recursively download directories via HTTPS
-        if (workflow.profile.contains('test')) {
+    // Pre-download test-dataset to get files for '--input_path' parameter
+    // Nextflow is unable to recursively download directories via HTTPS
+    if (workflow.profile.contains('test') && !workflow.profile.contains('vc')) {
+        if (!params.skip_basecalling || !params.skip_modification_analysis) {
             if (!isOffline()) {
-                GET_TEST_DATA ().set { ch_input_path }
+                GET_TEST_DATA ()
+                if (params.skip_modification_analysis) {
+                    GET_TEST_DATA.out.ch_input_fast5s_path
+                        .set { ch_input_path }
+                } else {
+                    GET_TEST_DATA.out.ch_input_dir_path
+                        .set { ch_input_path }
+                }
             } else {
                 exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
             }
         } else {
             if (params.input_path) {
                 ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+            } else {
+                ch_input_path = 'not_changed'
             }
         }
+    } else {
+        if (params.input_path) {
+            ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+        } else {
+            ch_input_path = 'not_changed'
+        }
+    }
+
+    /*
+     * Create empty software versions channel to mix
+     */
+    ch_software_versions = Channel.empty()
+
+    /*
+     * SUBWORKFLOW: Read in samplesheet, validate and stage input files
+     */
+    INPUT_CHECK ( ch_input, ch_input_path )
+        .set { ch_sample }
+
+    if (!params.skip_basecalling) {
+        ch_sample
+            .first()
+            .map { it[0] }
+            .set { ch_sample_name }
+
         /*
          * MODULE: Basecalling and demultipexing using Guppy
          */
@@ -201,7 +224,7 @@ workflow NANOSEQ{
         ch_guppy_summary = GUPPY.out.summary
         ch_software_versions = ch_software_versions.mix(GUPPY.out.versions.ifEmpty(null))
 
-        if (params.skip_demultiplexing){
+        if (params.skip_demultiplexing) {
             ch_sample
                 .map { it -> [ it[0], it[0].id, it[2], it[3], it[4], it[5] ] }
                 .set { ch_sample }
@@ -213,10 +236,18 @@ workflow NANOSEQ{
             .join(ch_sample, by: 1) // join on barcode
             .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
             .set { ch_fastq }
+        if (params.output_demultiplex_fast5) {
+
+            /*
+            * MODULE: Demultiplex fast5 files using ont_fast5_api/demux_fast5
+            */
+            DEMUX_FAST5 ( ch_input_path, ch_guppy_summary )
+            ch_software_versions = ch_software_versions.mix(DEMUX_FAST5.out.versions.ifEmpty(null))
+        }
     } else {
         ch_guppy_summary = Channel.empty()
 
-        if (!params.skip_demultiplexing){
+        if (!params.skip_demultiplexing) {
 
             /*
              * MODULE: Demultipexing using qcat
@@ -230,9 +261,8 @@ workflow NANOSEQ{
                 .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
                 .set { ch_fastq }
             ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
-
         } else {
-            if (!params.skip_alignment){
+            if (!params.skip_alignment) {
                 ch_sample
                     .map { it -> if (it[6].toString().endsWith('.gz')) [ it[0], it[6], it[2], it[1], it[4], it[5] ] }
                     .set { ch_fastq }
@@ -247,8 +277,8 @@ workflow NANOSEQ{
             .map { it -> [ it[0], it[1] ] }
             .set { ch_fastq_nanolyse }
 
-        if (!params.nanolyse_fasta){
-            if (!isOffline()){
+        if (!params.nanolyse_fasta) {
+            if (!isOffline()) {
                 GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
             } else {
                 exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
@@ -257,8 +287,8 @@ workflow NANOSEQ{
             ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
         }
         /*
-        * MODULE: DNA contaminant removal using NanoLyse
-        */
+         * MODULE: DNA contaminant removal using NanoLyse
+         */
         NANOLYSE ( ch_fastq_nanolyse, ch_nanolyse_fasta )
         NANOLYSE.out.fastq
             .join( ch_sample )
@@ -269,8 +299,8 @@ workflow NANOSEQ{
 
     ch_pycoqc_multiqc = Channel.empty()
     ch_fastqc_multiqc = Channel.empty()
-    if (!params.skip_qc){
-        if (!params.skip_basecalling){
+    if (!params.skip_qc) {
+        if (!params.skip_basecalling) {
 
             /*
              * SUBWORKFLOW: Basecalling QC with PycoQC and Nanoplot
@@ -284,7 +314,7 @@ workflow NANOSEQ{
          * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
          */
         QCFASTQ_NANOPLOT_FASTQC ( ch_fastq, params.skip_nanoplot, params.skip_fastqc)
-        if (params.skip_basecalling){
+        if (params.skip_basecalling) {
             ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.nanoplot_version.first().ifEmpty(null))
         }
         ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
@@ -292,14 +322,16 @@ workflow NANOSEQ{
     }
 
     ch_samtools_multiqc = Channel.empty()
-    if (!params.skip_alignment){
+    if (!params.skip_alignment) {
 
         /*
-        * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
-        */
+         * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
+         */
         PREPARE_GENOME ( ch_fastq )
         ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
         ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
+        ch_fasta       = PREPARE_GENOME.out.ch_fasta
+        ch_fai         = PREPARE_GENOME.out.ch_fai
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
         if (params.aligner == 'minimap2') {
@@ -308,24 +340,48 @@ workflow NANOSEQ{
             * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
             */
             ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq )
-            ch_view_sortbam = ALIGN_MINIMAP2.out.ch_sortbam
+            ch_align_sam = ALIGN_MINIMAP2.out.ch_align_sam
+            ch_index = ALIGN_MINIMAP2.out.ch_index
             ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.samtools_version.first().ifEmpty(null))
-            ch_samtools_multiqc  = ALIGN_MINIMAP2.out.ch_sortbam_stats_multiqc.ifEmpty([])
         } else {
 
             /*
              * SUBWORKFLOW: Align fastq files with graphmap2 and sort bam files
              */
             ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
-            ch_view_sortbam = ALIGN_GRAPHMAP2.out.ch_sortbam
+            ch_align_sam = ALIGN_GRAPHMAP2.out.ch_align_sam
+            ch_index = ALIGN_GRAPHMAP2.out.ch_index
             ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.samtools_version.first().ifEmpty(null))
-            ch_samtools_multiqc  = ALIGN_GRAPHMAP2.out.ch_sortbam_stats_multiqc.ifEmpty([])
+        }
+
+        /*
+        * SUBWORKFLOW: View, then  sort, and index bam files
+        */
+        BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam, params.call_variants, ch_fasta )
+        ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
+        ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.samtools_versions.first().ifEmpty(null))
+        ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
+
+        if (params.call_variants && params.protocol == 'DNA') {
+            /*
+            * SUBWORKFLOW: Short variant calling
+            */
+            if (!params.skip_vc) {
+                SHORT_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
+                ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+            }
+
+            /*
+            * SUBWORKFLOW: Structural variant calling
+            */
+            if (!params.skip_sv) {
+                STRUCTURAL_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
+                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+            }
         }
 
         ch_bedtools_version = Channel.empty()
-        if (!params.skip_bigwig){
+        if (!params.skip_bigwig) {
 
             /*
              * SUBWORKFLOW: Convert BAM -> BEDGraph -> BigWig
@@ -334,7 +390,7 @@ workflow NANOSEQ{
             ch_bedtools_version = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGWIG.out.bedtools_version.first().ifEmpty(null))
             ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGWIG.out.bedgraphtobigwig_version.first().ifEmpty(null))
         }
-        if (!params.skip_bigbed){
+        if (!params.skip_bigbed) {
 
             /*
              * SUBWORKFLOW: Convert BAM -> BED12 -> BigBED
@@ -348,6 +404,9 @@ workflow NANOSEQ{
         ch_view_sortbam
             .map { it -> [ it[0], it[3] ] }
             .set { ch_sortbam }
+        ch_view_sortbam
+            .map { it -> [ it[0], it[3], it[4] ] }
+            .set { ch_nanopolish_sortbam }
     } else {
         ch_sample
             .map { it -> if (it[6].toString().endsWith('.bam')) [ it[0], it[6] ] }
@@ -382,16 +441,17 @@ workflow NANOSEQ{
                 .set { ch_sample_annotation }
 
             /*
-            * MODULE: Quantification and novel isoform detection with bambu
-            */
+             * MODULE: Quantification and novel isoform detection with bambu
+             */
             BAMBU ( ch_sample_annotation, ch_sortbam.collect{ it [1] } )
             ch_gene_counts       = BAMBU.out.ch_gene_counts
             ch_transcript_counts = BAMBU.out.ch_transcript_counts
             ch_software_versions = ch_software_versions.mix(BAMBU.out.versions.first().ifEmpty(null))
         } else {
+
             /*
-            * SUBWORKFLOW: Novel isoform detection with StringTie and Quantification with featureCounts
-            */
+             * SUBWORKFLOW: Novel isoform detection with StringTie and Quantification with featureCounts
+             */
             QUANTIFY_STRINGTIE_FEATURECOUNTS( ch_sample, ch_sortbam )
             ch_gene_counts                      = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_gene_counts
             ch_transcript_counts                = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_transcript_counts
@@ -403,28 +463,44 @@ workflow NANOSEQ{
         if (!params.skip_differential_analysis) {
 
             /*
-            * SUBWORKFLOW: Differential gene and transcript analysis with DESeq2 and DEXseq
-            */
+             * SUBWORKFLOW: Differential gene and transcript analysis with DESeq2 and DEXseq
+             */
             DIFFERENTIAL_DESEQ2_DEXSEQ( ch_gene_counts, ch_transcript_counts )
             ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.first().ifEmpty(null))
             ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.dexseq_version.first().ifEmpty(null))
         }
     }
 
+    if (!params.skip_modification_analysis && params.protocol == 'directRNA') {
+
+        /*
+         * SUBWORKFLOW: RNA modification detection with xPore and m6anet
+         */
+        RNA_MODIFICATION_XPORE_M6ANET( ch_sample, ch_nanopolish_sortbam )
+    }
+
+    if (!params.skip_fusion_analysis && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
+
+        /*
+         * SUBWORKFLOW: RNA_FUSIONS_JAFFAL
+         */
+        RNA_FUSIONS_JAFFAL( ch_sample, params.jaffal_ref_dir )
+    }
+
     /*
-    * MODULE: Parse software version numbers
-    */
+     * MODULE: Parse software version numbers
+     */
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_software_versions.unique().collectFile()
     )
 
-    if (!params.skip_multiqc){
-        workflow_summary    = Schema.params_summary_multiqc(workflow, params.summary_params)
-        ch_workflow_summary = Channel.value(workflow_summary).collectFile(name: 'workflow_summary_mqc.yaml')
+    if (!params.skip_multiqc) {
+        workflow_summary    = WorkflowNanoseq.paramsSummaryMultiqc(workflow, summary_params)
+        ch_workflow_summary = Channel.value(workflow_summary)
 
         /*
-        * MODULE: MultiQC
-        */
+         * MODULE: MultiQC
+         */
         MULTIQC (
         ch_multiqc_config,
         ch_multiqc_custom_config.collect().ifEmpty([]),
@@ -434,7 +510,7 @@ workflow NANOSEQ{
         ch_featurecounts_gene_multiqc.ifEmpty([]),
         ch_featurecounts_transcript_multiqc.ifEmpty([]),
         CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
-        ch_workflow_summary
+        ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml')
         )
     }
 }
@@ -444,10 +520,16 @@ workflow NANOSEQ{
 ////////////////////////////////////////////////////
 
 workflow.onComplete {
-//    Completion.email(workflow, params, params.summary_params, log, multiqc_report)
-    Completion.summary(workflow, params, log)
+    if (params.email) {
+        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+        //Completion.email(workflow, params, params.summary_params, log, multiqc_report)
+    }
+//    Completion.summary(workflow, params, log)
+    NfcoreTemplate.summary(workflow, params, log)
 }
 
-////////////////////////////////////////////////////
-/* --                  THE END                 -- */
-////////////////////////////////////////////////////
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    THE END
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/

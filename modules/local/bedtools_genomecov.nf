@@ -1,18 +1,11 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-//params.options = [:]
-//def options    = initOptions(params.options)
-
 process BEDTOOLS_GENOMECOV {
+    tag "$meta.id"
     label 'process_medium'
 
     conda     (params.enable_conda ? "bioconda::bedtools=2.29.2" : null)
-    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/bedtools:2.29.2--hc088bd4_0"
-    } else {
-        container "quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0"
-    }
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/bedtools:2.29.2--hc088bd4_0' :
+        'quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0' }"
 
     input:
     tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai)
@@ -31,8 +24,8 @@ process BEDTOOLS_GENOMECOV {
         -bg \\
         | bedtools sort > ${meta.id}.bedGraph
     cat <<-END_VERSIONS > versions.yml
-    ${getProcessName(task.process)}:
-        ${getSoftwareName(task.process)}: \$(bedtools --version | sed -e "s/bedtools v//g")
+    "${task.process}":
+        bedtools: \$(bedtools --version | sed -e "s/bedtools v//g")
     END_VERSIONS
     """
 }

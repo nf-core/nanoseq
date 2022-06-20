@@ -1,23 +1,10 @@
-// Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; getProcessName } from './functions'
-
-params.options = [:]
-
-/*
- * Convert GTF file to BED format
- */
 process GTF2BED {
     label 'process_low'
-//    publishDir "${params.outdir}",
-//        mode: params.publish_dir_mode,
-//        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:'genome', publish_id:'') }
 
     conda     (params.enable_conda ? "conda-forge::perl=5.26.2" : null)
-    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/perl:5.26.2"
-    } else {
-        container "quay.io/biocontainers/perl:5.26.2"
-    }
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/perl:5.26.2' :
+        'quay.io/biocontainers/perl:5.26.2' }"
 
     input:
     tuple path(gtf), val(name)
@@ -31,7 +18,7 @@ process GTF2BED {
     gtf2bed $gtf > ${gtf.baseName}.bed
 
     cat <<-END_VERSIONS > versions.yml
-    ${getProcessName(task.process)}:
+    "${task.process}":
         perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
     END_VERSIONS
     """
