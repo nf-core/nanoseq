@@ -64,7 +64,7 @@
 
 - [pycoQC](https://doi.org/10.21105/joss.01236)
 
-  > Leger A, Leonardi T, (2019). pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software, 4(34), 1236.
+  > Leger A, Leonardi T, (2019). pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software, 4(34), 1236, https://doi.org/10.21105/joss.01236
 
 - [qcat](https://github.com/nanoporetech/qcat)
 
