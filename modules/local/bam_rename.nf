@@ -5,6 +5,9 @@ process BAM_RENAME {
     //container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
     //    'https://containers.biocontainers.pro/s3/SingImgsRepo/biocontainers/v1.2.0_cv1/biocontainers_v1.2.0_cv1.img' :
     //    'quay.io/biocontainers/biocontainers:latest' }"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/sed:4.7.0' :
+        'quay.io/biocontainers/sed:4.7.0' }"
 
     input:
     tuple val(meta), path(bam)
