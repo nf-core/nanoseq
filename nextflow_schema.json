@@ -213,8 +213,8 @@
                 },
                 "variant_caller": {
                     "type": "string",
-                    "default": "medaka",
-                    "description": "Specifies the variant caller that will used to call small variants (available are: medaka, deepvariant, and pepper_margin_deepvariant). Variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`. Please note `deepvariant` and `pepper_margin_deepvariant` are only avaible if using singularity or docker.",
+                    "default": "clair3",
+                    "description": "Specifies the variant caller that will used to call small variants (available are: clair3, deepvariant, and pepper_margin_deepvariant). Variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`. Please note variant calling is only available if using singularity or docker.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
                 "structural_variant_caller": {
@@ -223,25 +223,27 @@
                     "description": "Specifies the variant caller that will be used to call structural variants (available are: sniffles and cutesv). Structural variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
-                "split_mnps": {
-                    "type": "boolean",
-                    "description": "Specifies if MNPs will be split into SNPs when using medaka.",
-                    "fa_icon": "fas fa-file-alt"
-                },
                 "deepvariant_gpu": {
                     "type": "boolean",
                     "fa_icon": "fas fa-exchange-alt",
                     "description": "Specifies whether to call variants with pepper_margin_deepvariant in GPU mode."
                 },
-                "phase_vcf": {
-                    "type": "boolean",
-                    "fa_icon": "fas fa-exchange-alt",
-                    "description": "Specifies if vcf will be phased when using medaka."
-                },
                 "skip_vc": {
                     "type": "boolean",
                     "fa_icon": "fas fa-fast-forward",
                     "description": "Skip variant calling."
+                },
+                "clair3_model": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Model used to train Clair3, e.g., 'r941_prom_hac_g360+g422'.",
+                    "help_text": "If Clair3 is used for variant calling a model used to train the data must be specified.",
+                    "fa_icon": "fas fa-barcode"
+                },
+                "make_gvcf": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-exchange-alt",
+                    "description": "Generate gVCF files."
                 },
                 "skip_sv": {
                     "type": "boolean",
