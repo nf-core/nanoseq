@@ -12,13 +12,11 @@ process CLAIR3 {
     path(fai)
 
     output:
-    tuple val(meta), path("${meta.id}/*")        , emit: vcf 
+    tuple val(meta), path("${meta.id}/*")        , emit: vcf
     path "versions.yml"                          , emit: versions
 
     script:
     def args = task.ext.args ?: ''
-    def gvcf = params.make_gvcf ? "--gvcf" : ""
-
 
     """
     /usr/local/bin/run_clair3.sh \
@@ -28,12 +26,11 @@ process CLAIR3 {
     --platform="ont" \
     --model_path="/usr/local/bin/models/${params.clair3_model}" \
     --output="${meta.id}" \
-    $gvcf \
     $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        Clair3: \$( /usr/local/bin/run_clair3.sh --version | sed 's/ /,/' )
+        clair3: \$( /usr/local/bin/run_clair3.sh --version | sed 's/ /,/' )
     END_VERSIONS
     """
 }

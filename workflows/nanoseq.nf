@@ -96,7 +96,7 @@ if (params.call_variants) {
         exit 1, "Conda environments cannot be used when calling variants with clair3, deepvariant, or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
     }
 
-    def clair3_model_list = ['r941_prom_sup_g5014', 'r941_prom_hac_g360+g422']
+    def clair3_model_list = ['r941_prom_sup_g5014', 'r941_prom_hac_g360+g422', 'ont', 'ont_guppy5']
 
     if (params.clair3_model && !clair3_model_list.contains(params.clair3_model)) {
                 exit 1, "Please specify a valid clair3 model. Valid options: ${clair3_model_list}"

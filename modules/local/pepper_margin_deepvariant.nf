@@ -25,7 +25,6 @@ process PEPPER_MARGIN_DEEPVARIANT {
     def args    = task.ext.args ?: ""
     def gpu     = params.deepvariant_gpu ? "-g" : ""
     prefix      = task.ext.prefix ?: "${meta.id}"
-    def gvcf    = params.make_gvcf ? "--gvcf" : ""
 
     """
     mkdir -p "${prefix}"
@@ -36,7 +35,6 @@ process PEPPER_MARGIN_DEEPVARIANT {
         -o "." \\
         -p "${prefix}" \\
         -t ${task.cpus} \\
-        $gpu \\
         $args
 
     cat <<-END_VERSIONS > versions.yml

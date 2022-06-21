@@ -6,20 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.1.0] - 2021-06-22
 
 ### Major enhancements
+
 - Removed Guppy basecaller
 - Added Clair3 variant caller
 
 ### Parameters
+
 - Added XXXX
 - Removed `--split_mnps` to split multi-nucleotide polymorphisms into single nucleotide polymorphisms when using medaka
 - Removed `--phase_vcf` to output a phased vcf when using medaka
 
 ### Software dependencies
 
-| Dependency                      | Old version | New version |
-| ------------------------------- | ----------- | ----------- |
-| `Guppy`                         | 4.0.14      |             |
-| `medaka`                        | 1.4.4       |             |
+| Dependency | Old version | New version |
+| ---------- | ----------- | ----------- |
+| `Guppy`    | 4.0.14      |             |
+| `medaka`   | 1.4.4       |             |
 
 ### Bug fix
 
