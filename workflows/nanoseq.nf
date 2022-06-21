@@ -15,8 +15,8 @@ checkPathParamList = [ params.input, params.multiqc_config ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters (missing protocol or profile will exit the run.)
-if (params.input) { 
-    ch_input = file(params.input) 
+if (params.input) {
+    ch_input = file(params.input)
 } else {
     exit 1, 'Input samplesheet not specified!'
 }
@@ -31,27 +31,27 @@ def isOffline() {
     }
 }
 
-def ch_guppy_model  = Channel.empty()
-def ch_guppy_config = Channel.empty()
+//def ch_guppy_model  = Channel.empty()
+//def ch_guppy_config = Channel.empty()
 
 if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
     exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
 }
 
-if (!params.skip_basecalling) {
-    if (!params.guppy_config) {
-        if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
-        if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!"      }
-    } else if (file(params.guppy_config).exists()) {
-        ch_guppy_config = Channel.fromPath(params.guppy_config)
-    }
+//if (!params.skip_basecalling) {
+//    if (!params.guppy_config) {
+//        if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
+//        if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!"      }
+//    } else if (file(params.guppy_config).exists()) {
+//        ch_guppy_config = Channel.fromPath(params.guppy_config)
+//    }
 
-    if (params.guppy_model) {
-        if (file(params.guppy_model).exists()) {
-            ch_guppy_model = Channel.fromPath(params.guppy_model)
-        }
-    }
-} else {
+//    if (params.guppy_model) {
+//        if (file(params.guppy_model).exists()) {
+//            ch_guppy_model = Channel.fromPath(params.guppy_model)
+//        }
+//    }
+//} else {
     if (!params.skip_demultiplexing) {
         if (!params.barcode_kit) {
             params.barcode_kit = 'Auto'
@@ -71,7 +71,7 @@ if (!params.skip_basecalling) {
             exit 1, "Please provide a barcode kit to demultiplex with qcat. Valid options: ${qcatBarcodeKitList}"
         }
     }
-}
+//}
 
 if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
@@ -119,7 +119,6 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 
 include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
-include { GUPPY                 } from '../modules/local/guppy'
 include { DEMUX_FAST5           } from '../modules/local/demux_fast5'
 include { QCAT                  } from '../modules/local/qcat'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
@@ -167,38 +166,38 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/
 // Info required for completion email and summary
 def multiqc_report      = []
 
-workflow NANOSEQ{
+workflow NANOSEQ {
 
     // Pre-download test-dataset to get files for '--input_path' parameter
     // Nextflow is unable to recursively download directories via HTTPS
-    if (workflow.profile.contains('test') && !workflow.profile.contains('vc')) {
-        if (!params.skip_basecalling || !params.skip_modification_analysis) {
-            if (!isOffline()) {
-                GET_TEST_DATA ()
-                if (params.skip_modification_analysis) {
-                    GET_TEST_DATA.out.ch_input_fast5s_path
-                        .set { ch_input_path }
-                } else {
-                    GET_TEST_DATA.out.ch_input_dir_path
-                        .set { ch_input_path }
-                }
-            } else {
-                exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
-            }
-        } else {
-            if (params.input_path) {
-                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
-            } else {
-                ch_input_path = 'not_changed'
-            }
-        }
-    } else {
+//    if (workflow.profile.contains('test') && !workflow.profile.contains('vc')) {
+        //if (!params.skip_basecalling || !params.skip_modification_analysis) {
+        //    if (!isOffline()) {
+        //        GET_TEST_DATA ()
+        //        if (params.skip_modification_analysis) {
+        //            GET_TEST_DATA.out.ch_input_fast5s_path
+        //                .set { ch_input_path }
+        //        } else {
+        //            GET_TEST_DATA.out.ch_input_dir_path
+        //                .set { ch_input_path }
+        //        }
+        //    } else {
+        //        exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
+        //    }
+        //} else {
+        //    if (params.input_path) {
+        //        ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+        //    } else {
+        //        ch_input_path = 'not_changed'
+        //    }
+        //}
+ //   } else {
         if (params.input_path) {
             ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
         } else {
             ch_input_path = 'not_changed'
         }
-    }
+ //   }
 
     /*
      * Create empty software versions channel to mix
@@ -211,41 +210,42 @@ workflow NANOSEQ{
     INPUT_CHECK ( ch_input, ch_input_path )
         .set { ch_sample }
 
-    if (!params.skip_basecalling) {
-        ch_sample
-            .first()
-            .map { it[0] }
-            .set { ch_sample_name }
+    //if (!params.skip_basecalling) {
+    //    ch_sample
+    //        .first()
+    //        .map { it[0] }
+    //        .set { ch_sample_name }
 
-        /*
-         * MODULE: Basecalling and demultipexing using Guppy
-         */
-        GUPPY ( ch_input_path, ch_sample_name, ch_guppy_config.ifEmpty([]), ch_guppy_model.ifEmpty([]) )
-        ch_guppy_summary = GUPPY.out.summary
-        ch_software_versions = ch_software_versions.mix(GUPPY.out.versions.ifEmpty(null))
+    //    /*
+    //     * MODULE: Basecalling and demultipexing using Guppy
+    //     */
+    //    GUPPY ( ch_input_path, ch_sample_name, ch_guppy_config.ifEmpty([]), ch_guppy_model.ifEmpty([]) )
+    //    ch_guppy_summary = GUPPY.out.summary
+    //    ch_software_versions = ch_software_versions.mix(GUPPY.out.versions.ifEmpty(null))
 
         if (params.skip_demultiplexing) {
             ch_sample
                 .map { it -> [ it[0], it[0].id, it[2], it[3], it[4], it[5] ] }
                 .set { ch_sample }
         }
+        ch_sample.view()
 
-        GUPPY.out.fastq
-            .flatten()
-            .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
-            .join(ch_sample, by: 1) // join on barcode
-            .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
-            .set { ch_fastq }
-        if (params.output_demultiplex_fast5) {
+    //    GUPPY.out.fastq
+    //        .flatten()
+    //        .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.')) ] }
+    //        .join(ch_sample, by: 1) // join on barcode
+    //        .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
+    //        .set { ch_fastq }
+    //    if (params.output_demultiplex_fast5) {
 
-            /*
-            * MODULE: Demultiplex fast5 files using ont_fast5_api/demux_fast5
-            */
-            DEMUX_FAST5 ( ch_input_path, ch_guppy_summary )
-            ch_software_versions = ch_software_versions.mix(DEMUX_FAST5.out.versions.ifEmpty(null))
-        }
-    } else {
-        ch_guppy_summary = Channel.empty()
+    //        /*
+    //        * MODULE: Demultiplex fast5 files using ont_fast5_api/demux_fast5
+    //        */
+    //        DEMUX_FAST5 ( ch_input_path, ch_guppy_summary )
+    //        ch_software_versions = ch_software_versions.mix(DEMUX_FAST5.out.versions.ifEmpty(null))
+    //    }
+    //} else {
+    //    ch_guppy_summary = Channel.empty()
 
         if (!params.skip_demultiplexing) {
 
@@ -270,7 +270,7 @@ workflow NANOSEQ{
                 ch_fastq = Channel.empty()
             }
         }
-    }
+//    }
 
     if (params.run_nanolyse) {
         ch_fastq
@@ -299,16 +299,16 @@ workflow NANOSEQ{
 
     ch_pycoqc_multiqc = Channel.empty()
     ch_fastqc_multiqc = Channel.empty()
-    if (!params.skip_qc) {
-        if (!params.skip_basecalling) {
+    //if (!params.skip_qc) {
+    //    if (!params.skip_basecalling) {
 
-            /*
-             * SUBWORKFLOW: Basecalling QC with PycoQC and Nanoplot
-             */
-            QCBASECALL_PYCOQC_NANOPLOT ( ch_guppy_summary , params.skip_pycoqc, params.skip_nanoplot )
-            ch_software_versions = ch_software_versions.mix(QCBASECALL_PYCOQC_NANOPLOT.out.pycoqc_version.first().ifEmpty(null))
-            ch_pycoqc_multiqc    = QCBASECALL_PYCOQC_NANOPLOT.out.pycoqc_multiqc.ifEmpty([])
-        }
+    //        /*
+    //         * SUBWORKFLOW: Basecalling QC with PycoQC and Nanoplot
+    //         */
+    //        QCBASECALL_PYCOQC_NANOPLOT ( ch_guppy_summary , params.skip_pycoqc, params.skip_nanoplot )
+    //        ch_software_versions = ch_software_versions.mix(QCBASECALL_PYCOQC_NANOPLOT.out.pycoqc_version.first().ifEmpty(null))
+    //        ch_pycoqc_multiqc    = QCBASECALL_PYCOQC_NANOPLOT.out.pycoqc_multiqc.ifEmpty([])
+    //    }
 
         /*
          * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
@@ -319,7 +319,7 @@ workflow NANOSEQ{
         }
         ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
         ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
-    }
+//    }
 
     ch_samtools_multiqc = Channel.empty()
     if (!params.skip_alignment) {
