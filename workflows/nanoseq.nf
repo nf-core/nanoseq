@@ -225,10 +225,11 @@ workflow NANOSEQ {
 
         if (params.skip_demultiplexing) {
             ch_sample
-                .map { it -> [ it[0], it[0].id, it[2], it[3], it[4], it[5] ] }
+    //            .map { it -> [ it[0], it[0].id, it[2], it[3], it[4], it[5] ] }
                 .set { ch_sample }
         }
         ch_sample.view()
+        println(ch_input)
 
     //    GUPPY.out.fastq
     //        .flatten()
