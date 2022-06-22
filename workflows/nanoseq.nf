@@ -31,47 +31,29 @@ def isOffline() {
     }
 }
 
-//def ch_guppy_model  = Channel.empty()
-//def ch_guppy_config = Channel.empty()
-
 if (params.protocol != 'DNA' && params.protocol != 'cDNA' && params.protocol != 'directRNA') {
     exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA', 'cDNA', 'directRNA'"
 }
 
-//if (!params.skip_basecalling) {
-//    if (!params.guppy_config) {
-//        if (!params.flowcell) { exit 1, "Please specify a valid flowcell identifier for basecalling!" }
-//        if (!params.kit)      { exit 1, "Please specify a valid kit identifier for basecalling!"      }
-//    } else if (file(params.guppy_config).exists()) {
-//        ch_guppy_config = Channel.fromPath(params.guppy_config)
-//    }
-
-//    if (params.guppy_model) {
-//        if (file(params.guppy_model).exists()) {
-//            ch_guppy_model = Channel.fromPath(params.guppy_model)
-//        }
-//    }
-//} else {
-    if (!params.skip_demultiplexing) {
-        if (!params.barcode_kit) {
-            params.barcode_kit = 'Auto'
-        }
-
-        def qcatBarcodeKitList = ['Auto', 'RBK001', 'RBK004', 'NBD103/NBD104',
-                                'NBD114', 'NBD104/NBD114', 'PBC001', 'PBC096',
-                                'RPB004/RLB001', 'PBK004/LWB001', 'RAB204', 'VMK001', 'DUAL']
-
-        if (params.barcode_kit && qcatBarcodeKitList.contains(params.barcode_kit)) {
-            if (params.input_path) {
-                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
-            } else {
-                exit 1, "Please specify a valid input fastq file to perform demultiplexing!"
-            }
-        } else {
-            exit 1, "Please provide a barcode kit to demultiplex with qcat. Valid options: ${qcatBarcodeKitList}"
-        }
+if (!params.skip_demultiplexing) {
+    if (!params.barcode_kit) {
+        params.barcode_kit = 'Auto'
     }
-//}
+
+    def qcatBarcodeKitList = ['Auto', 'RBK001', 'RBK004', 'NBD103/NBD104',
+                            'NBD114', 'NBD104/NBD114', 'PBC001', 'PBC096',
+                            'RPB004/RLB001', 'PBK004/LWB001', 'RAB204', 'VMK001', 'DUAL']
+
+    if (params.barcode_kit && qcatBarcodeKitList.contains(params.barcode_kit)) {
+        if (params.input_path) {
+            ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+        } else {
+            exit 1, "Please specify a valid input fastq file to perform demultiplexing!"
+        }
+    } else {
+        exit 1, "Please provide a barcode kit to demultiplex with qcat. Valid options: ${qcatBarcodeKitList}"
+    }
+}
 
 if (!params.skip_alignment) {
     if (params.aligner != 'minimap2' && params.aligner != 'graphmap2') {
@@ -125,7 +107,6 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 
 include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
-//include { DEMUX_FAST5           } from '../modules/local/demux_fast5'
 include { QCAT                  } from '../modules/local/qcat'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
 include { BAMBU                 } from '../modules/local/bambu'
@@ -137,7 +118,6 @@ include { MULTIQC               } from '../modules/local/multiqc'
 
 include { INPUT_CHECK                      } from '../subworkflows/local/input_check'
 include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'
-//include { QCBASECALL_PYCOQC_NANOPLOT       } from '../subworkflows/local/qcbasecall_pycoqc_nanoplot'
 include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq_nanoplot_fastqc'
 include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'
 include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'
@@ -248,12 +228,8 @@ workflow NANOSEQ {
      * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
      */
     QCFASTQ_NANOPLOT_FASTQC ( ch_fastq, params.skip_nanoplot, params.skip_fastqc)
-    if (params.skip_basecalling) {
-        ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.nanoplot_version.first().ifEmpty(null))
-    }
     ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
     ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
-
     ch_samtools_multiqc = Channel.empty()
 
     if (!params.skip_alignment) {

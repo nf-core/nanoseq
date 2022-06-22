@@ -35,15 +35,15 @@ On release, automated continuous integration tests run the pipeline on a [full-s
 5. Create bigWig ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/)) and bigBed ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedToBigBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)) coverage tracks for visualisation
 6. Downstream analysis
    - DNA specific:
-       - Short variant calling ([`Clair3`](https://github.com/HKU-BAL/Clair3), [`deepvariant`](https://github.com/google/deepvariant), or [`pepper_margin_deepvariant`](https://github.com/kishwarshafin/pepper))
-       - Structural variant calling ([`sniffles`](https://github.com/fritzsedlazeck/Sniffles) or [`cutesv`](https://github.com/tjiangHIT/cuteSV))
+     - Short variant calling ([`Clair3`](https://github.com/HKU-BAL/Clair3), [`deepvariant`](https://github.com/google/deepvariant), or [`pepper_margin_deepvariant`](https://github.com/kishwarshafin/pepper))
+     - Structural variant calling ([`sniffles`](https://github.com/fritzsedlazeck/Sniffles) or [`cutesv`](https://github.com/tjiangHIT/cuteSV))
    - RNA specific:
-       - Transcript reconstruction and quantification ([`bambu`](https://bioconductor.org/packages/release/bioc/html/bambu.html) or [`StringTie2`](https://ccb.jhu.edu/software/stringtie/))
-       - bambu performs both transcript reconstruction and quantification
-       - When StringTie2 is chosen, each sample can be processed individually and combined. After which, [`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/) will be used for both gene and transcript quantification.
-       - Differential expression analysis ([`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) and/or [`DEXSeq`](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html))
-       - RNA modification detection ([`xpore`](https://github.com/GoekeLab/xpore) and/or [`m6anet`](https://github.com/GoekeLab/m6anet))
-       - RNA fusion detection ([`JAFFAL`](https://github.com/Oshlack/JAFFA))
+     - Transcript reconstruction and quantification ([`bambu`](https://bioconductor.org/packages/release/bioc/html/bambu.html) or [`StringTie2`](https://ccb.jhu.edu/software/stringtie/))
+     - bambu performs both transcript reconstruction and quantification
+     - When StringTie2 is chosen, each sample can be processed individually and combined. After which, [`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/) will be used for both gene and transcript quantification.
+     - Differential expression analysis ([`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) and/or [`DEXSeq`](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html))
+     - RNA modification detection ([`xpore`](https://github.com/GoekeLab/xpore) and/or [`m6anet`](https://github.com/GoekeLab/m6anet))
+     - RNA fusion detection ([`JAFFAL`](https://github.com/Oshlack/JAFFA))
 7. Present QC for raw read and alignment results ([`MultiQC`](https://multiqc.info/docs/))
 
 ### Functionality Overview
@@ -83,9 +83,6 @@ The nf-core/nanoseq pipeline comes with documentation about the pipeline [usage]
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol DNA \
-    --input_path ./fastq/ \
-    --flowcell FLO-MIN106 \
-    --kit SQK-LSK109 \
     --barcode_kit SQK-PBK004 \
     -profile <docker/singularity/podman/institute>
 ```
