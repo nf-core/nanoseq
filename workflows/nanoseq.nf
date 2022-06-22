@@ -86,15 +86,21 @@ if (params.call_variants) {
     if (params.protocol != 'DNA') {
         exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA'"
     }
-    if (!params.skip_vc && params.variant_caller != 'medaka' && params.variant_caller != 'deepvariant' && params.variant_caller != 'pepper_margin_deepvariant') {
-        exit 1, "Invalid variant caller option: ${params.variant_caller}. Valid options: 'medaka', 'deepvariant' or 'pepper_margin_deepvariant'"
+    if (!params.skip_vc && params.variant_caller != 'clair3' && params.variant_caller != 'deepvariant' && params.variant_caller != 'pepper_margin_deepvariant') {
+        exit 1, "Invalid variant caller option: ${params.variant_caller}. Valid options: 'clair3', 'deepvariant' or 'pepper_margin_deepvariant'"
     }
     if (!params.skip_sv && params.structural_variant_caller != 'sniffles' && params.structural_variant_caller != 'cutesv') {
         exit 1, "Invalid structural variant caller option: ${params.structural_variant_caller}. Valid options: 'sniffles', 'cutesv"
     }
-    if (!params.skip_vc && params.enable_conda && params.variant_caller != 'medaka') {
-        exit 1, "Conda environments cannot be used when using the deepvariant or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
+    if (!params.skip_vc && params.enable_conda) {
+        exit 1, "Conda environments cannot be used when calling variants with clair3, deepvariant, or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
     }
+
+    def clair3_model_list = ['r941_prom_sup_g5014', 'r941_prom_hac_g360+g422', 'ont', 'ont_guppy5']
+
+    if (params.clair3_model && !clair3_model_list.contains(params.clair3_model)) {
+                exit 1, "Please specify a valid clair3 model. Valid options: ${clair3_model_list}"
+            }
 }
 
 if (!params.skip_quantification) {
