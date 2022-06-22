@@ -14,6 +14,10 @@
 
   > Quinlan AR, Hall IM. BEDTools: a flexible suite of utilities for comparing genomic features. Bioinformatics. 2010 Mar 15;26(6):841-2. doi: 10.1093/bioinformatics/btq033. Epub 2010 Jan 28. PubMed PMID: 20110278; PubMed Central PMCID: PMC2832824.
 
+- [Clair3](https://github.com/HKU-BAL/Clair3)
+
+  > Zheng, Zhenxian, et al. "Symphonizing pileup and full-alignment for deep learning-based long-read variant calling." bioRxiv (2021).
+
 - [cuteSV](https://pubmed.ncbi.nlm.nih.gov/32746918/)
 
   > Jiang T, Liu Y, Jiang Y, Li J, Gao Y, Cui Z, Liu Y, Liu B, Wang Y. Long-read-based human genomic structural variation detection with cuteSV. Genome Biol. 2020 Aug 3;21(1):189. doi: 10.1186/s13059-020-02107-y. PMID: 32746918; PMCID: PMC7477834.
@@ -29,8 +33,6 @@
 - [GraphMap](https://pubmed.ncbi.nlm.nih.gov/27079541/)
 
   > Sović I, Šikić M, Wilm A, Fenlon SN, Chen S, Nagarajan N. Fast and sensitive mapping of nanopore sequencing reads with GraphMap. Nat Commun. 2016 Apr 15;7:11307. doi: 10.1038/ncomms11307. PMID: 27079541; PMCID: PMC4835549.
-
-- [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
 
 - [JAFFAL](https://doi.org/10.1186/s13059-021-02588-5)
 
@@ -48,8 +50,6 @@
 
   > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PMID: 29750242; PMCID: PMC6137996.
 
-- [Medaka](https://github.com/nanoporetech/medaka)
-
 - [MultiQC](https://www.ncbi.nlm.nih.gov/pubmed/27312411/)
 
   > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
@@ -61,10 +61,6 @@
 - [NanoPlot](https://pubmed.ncbi.nlm.nih.gov/29547981/)
 
   > De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018 Aug 1;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149. PubMed PMID: 29547981; PubMed Central PMCID: PMC6061794.
-
-- [pycoQC](https://doi.org/10.21105/joss.01236)
-
-  > Leger A, Leonardi T, (2019). pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software, 4(34), 1236, https://doi.org/10.21105/joss.01236
 
 - [qcat](https://github.com/nanoporetech/qcat)
 

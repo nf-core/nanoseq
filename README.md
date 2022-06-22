@@ -26,7 +26,7 @@ On release, automated continuous integration tests run the pipeline on a [full-s
 ## Pipeline Summary
 
 1. Demultiplexing with [`qcat`](https://github.com/nanoporetech/qcat); _optional_)
-2. Raw read DNA cleaning ([NanoLyse](https://github.com/wdecoster/nanolyse); _optional_)
+2. Raw read DNA cleaning ([`NanoLyse`](https://github.com/wdecoster/nanolyse); _optional_)
 3. Raw read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot), [`FastQC`](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/); _optional_)
 4. Alignment ([`GraphMap2`](https://github.com/lbcb-sci/graphmap2) or [`minimap2`](https://github.com/lh3/minimap2))
    - Both aligners are capable of performing unspliced and spliced alignment. Sensible defaults will be applied automatically based on a combination of the input data and user-specified parameters
@@ -83,7 +83,7 @@ The nf-core/nanoseq pipeline comes with documentation about the pipeline [usage]
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol DNA \
-    --input_path ./fast5/ \
+    --input_path ./fastq/ \
     --flowcell FLO-MIN106 \
     --kit SQK-LSK109 \
     --barcode_kit SQK-PBK004 \
