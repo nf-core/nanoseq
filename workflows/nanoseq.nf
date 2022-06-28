@@ -74,9 +74,9 @@ if (params.call_variants) {
     if (!params.skip_sv && params.structural_variant_caller != 'sniffles' && params.structural_variant_caller != 'cutesv') {
         exit 1, "Invalid structural variant caller option: ${params.structural_variant_caller}. Valid options: 'sniffles', 'cutesv"
     }
-    if (!params.skip_vc && params.enable_conda) {
-        exit 1, "Conda environments cannot be used when calling variants with clair3, deepvariant, or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
-    }
+    //if (!params.skip_vc && params.enable_conda) {
+    //    exit 1, "Conda environments cannot be used when calling variants with clair3, deepvariant, or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
+    //}
 
     def clair3_model_list = ['r941_prom_sup_g5014', 'r941_prom_hac_g360+g422', 'ont', 'ont_guppy5']
 
