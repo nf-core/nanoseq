@@ -154,10 +154,33 @@ def multiqc_report      = []
 
 workflow NANOSEQ {
 
-    if (params.input_path) {
-        ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+    if (workflow.profile.contains('test') && !workflow.profile.contains('vc')) {
+        if (!params.skip_basecalling || !params.skip_modification_analysis) {
+            if (!isOffline()) {
+                GET_TEST_DATA ()
+                if (params.skip_modification_analysis) {
+                    GET_TEST_DATA.out.ch_input_fast5s_path
+                        .set { ch_input_path }
+                } else {
+                    GET_TEST_DATA.out.ch_input_dir_path
+                        .set { ch_input_path }
+                }
+            } else {
+                exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
+            }
+        } else {
+            if (params.input_path) {
+                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+            } else {
+                ch_input_path = 'not_changed'
+            }
+        }
     } else {
-        ch_input_path = 'not_changed'
+        if (params.input_path) {
+            ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+        } else {
+            ch_input_path = 'not_changed'
+        }
     }
 
     /*
@@ -204,7 +227,7 @@ workflow NANOSEQ {
             if (!isOffline()) {
                 GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
             } else {
-                exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
+                exit 1, "NXF_OFFLINE=true or -offline has been set so can not download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
             }
         } else {
         ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
