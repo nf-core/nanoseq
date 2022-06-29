@@ -94,6 +94,15 @@ if (!params.skip_quantification) {
     }
 }
 
+if (!params.skip_modification_analysis) {
+    if (!params.protocol == 'directRNA') {
+        exit 1, "Invalid protocol option if performing base modification analysis: ${params.protocol}. Valid options: 'directRNA'"
+    }
+    if(params.enable_conda) {
+        exit 1, "Conda environments cannot be used when analysing base modifications. Valid options: 'docker', 'singularity'"
+    }
+}
+
 ////////////////////////////////////////////////////
 /* --          CONFIG FILES                    -- */
 ////////////////////////////////////////////////////
