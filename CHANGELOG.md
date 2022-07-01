@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed Guppy basecaller
 - Added Clair3 variant caller
+- Updated `nanoplot` version from `1.38.0` to `1.39.0`
 
 ### Parameters
 
@@ -18,10 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Software dependencies
 
-| Dependency | Old version | New version |
-| ---------- | ----------- | ----------- |
-| `Guppy`    | 4.0.14      |             |
-| `medaka`   | 1.4.4       |             |
+|  Dependency  | Old version | New version |
+| ------------ | ----------- | ----------- |
+| `Guppy`      | 4.0.14      |             |
+| `medaka`     | 1.4.4       |             |
+| `nanoplot`   | 1.38.0      | 1.39.0      |
 
 ### Bug fix
 

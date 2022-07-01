@@ -19,8 +19,8 @@ process CLAIR3 {
     script:
     def args = task.ext.args ?: ''
 
-    ///opt/conda/envs/clair3/bin/run_clair3.sh
-    ///usr/local/bin/run_clair3.sh \
+    // /opt/conda/envs/clair3/bin/run_clair3.sh
+    // /usr/local/bin/run_clair3.sh \
 
     """
     run_clair3.sh \

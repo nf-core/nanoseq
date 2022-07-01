@@ -2,31 +2,30 @@
  * FastQ QC with NanoPlot and fastqc
  */
 
-include { NANOPLOT     } from '../../modules/local/nanoplot'
+include { NANOPLOT     } from '../../modules/nf-core/modules/nanoplot/main'
 include { FASTQC       } from '../../modules/nf-core/modules/fastqc/main'
 
 workflow QCFASTQ_NANOPLOT_FASTQC {
     take:
     ch_fastq
-    skip_nanoplot
-    skip_fastqc
 
     main:
     ch_fastq
-        .map { ch -> [ ch[0], ch[1] ] }
+        .map { it -> [ it[0], it[1] ] }
         .set { ch_fastq }
 
     /*
-     * FastQ QC using NanoPlot
+     * QC using NanoPlot
      */
     nanoplot_png     = Channel.empty()
     nanoplot_html    = Channel.empty()
     nanoplot_txt     = Channel.empty()
     nanoplot_log     = Channel.empty()
     nanoplot_version = Channel.empty()
-    if (!skip_nanoplot){
+
+    if (!params.skip_nanoplot){
         NANOPLOT ( ch_fastq )
-        //nanoplot_png     = NANOPLOT.out.png
+        nanoplot_png     = NANOPLOT.out.png
         nanoplot_html    = NANOPLOT.out.html
         nanoplot_txt     = NANOPLOT.out.txt
         nanoplot_log     = NANOPLOT.out.log
@@ -40,7 +39,7 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     fastqc_html    = Channel.empty()
     fastqc_multiqc = Channel.empty()
     fastqc_version = Channel.empty()
-    if (!skip_fastqc){
+    if (!params.skip_fastqc){
         FASTQC ( ch_fastq )
         fastqc_zip     = FASTQC.out.zip
         fastqc_html    = FASTQC.out.html
@@ -51,7 +50,6 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
             .map { it -> [ it[1] ] }
             .set { fastqc_html_only }
         fastqc_multiqc = fastqc_multiqc.mix( fastqc_zip_only, fastqc_html_only )
-//       fastqc_version = FASTQC.out.versions
     }
 
     emit:
