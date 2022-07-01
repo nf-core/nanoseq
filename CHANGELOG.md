@@ -3,6 +3,34 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2021-06-22
+
+### Major enhancements
+
+- Removed Guppy basecaller
+- Added Clair3 variant caller
+
+### Parameters
+
+- Added XXXX
+- Removed `--split_mnps` to split multi-nucleotide polymorphisms into single nucleotide polymorphisms when using medaka
+- Removed `--phase_vcf` to output a phased vcf when using medaka
+
+### Software dependencies
+
+| Dependency | Old version | New version |
+| ---------- | ----------- | ----------- |
+| `Guppy`    | 4.0.14      |             |
+| `medaka`   | 1.4.4       |             |
+
+### Bug fix
+
+- Stuff goes here
+
+> **NB:** Dependency has been **updated** if both old and new version information is present.
+> **NB:** Dependency has been **added** if just the new version information is present.
+> **NB:** Dependency has been **removed** if version information isn't present.
+
 ## [3.0.0] - 2022-06-21
 
 ### Major enhancements
