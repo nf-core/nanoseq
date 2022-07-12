@@ -3,9 +3,10 @@
  */
 
 include { SNIFFLES                              } from '../../modules/local/sniffles'
-include { TABIX_BGZIP as SNIFFLES_BGZIP_VCF     } from '../../modules/nf-core/modules/tabix/bgzip/main'
+include { BCFTOOLS_SORT as SNIFFLES_SORT        } from '../../modules/nf-core/modules/bcftools/sort/main'
 include { TABIX_TABIX as SNIFFLES_TABIX_VCF     } from '../../modules/nf-core/modules/tabix/tabix/main'
 include { CUTESV                                } from '../../modules/local/cutesv'
+include { BCFTOOLS_SORT as CUTESV_SORT          } from '../../modules/nf-core/modules/bcftools/sort/main'
 include { TABIX_BGZIP as CUTESV_BGZIP_VCF       } from '../../modules/nf-core/modules/tabix/bgzip/main'
 include { TABIX_TABIX as CUTESV_TABIX_VCF       } from '../../modules/nf-core/modules/tabix/tabix/main'
 
@@ -35,11 +36,11 @@ workflow STRUCTURAL_VARIANT_CALLING {
         ch_versions = ch_versions.mix(SNIFFLES.out.versions)
 
         /*
-         * Zip sniffles vcf
+         * Sort vcf file with bcftools
          */
-        SNIFFLES_BGZIP_VCF( SNIFFLES.out.sv_calls )
-        ch_sv_calls_vcf = SNIFFLES_BGZIP_VCF.out.gz
-        ch_versions = ch_versions.mix(SNIFFLES_BGZIP_VCF.out.versions)
+        SNIFFLES_SORT( SNIFFLES.out.sv_calls )
+        ch_sv_calls_vcf = SNIFFLES_SORT.out.vcf
+        ch_versions = ch_versions.mix(SNIFFLES_SORT.out.versions)
 
         /*
          * Index sniffles vcf.gz
@@ -57,14 +58,14 @@ workflow STRUCTURAL_VARIANT_CALLING {
         ch_versions = ch_versions.mix(CUTESV.out.versions)
 
         /*
-         * Zip cutesv vcf
+         * Sort vcf file with bcftools
          */
-        CUTESV_BGZIP_VCF( CUTESV.out.sv_calls )
-        ch_sv_calls_vcf = CUTESV_BGZIP_VCF.out.gz
-        ch_versions = ch_versions.mix(CUTESV_BGZIP_VCF.out.versions)
+        CUTESV_SORT( CUTESV.out.sv_calls )
+        ch_sv_calls_vcf = CUTESV_SORT.out.vcf
+        ch_versions = ch_versions.mix(CUTESV_SORT.out.versions)
 
         /*
-         * Zip cutesv vcf.gz
+         * Tabix cutesv vcf.gz
          */
         CUTESV_TABIX_VCF( ch_sv_calls_vcf )
         ch_sv_calls_tbi  = CUTESV_TABIX_VCF.out.tbi

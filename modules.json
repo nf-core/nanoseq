@@ -3,6 +3,9 @@
     "homePage": "https://github.com/nf-core/nanoseq",
     "repos": {
         "nf-core/modules": {
+            "bcftools/sort": {
+                "git_sha": "682f789f93070bd047868300dd018faf3d434e7c"
+            },
             "custom/dumpsoftwareversions": {
                 "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             },
