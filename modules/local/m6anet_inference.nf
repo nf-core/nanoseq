@@ -1,6 +1,5 @@
 process M6ANET_INFERENCE {
     tag "$meta.id"
-    echo true
     label 'process_medium'
 
 //  conda     (params.enable_conda ? "bioconda::nanopolish==0.13.2" : null) // need to get xpore onto conda

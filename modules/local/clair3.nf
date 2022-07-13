@@ -23,7 +23,7 @@ process CLAIR3 {
     // /usr/local/bin/run_clair3.sh \
 
     """
-    run_clair3.sh \
+    /usr/local/bin/run_clair3.sh \
     --bam_fn=$input \
     --ref_fn=$fasta \
     --threads=$task.cpus \
@@ -34,7 +34,7 @@ process CLAIR3 {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        clair3: \$( run_clair3.sh --version | sed 's/ /,/' )
+        clair3: \$( /usr/local/bin/run_clair3.sh --version | sed 's/ /,/' )
     END_VERSIONS
     """
 }

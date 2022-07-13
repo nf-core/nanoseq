@@ -74,9 +74,9 @@ if (params.call_variants) {
     if (!params.skip_sv && params.structural_variant_caller != 'sniffles' && params.structural_variant_caller != 'cutesv') {
         exit 1, "Invalid structural variant caller option: ${params.structural_variant_caller}. Valid options: 'sniffles', 'cutesv"
     }
-    //if (!params.skip_vc && params.enable_conda) {
-    //    exit 1, "Conda environments cannot be used when calling variants with clair3, deepvariant, or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
-    //}
+    if (!params.skip_vc && params.enable_conda) {
+        exit 1, "Conda environments cannot currently be used when calling variants with clair3, deepvariant, or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
+    }
 
     def clair3_model_list = ['r941_prom_sup_g5014', 'r941_prom_hac_g360+g422', 'ont', 'ont_guppy5']
 
@@ -256,14 +256,18 @@ workflow NANOSEQ {
         ch_software_versions = ch_software_versions.mix(NANOLYSE.out.versions.first().ifEmpty(null))
     }
 
-    /*
-     * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
-     */
     ch_qcfastq_multiqc = Channel.empty()
 
-    QCFASTQ_NANOPLOT_FASTQC ( ch_fastq )
-    ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
-    ch_qcfastq_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
+    if (!params.skip_qc) {
+        /*
+         * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
+         */
+        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq )
+        ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
+        ch_qcfastq_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
+    }
+
+    ch_samtools_multiqc = Channel.empty()
 
     if (!params.skip_alignment) {
 
@@ -277,6 +281,7 @@ workflow NANOSEQ {
         ch_fai         = PREPARE_GENOME.out.ch_fai
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
+
         if (params.aligner == 'minimap2') {
 
             /*
@@ -300,7 +305,6 @@ workflow NANOSEQ {
         /*
         * SUBWORKFLOW: View, then  sort, and index bam files
         */
-        ch_samtools_multiqc = Channel.empty()
 
         BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam, params.call_variants, ch_fasta )
         ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam

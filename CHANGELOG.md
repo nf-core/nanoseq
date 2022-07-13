@@ -8,14 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Major enhancements
 
 - Removed Guppy basecaller
+- Removed tabix gzip for sv calls
+- Added bcftools sort for sv calls
+- Removed medaka variant callaer
 - Added Clair3 variant caller
 - Updated `nanoplot` version from `1.38.0` to `1.39.0`
 
 ### Parameters
 
-- Added XXXX
 - Removed `--split_mnps` to split multi-nucleotide polymorphisms into single nucleotide polymorphisms when using medaka
-- Removed `--phase_vcf` to output a phased vcf when using medaka
+- Removed `--phase_vcf` to output a phased vcf when using medaka.
+- Removed `--barcode_both_ends` in Guppy basecaller.
+- Removed `--trim_barcodes` in Guppy basecaller.
+- Removed `--guppy_config` in Guppy basecaller.
+- Removed `--guppy_model` in Guppy basecaller.
+- Removed `--guppy_gpu` in Guppy basecaller.
+- Removed `--guppy_gpu_runners` in Guppy basecaller.
+- Removed `--guppy_cpu_threads` in Guppy basecaller.
+- Removed `--gpu_device` in Guppy basecaller.
+- Removed `--gpu_cluster_options` in Guppy basecaller.
+- Removed `--skip_basecalling` in Guppy basecaller.
+
 
 ### Software dependencies
 
@@ -23,11 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | ------------ | ----------- | ----------- |
 | `Guppy`      | 4.0.14      |             |
 | `medaka`     | 1.4.4       |             |
-| `nanoplot`   | 1.38.0      | 1.39.0      |
+| `nanoplot`   | 1.38.0      | 1.40.0      |
+| `bcftools`   |             | 1.15.1      |
+| `pyoqc`      | 2.5.2       |             |
+| `clari3`     |             |
 
 ### Bug fix
 
-- Stuff goes here
+- Added bcftools sort for sv files to fix failing indexing.
 
 > **NB:** Dependency has been **updated** if both old and new version information is present.
 > **NB:** Dependency has been **added** if just the new version information is present.

@@ -51,17 +51,17 @@
                 }
             }
         },
-        "basecalling_demultiplexing_options": {
-            "title": "Basecalling/demultiplexing options",
+        "demultiplexing_options": {
+            "title": "Demultiplexing options",
             "type": "object",
-            "description": "Options required to basecall and demultiplex samples.",
+            "description": "Options required to demultiplex samples.",
             "default": "",
             "fa_icon": "fab fa-autoprefixer",
             "properties": {
                 "input_path": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Path to Nanopore run directory files (e.g. 'fastq_pass/*') or a basecalled fastq file that requires demultiplexing. The latter can only be provided in conjunction with the '--skip_basecalling' parameter.",
+                    "description": "Path to fastq file that requires demultiplexing.",
                     "fa_icon": "far fa-file-code"
                 },
                 "flowcell": {
@@ -77,58 +77,8 @@
                 "barcode_kit": {
                     "type": "string",
                     "description": "Barcode kit used to perform the sequencing e.g. 'SQK-PBK004'.",
-                    "help_text": "If you would like to skip the basecalling (`--skip_basecalling`) but still perform the demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):\n\n| `qcat` barcode kit specifications | description                                                                   |\n|-----------------------------------|-------------------------------------------------------------------------------|\n| `Auto`                            | Auto detect barcoding kit                                                     |\n| `RBK001`                          | Rapid barcoding kit                                                           |\n| `RBK004`                          | Rapid barcoding kit v4                                                        |\n| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |\n| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |\n| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |\n| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |\n| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |\n| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |\n| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |\n| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |\n| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |",
+                    "help_text": "To perform the demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):\n\n| `qcat` barcode kit specifications | description                                                                   |\n|-----------------------------------|-------------------------------------------------------------------------------|\n| `Auto`                            | Auto detect barcoding kit                                                     |\n| `RBK001`                          | Rapid barcoding kit                                                           |\n| `RBK004`                          | Rapid barcoding kit v4                                                        |\n| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |\n| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |\n| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |\n| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |\n| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |\n| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |\n| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |\n| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |\n| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |",
                     "fa_icon": "fas fa-barcode"
-                },
-                "barcode_both_ends": {
-                    "type": "boolean",
-                    "fa_icon": "fas fa-barcode",
-                    "description": "Require barcode on both ends for Guppy basecaller."
-                },
-                "trim_barcodes": {
-                    "type": "boolean",
-                    "fa_icon": "fas fa-barcode",
-                    "description": "Whether to trim the barcodes from the output sequences in the FastQ files from Guppy basecaller."
-                },
-                "guppy_config": {
-                    "type": "string",
-                    "help_text": "Cannot be used in conjunction with `--flowcell` and `--kit`. This can be a local file (e.g. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data/` directory of Guppy.",
-                    "description": "Config file used for basecalling that will be passed to Guppy via the '--config' parameter.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "guppy_model": {
-                    "type": "string",
-                    "description": "Custom basecalling model file in `json` format that will be passed to Guppy via the '--model' parameter.",
-                    "help_text": "Custom basecalling models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki). This can also be a string specifying a model stored in the `/opt/ont/guppy/data` directory of Guppy.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "guppy_gpu": {
-                    "type": "boolean",
-                    "description": "Whether to demultiplex with Guppy in GPU mode.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "guppy_gpu_runners": {
-                    "type": "integer",
-                    "default": 6,
-                    "description": "Number of '--gpu_runners_per_device' used for Guppy when using '--guppy_gpu'.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "guppy_cpu_threads": {
-                    "type": "integer",
-                    "default": 1,
-                    "description": "Number of '--cpu_threads_per_caller' used for Guppy when using '--guppy_gpu'.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "gpu_device": {
-                    "type": "string",
-                    "default": "auto",
-                    "description": "Basecalling device specified to Guppy in GPU mode using '--device'.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "gpu_cluster_options": {
-                    "type": "string",
-                    "description": "Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').",
-                    "fa_icon": "fas fa-fish"
                 },
                 "output_demultiplex_fast5": {
                     "type": "boolean",
@@ -145,11 +95,6 @@
                     "type": "boolean",
                     "description": "Search for adapters in the whole read by applying the '--detect-middle' parameter in qcat.",
                     "fa_icon": "fas fa-cut"
-                },
-                "skip_basecalling": {
-                    "type": "boolean",
-                    "description": "Skip basecalling with Guppy.",
-                    "fa_icon": "fas fa-fast-forward"
                 },
                 "skip_demultiplexing": {
                     "type": "boolean",
@@ -547,7 +492,7 @@
             "$ref": "#/definitions/input_output_options"
         },
         {
-            "$ref": "#/definitions/basecalling_demultiplexing_options"
+            "$ref": "#/definitions/demultiplexing_options"
         },
         {
             "$ref": "#/definitions/alignment_options"
