@@ -29,17 +29,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `--gpu_cluster_options` in Guppy basecaller.
 - Removed `--skip_basecalling` in Guppy basecaller.
 
-
 ### Software dependencies
 
-|  Dependency  | Old version | New version |
-| ------------ | ----------- | ----------- |
-| `Guppy`      | 4.0.14      |             |
-| `medaka`     | 1.4.4       |             |
-| `nanoplot`   | 1.38.0      | 1.40.0      |
-| `bcftools`   |             | 1.15.1      |
-| `pyoqc`      | 2.5.2       |             |
-| `clari3`     |             |
+| Dependency | Old version | New version |
+| ---------- | ----------- | ----------- |
+| `Guppy`    | 4.0.14      |             |
+| `medaka`   | 1.4.4       |             |
+| `nanoplot` | 1.38.0      | 1.40.0      |
+| `bcftools` |             | 1.15.1      |
+| `pyoqc`    | 2.5.2       |             |
+| `clari3`   |             |
 
 ### Bug fix
 
