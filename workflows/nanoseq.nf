@@ -164,7 +164,7 @@ def multiqc_report      = []
 workflow NANOSEQ {
 
     if (workflow.profile.contains('test') && !workflow.profile.contains('vc')) {
-        if (!params.skip_basecalling || !params.skip_modification_analysis) {
+        if (!params.skip_modification_analysis) {
             if (!isOffline()) {
                 GET_TEST_DATA ()
                 if (params.skip_modification_analysis) {
