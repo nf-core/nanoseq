@@ -3,6 +3,9 @@
     "homePage": "https://github.com/nf-core/nanoseq",
     "repos": {
         "nf-core/modules": {
+            "bcftools/sort": {
+                "git_sha": "682f789f93070bd047868300dd018faf3d434e7c"
+            },
             "custom/dumpsoftwareversions": {
                 "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             },
@@ -12,14 +15,14 @@
             "nanolyse": {
                 "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
             },
-            "pycoqc": {
-                "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
+            "nanoplot": {
+                "git_sha": "682f789f93070bd047868300dd018faf3d434e7c"
             },
             "samtools/faidx": {
                 "git_sha": "897c33d5da084b61109500ee44c01da2d3e4e773"
             },
             "samtools/flagstat": {
-                "git_sha": "897c33d5da084b61109500ee44c01da2d3e4e773"
+                "git_sha": "ecece498f10b47b7c9d06f53a310cea5811b4c5f"
             },
             "samtools/idxstats": {
                 "git_sha": "897c33d5da084b61109500ee44c01da2d3e4e773"

@@ -1,6 +1,5 @@
 process JAFFAL {
     tag "$meta.id"
-    echo true
     label 'process_medium'
 
     conda     (params.enable_conda ? "bioconda::jaffa=2.0.0" : null)

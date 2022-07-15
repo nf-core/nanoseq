@@ -74,9 +74,9 @@ if (params.call_variants) {
     if (!params.skip_sv && params.structural_variant_caller != 'sniffles' && params.structural_variant_caller != 'cutesv') {
         exit 1, "Invalid structural variant caller option: ${params.structural_variant_caller}. Valid options: 'sniffles', 'cutesv"
     }
-    //if (!params.skip_vc && params.enable_conda) {
-    //    exit 1, "Conda environments cannot be used when calling variants with clair3, deepvariant, or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
-    //}
+    if (!params.skip_vc && params.enable_conda) {
+        exit 1, "Conda environments cannot currently be used when calling variants with clair3, deepvariant, or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
+    }
 
     def clair3_model_list = ['r941_prom_sup_g5014', 'r941_prom_hac_g360+g422', 'ont', 'ont_guppy5']
 
@@ -98,7 +98,7 @@ if (!params.skip_modification_analysis) {
     if (!params.protocol == 'directRNA') {
         exit 1, "Invalid protocol option if performing base modification analysis: ${params.protocol}. Valid options: 'directRNA'"
     }
-    if(params.enable_conda) {
+    if(params.enable_conda && !params.protocol == 'directRNA') {
         exit 1, "Conda environments cannot be used when analysing base modifications. Valid options: 'docker', 'singularity'"
     }
 }
@@ -164,7 +164,7 @@ def multiqc_report      = []
 workflow NANOSEQ {
 
     if (workflow.profile.contains('test') && !workflow.profile.contains('vc')) {
-        if (!params.skip_basecalling || !params.skip_modification_analysis) {
+        if (!params.skip_modification_analysis) {
             if (!isOffline()) {
                 GET_TEST_DATA ()
                 if (params.skip_modification_analysis) {
@@ -232,6 +232,9 @@ workflow NANOSEQ {
             .map { it -> [ it[0], it[1] ] }
             .set { ch_fastq_nanolyse }
 
+        /*
+         * MODULE: Get nanolyse fasta
+         */
         if (!params.nanolyse_fasta) {
             if (!isOffline()) {
                 GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
@@ -253,15 +256,17 @@ workflow NANOSEQ {
         ch_software_versions = ch_software_versions.mix(NANOLYSE.out.versions.first().ifEmpty(null))
     }
 
-    ch_pycoqc_multiqc = Channel.empty()
-    ch_fastqc_multiqc = Channel.empty()
+    ch_qcfastq_multiqc = Channel.empty()
 
-    /*
-     * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
-     */
-    QCFASTQ_NANOPLOT_FASTQC ( ch_fastq, params.skip_nanoplot, params.skip_fastqc)
-    ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
-    ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
+    if (!params.skip_qc) {
+        /*
+         * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
+         */
+        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq )
+        ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
+        ch_qcfastq_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
+    }
+
     ch_samtools_multiqc = Channel.empty()
 
     if (!params.skip_alignment) {
@@ -276,6 +281,7 @@ workflow NANOSEQ {
         ch_fai         = PREPARE_GENOME.out.ch_fai
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
         ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
+
         if (params.aligner == 'minimap2') {
 
             /*
@@ -299,6 +305,7 @@ workflow NANOSEQ {
         /*
         * SUBWORKFLOW: View, then  sort, and index bam files
         */
+
         BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam, params.call_variants, ch_fasta )
         ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
         ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.samtools_versions.first().ifEmpty(null))
@@ -446,8 +453,7 @@ workflow NANOSEQ {
         MULTIQC (
         ch_multiqc_config,
         ch_multiqc_custom_config.collect().ifEmpty([]),
-        ch_pycoqc_multiqc.collect().ifEmpty([]),
-        ch_fastqc_multiqc.ifEmpty([]),
+        ch_qcfastq_multiqc.ifEmpty([]),
         ch_samtools_multiqc.collect().ifEmpty([]),
         ch_featurecounts_gene_multiqc.ifEmpty([]),
         ch_featurecounts_transcript_multiqc.ifEmpty([]),
