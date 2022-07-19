@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed Guppy basecaller
 - Removed tabix gzip for sv calls
+- Removed medaka variant caller
 - Added bcftools sort for sv calls
-- Removed medaka variant callaer
 - Added Clair3 variant caller
 - Updated `nanoplot` version from `1.38.0` to `1.39.0`
 
