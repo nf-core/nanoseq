@@ -21,7 +21,7 @@ You will need to create a file with information about the samples in your experi
 
 As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without demultiplexing.
 
-#### With basecalling and demultiplexing
+#### With demultiplexing
 
 ##### Example `samplesheet.csv` for barcoded fast5 inputs
 
@@ -105,7 +105,7 @@ nextflow run nf-core/nanoseq \
     -profile <docker/singularity/institute>
 ```
 
-##### RNA modification detection (please run basecalling prior)
+##### RNA modification detection
 
 ##### Example `samplesheet.csv` for FAST5 and FASTQ input directories
 

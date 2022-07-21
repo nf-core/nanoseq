@@ -18,16 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed `--split_mnps` to split multi-nucleotide polymorphisms into single nucleotide polymorphisms when using medaka
 - Removed `--phase_vcf` to output a phased vcf when using medaka.
-- Removed `--barcode_both_ends` in Guppy basecaller.
-- Removed `--trim_barcodes` in Guppy basecaller.
-- Removed `--guppy_config` in Guppy basecaller.
-- Removed `--guppy_model` in Guppy basecaller.
-- Removed `--guppy_gpu` in Guppy basecaller.
-- Removed `--guppy_gpu_runners` in Guppy basecaller.
-- Removed `--guppy_cpu_threads` in Guppy basecaller.
-- Removed `--gpu_device` in Guppy basecaller.
-- Removed `--gpu_cluster_options` in Guppy basecaller.
-- Removed `--skip_basecalling` in Guppy basecaller.
+- Removed `--barcode_both_ends` for Guppy basecaller.
+- Removed `--trim_barcodes` for Guppy basecaller.
+- Removed `--guppy_config` for Guppy basecaller.
+- Removed `--guppy_model` for Guppy basecaller.
+- Removed `--guppy_gpu` for Guppy basecaller.
+- Removed `--guppy_gpu_runners` for Guppy basecaller.
+- Removed `--guppy_cpu_threads` for Guppy basecaller.
+- Removed `--gpu_device` for Guppy basecaller.
+- Removed `--gpu_cluster_options` for Guppy basecaller.
+- Removed `--skip_basecalling` for Guppy basecaller.
+- Added `--clair3_model` for Clair3 variant calling.
 
 ### Software dependencies
 
@@ -38,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | `nanoplot` | 1.38.0      | 1.40.0      |
 | `bcftools` |             | 1.15.1      |
 | `pyoqc`    | 2.5.2       |             |
-| `clari3`   |             |
+| `Clari3`   |             | 3.0.1       |
 
 ### Bug fix
 
