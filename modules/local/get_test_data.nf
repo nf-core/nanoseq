@@ -6,7 +6,7 @@ process GET_TEST_DATA {
     path "test-datasets/modification_fast5_fastq/"   , emit: ch_input_dir_path
 
     script:
-    barcoded = (workflow.profile.contains('test_bc_nodx') || workflow.profile.contains('rnamod')) ? "nonbarcoded" : "barcoded"
+    barcoded = (workflow.profile.contains('rnamod')) ? "nonbarcoded" : "barcoded"
     """
     git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
     """

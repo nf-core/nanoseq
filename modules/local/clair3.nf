@@ -2,7 +2,7 @@ process CLAIR3 {
     tag "$meta.id"
     label 'process_high'
 
-    conda     (params.enable_conda ? 'bioconda::clair3=0.1.10 conda-forge::python=3.6.10' : null)
+    //conda     (params.enable_conda ? 'bioconda::clair3=0.1.10 conda-forge::python=3.6.10' : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/clair3:0.1.10--hdfd78af_0' :
         'quay.io/biocontainers/clair3:0.1.10--hdfd78af_0' }"

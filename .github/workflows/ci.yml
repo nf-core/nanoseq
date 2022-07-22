@@ -56,7 +56,6 @@ jobs:
     strategy:
       matrix:
         profiles:
-          - "test_bc_nodx"
           - "test_nobc_dx"
           - "test_nobc_nodx_vc"
           - "test_nobc_nodx_stringtie"
