@@ -6,7 +6,7 @@ process GET_JAFFAL_REF {
         'biocontainers/biocontainers:v1.2.0_cv1' }"
 
     output:
-    path "for_jaffal.tar.gz"  , emit: ch_jaffal_ref
+    tuple val(null), path("for_jaffal.tar.gz")  , emit: ch_jaffal_ref
 
     script:
     """

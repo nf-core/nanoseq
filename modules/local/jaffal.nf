@@ -1,5 +1,4 @@
 process JAFFAL {
-    tag "$meta.id"
     echo true
     label 'process_medium'
 

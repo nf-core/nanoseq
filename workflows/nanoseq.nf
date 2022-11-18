@@ -15,8 +15,8 @@ checkPathParamList = [ params.input, params.multiqc_config ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters (missing protocol or profile will exit the run.)
-if (params.input) { 
-    ch_input = file(params.input) 
+if (params.input) {
+    ch_input = file(params.input)
 } else {
     exit 1, 'Input samplesheet not specified!'
 }
@@ -484,7 +484,11 @@ workflow NANOSEQ{
         /*
          * SUBWORKFLOW: RNA_FUSIONS_JAFFAL
          */
-        RNA_FUSIONS_JAFFAL( ch_sample, params.jaffal_ref_dir )
+        ch_fastq
+            .map { it -> [ it[0], it[1] ] }
+            .set { ch_fastq_simple }
+
+        RNA_FUSIONS_JAFFAL( ch_fastq_simple, params.jaffal_ref_dir )
     }
 
     /*
