@@ -30,7 +30,7 @@ group,replicate,barcode,input_file,fasta,gtf
 WT_MOUSE,1,1,,mm10,
 WT_HUMAN,1,2,,hg19,
 WT_POMBE,1,3,,/path/to/local/genome.fa,
-WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
+WT_DENOVO,1,4,,/path/to/local/transcriptome.fa,
 WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
 WT_UNKNOWN,3,6,,,
 ```
@@ -54,7 +54,7 @@ nextflow run nf-core/nanoseq \
 
 ```bash
 group,replicate,barcode,input_file,fasta,gtf
-SAMPLE,1,1,/path/to/local/genome.fa,,
+SAMPLE,1,1,,/path/to/local/genome.fa,
 ```
 
 > Only a single sample can be specified if you would like to skip demultiplexing
