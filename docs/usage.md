@@ -95,6 +95,7 @@ nextflow run nf-core/nanoseq \
     --input_path ./undemultiplexed.fastq.gz \
     --barcode_kit 'NBD103/NBD104' \
     --skip_basecalling \
+    --skip_quantification \
     -profile <docker/singularity/institute>
 ```
 
