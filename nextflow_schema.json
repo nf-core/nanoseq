@@ -25,11 +25,12 @@
                 },
                 "protocol": {
                     "type": "string",
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
+                    "description": "Input sample type. Valid options: 'DNA', 'cDNA',  and 'directRNA'.",
                     "format": "file-path",
                     "mimetype": "text/csv",
                     "schema": "assets/schema_input.json",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re//usage#samplesheet-input)."
+                    "help_text": "You will need to specify a protocol based on the sample input type. Valid options are 'DNA', 'cDNA', and 'directRNA'.",
+                    "fa_icon": "fas fa-dna"
                 },
                 "outdir": {
                     "type": "string",
