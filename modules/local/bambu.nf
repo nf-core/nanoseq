@@ -1,8 +1,10 @@
 process BAMBU {
     label 'process_medium'
 
-    conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-bambu=2.0.0 bioconda::bioconductor-bsgenome=1.62.0" : null)
-    container "docker.io/yuukiiwa/nanoseq:bambu_bsgenome" //not on biocontainers; does not have a singularity container
+    conda     (params.enable_conda ? "conda-forge::r-base=4.0.3 bioconda::bioconductor-bambu=3.0.6 bioconda::bioconductor-bsgenome=1.62.0" : null)
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/bioconductor-bambu:3.0.6--r42hc247a5b_0' :
+        'quay.io/biocontainers/bioconductor-bambu:3.0.6--r42hc247a5b_0' }"
 
     input:
     tuple path(fasta), path(gtf)
