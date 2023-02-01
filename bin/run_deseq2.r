@@ -50,7 +50,7 @@ if (transcriptquant == "stringtie2"){
     rownames(countTab) <-count.matrix[,1]
 }
 if (transcriptquant == "bambu"){
-    countTab           <- data.frame(read.table(path,sep="\t",header=TRUE))
+    countTab           <- data.frame(read.table(path,sep="\t",header=TRUE,row.names = 1))
     colnames(countTab) <- unlist(lapply(strsplit(colnames(countTab),"\\."),"[[",1))
     countTab[,1:length(colnames(countTab))] <- sapply(countTab, as.integer)
 }
