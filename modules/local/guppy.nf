@@ -20,6 +20,9 @@ process GUPPY {
     path "basecalling/*"                       , emit: called
     path "versions.yml"                        , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def fast5_dir_path = workflow.profile.contains('test') ? "input_path" : "$input_path"
     def trim_barcodes = params.trim_barcodes ? "--trim_barcodes" : ""

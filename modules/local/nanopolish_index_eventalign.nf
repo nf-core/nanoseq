@@ -14,6 +14,9 @@ process NANOPOLISH_INDEX_EVENTALIGN {
     tuple val(meta), path(genome), path(gtf), path("*eventalign.txt"), path("*summary.txt"), emit: nanopolish_outputs
     path "versions.yml"        , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     sample_summary = "$meta.id" +"_summary.txt"
     sample_eventalign = "$meta.id" +"_eventalign.txt"

@@ -14,6 +14,9 @@ process BAMBU {
     path "extended_annotations.gtf" , emit: extended_gtf
     path "versions.yml"             , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     run_bambu.r \\

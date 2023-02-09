@@ -15,6 +15,9 @@ process SAMTOOLS_SORT_INDEX {
     tuple val(meta), path("*sorted.bam"), path("*.csi")  , optional:true, emit: bam_csi
     path  "versions.yml"          , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     samtools sort -@ $task.cpus -o ${meta.id}.sorted.bam -T $meta.id $bam

@@ -4,6 +4,7 @@
     nf-core/nanoseq
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Github : https://github.com/nf-core/nanoseq
+
     Website: https://nf-co.re/nanoseq
     Slack  : https://nfcore.slack.com/channels/nanoseq
 ----------------------------------------------------------------------------------------

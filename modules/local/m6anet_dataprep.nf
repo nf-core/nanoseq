@@ -12,6 +12,9 @@ process M6ANET_DATAPREP {
     tuple val(meta), path("$meta.id"), emit: dataprep_outputs
     path "versions.yml"        , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     m6anet-dataprep \\

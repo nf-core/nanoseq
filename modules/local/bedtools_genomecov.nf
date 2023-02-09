@@ -14,6 +14,9 @@ process BEDTOOLS_GENOMECOV {
     tuple val(meta), path(sizes), path("*.bedGraph"), emit: bedgraph
     path "versions.yml"                             , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     split = (params.protocol == 'DNA' || is_transcripts) ? "" : "-split"
     """

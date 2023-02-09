@@ -15,6 +15,8 @@ process SNIFFLES {
     tuple val(meta), path("*_sniffles.vcf") , emit: sv_calls // vcf files
     path "versions.yml"                     , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     """

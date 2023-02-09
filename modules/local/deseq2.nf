@@ -13,6 +13,9 @@ process DESEQ2 {
     path "*.txt"                , emit: deseq2_txt
     path "versions.yml"         , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     run_deseq2.r $params.quantification_method $counts

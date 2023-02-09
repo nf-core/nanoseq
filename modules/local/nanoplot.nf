@@ -12,14 +12,14 @@ process NANOPLOT {
 
     output:
     tuple val(meta), path("$output_html"), emit: html
-    //tuple val(meta), path("$output_png") , emit: png
     tuple val(meta), path("$output_txt") , emit: txt
     tuple val(meta), path("$output_log") , emit: log
     path  "versions.yml"           , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
-    //def args = task.ext.args ?: ''
-    // $options.args \\
     def input_file = ("$ontfile".endsWith(".fastq.gz")) ? "--fastq ${ontfile}" :
                     ("$ontfile".endsWith(".txt")) ? "--summary ${ontfile}" : ''
     def output_dir = ("$ontfile".endsWith(".fastq.gz")) ? "fastq/${meta.id}" :
