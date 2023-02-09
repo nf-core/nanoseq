@@ -16,6 +16,9 @@ process DEMUX_FAST5 {
     path "demultiplexed_fast5/*"   , emit: fast5
     path "versions.yml"            , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def fast5_dir_path = workflow.profile.contains('test') ? "input_path" : "$input_path"
     """

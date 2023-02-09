@@ -15,8 +15,10 @@ process MEDAKA_VARIANT {
     tuple val(meta), path ("$output_vcf")    , emit: vcf // vcf files
     path "versions.yml"                      , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
-    //def args             =  options.args        ?: ''
     def split_mnps       =  params.split_mnps   ? "-l"                        : ''
     def phase_vcf        =  params.phase_vcf    ? "-p"                        : ''
 

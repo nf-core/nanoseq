@@ -8,6 +8,9 @@ process GET_NANOLYSE_FASTA {
     output:
     path "*fasta.gz"  , emit: ch_nanolyse_fasta
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     curl \\

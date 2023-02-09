@@ -14,6 +14,9 @@ process UCSC_BEDGRAPHTOBIGWIG {
     tuple val(meta), path(sizes), path("*.bigWig"), emit: bigwig
     path "versions.yml"                           , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def VERSION = '377'
     """

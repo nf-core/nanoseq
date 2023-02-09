@@ -13,7 +13,10 @@ process GTF2BED {
     tuple path('*.bed'), val(name) , emit: gtf_bed
     path "versions.yml", emit: versions
 
-    script: // This script is bundled with the pipeline, in nf-core/chipseq/bin/
+    when:
+    task.ext.when == null || task.ext.when
+
+    script:
     """
     gtf2bed $gtf > ${gtf.baseName}.bed
 

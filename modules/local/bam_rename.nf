@@ -15,6 +15,9 @@ process BAM_RENAME {
     output:
     tuple val(meta), path("*.bam"), emit: bam
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     [ ! -f ${meta.id}.bam ] && ln -s $bam ${meta.id}.bam

@@ -17,6 +17,9 @@ process JAFFAL {
     path "*.csv"                     ,emit: jaffal_results
     path "versions.yml"        , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     bpipe run -p refBase=$jaffal_ref_dir $jaffal_ref_dir/JAFFAL.groovy $fastq

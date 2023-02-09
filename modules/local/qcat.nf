@@ -14,6 +14,9 @@ process QCAT {
     path "fastq/*.fastq.gz"               , emit: fastq
     path "versions.yml"                   , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""
     """

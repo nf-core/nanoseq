@@ -14,6 +14,9 @@ process GET_CHROM_SIZES {
     tuple path('*.sizes'), val(name) , emit: sizes
     path "versions.yml"              , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     samtools faidx $fasta

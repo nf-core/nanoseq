@@ -13,6 +13,9 @@ process M6ANET_INFERENCE {
     path "*", emit: m6anet_outputs
     path "versions.yml"        , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def out_dir = meta.id+"_results"
     """
