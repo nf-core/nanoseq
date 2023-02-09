@@ -59,7 +59,6 @@ def check_samplesheet(file_in, updated_path, file_out):
     input_extensions = []
     sample_info_dict = {}
     with open(file_in, "r") as fin:
-
         ## Check header
         MIN_COLS = 3
         HEADER = ["group", "replicate", "barcode", "input_file", "fasta", "gtf"]
@@ -200,13 +199,11 @@ def check_samplesheet(file_in, updated_path, file_out):
         out_dir = os.path.dirname(file_out)
         make_dir(out_dir)
         with open(file_out, "w") as fout:
-
             fout.write(
                 ",".join(["sample", "barcode", "input_file", "fasta", "gtf", "is_transcripts", "nanopolish_fast5"])
                 + "\n"
             )
             for sample in sorted(sample_info_dict.keys()):
-
                 ## Check that replicate ids are in format 1..<NUM_REPS>
                 uniq_rep_ids = set(sample_info_dict[sample].keys())
                 if len(uniq_rep_ids) != max(uniq_rep_ids):
