@@ -14,6 +14,9 @@ process SAMTOOLS_VIEW_BAM {
     tuple val(meta), path("*.bam") ,emit: bam
     path "versions.yml"        , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     samtools view -b -h -O BAM -@ $task.cpus -o ${meta.id}.bam $sam

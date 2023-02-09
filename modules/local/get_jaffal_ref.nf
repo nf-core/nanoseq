@@ -8,6 +8,9 @@ process GET_JAFFAL_REF {
     output:
     path "for_jaffal.tar.gz"  , emit: ch_jaffal_ref
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     curl \\

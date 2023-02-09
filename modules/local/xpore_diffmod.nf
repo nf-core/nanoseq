@@ -9,6 +9,9 @@ process XPORE_DIFFMOD {
     input:
     val dataprep_dirs
 
+    when:
+    task.ext.when == null || task.ext.when
+
     output:
     path "diffmod*", emit: diffmod_outputs
     path "versions.yml"        , emit: versions

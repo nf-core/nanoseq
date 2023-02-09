@@ -1,8 +1,8 @@
 process TABIX_BGZIPTABIX {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_single'
 
-    conda (params.enable_conda ? 'bioconda::tabix=1.11' : null)
+    conda "bioconda::tabix=1.11"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/tabix:1.11--hdfd78af_0' :
         'quay.io/biocontainers/tabix:1.11--hdfd78af_0' }"
@@ -22,8 +22,20 @@ process TABIX_BGZIPTABIX {
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    bgzip  --threads ${task.cpus} -c $args $input > ${prefix}.gz
-    tabix $args2 ${prefix}.gz
+    bgzip  --threads ${task.cpus} -c $args $input > ${prefix}.${input.getExtension()}.gz
+    tabix $args2 ${prefix}.${input.getExtension()}.gz
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
+    END_VERSIONS
+    """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.gz
+    touch ${prefix}.gz.tbi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -15,6 +15,9 @@ process STRINGTIE2 {
     path "*.stringtie.gtf"       , emit: stringtie_gtf
     path  "versions.yml"         , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     stringtie \\

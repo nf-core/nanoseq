@@ -18,6 +18,9 @@ process SUBREAD_FEATURECOUNTS {
     path "counts_transcript.txt.summary" , emit: featurecounts_transcript_multiqc
     path "versions.yml"                  , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     featureCounts \\

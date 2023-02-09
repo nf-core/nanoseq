@@ -12,6 +12,9 @@ process DEXSEQ {
     path "*.txt"                , emit: dexseq_txt
     path "versions.yml"         , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     """
     run_dexseq.r $params.quantification_method $counts

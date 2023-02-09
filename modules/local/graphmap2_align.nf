@@ -14,6 +14,9 @@ process GRAPHMAP2_ALIGN {
     tuple val(meta), path(sizes), val(is_transcripts), path("*.sam"), emit: align_sam
     path "versions.yml"           , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
     def preset    = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"
     def junctions = (params.protocol != 'DNA' && !is_transcripts && gtf) ? "--gtf $gtf" : ""

@@ -1,11 +1,11 @@
 process SAMTOOLS_IDXSTATS {
     tag "$meta.id"
-    label 'process_low'
+    label 'process_single'
 
-    conda (params.enable_conda ? "bioconda::samtools=1.15.1" : null)
+    conda "bioconda::samtools=1.16.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/samtools:1.15.1--h1170115_0' :
-        'quay.io/biocontainers/samtools:1.15.1--h1170115_0' }"
+        'https://depot.galaxyproject.org/singularity/samtools:1.16.1--h6899075_1' :
+        'quay.io/biocontainers/samtools:1.16.1--h6899075_1' }"
 
     input:
     tuple val(meta), path(bam), path(bai)
@@ -19,11 +19,14 @@ process SAMTOOLS_IDXSTATS {
 
     script:
     def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
+
     """
     samtools \\
         idxstats \\
+        --threads ${task.cpus-1} \\
         $bam \\
-        > ${bam}.idxstats
+        > ${prefix}.idxstats
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
