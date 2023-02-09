@@ -3,7 +3,7 @@
  */
 
 include { GET_JAFFAL_REF } from '../../modules/local/get_jaffal_ref'
-include { UNTAR          } from '../../modules/nf-core/modules/untar/main'
+include { UNTAR          } from '../../modules/nf-core/untar/main'
 include { JAFFAL         } from '../../modules/local/jaffal'
 
 workflow RNA_FUSIONS_JAFFAL {
