@@ -39,7 +39,7 @@ workflow SHORT_VARIANT_CALLING {
          * Zip medaka vcf
          */
         MEDAKA_BGZIP_VCF( MEDAKA_VARIANT.out.vcf )
-        ch_short_calls_vcf  = MEDAKA_BGZIP_VCF.out.gz
+        ch_short_calls_vcf  = MEDAKA_BGZIP_VCF.out.output
         ch_versions = ch_versions.mix(bgzip_version = MEDAKA_BGZIP_VCF.out.versions)
 
         /*
