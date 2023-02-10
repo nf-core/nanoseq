@@ -10,8 +10,8 @@ process M6ANET_INFERENCE {
     tuple val(meta), path(input_dir)
 
     output:
-    path "*", emit: m6anet_outputs
-    path "versions.yml"        , emit: versions
+    path "*"           , emit: m6anet_outputs
+    path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when

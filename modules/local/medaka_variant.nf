@@ -12,8 +12,8 @@ process MEDAKA_VARIANT {
     path(fasta)
 
     output:
-    tuple val(meta), path ("$output_vcf")    , emit: vcf // vcf files
-    path "versions.yml"                      , emit: versions
+    tuple val(meta), path ("$output_vcf"), emit: vcf // vcf files
+    path "versions.yml"                  , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

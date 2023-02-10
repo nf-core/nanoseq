@@ -10,8 +10,8 @@ process GTF2BED {
     tuple path(gtf), val(name)
 
     output:
-    tuple path('*.bed'), val(name) , emit: gtf_bed
-    path "versions.yml", emit: versions
+    tuple path('*.bed'), val(name), emit: gtf_bed
+    path "versions.yml"           , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

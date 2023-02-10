@@ -7,8 +7,8 @@ process GET_NANOLYSE_FASTA {
         'ubuntu:20.04' }"
 
     output:
-    path "*fasta.gz"  , emit: ch_nanolyse_fasta
-    path "versions.yml"                       , emit: versions
+    path "*fasta.gz"   , emit: ch_nanolyse_fasta
+    path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when

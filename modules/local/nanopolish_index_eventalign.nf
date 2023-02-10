@@ -12,7 +12,7 @@ process NANOPOLISH_INDEX_EVENTALIGN {
 
     output:
     tuple val(meta), path(genome), path(gtf), path("*eventalign.txt"), path("*summary.txt"), emit: nanopolish_outputs
-    path "versions.yml"        , emit: versions
+    path "versions.yml"                                                                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

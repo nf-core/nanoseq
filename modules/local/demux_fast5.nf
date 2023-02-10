@@ -11,8 +11,8 @@ process DEMUX_FAST5 {
     tuple val(meta), path(input_summary)
 
     output:
-    path "demultiplexed_fast5/*"   , emit: fast5
-    path "versions.yml"            , emit: versions
+    path "demultiplexed_fast5/*", emit: fast5
+    path "versions.yml"         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

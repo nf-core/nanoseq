@@ -12,8 +12,8 @@ process STRINGTIE2 {
     tuple val(meta), path(fasta), path(gtf), path(bam)
 
     output:
-    path "*.stringtie.gtf"       , emit: stringtie_gtf
-    path  "versions.yml"         , emit: versions
+    path "*.stringtie.gtf", emit: stringtie_gtf
+    path  "versions.yml"  , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

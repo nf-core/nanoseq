@@ -12,9 +12,9 @@ process JAFFAL {
     path jaffal_ref_dir
 
     output:
-    tuple val(meta), path("*.fasta") ,emit: jaffal_fastq
-    path "*.csv"                     ,emit: jaffal_results
-    path "versions.yml"        , emit: versions
+    tuple val(meta), path("*.fasta"), emit: jaffal_fastq
+    path "*.csv"                    , emit: jaffal_results
+    path "versions.yml"             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

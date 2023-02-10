@@ -10,8 +10,8 @@ process DESEQ2 {
     path counts
 
     output:
-    path "*.txt"                , emit: deseq2_txt
-    path "versions.yml"         , emit: versions
+    path "*.txt"       , emit: deseq2_txt
+    path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when

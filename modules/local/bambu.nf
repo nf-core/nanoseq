@@ -11,10 +11,10 @@ process BAMBU {
     path bams
 
     output:
-    path "counts_gene.txt"          , emit: ch_gene_counts
-    path "counts_transcript.txt"    , emit: ch_transcript_counts
-    path "extended_annotations.gtf" , emit: extended_gtf
-    path "versions.yml"             , emit: versions
+    path "counts_gene.txt"         , emit: ch_gene_counts
+    path "counts_transcript.txt"   , emit: ch_transcript_counts
+    path "extended_annotations.gtf", emit: extended_gtf
+    path "versions.yml"            , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

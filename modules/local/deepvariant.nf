@@ -1,6 +1,6 @@
 process DEEPVARIANT {
     tag "$meta.id"
-    label 'process_high'
+    label 'process_medium'
 
     container "google/deepvariant:1.4.0"
 
@@ -15,9 +15,9 @@ process DEEPVARIANT {
     path(fai)
 
     output:
-    tuple val(meta), path("${prefix}.vcf.gz")   ,  emit: vcf
-    tuple val(meta), path("${prefix}.g.vcf.gz") ,  emit: gvcf
-    path "versions.yml"                         ,  emit: versions
+    tuple val(meta), path("${prefix}.vcf.gz")  ,  emit: vcf
+    tuple val(meta), path("${prefix}.g.vcf.gz"),  emit: gvcf
+    path "versions.yml"                        ,  emit: versions
 
     when:
     task.ext.when == null || task.ext.when

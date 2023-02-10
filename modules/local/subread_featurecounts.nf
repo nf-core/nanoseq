@@ -12,11 +12,11 @@ process SUBREAD_FEATURECOUNTS {
     path bams
 
     output:
-    path "counts_gene.txt"               , emit: gene_counts
-    path "counts_transcript.txt"         , emit: transcript_counts
-    path "counts_gene.txt.summary"       , emit: featurecounts_gene_multiqc
-    path "counts_transcript.txt.summary" , emit: featurecounts_transcript_multiqc
-    path "versions.yml"                  , emit: versions
+    path "counts_gene.txt"              , emit: gene_counts
+    path "counts_transcript.txt"        , emit: transcript_counts
+    path "counts_gene.txt.summary"      , emit: featurecounts_gene_multiqc
+    path "counts_transcript.txt.summary", emit: featurecounts_transcript_multiqc
+    path "versions.yml"                 , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

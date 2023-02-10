@@ -9,8 +9,8 @@ process DEXSEQ {
     path counts
 
     output:
-    path "*.txt"                , emit: dexseq_txt
-    path "versions.yml"         , emit: versions
+    path "*.txt"        , emit: dexseq_txt
+    path "versions.yml" , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

@@ -10,8 +10,8 @@ process BEDTOOLS_BAMBED {
     tuple val(meta), path(sizes), val(is_transcripts), path(bam), path(bai)
 
     output:
-    tuple val(meta), path(sizes), path("*.bed12") , emit: bed12
-    path "versions.yml"                           , emit: versions
+    tuple val(meta), path(sizes), path("*.bed12"), emit: bed12
+    path "versions.yml"                          , emit: versions
 
     when:
     !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')

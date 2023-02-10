@@ -11,8 +11,8 @@ process GET_CHROM_SIZES {
     tuple path(fasta), val(name)
 
     output:
-    tuple path('*.sizes'), val(name) , emit: sizes
-    path "versions.yml"              , emit: versions
+    tuple path('*.sizes'), val(name), emit: sizes
+    path "versions.yml"             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
