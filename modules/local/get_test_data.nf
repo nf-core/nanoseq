@@ -1,4 +1,7 @@
 process GET_TEST_DATA {
+    label "process_single"
+
+2.34.1
     container "docker.io/yuukiiwa/git:latest"
 
     output:

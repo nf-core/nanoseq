@@ -1,4 +1,5 @@
 process BAM_RENAME {
+    label 'process_medium'
     tag "$meta.id"
 
     conda (params.enable_conda ? "conda-forge::sed=4.7" : null)

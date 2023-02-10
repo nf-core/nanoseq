@@ -1,4 +1,5 @@
 process GET_JAFFAL_REF {
+    label "process_single"
 
     conda (params.enable_conda ? "conda-forge::sed=4.7" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
