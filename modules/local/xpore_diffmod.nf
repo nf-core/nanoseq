@@ -9,12 +9,12 @@ process XPORE_DIFFMOD {
     input:
     val dataprep_dirs
 
-    when:
-    task.ext.when == null || task.ext.when
-
     output:
     path "diffmod*", emit: diffmod_outputs
     path "versions.yml"        , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     diffmod_config = "--config $workflow.workDir/*/*/diffmod_config.yml"

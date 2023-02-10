@@ -2,9 +2,12 @@ process DEEPVARIANT {
     tag "$meta.id"
     label 'process_high'
 
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker.io/google/deepvariant:1.3.0' :
-        'docker.io/google/deepvariant:1.3.0' }"
+    container "google/deepvariant:1.4.0"
+
+    // Exit if running this module with -profile conda / -profile mamba
+    if (workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1) {
+        exit 1, "DEEPVARIANT module does not support Conda. Please use Docker / Singularity / Podman instead."
+    }
 
     input:
     tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)

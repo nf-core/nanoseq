@@ -1,12 +1,10 @@
 process DEMUX_FAST5 {
     label 'process_medium'
 
-    conda     (params.enable_conda ? "bioconda:ont-fast5-api:4.0.0--pyhdfd78af_0" : null)
-    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/ont-fast5-api:4.0.0--pyhdfd78af_0"
-    } else {
-        container "quay.io/biocontainers/ont-fast5-api:4.0.0--pyhdfd78af_0"
-    }
+    conda "bioconda::ont-fast5-api=4.0.0"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/ont-fast5-api:4.0.0--pyhdfd78af_0' :
+        'quay.io/biocontainers/ont-fast5-api:4.0.0--pyhdfd78af_0' }"
 
     input:
     path(input_path), stageAs: 'input_path/*'

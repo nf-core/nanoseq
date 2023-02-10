@@ -7,15 +7,15 @@ process UCSC_BED12TOBIGBED {
         'https://depot.galaxyproject.org/singularity/ucsc-bedtobigbed:377--h446ed27_1' :
         'quay.io/biocontainers/ucsc-bedtobigbed:377--h446ed27_1' }"
 
-    when:
-    !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
-
     input:
     tuple val(meta), path(sizes),  path(bed12)
 
     output:
-    tuple val(meta), path(sizes),  path("*.bigBed"), emit: bigbed
-    path "versions.yml"                            , emit: versions
+    tuple val(meta), path(sizes), path("*.bigBed"), emit: bigbed
+    path "versions.yml"                           , emit: versions
+
+    when:
+    !params.skip_alignment && !params.skip_bigbed && (params.protocol == 'directRNA' || params.protocol == 'cDNA')
 
     script:
     def VERSION = '377'
