@@ -3,8 +3,8 @@ process GET_NANOLYSE_FASTA {
 
     conda "conda-forge::sed=4.7"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/ubuntu:20.04' :
-        'ubuntu:20.04' }"
+        'https://containers.biocontainers.pro/s3/SingImgsRepo/biocontainers/v1.2.0_cv1/biocontainers_v1.2.0_cv1.img' :
+        'biocontainers/biocontainers:v1.2.0_cv1' }"
 
     output:
     path "*fasta.gz"   , emit: ch_nanolyse_fasta
@@ -21,7 +21,7 @@ process GET_NANOLYSE_FASTA {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        curl: \$(curl --version | grep "curl" | sed "s/curl //; s/ .*\$//")
+        curl: \$(echo \$(curl --version  2>&1) | grep "curl" | sed "s/curl //; s/ .*\$//")
     END_VERSIONS
     """
 }

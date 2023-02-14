@@ -279,7 +279,9 @@ workflow NANOSEQ{
 
         if (!params.nanolyse_fasta) {
             if (!isOffline()) {
-                GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
+                GET_NANOLYSE_FASTA()
+                GET_NANOLYSE_FASTA.out.ch_nanolyse_fasta
+                    .set{ ch_nanolyse_fasta }
             } else {
                 exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
             }
