@@ -2,7 +2,7 @@ process MINIMAP2_INDEX {
     tag "$fasta"
     label 'process_high'
 
-    conda     (params.enable_conda ? "bioconda::minimap2=2.17" : null)
+    conda "bioconda::minimap2=2.17"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/minimap2:2.17--hed695b0_3' :
         'quay.io/biocontainers/minimap2:2.17--hed695b0_3' }"

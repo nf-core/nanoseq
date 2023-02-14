@@ -2,7 +2,7 @@ process SAMTOOLS_VIEW_BAM {
     tag "$meta.id"
     label 'process_medium'
 
-    conda     (params.enable_conda ? "bioconda::samtools=1.10" : null)
+    conda "bioconda::samtools=1.10"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/samtools:1.15.1--h1170115_0' :
         'quay.io/biocontainers/samtools:1.15.1--h1170115_0' }"

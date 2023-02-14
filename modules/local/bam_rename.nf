@@ -2,7 +2,7 @@ process BAM_RENAME {
     label 'process_medium'
     tag "$meta.id"
 
-    conda (params.enable_conda ? "conda-forge::sed=4.7" : null)
+    conda "conda-forge::sed=4.7"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/sed:4.7.0' :
         'quay.io/biocontainers/sed:4.7.0' }"

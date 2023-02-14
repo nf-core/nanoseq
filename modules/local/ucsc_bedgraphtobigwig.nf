@@ -2,7 +2,7 @@ process UCSC_BEDGRAPHTOBIGWIG {
     tag "$meta.id"
     label 'process_medium'
 
-    conda     (params.enable_conda ? "bioconda::ucsc-bedgraphtobigwig=377" : null)
+    conda "bioconda::ucsc-bedgraphtobigwig=377"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/ucsc-bedgraphtobigwig:377--h446ed27_1' :
         'quay.io/biocontainers/ucsc-bedgraphtobigwig:377--h446ed27_1' }"

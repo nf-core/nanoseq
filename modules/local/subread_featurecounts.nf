@@ -2,7 +2,7 @@ process SUBREAD_FEATURECOUNTS {
     label 'process_medium'
 
     // Note: 2.7X indices incompatible with AWS iGenomes.
-    conda     (params.enable_conda ? "bioconda::subread=2.0.1" : null)
+    conda "bioconda::subread=2.0.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/subread:2.0.1--hed695b0_0' :
         'quay.io/biocontainers/subread:2.0.1--hed695b0_0' }"

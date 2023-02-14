@@ -1,14 +1,12 @@
 process GET_TEST_DATA {
     label "process_single"
 
-2.34.1
     container "docker.io/yuukiiwa/git:latest"
 
     output:
     path "test-datasets/fast5/$barcoded/*"        , emit: ch_input_fast5s_path
     path "test-datasets/modification_fast5_fastq/", emit: ch_input_dir_path
     path "versions.yml"                           , emit: versions
-
 
     when:
     task.ext.when == null || task.ext.when
@@ -20,6 +18,6 @@ process GET_TEST_DATA {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        deepvariant: git --version | sed 's/git version //; s/ .*\$//')
+        git: \$(echo \$(git --version | sed 's/git version //; s/ .*\$//')
     """
 }

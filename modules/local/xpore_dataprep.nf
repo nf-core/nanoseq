@@ -2,7 +2,7 @@ process XPORE_DATAPREP {
     tag "$meta.id"
     label 'process_medium'
 
-    conda     (params.enable_conda ? "bioconda::xpore=2.1.0" : null)
+    conda "bioconda::xpore=2.1.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/xpore:2.1--pyh5e36f6f_0' :
         'quay.io/biocontainers/xpore:2.1--pyh5e36f6f_0' }"
