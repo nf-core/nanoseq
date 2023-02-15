@@ -59,12 +59,11 @@ def check_samplesheet(file_in, updated_path, file_out):
     input_extensions = []
     sample_info_dict = {}
     with open(file_in, "r") as fin:
-
         ## Check header
         MIN_COLS = 3
-        HEADER = ['group', 'replicate', 'barcode', 'input_file', 'fasta', 'gtf']
+        HEADER = ["group", "replicate", "barcode", "input_file", "fasta", "gtf"]
         header = fin.readline().strip().split(",")
-        if header[:len(HEADER)] != HEADER:
+        if header[: len(HEADER)] != HEADER:
             print("ERROR: Please check samplesheet header -> {} != {}".format(",".join(header), ",".join(HEADER)))
             sys.exit(1)
 
@@ -74,40 +73,40 @@ def check_samplesheet(file_in, updated_path, file_out):
 
             ## Check valid number of columns per row
             if len(lspl) < len(HEADER):
-                print_error("Invalid number of columns (minimum = {})!".format(len(HEADER)), 'Line', line)
+                print_error("Invalid number of columns (minimum = {})!".format(len(HEADER)), "Line", line)
 
             num_cols = len([x for x in lspl if x])
             if num_cols < MIN_COLS:
-                print_error("Invalid number of populated columns (minimum = {})!".format(MIN_COLS), 'Line', line)
+                print_error("Invalid number of populated columns (minimum = {})!".format(MIN_COLS), "Line", line)
 
             ## Check group name entries
-            group, replicate, barcode, input_file, fasta, gtf = lspl[:len(HEADER)]
+            group, replicate, barcode, input_file, fasta, gtf = lspl[: len(HEADER)]
             if group:
                 if group.find(" ") != -1:
-                    print_error("Group entry contains spaces!", 'Line', line)
+                    print_error("Group entry contains spaces!", "Line", line)
             else:
-                print_error("Group entry has not been specified!", 'Line', line)
+                print_error("Group entry has not been specified!", "Line", line)
 
             ## Check replicate entry is integer
             if replicate:
                 if not replicate.isdigit():
-                    print_error("Replicate id not an integer!", 'Line', line)
+                    print_error("Replicate id not an integer!", "Line", line)
             else:
-                print_error("Replicate id not specified!", 'Line', line)
+                print_error("Replicate id not specified!", "Line", line)
             replicate = int(replicate)
 
             ## Check barcode entry
             if barcode:
                 if not barcode.isdigit():
-                    print_error("Barcode entry is not an integer!", 'Line', line)
+                    print_error("Barcode entry is not an integer!", "Line", line)
                 else:
-                    barcode = 'barcode%s' % (barcode.zfill(2))
+                    barcode = "barcode%s" % (barcode.zfill(2))
 
             ## Check input file extension
-            nanopolish_fast5 = ''
+            nanopolish_fast5 = ""
             if input_file:
                 if input_file.find(" ") != -1:
-                    print_error("Input file contains spaces!", 'Line', line)
+                    print_error("Input file contains spaces!", "Line", line)
                 if input_file.endswith(".fastq.gz"):
                     input_extensions.append("*.fastq.gz")
                 elif input_file.endswith(".fq.gz"):
@@ -116,52 +115,65 @@ def check_samplesheet(file_in, updated_path, file_out):
                     input_extensions.append("*.bam")
                 else:
                     if updated_path != "not_changed":
-                        input_file='/'.join([updated_path,input_file.split("/")[-1]])
-                    list_dir         = os.listdir(input_file)
+                        input_file = "/".join([updated_path, input_file.split("/")[-1]])
+                    list_dir = os.listdir(input_file)
                     nanopolish_fast5 = input_file
-                    if not (all(fname.endswith('.fast5') for fname in list_dir)):
+                    if not (all(fname.endswith(".fast5") for fname in list_dir)):
                         if "fast5" in list_dir and "fastq" in list_dir:
-                            nanopolish_fast5 = input_file+'/fast5'
+                            nanopolish_fast5 = input_file + "/fast5"
                             ## CHECK FAST5 DIRECTORY
-                            if not (all(fname.endswith('.fast5') for fname in os.listdir(nanopolish_fast5))):
-                                print_error('fast5 directory contains non-fast5 files.')
+                            if not (all(fname.endswith(".fast5") for fname in os.listdir(nanopolish_fast5))):
+                                print_error("fast5 directory contains non-fast5 files.")
                             ## CHECK PROVIDED BASECALLED FASTQ
-                            fastq_path       = input_file+'/fastq'
-                            basecalled_fastq = [fn for fn in os.listdir(fastq_path) if fn.endswith(".fastq.gz") or fn.endswith(".fq.gz") ]
+                            fastq_path = input_file + "/fastq"
+                            basecalled_fastq = [
+                                fn for fn in os.listdir(fastq_path) if fn.endswith(".fastq.gz") or fn.endswith(".fq.gz")
+                            ]
                             if len(basecalled_fastq) != 1:
-                                print_error('Please input one basecalled fastq per sample.')
+                                print_error("Please input one basecalled fastq per sample.")
                             else:
-                                input_file   = fastq_path+'/'+basecalled_fastq[0]
+                                input_file = fastq_path + "/" + basecalled_fastq[0]
                                 if not basecalled_fastq[0].endswith(".fastq.gz"):
                                     if not basecalled_fastq[0].endswith(".fq.gz"):
                                         print_error('basecalled fastq input does not end with ".fastq.gz" or ".fq.gz"')
                         else:
-                            print_error('path does not end with ".fastq.gz", ".fq.gz", or ".bam" and is not an existing directory with correct fast5 and/or fastq inputs.')
+                            print_error(
+                                'path does not end with ".fastq.gz", ".fq.gz", or ".bam" and is not an existing directory with correct fast5 and/or fastq inputs.'
+                            )
 
             ## Check genome entries
             if fasta:
-                if fasta.find(' ') != -1:
-                    print_error("Genome entry contains spaces!",'Line', line)
-                if len(fasta.split('.')) > 1:
-                    if fasta[-6:] != '.fasta' and fasta[-3:] != '.fa' and fasta[-9:] != '.fasta.gz' and fasta[-6:] != '.fa.gz':
-                        print_error("Genome entry does not have extension '.fasta', '.fa', '.fasta.gz' or '.fa.gz'!",'Line', line)
+                if fasta.find(" ") != -1:
+                    print_error("Genome entry contains spaces!", "Line", line)
+                if len(fasta.split(".")) > 1:
+                    if (
+                        fasta[-6:] != ".fasta"
+                        and fasta[-3:] != ".fa"
+                        and fasta[-9:] != ".fasta.gz"
+                        and fasta[-6:] != ".fa.gz"
+                    ):
+                        print_error(
+                            "Genome entry does not have extension '.fasta', '.fa', '.fasta.gz' or '.fa.gz'!",
+                            "Line",
+                            line,
+                        )
 
             ## Check transcriptome entries
-            #gtf = ''
-            is_transcripts = '0'
+            # gtf = ''
+            is_transcripts = "0"
             if gtf:
-                if gtf.find(' ') != -1:
-                    print_error("Transcriptome entry contains spaces!",'Line',line)
+                if gtf.find(" ") != -1:
+                    print_error("Transcriptome entry contains spaces!", "Line", line)
                 print(gtf[-4:])
-                if gtf[-4:] != '.gtf' and gtf[-7:] != '.gtf.gz':
-                    print_error("Transcriptome entry does not have extension '.gtf' or '.gtf.gz'!", 'Line', line)
-                #if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-9:] != '.fasta.gz' and transcriptome[-6:] != '.fa.gz' and transcriptome[-4:] != '.gtf' and transcriptome[-7:] != '.gtf.gz':
+                if gtf[-4:] != ".gtf" and gtf[-7:] != ".gtf.gz":
+                    print_error("Transcriptome entry does not have extension '.gtf' or '.gtf.gz'!", "Line", line)
+                # if transcriptome[-6:] != '.fasta' and transcriptome[-3:] != '.fa' and transcriptome[-9:] != '.fasta.gz' and transcriptome[-6:] != '.fa.gz' and transcriptome[-4:] != '.gtf' and transcriptome[-7:] != '.gtf.gz':
                 #    print_error("Transcriptome entry does not have extension '.fasta', '.fa', '.fasta.gz', '.fa.gz', '.gtf' or '.gtf.gz'!", 'Line', line)
-                #if transcriptome[-4:] == '.gtf' or transcriptome[-7:] == '.gtf.gz':
+                # if transcriptome[-4:] == '.gtf' or transcriptome[-7:] == '.gtf.gz':
                 #    gtf = transcriptome
                 #    if not genome:
                 #        print_error("If genome isn't provided, transcriptome must be in fasta format for mapping!", 'Line', line)
-                #else:
+                # else:
                 #    is_transcripts = '1'
                 #    genome = transcriptome
 
@@ -172,30 +184,35 @@ def check_samplesheet(file_in, updated_path, file_out):
             if replicate not in sample_info_dict[group]:
                 sample_info_dict[group][replicate] = sample_info
             else:
-                print_error("Same replicate id provided multiple times!", 'Line', line)
+                print_error("Same replicate id provided multiple times!", "Line", line)
 
     ## Check all input files have the same extension
     if len(set(input_extensions)) > 1:
-        print_error("All input files must have the same extension!", 'Multiple extensions found', ', '.join(set(input_extensions)))
+        print_error(
+            "All input files must have the same extension!",
+            "Multiple extensions found",
+            ", ".join(set(input_extensions)),
+        )
 
     ## Write validated samplesheet with appropriate columns
     if len(sample_info_dict) > 0:
         out_dir = os.path.dirname(file_out)
         make_dir(out_dir)
         with open(file_out, "w") as fout:
-
-            fout.write(",".join(['sample', 'barcode', 'input_file', 'fasta', 'gtf', 'is_transcripts', 'nanopolish_fast5']) + "\n")
+            fout.write(
+                ",".join(["sample", "barcode", "input_file", "fasta", "gtf", "is_transcripts", "nanopolish_fast5"])
+                + "\n"
+            )
             for sample in sorted(sample_info_dict.keys()):
-
                 ## Check that replicate ids are in format 1..<NUM_REPS>
                 uniq_rep_ids = set(sample_info_dict[sample].keys())
                 if len(uniq_rep_ids) != max(uniq_rep_ids):
-                    print_error("Replicate ids must start with 1..<num_replicates>!", 'Group', sample)
+                    print_error("Replicate ids must start with 1..<num_replicates>!", "Group", sample)
 
                 ### Write to file
                 for replicate in sorted(sample_info_dict[sample].keys()):
-                    sample_id = "{}_R{}".format(sample,replicate)
-                    fout.write(','.join([sample_id] + sample_info_dict[sample][replicate]) + '\n')
+                    sample_id = "{}_R{}".format(sample, replicate)
+                    fout.write(",".join([sample_id] + sample_info_dict[sample][replicate]) + "\n")
 
 
 def main(args=None):
@@ -203,5 +220,5 @@ def main(args=None):
     check_samplesheet(args.FILE_IN, args.UPDATED_PATH, args.FILE_OUT)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

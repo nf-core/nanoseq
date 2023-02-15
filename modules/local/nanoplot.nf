@@ -2,7 +2,7 @@ process NANOPLOT {
     tag "$meta.id"
     label 'process_low'
 
-    conda (params.enable_conda ? 'bioconda::nanoplot=1.38.0' : null)
+    conda "bioconda::nanoplot=1.38.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/nanoplot:1.38.0--pyhdfd78af_0' :
         'quay.io/biocontainers/nanoplot:1.38.0--pyhdfd78af_0' }"
@@ -12,14 +12,14 @@ process NANOPLOT {
 
     output:
     tuple val(meta), path("$output_html"), emit: html
-    //tuple val(meta), path("$output_png") , emit: png
     tuple val(meta), path("$output_txt") , emit: txt
     tuple val(meta), path("$output_log") , emit: log
     path  "versions.yml"           , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
+
     script:
-    //def args = task.ext.args ?: ''
-    // $options.args \\
     def input_file = ("$ontfile".endsWith(".fastq.gz")) ? "--fastq ${ontfile}" :
                     ("$ontfile".endsWith(".txt")) ? "--summary ${ontfile}" : ''
     def output_dir = ("$ontfile".endsWith(".fastq.gz")) ? "fastq/${meta.id}" :
@@ -33,6 +33,7 @@ process NANOPLOT {
         -t $task.cpus \\
         $input_file \\
         -o $output_dir
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         nanoplot: \$(echo \$(NanoPlot --version 2>&1) | sed 's/^.*NanoPlot //; s/ .*\$//')

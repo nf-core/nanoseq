@@ -1,20 +1,21 @@
 process DEMUX_FAST5 {
     label 'process_medium'
 
-    conda     (params.enable_conda ? "bioconda:ont-fast5-api:4.0.0--pyhdfd78af_0" : null)
-    if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/ont-fast5-api:4.0.0--pyhdfd78af_0"
-    } else {
-        container "quay.io/biocontainers/ont-fast5-api:4.0.0--pyhdfd78af_0"
-    }
+    conda "bioconda::ont-fast5-api=4.0.0"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/ont-fast5-api:4.0.0--pyhdfd78af_0' :
+        'quay.io/biocontainers/ont-fast5-api:4.0.0--pyhdfd78af_0' }"
 
     input:
     path(input_path), stageAs: 'input_path/*'
     tuple val(meta), path(input_summary)
 
     output:
-    path "demultiplexed_fast5/*"   , emit: fast5
-    path "versions.yml"            , emit: versions
+    path "demultiplexed_fast5/*", emit: fast5
+    path "versions.yml"         , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     def fast5_dir_path = workflow.profile.contains('test') ? "input_path" : "$input_path"

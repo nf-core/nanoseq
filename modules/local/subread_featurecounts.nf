@@ -2,7 +2,7 @@ process SUBREAD_FEATURECOUNTS {
     label 'process_medium'
 
     // Note: 2.7X indices incompatible with AWS iGenomes.
-    conda     (params.enable_conda ? "bioconda::subread=2.0.1" : null)
+    conda "bioconda::subread=2.0.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/subread:2.0.1--hed695b0_0' :
         'quay.io/biocontainers/subread:2.0.1--hed695b0_0' }"
@@ -12,11 +12,14 @@ process SUBREAD_FEATURECOUNTS {
     path bams
 
     output:
-    path "counts_gene.txt"               , emit: gene_counts
-    path "counts_transcript.txt"         , emit: transcript_counts
-    path "counts_gene.txt.summary"       , emit: featurecounts_gene_multiqc
-    path "counts_transcript.txt.summary" , emit: featurecounts_transcript_multiqc
-    path "versions.yml"                  , emit: versions
+    path "counts_gene.txt"              , emit: gene_counts
+    path "counts_transcript.txt"        , emit: transcript_counts
+    path "counts_gene.txt.summary"      , emit: featurecounts_gene_multiqc
+    path "counts_transcript.txt.summary", emit: featurecounts_transcript_multiqc
+    path "versions.yml"                 , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     """

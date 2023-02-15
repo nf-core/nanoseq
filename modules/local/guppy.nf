@@ -15,10 +15,13 @@ process GUPPY {
     path guppy_model
 
     output:
-    path "fastq/*.fastq.gz"                    , emit: fastq
-    tuple val(meta), path("basecalling/*.txt") , emit: summary
-    path "basecalling/*"                       , emit: called
-    path "versions.yml"                        , emit: versions
+    path "fastq/*.fastq.gz"                   , emit: fastq
+    tuple val(meta), path("basecalling/*.txt"), emit: summary
+    path "basecalling/*"                      , emit: called
+    path "versions.yml"                       , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     def fast5_dir_path = workflow.profile.contains('test') ? "input_path" : "$input_path"

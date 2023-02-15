@@ -15,8 +15,8 @@ checkPathParamList = [ params.input, params.multiqc_config ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters (missing protocol or profile will exit the run.)
-if (params.input) { 
-    ch_input = file(params.input) 
+if (params.input) {
+    ch_input = file(params.input)
 } else {
     exit 1, 'Input samplesheet not specified!'
 }
@@ -153,8 +153,8 @@ include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fus
 /*
  * MODULE: Installed directly from nf-core/modules
  */
-include { NANOLYSE                    } from '../modules/nf-core/modules/nanolyse/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
+include { NANOLYSE                    } from '../modules/nf-core/nanolyse/main'
+include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
 /*
  * SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -279,7 +279,9 @@ workflow NANOSEQ{
 
         if (!params.nanolyse_fasta) {
             if (!isOffline()) {
-                GET_NANOLYSE_FASTA ().set { ch_nanolyse_fasta }
+                GET_NANOLYSE_FASTA()
+                GET_NANOLYSE_FASTA.out.ch_nanolyse_fasta
+                    .set{ ch_nanolyse_fasta }
             } else {
                 exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
             }
@@ -484,7 +486,11 @@ workflow NANOSEQ{
         /*
          * SUBWORKFLOW: RNA_FUSIONS_JAFFAL
          */
-        RNA_FUSIONS_JAFFAL( ch_sample, params.jaffal_ref_dir )
+        ch_fastq
+            .map { it -> [ it[0], it[1] ] }
+            .set { ch_fastq_simple }
+
+        RNA_FUSIONS_JAFFAL( ch_fastq_simple, params.jaffal_ref_dir )
     }
 
     /*
@@ -526,6 +532,9 @@ workflow.onComplete {
     }
 //    Completion.summary(workflow, params, log)
     NfcoreTemplate.summary(workflow, params, log)
+    if (params.hook_url) {
+        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
+    }
 }
 
 /*

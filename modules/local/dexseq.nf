@@ -1,7 +1,7 @@
 process DEXSEQ {
     label "process_medium"
 
-    conda     (params.enable_conda ? "conda-forge::r-base=4.0.2 bioconda::bioconductor-dexseq=1.36.0 bioconda::bioconductor-drimseq=1.18.0 bioconda::bioconductor-stager=1.12.0" : null)
+    conda "conda-forge::r-base=4.0.2 bioconda::bioconductor-dexseq=1.36.0 bioconda::bioconductor-drimseq=1.18.0 bioconda::bioconductor-stager=1.12.0"
     container "docker.io/yuukiiwa/nanoseq:dexseq"
     // need a multitool container for r-base, dexseq, stager, drimseq and on quay hub
 
@@ -9,8 +9,11 @@ process DEXSEQ {
     path counts
 
     output:
-    path "*.txt"                , emit: dexseq_txt
-    path "versions.yml"         , emit: versions
+    path "*.txt"        , emit: dexseq_txt
+    path "versions.yml" , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     """

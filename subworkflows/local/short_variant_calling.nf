@@ -3,11 +3,11 @@
  */
 
 include { MEDAKA_VARIANT                        } from '../../modules/local/medaka_variant'
-include { TABIX_BGZIP as MEDAKA_BGZIP_VCF       } from '../../modules/nf-core/modules/tabix/bgzip/main'
-include { TABIX_TABIX as MEDAKA_TABIX_VCF       } from '../../modules/nf-core/modules/tabix/tabix/main'
+include { TABIX_BGZIP as MEDAKA_BGZIP_VCF       } from '../../modules/nf-core/tabix/bgzip/main'
+include { TABIX_TABIX as MEDAKA_TABIX_VCF       } from '../../modules/nf-core/tabix/tabix/main'
 include { DEEPVARIANT                           } from '../../modules/local/deepvariant'
-include { TABIX_TABIX as DEEPVARIANT_TABIX_VCF  } from '../../modules/nf-core/modules/tabix/tabix/main'
-include { TABIX_TABIX as DEEPVARIANT_TABIX_GVCF } from '../../modules/nf-core/modules/tabix/tabix/main'
+include { TABIX_TABIX as DEEPVARIANT_TABIX_VCF  } from '../../modules/nf-core/tabix/tabix/main'
+include { TABIX_TABIX as DEEPVARIANT_TABIX_GVCF } from '../../modules/nf-core/tabix/tabix/main'
 include { PEPPER_MARGIN_DEEPVARIANT             } from '../../modules/local/pepper_margin_deepvariant'
 
 workflow SHORT_VARIANT_CALLING {
@@ -39,7 +39,7 @@ workflow SHORT_VARIANT_CALLING {
          * Zip medaka vcf
          */
         MEDAKA_BGZIP_VCF( MEDAKA_VARIANT.out.vcf )
-        ch_short_calls_vcf  = MEDAKA_BGZIP_VCF.out.gz
+        ch_short_calls_vcf  = MEDAKA_BGZIP_VCF.out.output
         ch_versions = ch_versions.mix(bgzip_version = MEDAKA_BGZIP_VCF.out.versions)
 
         /*

@@ -3,7 +3,7 @@
  */
 
 include { STRINGTIE2            } from '../../modules/local/stringtie2'
-include { STRINGTIE_MERGE       } from '../../modules/nf-core/modules/stringtie/merge/main'
+include { STRINGTIE_MERGE       } from '../../modules/nf-core/stringtie/merge/main'
 include { SUBREAD_FEATURECOUNTS } from '../../modules/local/subread_featurecounts'
 
 workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {

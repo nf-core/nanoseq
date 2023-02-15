@@ -2,7 +2,7 @@ process SNIFFLES {
     tag "$meta.id"
     label 'process_high'
 
-    conda (params.enable_conda ? "bioconda::sniffles=1.0.12" : null)
+    conda "bioconda::sniffles=1.0.12"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/sniffles:1.0.12--h8b12597_1' :
         'quay.io/biocontainers/sniffles:1.0.12--h8b12597_1' }"
@@ -12,9 +12,11 @@ process SNIFFLES {
 
 
     output:
-    tuple val(meta), path("*_sniffles.vcf") , emit: sv_calls // vcf files
-    path "versions.yml"                     , emit: versions
+    tuple val(meta), path("*_sniffles.vcf"), emit: sv_calls
+    path "versions.yml"                    , emit: versions
 
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     """

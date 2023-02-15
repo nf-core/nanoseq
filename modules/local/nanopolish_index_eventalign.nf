@@ -2,7 +2,7 @@ process NANOPOLISH_INDEX_EVENTALIGN {
     tag "$meta.id"
     label 'process_medium'
 
-    conda (params.enable_conda ? "bioconda::nanopolish==0.13.2" : null)
+    conda "bioconda::nanopolish==0.13.2"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/nanopolish:0.13.2--he3b7ca5_2' :
         'quay.io/biocontainers/nanopolish:0.13.2--he3b7ca5_2' }"
@@ -12,7 +12,10 @@ process NANOPOLISH_INDEX_EVENTALIGN {
 
     output:
     tuple val(meta), path(genome), path(gtf), path("*eventalign.txt"), path("*summary.txt"), emit: nanopolish_outputs
-    path "versions.yml"        , emit: versions
+    path "versions.yml"                                                                    , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     sample_summary = "$meta.id" +"_summary.txt"

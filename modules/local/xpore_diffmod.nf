@@ -1,7 +1,7 @@
 process XPORE_DIFFMOD {
     label 'process_medium'
 
-    conda     (params.enable_conda ? "bioconda::xpore=2.1.0" : null)
+    conda "bioconda::xpore=2.1.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/xpore:2.1--pyh5e36f6f_0' :
         'quay.io/biocontainers/xpore:2.1--pyh5e36f6f_0' }"
@@ -10,8 +10,11 @@ process XPORE_DIFFMOD {
     val dataprep_dirs
 
     output:
-    path "diffmod*", emit: diffmod_outputs
-    path "versions.yml"        , emit: versions
+    path "diffmod*"    , emit: diffmod_outputs
+    path "versions.yml", emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     diffmod_config = "--config $workflow.workDir/*/*/diffmod_config.yml"

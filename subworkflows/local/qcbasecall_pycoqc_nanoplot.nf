@@ -2,7 +2,7 @@
  * Basecalling QC with PycoQC and NanoPlot
  */
 
-include { PYCOQC      } from '../../modules/nf-core/modules/pycoqc/main'
+include { PYCOQC      } from '../../modules/nf-core/pycoqc/main'
 include { NANOPLOT    } from '../../modules/local/nanoplot'
 
 workflow QCBASECALL_PYCOQC_NANOPLOT {
