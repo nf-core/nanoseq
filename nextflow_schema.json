@@ -52,8 +52,8 @@
                 }
             }
         },
-        "basecalling_demultiplexing_options": {
-            "title": "Basecalling/demultiplexing options",
+        "demultiplexing_options": {
+            "title": "Demultiplexing options",
             "type": "object",
             "description": "Options required to basecall and demultiplex samples.",
             "default": "",
@@ -62,18 +62,8 @@
                 "input_path": {
                     "type": "string",
                     "format": "file-path",
-                    "description": "Path to Nanopore run directory files (e.g. 'fastq_pass/*') or a basecalled fastq file that requires demultiplexing. The latter can only be provided in conjunction with the '--skip_basecalling' parameter.",
+                    "description": "Path to Nanopore run directory files (e.g. 'fastq_pass/*') or a basecalled fastq file that requires demultiplexing.",
                     "fa_icon": "far fa-file-code"
-                },
-                "flowcell": {
-                    "type": "string",
-                    "description": "Flowcell used to perform the sequencing e.g. 'FLO-MIN106'. Not required if '--guppy_config' is specified.",
-                    "fa_icon": "fas fa-band-aid"
-                },
-                "kit": {
-                    "type": "string",
-                    "description": "Kit used to perform the sequencing e.g. 'SQK-LSK109'. Not required if '--guppy_config' is specified.",
-                    "fa_icon": "fas fa-barcode"
                 },
                 "barcode_kit": {
                     "type": "string",
@@ -90,51 +80,6 @@
                     "type": "boolean",
                     "fa_icon": "fas fa-barcode",
                     "description": "Whether to trim the barcodes from the output sequences in the FastQ files from Guppy basecaller."
-                },
-                "guppy_config": {
-                    "type": "string",
-                    "help_text": "Cannot be used in conjunction with `--flowcell` and `--kit`. This can be a local file (e.g. `/your/dir/guppy_conf.cfg`) or a string specifying a configuration stored in the `/opt/ont/guppy/data/` directory of Guppy.",
-                    "description": "Config file used for basecalling that will be passed to Guppy via the '--config' parameter.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "guppy_model": {
-                    "type": "string",
-                    "description": "Custom basecalling model file in `json` format that will be passed to Guppy via the '--model' parameter.",
-                    "help_text": "Custom basecalling models can be trained with software such as [Taiyaki](https://github.com/nanoporetech/taiyaki). This can also be a string specifying a model stored in the `/opt/ont/guppy/data` directory of Guppy.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "guppy_gpu": {
-                    "type": "boolean",
-                    "description": "Whether to demultiplex with Guppy in GPU mode.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "guppy_gpu_runners": {
-                    "type": "integer",
-                    "default": 6,
-                    "description": "Number of '--gpu_runners_per_device' used for Guppy when using '--guppy_gpu'.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "guppy_cpu_threads": {
-                    "type": "integer",
-                    "default": 1,
-                    "description": "Number of '--cpu_threads_per_caller' used for Guppy when using '--guppy_gpu'.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "gpu_device": {
-                    "type": "string",
-                    "default": "auto",
-                    "description": "Basecalling device specified to Guppy in GPU mode using '--device'.",
-                    "fa_icon": "fas fa-fish"
-                },
-                "gpu_cluster_options": {
-                    "type": "string",
-                    "description": "Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').",
-                    "fa_icon": "fas fa-fish"
-                },
-                "output_demultiplex_fast5": {
-                    "type": "boolean",
-                    "description": "Demultiplex fast5 files with demux_fast5.",
-                    "fa_icon": "fas fa-file-code"
                 },
                 "qcat_min_score": {
                     "type": "integer",
@@ -558,7 +503,7 @@
             "$ref": "#/definitions/input_output_options"
         },
         {
-            "$ref": "#/definitions/basecalling_demultiplexing_options"
+            "$ref": "#/definitions/demultiplexing_options"
         },
         {
             "$ref": "#/definitions/alignment_options"
