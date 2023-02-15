@@ -76,6 +76,7 @@ jobs:
     strategy:
       matrix:
         parameters:
+          - "--aligner graphmap2"
           - "--skip_alignment"
           - "--skip_qc"
           - "--skip_quantification"
