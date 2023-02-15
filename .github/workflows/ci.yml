@@ -93,6 +93,6 @@ jobs:
 
       - name: Run pipeline with different parameters
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_nodx_stringtie,docker ${{ matrix.parameters }}
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker ${{ matrix.parameters }}
 
 #
