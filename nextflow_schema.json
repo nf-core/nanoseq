@@ -92,11 +92,6 @@
                     "description": "Search for adapters in the whole read by applying the '--detect-middle' parameter in qcat.",
                     "fa_icon": "fas fa-cut"
                 },
-                "skip_basecalling": {
-                    "type": "boolean",
-                    "description": "Skip basecalling with Guppy.",
-                    "fa_icon": "fas fa-fast-forward"
-                },
                 "skip_demultiplexing": {
                     "type": "boolean",
                     "description": "Skip demultiplexing with Guppy/qcat.",
@@ -280,11 +275,6 @@
                     "type": "boolean",
                     "fa_icon": "fas fa-fast-forward",
                     "description": "Skip BigWig file generation."
-                },
-                "skip_pycoqc": {
-                    "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
-                    "description": "Skip pycoQC."
                 },
                 "skip_nanoplot": {
                     "type": "boolean",
