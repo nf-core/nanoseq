@@ -81,6 +81,17 @@
                     "fa_icon": "fas fa-barcode",
                     "description": "Whether to trim the barcodes from the output sequences in the FastQ files from Guppy basecaller."
                 },
+                "gpu_device": {
+                    "type": "string",
+                    "default": "auto",
+                    "description": "Basecalling device specified to Guppy in GPU mode using '--device'.",
+                    "fa_icon": "fas fa-fish"
+                },
+                "gpu_cluster_options": {
+                    "type": "string",
+                    "description": "Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').",
+                    "fa_icon": "fas fa-fish"
+                },
                 "qcat_min_score": {
                     "type": "integer",
                     "default": 60,
