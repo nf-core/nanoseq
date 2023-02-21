@@ -30,8 +30,6 @@
 
   > Sović I, Šikić M, Wilm A, Fenlon SN, Chen S, Nagarajan N. Fast and sensitive mapping of nanopore sequencing reads with GraphMap. Nat Commun. 2016 Apr 15;7:11307. doi: 10.1038/ncomms11307. PMID: 27079541; PMCID: PMC4835549.
 
-- [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
-
 - [JAFFAL](https://doi.org/10.1186/s13059-021-02588-5)
 
   > Davidson NM, Chen Y, Sadras T, Ryland GL, Blombery P, Ekert PG, Göke J, Oshlack A. JAFFAL: detecting fusion genes with long-read transcriptome sequencing. Genome Biol. 2022 Jan 6;23(1):10. doi: 10.1186/s13059-021-02588-5. PMID: 34991664; PMCID: PMC8739696.
@@ -61,10 +59,6 @@
 - [NanoPlot](https://pubmed.ncbi.nlm.nih.gov/29547981/)
 
   > De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018 Aug 1;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149. PubMed PMID: 29547981; PubMed Central PMCID: PMC6061794.
-
-- [pycoQC](https://doi.org/10.21105/joss.01236)
-
-  > Leger A, Leonardi T, (2019). pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software, 4(34), 1236, https://doi.org/10.21105/joss.01236
 
 - [qcat](https://github.com/nanoporetech/qcat)
 

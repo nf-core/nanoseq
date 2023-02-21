@@ -2,7 +2,7 @@
  * FastQ QC with NanoPlot and fastqc
  */
 
-include { NANOPLOT     } from '../../modules/nf-core/nanoplot/main' 
+include { NANOPLOT     } from '../../modules/nf-core/nanoplot/main'
 include { FASTQC       } from '../../modules/nf-core/fastqc/main'
 
 workflow QCFASTQ_NANOPLOT_FASTQC {
