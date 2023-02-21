@@ -10,7 +10,10 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "protocol"],
+            "required": [
+                "input",
+                "protocol"
+            ],
             "properties": {
                 "input": {
                     "type": "string",
@@ -74,17 +77,17 @@
                 "barcode_both_ends": {
                     "type": "boolean",
                     "fa_icon": "fas fa-barcode",
-                    "description": "Require barcode on both ends for Guppy basecaller."
+                    "description": "Require barcode on both ends for basecaller."
                 },
                 "trim_barcodes": {
                     "type": "boolean",
                     "fa_icon": "fas fa-barcode",
-                    "description": "Whether to trim the barcodes from the output sequences in the FastQ files from Guppy basecaller."
+                    "description": "Trim barcodes from the output sequences in the FastQ files from basecaller."
                 },
                 "gpu_device": {
                     "type": "string",
                     "default": "auto",
-                    "description": "Basecalling device specified to Guppy in GPU mode using '--device'.",
+                    "description": "Device specified in GPU mode using '--device'.",
                     "fa_icon": "fas fa-fish"
                 },
                 "gpu_cluster_options": {
@@ -105,7 +108,7 @@
                 },
                 "skip_demultiplexing": {
                     "type": "boolean",
-                    "description": "Skip demultiplexing with Guppy/qcat.",
+                    "description": "Skip demultiplexing with qcat.",
                     "fa_icon": "fas fa-fast-forward"
                 },
                 "run_nanolyse": {
