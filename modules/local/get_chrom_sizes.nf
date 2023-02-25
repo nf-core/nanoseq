@@ -8,11 +8,11 @@ process GET_CHROM_SIZES {
         'quay.io/biocontainers/samtools:1.13--h8c37831_0' }"
 
     input:
-    tuple path(fasta), val(name)
+    path fasta
 
     output:
-    tuple path('*.sizes'), val(name), emit: sizes
-    path "versions.yml"             , emit: versions
+    path "*.sizes"      , emit: sizes
+    path "versions.yml" , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

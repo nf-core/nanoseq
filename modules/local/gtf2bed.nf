@@ -7,11 +7,11 @@ process GTF2BED {
         'quay.io/biocontainers/perl:5.26.2' }"
 
     input:
-    tuple path(gtf), val(name)
+    path gtf
 
     output:
-    tuple path('*.bed'), val(name), emit: gtf_bed
-    path "versions.yml"           , emit: versions
+    path "*.bed"        , emit: gtf_bed
+    path "versions.yml" , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
