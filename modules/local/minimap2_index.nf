@@ -22,6 +22,13 @@ process MINIMAP2_INDEX {
     def kmer      = (params.protocol == 'directRNA') ? "-k14" : ""
     def stranded  = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
     def junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
+
+            ext.args   = [
+                (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice",
+                (params.protocol == 'directRNA') ? "-k14" : "",
+                (params.stranded || params.protocol == 'directRNA') ? "-uf" : "",
+                (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""
+            ].join(' ').trim()
     """
     minimap2 \\
         $preset \\

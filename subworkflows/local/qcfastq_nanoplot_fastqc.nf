@@ -10,9 +10,6 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     ch_fastq
 
     main:
-    ch_fastq
-        .map { ch -> [ ch[0], ch[1] ] }
-        .set { ch_fastq }
 
     /*
      * FastQ QC using NanoPlot

@@ -18,7 +18,7 @@ process MINIMAP2_ALIGN {
     task.ext.when == null || task.ext.when
 
     script:
-    def preset    = (params.protocol == 'DNA' || is_transcripts) ? "-ax map-ont" : "-ax splice"
+    def preset    = (params.protocol == 'DNA' || is_transcripts) ? "--MD -ax map-ont" : "-ax splice"
     def kmer      = (params.protocol == 'directRNA') ? "-k14" : ""
     def stranded  = (params.stranded || params.protocol == 'directRNA') ? "-uf" : ""
     def junctions = (params.protocol != 'DNA' && bed) ? "--junc-bed ${file(bed)}" : ""

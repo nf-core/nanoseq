@@ -15,10 +15,28 @@
                         "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
                         "installed_by": ["modules"]
                     },
+                    "custom/getchromsizes": {
+                        "branch": "master",
+                        "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/custom/getchromsizes/custom-getchromsizes.diff"
+                    },
                     "fastqc": {
                         "branch": "master",
                         "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
                         "installed_by": ["modules"]
+                    },
+                    "minimap2/align": {
+                        "branch": "master",
+                        "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/minimap2/align/minimap2-align.diff"
+                    },
+                    "minimap2/index": {
+                        "branch": "master",
+                        "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/minimap2/index/minimap2-index.diff"
                     },
                     "multiqc": {
                         "branch": "master",
@@ -43,12 +61,12 @@
                     "samtools/flagstat": {
                         "branch": "master",
                         "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
-                        "installed_by": ["modules"]
+                        "installed_by": ["bam_stats_samtools", "modules"]
                     },
                     "samtools/idxstats": {
                         "branch": "master",
                         "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
-                        "installed_by": ["modules"]
+                        "installed_by": ["bam_stats_samtools", "modules"]
                     },
                     "samtools/index": {
                         "branch": "master",
@@ -63,7 +81,7 @@
                     "samtools/stats": {
                         "branch": "master",
                         "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
-                        "installed_by": ["modules"]
+                        "installed_by": ["bam_stats_samtools", "modules"]
                     },
                     "stringtie/merge": {
                         "branch": "master",
@@ -93,7 +111,13 @@
                 }
             },
             "subworkflows": {
-                "nf-core": {}
+                "nf-core": {
+                    "bam_stats_samtools": {
+                        "branch": "master",
+                        "git_sha": "92eb5091ae5368a60cda58b3a0ced8b36d715b0f",
+                        "installed_by": ["subworkflows"]
+                    }
+                }
             }
         }
     }

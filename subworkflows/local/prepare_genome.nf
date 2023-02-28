@@ -1,44 +1,56 @@
 /*
  * Prepare genome/transcriptome before alignment
  */
-
-include { GET_CHROM_SIZES  } from '../../modules/local/get_chrom_sizes'
-include { GTF2BED          } from '../../modules/local/gtf2bed'
-include { SAMTOOLS_FAIDX   } from '../../modules/nf-core/samtools/faidx/main'
+include { CUSTOM_GETCHROMSIZES } from '../../modules/nf-core/custom/getchromsizes/main'
+include { GTF2BED              } from '../../modules/local/gtf2bed'
 
 workflow PREPARE_GENOME {
-    take:
-    fasta
-    gtf
 
     main:
 
-    /*
-     * Make chromosome sizes file
-     */
+    ch_versions = Channel.empty()
+    ch_fasta    = Channel.empty()
+    ch_fai      = Channel.empty()
+    ch_sizes    = Channel.empty()
+    ch_gtf      = Channel.empty()
+    ch_bed      = Channel.empty()
+
     if (params.fasta) {
-        GET_CHROM_SIZES (fasta)
-        ch_chrom_sizes = GET_CHROM_SIZES.out.sizes
-        samtools_version = GET_CHROM_SIZES.out.versions
-        ch_chrom_sizes.view()
 
-    /*
-     * Make fasta index
-     */
-    //SAMTOOLS_FAIDX (fasta)
-    //ch_fai = SAMTOOLS_FAIDX.out.fai
+        Channel.fromPath(params.fasta)
+            .collect()
+            .set { ch_fasta }
 
-    /*
-     * Convert GTF to BED12
-     */
-    //GTF2BED (gtf)
-    //ch_gtf_bed = GTF2BED.out.gtf_bed
-    //gtf2bed_version = GTF2BED.out.versions
+        /*
+         * Generates a FASTA file of chromosome sizes and a fasta index file
+         */
+        CUSTOM_GETCHROMSIZES (ch_fasta)
+        ch_chrom_sizes = CUSTOM_GETCHROMSIZES.out.sizes.collect()
+        ch_fai = CUSTOM_GETCHROMSIZES.out.fai.collect()
+        ch_versions = ch_versions.mix(CUSTOM_GETCHROMSIZES.out.versions)
+
+    }
+
+    if (params.gtf) {
+
+        Channel.fromPath(params.gtf)
+            .collect()
+            .set { ch_gtf }
+
+        /*
+         * Convert GTF to BED12
+         */
+        GTF2BED (ch_gtf)
+        ch_bed = GTF2BED.out.gtf_bed.collect()
+        ch_versions = ch_versions.mix(GTF2BED.out.versions)
+
+    }
 
     emit:
-    ch_chrom_sizes
-    //ch_fai
-    //ch_gtf_bed
-    //samtools_version
-    //gtf2bed_version
+    ch_fasta
+    ch_fai
+    ch_sizes
+    ch_gtf
+    ch_bed
+    ch_versions
 }

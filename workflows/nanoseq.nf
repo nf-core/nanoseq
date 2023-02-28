@@ -202,15 +202,14 @@ workflow NANOSEQ{
             .map { it -> [ it.baseName.substring(0,it.baseName.lastIndexOf('.')), it ] }
             .join(ch_sample.map{ meta, empty -> [meta.barcode, meta] }, by: [0] )
             .map { it -> [ it[2], it[1] ] }
-            .set { ch_fastq }
+            .set { ch_fastq_dirty }
         ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
     } else {
         if (!params.skip_alignment) {
             ch_sample
-                //.map { it -> if (it[6].toString().endsWith('.gz')) [ it[0], it[6], it[2], it[1], it[4], it[5] ] }
-                .set { ch_fastq }
+                .set { ch_fastq_dirty }
         } else {
-            ch_fastq = Channel.empty()
+            ch_fastq_dirty = Channel.empty()
         }
     }
 
@@ -230,21 +229,23 @@ workflow NANOSEQ{
         } else {
             ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
         }
+
         /*
          * MODULE: DNA contaminant removal using NanoLyse
          */
-        NANOLYSE (ch_fastq, ch_nanolyse_fasta)
+        NANOLYSE (ch_fastq_dirty, ch_nanolyse_fasta)
         NANOLYSE.out.fastq
-            .set { ch_fastq_nl }
+            .set { ch_fastq }
         ch_software_versions = ch_software_versions.mix(NANOLYSE.out.versions.first().ifEmpty(null))
     } else {
-        ch_fastq
+        ch_fastq_dirty
             .map { it -> [ it[0], it[1] ] }
-            .set { ch_fastq_nl }
+            .set { ch_fastq }
     }
 
     ch_fastqc_multiqc = Channel.empty()
     if (!params.skip_qc) {
+
         /*
          * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
          */
@@ -254,46 +255,58 @@ workflow NANOSEQ{
     }
 
     ch_samtools_multiqc = Channel.empty()
+
     if (!params.skip_alignment) {
+
         /*
          * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
          */
-        PREPARE_GENOME (params.fasta, params.gtf)
-        //ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
-        //ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
-        //ch_fasta       = PREPARE_GENOME.out.ch_fasta
-        //ch_fai         = PREPARE_GENOME.out.ch_fai
-        //ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
-        //ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
+        PREPARE_GENOME ()
+        ch_fasta             = PREPARE_GENOME.out.ch_fasta
+        ch_fai               = PREPARE_GENOME.out.ch_fai
+        ch_sizes             = PREPARE_GENOME.out.ch_sizes
+        ch_gtf               = PREPARE_GENOME.out.ch_gtf
+        ch_bed               = PREPARE_GENOME.out.ch_bed
+        ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.ch_versions.first().ifEmpty(null))
 
+        if (params.aligner == 'minimap2') {
 
-//         /*
-//          * SUBWORKFLOW: View, then  sort, and index bam files
-//          */
-//         //BAM_SORT_INDEX_SAMTOOLS (ch_align_sam, params.call_variants, ch_fasta)
-//         ch_view_sortbam = Channel.empty()
-//         //ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
-//         //ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.samtools_versions.first().ifEmpty(null))
-//         //ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
+            /*
+             * SUBWORKFLOW: Create index and align fastq files with MINIMAP2
+             */
+            ALIGN_MINIMAP2 ( ch_fasta, ch_sizes, ch_gtf, ch_bed, ch_fastq )
+            ch_index = ALIGN_MINIMAP2.out.ch_index
+            ch_bam_bai   = ALIGN_MINIMAP2.out.ch_bam_bai
+            ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.ch_versions.first().ifEmpty(null))
+        } else {
 
-//         if (params.call_variants && params.protocol == 'DNA') {
+            /*
+             * SUBWORKFLOW: Align fastq files with graphmap2 and sort bam files
+             */
+            //ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
+            //ch_align_sam = ALIGN_GRAPHMAP2.out.ch_align_sam
+            //ch_index = ALIGN_GRAPHMAP2.out.ch_index
+            //ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
+        }
 
-//             /*
-//              * SUBWORKFLOW: Short variant calling
-//              */
-//             if (!params.skip_vc) {
-//                 SHORT_VARIANT_CALLING (ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] })
-//                 ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
-//             }
+        if (params.call_variants && params.protocol == 'DNA') {
 
-//             /*
-//             * SUBWORKFLOW: Structural variant calling
-//             */
-//             if (!params.skip_sv) {
-//                 STRUCTURAL_VARIANT_CALLING (ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] })
-//                 ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
-//             }
-//         }
+            /*
+             * SUBWORKFLOW: Short variant calling
+             */
+            //if (!params.skip_vc) {
+            //    SHORT_VARIANT_CALLING (ch_bam, ch_bai, ch_fasta, ch_fai)
+            //    ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+            //}
+
+            /*
+             * SUBWORKFLOW: Structural variant calling
+             */
+            if (!params.skip_sv) {
+                STRUCTURAL_VARIANT_CALLING (ch_bam_bai, ch_fasta, ch_fai)
+                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+            }
+        }
 
 //         ch_bedtools_version = Channel.empty()
 //         if (!params.skip_bigwig) {

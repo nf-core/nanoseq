@@ -315,6 +315,19 @@
             "fa_icon": "fas fa-dna",
             "description": "Reference genome related files and options required for the workflow.",
             "properties": {
+                "fasta": {
+                    "type": "string",
+                    "default": null
+                },
+                "gtf": {
+                    "type": "string",
+                    "default": null
+                },
+                "genome": {
+                    "type": "string",
+                    "description": "Name of iGenomes reference.",
+                    "default": "null"
+                },
                 "igenomes_base": {
                     "type": "string",
                     "format": "directory-path",

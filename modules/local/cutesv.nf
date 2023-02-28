@@ -2,13 +2,13 @@ process CUTESV {
     tag "$meta.id"
     label 'process_high'
 
-    conda "bioconda::cutesv=1.0.12"
+    conda "bioconda::cutesv=2.0.2"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/cutesv:1.0.12--pyhdfd78af_0' :
-        'quay.io/biocontainers/cutesv:1.0.12--pyhdfd78af_0' }"
+        'quay.io/biocontainers/cutesv:2.0.2--pyhdfd78af_0 ' }"
 
     input:
-    tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)
+    tuple val(meta), path(bam), path(bai)
     path(fasta)
 
     output:
@@ -19,15 +19,19 @@ process CUTESV {
     task.ext.when == null || task.ext.when
 
     script:
+    def args = task.ext.args ?: ''
+    def genotyping = params.enable_genotyping ? "--genotyping" : ''
     """
     cuteSV \
-        ${input} \
-        ${fasta} \
-        ${meta.id}_cuteSV.vcf \
-        . \
-        --threads $task.cpus \
-        --sample ${meta.id} \
-        --genotype
+        ${bam} \\
+        ${fasta} \\
+        ${meta.id}_cuteSV.vcf \\
+        . \\
+        --threads $task.cpus \\
+        --sample ${meta.id} \\
+        $genotyping \\
+        $args
+
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

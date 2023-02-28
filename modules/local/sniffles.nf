@@ -2,28 +2,34 @@ process SNIFFLES {
     tag "$meta.id"
     label 'process_high'
 
-    conda "bioconda::sniffles=1.0.12"
+    conda "bioconda::sniffles=2.0.7"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/sniffles:1.0.12--h8b12597_1' :
-        'quay.io/biocontainers/sniffles:1.0.12--h8b12597_1' }"
+        'https://depot.galaxyproject.org/singularity/sniffles:2.0.7--pyhdfd78af_0' :
+        'quay.io/biocontainers/sniffles:2.0.7--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)
+    tuple val(meta), path(bam), path(bai)
+    path fasta
 
 
     output:
-    tuple val(meta), path("*_sniffles.vcf"), emit: sv_calls
+    tuple val(meta), path("*_sniffles.vcf"), emit: sv_vcf
+    tuple val(meta), path("*_sniffles.snf"), emit: sv_snf
     path "versions.yml"                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
+    def args = task.ext.args ?: ''
     """
-    sniffles \
-        -m  $input \
-        -v ${meta.id}_sniffles.vcf \
-        -t $task.cpus
+    sniffles \\
+        --input $bam \\
+        --vcf ${meta.id}_sniffles.vcf \\
+        --snf ${meta.id}_sniffles.snf \\
+        --reference $fasta \\
+        -t $task.cpus \\
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
