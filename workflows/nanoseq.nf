@@ -308,7 +308,6 @@ workflow NANOSEQ{
             }
         }
 
-//         ch_bedtools_version = Channel.empty()
 //         if (!params.skip_bigwig) {
 
 //             /*
