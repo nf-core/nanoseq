@@ -6,7 +6,7 @@
 
 ## [SGNEx](https://www.biorxiv.org/content/10.1101/2021.04.21.440736v1.abstract)
 
->Chen, Y., Davidson, N. M., Wan, Y. K., Patel, H., Yao, F., Low, H. M., ... & SG-NEx consortium. (2021). A systematic benchmark of Nanopore long read RNA sequencing for transcript level analysis in human cell lines. BioRxiv, 2021-04.
+> Chen, Y., Davidson, N. M., Wan, Y. K., Patel, H., Yao, F., Low, H. M., ... & SG-NEx consortium. (2021). A systematic benchmark of Nanopore long read RNA sequencing for transcript level analysis in human cell lines. BioRxiv, 2021-04.
 
 ## [Nextflow](https://www.ncbi.nlm.nih.gov/pubmed/28398311/)
 
