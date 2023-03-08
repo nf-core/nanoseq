@@ -30,9 +30,9 @@
                         "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
                         "installed_by": ["modules"]
                     },
-                    "pycoqc": {
+                    "nanoplot": {
                         "branch": "master",
-                        "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
+                        "git_sha": "3822e04e49b6d89b7092feb3480d744cb5d9986b",
                         "installed_by": ["modules"]
                     },
                     "samtools/faidx": {

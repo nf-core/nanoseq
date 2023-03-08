@@ -17,62 +17,11 @@ You will need to create a file with information about the samples in your experi
 | `fasta`      | Genome fasta file or transcriptome fasta file for alignment. This can either be a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz".                         |
 | `gtf`        | Annotation gtf file for transcript discovery and quantification and RNA modification detection. This can either be blank or a local path. Must have the extension ".gtf".                                                                                                                 |
 
-### Skip basecalling/demultiplexing
+### Skip demultiplexing
 
-As shown in the examples below, the accepted format of the file is slightly different if you would like to run the pipeline with or without basecalling/demultiplexing.
+As shown in the examples below, the accepted samplesheet format is different depending on if you would like to run the pipeline with or without demultiplexing.
 
-#### With basecalling and demultiplexing
-
-##### Example `samplesheet.csv` for barcoded fast5 inputs
-
-```bash
-group,replicate,barcode,input_file,fasta,gtf
-WT_MOUSE,1,1,,mm10,
-WT_HUMAN,1,2,,hg19,
-WT_POMBE,1,3,,/path/to/local/genome.fa,
-WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
-WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
-WT_UNKNOWN,3,6,,,
-```
-
-##### Example command for barcoded fast5 inputs
-
-```bash
-nextflow run nf-core/nanoseq \
-    --input samplesheet.csv \
-    --protocol cDNA \
-    --input_path ./fast5/ \
-    --flowcell FLO-MIN106 \
-    --kit SQK-DCS109 \
-    --barcode_kit EXP-NBD103 \
-    -profile <docker/singularity/institute>
-```
-
-#### With basecalling but not demultiplexing
-
-##### Example `samplesheet.csv` for non-barcoded fast5 inputs
-
-```bash
-group,replicate,barcode,input_file,fasta,gtf
-SAMPLE,1,1,/path/to/local/genome.fa,,
-```
-
-> Only a single sample can be specified if you would like to skip demultiplexing
-
-##### Example command for non-barcoded fast5 inputs
-
-```bash
-nextflow run nf-core/nanoseq \
-    --input samplesheet.csv \
-    --protocol cDNA \
-    --input_path ./fast5/ \
-    --flowcell FLO-MIN106 \
-    --kit SQK-DCS108 \
-    --skip_demultiplexing \
-    -profile <docker/singularity/institute>
-```
-
-#### With demultiplexing but not basecalling
+#### With demultiplexing
 
 ##### Example `samplesheet.csv` for non-demultiplexed fastq inputs
 
@@ -94,12 +43,11 @@ nextflow run nf-core/nanoseq \
     --protocol DNA \
     --input_path ./undemultiplexed.fastq.gz \
     --barcode_kit 'NBD103/NBD104' \
-    --skip_basecalling \
     --skip_quantification \
     -profile <docker/singularity/institute>
 ```
 
-#### Without both basecalling and demultiplexing
+#### Without demultiplexing
 
 ##### Example `samplesheet.csv` for demultiplexed fastq inputs
 
@@ -117,12 +65,11 @@ KO,2,,SAM101A4.fastq.gz,hg19,
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol cDNA \
-    --skip_basecalling \
     --skip_demultiplexing \
     -profile <docker/singularity/institute>
 ```
 
-##### Without basecalling, demultiplexing, and alignment
+##### Without demultiplexing and alignment
 
 ##### Example `samplesheet.csv` for BAM inputs
 
@@ -140,7 +87,6 @@ KO,2,,SAM101A4.bam,hg19,
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol cDNA \
-    --skip_basecalling \
     --skip_demultiplexing \
     --skip_alignment \
     -profile <docker/singularity/institute>
@@ -178,7 +124,6 @@ KO,2,,/full/path/to/SAM101A4/,hg19.fasta,hg19.gtf
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol directRNA \
-    --skip_basecalling \
     --skip_demultiplexing \
     -profile <docker/singularity/institute>
 ```
@@ -191,9 +136,6 @@ The typical command for running the pipeline is as follows:
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol DNA \
-    --input_path ./fast5/ \
-    --flowcell FLO-MIN106 \
-    --kit SQK-LSK109 \
     --barcode_kit SQK-PBK004 \
     -profile docker
 ```
