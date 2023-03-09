@@ -3,6 +3,33 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2023-03-10
+
+### Major enhancements
+
+- Removed the `guppy` basecaller as the distribution of `guppy` via a docker container is a breach to EULA
+- Bump minimum Nextflow version from 21.10.3 -> 22.10.1
+- Update pipeline template to nf-core/tools `2.7.2`
+- Update `bambu` version from `2.0.0` to `3.0.8`
+
+### Parameters
+
+- Removed  `--flowcell`
+- Removed  `--kit`
+- Removed  `--guppy_config`
+- Removed  `--guppy_model`
+- Removed  `--guppy_gpu`
+- Removed  `--guppy_gpu_runners`
+- Removed  `--guppy_cpu_threads`
+- Removed  `--output_demultiplex_fast5`
+- Removed  `--skip_basecalling`
+
+### Software dependencies
+
+| Dependency                      | Old version | New version |
+| ------------------------------- | ----------- | ----------- |
+| `bioconductor-bambu`            | 2.0.0       | 3.0.8       |
+
 ## [3.0.0] - 2022-06-21
 
 ### Major enhancements
