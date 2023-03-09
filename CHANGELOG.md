@@ -14,15 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Parameters
 
-- Removed  `--flowcell`
-- Removed  `--kit`
-- Removed  `--guppy_config`
-- Removed  `--guppy_model`
-- Removed  `--guppy_gpu`
-- Removed  `--guppy_gpu_runners`
-- Removed  `--guppy_cpu_threads`
-- Removed  `--output_demultiplex_fast5`
-- Removed  `--skip_basecalling`
+- Removed `--flowcell`
+- Removed `--kit`
+- Removed `--guppy_config`
+- Removed `--guppy_model`
+- Removed `--guppy_gpu`
+- Removed `--guppy_gpu_runners`
+- Removed `--guppy_cpu_threads`
+- Removed `--output_demultiplex_fast5`
+- Removed `--skip_basecalling`
 
 ### Software dependencies
 
