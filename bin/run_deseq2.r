@@ -42,17 +42,17 @@ path            <-args[2]
 
 #create a dataframe for all samples
 if (transcriptquant == "stringtie2"){
-    count.matrix       <- data.frame(read.table(path,sep="\t",header=TRUE, skip = 1))
+    count.matrix       <- data.frame(read.table(path, sep="\t", header=TRUE, skip = 1))
     count.matrix$Chr   <- count.matrix$Start <- count.matrix$End <- count.matrix$Length <- count.matrix$Strand <- NULL
-    colnames(count.matrix)[2:length(colnames(count.matrix))] <- unlist(lapply(strsplit(colnames(count.matrix)[2:length(colnames(count.matrix))],"\\."),"[[",1))
-    count.matrix       <- aggregate(count.matrix[,-1],count.matrix["Geneid"],sum)
-    countTab           <- count.matrix[,-1]
-    rownames(countTab) <-count.matrix[,1]
+    colnames(count.matrix)[2:length(colnames(count.matrix))] <- unlist(lapply(strsplit(colnames(count.matrix)[2:length(colnames(count.matrix))], "\\."), "[[", 1))
+    count.matrix       <- aggregate(count.matrix[, -1],count.matrix["Geneid"],sum)
+    countTab           <- count.matrix[, -1]
+    rownames(countTab) <-count.matrix[, 1]
 }
 if (transcriptquant == "bambu"){
-    countTab           <- data.frame(read.table(path,sep="\t",header=TRUE,row.names = 1))
-    colnames(countTab) <- unlist(lapply(strsplit(colnames(countTab),"\\."),"[[",1))
-    countTab[,1:length(colnames(countTab))] <- sapply(countTab, as.integer)
+    countTab           <- data.frame(read.table(path, sep="\t", header=TRUE, row.names = 1))
+    colnames(countTab) <- unlist(lapply(strsplit(colnames(countTab), "\\."), "[[", 1))
+    countTab[, 1:length(colnames(countTab))] <- sapply(countTab, as.integer)
 }
 
 
@@ -66,7 +66,7 @@ sample <- colnames(countTab)
 group <- sub("(^[^-]+)_.*", "\\1", sample)
 sampInfo <- data.frame(group, row.names = sample)
 if (!all(rownames(sampInfo) == colnames(countTab))){
-    sampInfo <- sampInfo[match(colnames(countTab), rownames(sampInfo)),]
+    sampInfo <- sampInfo[match(colnames(countTab), rownames(sampInfo)), ]
 }
 
 ################################################
