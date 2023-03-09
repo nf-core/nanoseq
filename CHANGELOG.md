@@ -3,6 +3,34 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2023-03-10
+
+### Major enhancements
+
+- Removed the `guppy` basecaller as distributing it via a docker image is a breach to EULA
+- Bump minimum Nextflow version from 21.10.3 -> 21.10.3
+- Update pipeline template to nf-core/tools `2.7.2`
+- Update `bambu` version from `1.0.2` to `2.0.0`
+
+### Parameters
+
+- Removed `--flowcell` as `nanoseq` no longer supports basecalling
+- Removed `--kit` as `nanoseq` no longer supports basecalling
+- Removed `--guppy_config` as `nanoseq` no longer supports basecalling
+- Removed `--guppy_model` as `nanoseq` no longer supports basecalling
+- Removed `--guppy_gpu` as `nanoseq` no longer supports basecalling
+- Removed `--guppy_gpu_runners` as `nanoseq` no longer supports basecalling
+- Removed `--guppy_cpu_threads` as `nanoseq` no longer supports basecalling
+- Removed `--output_demultiplex_fast5` as `nanoseq` no longer supports basecalling
+- Removed `--skip_basecalling` as `nanoseq` no longer supports basecalling
+- Removed `--skip_pycoqc` as `nanoseq` no longer supports basecalling
+
+### Software dependencies
+
+| Dependency                      | Old version | New version |
+| ------------------------------- | ----------- | ----------- |
+| `bioconductor-bambu`            | 2.0.0       | 3.0.8       |
+
 ## [3.0.0] - 2022-06-21
 
 ### Major enhancements
