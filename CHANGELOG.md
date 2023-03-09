@@ -27,9 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Software dependencies
 
-| Dependency                      | Old version | New version |
-| ------------------------------- | ----------- | ----------- |
-| `bioconductor-bambu`            | 2.0.0       | 3.0.8       |
+| Dependency           | Old version | New version |
+| -------------------- | ----------- | ----------- |
+| `bioconductor-bambu` | 2.0.0       | 3.0.8       |
 
 ## [3.0.0] - 2022-06-21
 
