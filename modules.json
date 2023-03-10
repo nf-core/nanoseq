@@ -96,7 +96,7 @@
                 "nf-core": {
                     "bam_stats_samtools": {
                         "branch": "master",
-                        "git_sha": "92eb5091ae5368a60cda58b3a0ced8b36d715b0f",
+                        "git_sha": "ac1e6df076195cec553a2079c9cebd94026a0d47",
                         "installed_by": ["subworkflows"]
                     }
                 }
