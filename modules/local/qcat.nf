@@ -2,7 +2,7 @@ process QCAT {
     tag "$input_path"
     label 'process_medium'
 
-    conda     (params.enable_conda ? "bioconda::qcat=1.1.0" : null)
+    conda "bioconda::qcat=1.1.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/qcat:1.1.0--py_0' :
         'quay.io/biocontainers/qcat:1.1.0--py_0' }"
@@ -11,8 +11,11 @@ process QCAT {
     path input_path
 
     output:
-    path "fastq/*.fastq.gz"               , emit: fastq
-    path "versions.yml"                   , emit: versions
+    path "fastq/*.fastq.gz", emit: fastq
+    path "versions.yml"    , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     def detect_middle = params.qcat_detect_middle ? "--detect-middle $params.qcat_detect_middle" : ""

@@ -2,7 +2,7 @@ process GRAPHMAP2_ALIGN {
     tag "$meta.id"
     label 'process_high'
 
-    conda     (params.enable_conda ? "bioconda::graphmap=0.6.3" : null)
+    conda "bioconda::graphmap=0.6.3"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/graphmap:0.6.3--he513fc3_0' :
         'quay.io/biocontainers/graphmap:0.6.3--he513fc3_0' }"
@@ -12,7 +12,10 @@ process GRAPHMAP2_ALIGN {
 
     output:
     tuple val(meta), path(sizes), val(is_transcripts), path("*.sam"), emit: align_sam
-    path "versions.yml"           , emit: versions
+    path "versions.yml"                                             , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
     def preset    = (params.protocol == 'DNA' || is_transcripts) ? "" : "-x rnaseq"

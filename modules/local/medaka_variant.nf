@@ -2,7 +2,7 @@ process MEDAKA_VARIANT {
     tag "$meta.id"
     label 'process_high'
 
-    conda (params.enable_conda ? "bioconda::medaka=1.4.4" : null)
+    conda "bioconda::medaka=1.4.4"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/medaka:1.4.4--py38h130def0_0' :
         'quay.io/biocontainers/medaka:1.4.4--py38h130def0_0' }"
@@ -12,11 +12,13 @@ process MEDAKA_VARIANT {
     path(fasta)
 
     output:
-    tuple val(meta), path ("$output_vcf")    , emit: vcf // vcf files
-    path "versions.yml"                      , emit: versions
+    tuple val(meta), path ("$output_vcf"), emit: vcf // vcf files
+    path "versions.yml"                  , emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
 
     script:
-    //def args             =  options.args        ?: ''
     def split_mnps       =  params.split_mnps   ? "-l"                        : ''
     def phase_vcf        =  params.phase_vcf    ? "-p"                        : ''
 

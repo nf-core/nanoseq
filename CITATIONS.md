@@ -4,11 +4,19 @@
 
 > Ewels PA, Peltzer A, Fillinger S, Patel H, Alneberg J, Wilm A, Garcia MU, Di Tommaso P, Nahnsen S. The nf-core framework for community-curated bioinformatics pipelines. Nat Biotechnol. 2020 Mar;38(3):276-278. doi: 10.1038/s41587-020-0439-x. PubMed PMID: 32055031.
 
+## [SGNEx](https://www.biorxiv.org/content/10.1101/2021.04.21.440736v1.abstract)
+
+> Chen, Y., Davidson, N. M., Wan, Y. K., Patel, H., Yao, F., Low, H. M., ... & SG-NEx consortium. (2021). A systematic benchmark of Nanopore long read RNA sequencing for transcript level analysis in human cell lines. BioRxiv, 2021-04.
+
 ## [Nextflow](https://www.ncbi.nlm.nih.gov/pubmed/28398311/)
 
 > Di Tommaso P, Chatzou M, Floden EW, Barja PP, Palumbo E, Notredame C. Nextflow enables reproducible computational workflows. Nat Biotechnol. 2017 Apr 11;35(4):316-319. doi: 10.1038/nbt.3820. PubMed PMID: 28398311.
 
 ## Pipeline tools
+
+- [bambu](https://www.biorxiv.org/content/10.1101/2022.11.14.516358v2.abstract)
+
+  > Chen, Y., Sim, A. D., Wan, Y. K., Yeo, K., Lee, J. J. X., Ling, M. H., ... & Göke, J. (2022). Context-aware transcript quantification from long read RNA-seq data with Bambu. bioRxiv, 2022-11.
 
 - [BEDTools](https://www.ncbi.nlm.nih.gov/pubmed/20110278/)
 
@@ -30,15 +38,13 @@
 
   > Sović I, Šikić M, Wilm A, Fenlon SN, Chen S, Nagarajan N. Fast and sensitive mapping of nanopore sequencing reads with GraphMap. Nat Commun. 2016 Apr 15;7:11307. doi: 10.1038/ncomms11307. PMID: 27079541; PMCID: PMC4835549.
 
-- [Guppy](https://nanoporetech.com/nanopore-sequencing-data-analysis)
-
 - [JAFFAL](https://doi.org/10.1186/s13059-021-02588-5)
 
   > Davidson NM, Chen Y, Sadras T, Ryland GL, Blombery P, Ekert PG, Göke J, Oshlack A. JAFFAL: detecting fusion genes with long-read transcriptome sequencing. Genome Biol. 2022 Jan 6;23(1):10. doi: 10.1186/s13059-021-02588-5. PMID: 34991664; PMCID: PMC8739696.
 
-- [m6anet](https://www.biorxiv.org/content/10.1101/2021.09.20.461055v1)
+- [m6anet](https://pubmed.ncbi.nlm.nih.gov/36357692/)
 
-  > Hendra C, et al., Detection of m6A from direct RNA sequencing using a Multiple Instance Learning framework. bioRXiv (2021)
+  > Hendra, C., Pratanwanich, P. N., Wan, Y. K., Goh, W. S., Thiery, A., & Göke, J. (2022). Detection of m6A from direct RNA sequencing using a multiple instance learning framework. Nature Methods, 1-9. PMID: 36357692; PMCID: PMC9718678.
 
 - [PEPPER-Margin-DeepVariant](https://pubmed.ncbi.nlm.nih.gov/34725481/)
 
@@ -61,10 +67,6 @@
 - [NanoPlot](https://pubmed.ncbi.nlm.nih.gov/29547981/)
 
   > De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018 Aug 1;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149. PubMed PMID: 29547981; PubMed Central PMCID: PMC6061794.
-
-- [pycoQC](https://doi.org/10.21105/joss.01236)
-
-  > Leger A, Leonardi T, (2019). pycoQC, interactive quality control for Oxford Nanopore Sequencing. Journal of Open Source Software, 4(34), 1236, https://doi.org/10.21105/joss.01236
 
 - [qcat](https://github.com/nanoporetech/qcat)
 
