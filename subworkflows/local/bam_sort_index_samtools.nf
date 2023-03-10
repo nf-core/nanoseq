@@ -6,7 +6,7 @@ include { SAMTOOLS_VIEW_BAM  } from '../../modules/local/samtools_view_bam'
 include { SAMTOOLS_SORT      } from '../../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX     } from '../../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_SORT_INDEX } from '../../modules/local/samtools_sort_index'
-include { BAM_STATS_SAMTOOLS } from '../../subworkflows/nf-core/bam_stats_samtools'
+include { BAM_STATS_SAMTOOLS } from '../../subworkflows/nf-core/bam_stats_samtools/main'
 
 workflow BAM_SORT_INDEX_SAMTOOLS {
     take:
