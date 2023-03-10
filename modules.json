@@ -93,13 +93,7 @@
                 }
             },
             "subworkflows": {
-                "nf-core": {
-                    "bam_stats_samtools": {
-                        "branch": "master",
-                        "git_sha": "92eb5091ae5368a60cda58b3a0ced8b36d715b0f",
-                        "installed_by": ["modules"]
-                    }
-                }
+                "nf-core": {}
             }
         }
     }
