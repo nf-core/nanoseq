@@ -2,38 +2,35 @@
  * Alignment with GRAPHMAP2
  */
 
-include { GRAPHMAP2_INDEX as GRAPHMAP2_INDEX_VARIANT } from '../../modules/nf-core/graphmap2/index/main'
-include { GRAPHMAP2_ALIGN as GRAPHMAP2_ALIGN_VARIANT } from '../../modules/nf-core/graphmap2/align/main'
-//include { GRAPHMAP2_INDEX as GRAPHMAP2_INDEX_SPLICE } from '../../modules/nf-core/graphmap2/index/main'
-//include { GRAPHMAP2_ALIGN as GRAPHMAP2_ALIGN_SPLICE } from '../../modules/nf-core/graphmap2/align/main'
+include { GRAPHMAP2_INDEX         } from '../../modules/local/graphmap2_index'
+include { GRAPHMAP2_ALIGN         } from '../../modules/local/graphmap2_align'
 
 workflow ALIGN_GRAPHMAP2 {
     take:
-    ch_fastq // channel: [ val(meta), path(reads)  ]
-    ch_fasta // channel: [ path fasta ]
-    ch_fai // channel: [ path fai ]
+    ch_fasta_index // channel: [ val(meta), [ reads ] ]
+    ch_fastq
 
     main:
+    /*
+     * Create genome/transcriptome index
+     */
+    GRAPHMAP2_INDEX ( ch_fasta_index )
+    ch_index          = GRAPHMAP2_INDEX.out.index
+    graphmap2_version = GRAPHMAP2_INDEX.out.versions
 
-    ch_versions = Channel.empty()
+    ch_index
+        .cross(ch_fastq) { it -> it[-1] }
+        .flatten()
+        .collate(12) // [fasta, fasta sizes, gtf, bed, fasta_index, annotation_string, meta, fastq, fasta, gtf, is_transcript, fasta_gtf_string]
+        .map { it -> [ it[6], it[7], it[0], it[1], it[2], it[3], it[10], it[4] ] } // [ sample, fastq, fasta, sizes, gtf, bed, is_transcripts, index ]
+        .set { ch_index }
 
-    if (params.protocol == "DNA") {
+    /*
+     * Map reads with GRAPHMAP2
+     */
 
-        /*
-        * Create genome/transcriptome index for variant calling with GRAPHMAP2
-        */
-        GRAPHMAP2_INDEX_VARIANT (ch_fasta)
-        ch_index          = GRAPHMAP2_INDEX_VARIANT.out.index
-        ch_versions = ch_versions.mix(GRAPHMAP2_INDEX_VARIANT.out.versions)
-
-        /*
-        * Map reads with GRAPHMAP2
-        */
-
-        GRAPHMAP2_ALIGN_VARIANT ( ch_index )
-        ch_align_sam = GRAPHMAP2_ALIGN.out.align_sam
-
-    }
+    GRAPHMAP2_ALIGN ( ch_index )
+    ch_align_sam = GRAPHMAP2_ALIGN.out.align_sam
 
     emit:
     ch_index
