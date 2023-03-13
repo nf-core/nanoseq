@@ -64,7 +64,11 @@ def check_samplesheet(file_in, updated_path, file_out):
         HEADER = ["group", "replicate", "barcode", "input_file"]
         header = fin.readline().strip().split(",")
         if header[: len(HEADER)] != HEADER:
-            print("ERROR: Please check samplesheet header -> {} != {}".format(",".join(header), ",".join(HEADER)))
+            print(
+                "ERROR: Please check samplesheet header -> {} != {}".format(
+                    ",".join(header), ",".join(HEADER)
+                )
+            )
             sys.exit(1)
 
         ## Check sample entries
@@ -73,11 +77,21 @@ def check_samplesheet(file_in, updated_path, file_out):
 
             ## Check valid number of columns per row
             if len(lspl) < len(HEADER):
-                print_error("Invalid number of columns (minimum = {})!".format(len(HEADER)), "Line", line)
+                print_error(
+                    "Invalid number of columns (minimum = {})!".format(len(HEADER)),
+                    "Line",
+                    line,
+                )
 
             num_cols = len([x for x in lspl if x])
             if num_cols < MIN_COLS:
-                print_error("Invalid number of populated columns (minimum = {})!".format(MIN_COLS), "Line", line)
+                print_error(
+                    "Invalid number of populated columns (minimum = {})!".format(
+                        MIN_COLS
+                    ),
+                    "Line",
+                    line,
+                )
 
             ## Check group name entries
             group, replicate, barcode, input_file = lspl[: len(HEADER)]
@@ -122,20 +136,31 @@ def check_samplesheet(file_in, updated_path, file_out):
                         if "fast5" in list_dir and "fastq" in list_dir:
                             nanopolish_fast5 = input_file + "/fast5"
                             ## CHECK FAST5 DIRECTORY
-                            if not (all(fname.endswith(".fast5") for fname in os.listdir(nanopolish_fast5))):
+                            if not (
+                                all(
+                                    fname.endswith(".fast5")
+                                    for fname in os.listdir(nanopolish_fast5)
+                                )
+                            ):
                                 print_error("fast5 directory contains non-fast5 files.")
                             ## CHECK PROVIDED BASECALLED FASTQ
                             fastq_path = input_file + "/fastq"
                             basecalled_fastq = [
-                                fn for fn in os.listdir(fastq_path) if fn.endswith(".fastq.gz") or fn.endswith(".fq.gz")
+                                fn
+                                for fn in os.listdir(fastq_path)
+                                if fn.endswith(".fastq.gz") or fn.endswith(".fq.gz")
                             ]
                             if len(basecalled_fastq) != 1:
-                                print_error("Please input one basecalled fastq per sample.")
+                                print_error(
+                                    "Please input one basecalled fastq per sample."
+                                )
                             else:
                                 input_file = fastq_path + "/" + basecalled_fastq[0]
                                 if not basecalled_fastq[0].endswith(".fastq.gz"):
                                     if not basecalled_fastq[0].endswith(".fq.gz"):
-                                        print_error('basecalled fastq input does not end with ".fastq.gz" or ".fq.gz"')
+                                        print_error(
+                                            'basecalled fastq input does not end with ".fastq.gz" or ".fq.gz"'
+                                        )
                         else:
                             print_error(
                                 'path does not end with ".fastq.gz", ".fq.gz", or ".bam" and is not an existing directory with correct fast5 and/or fastq inputs.'
@@ -164,19 +189,25 @@ def check_samplesheet(file_in, updated_path, file_out):
         make_dir(out_dir)
         with open(file_out, "w") as fout:
             fout.write(
-                ",".join(["sample", "barcode", "input_file", "nanopolish_fast5"])
-                + "\n"
+                ",".join(["sample", "barcode", "input_file", "nanopolish_fast5"]) + "\n"
             )
             for sample in sorted(sample_info_dict.keys()):
                 ## Check that replicate ids are in format 1..<NUM_REPS>
                 uniq_rep_ids = set(sample_info_dict[sample].keys())
                 if len(uniq_rep_ids) != max(uniq_rep_ids):
-                    print_error("Replicate ids must start with 1..<num_replicates>!", "Group", sample)
+                    print_error(
+                        "Replicate ids must start with 1..<num_replicates>!",
+                        "Group",
+                        sample,
+                    )
 
                 ### Write to file
                 for replicate in sorted(sample_info_dict[sample].keys()):
                     sample_id = "{}_R{}".format(sample, replicate)
-                    fout.write(",".join([sample_id] + sample_info_dict[sample][replicate]) + "\n")
+                    fout.write(
+                        ",".join([sample_id] + sample_info_dict[sample][replicate])
+                        + "\n"
+                    )
 
 
 def main(args=None):
