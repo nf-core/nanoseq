@@ -1,8 +1,7 @@
-name: samtools_stats
-description: Produces comprehensive statistics from SAM/BAM/CRAM file
+name: samtools_view
+description: filter/convert SAM/BAM/CRAM file
 keywords:
-  - statistics
-  - counts
+  - view
   - bam
   - sam
   - cram
@@ -24,30 +23,57 @@ input:
         e.g. [ id:'test', single_end:false ]
   - input:
       type: file
-      description: BAM/CRAM file from alignment
-      pattern: "*.{bam,cram}"
-  - input_index:
-      type: file
-      description: BAI/CRAI file from alignment
-      pattern: "*.{bai,crai}"
+      description: BAM/CRAM/SAM file
+      pattern: "*.{bam,cram,sam}"
+  - index:
+      type: optional file
+      description: BAM.BAI/CRAM.CRAI file
+      pattern: "*.{.bai,.crai}"
   - fasta:
       type: optional file
       description: Reference file the CRAM was created with
       pattern: "*.{fasta,fa}"
+  - qname:
+      type: file
+      description: Optional file with read names to output only select alignments
+      pattern: "*.{txt,list}"
 output:
   - meta:
       type: map
       description: |
         Groovy Map containing sample information
         e.g. [ id:'test', single_end:false ]
-  - stats:
+  - bam:
       type: file
-      description: File containing samtools stats output
-      pattern: "*.{stats}"
+      description: optional filtered/converted BAM file
+      pattern: "*.{bam}"
+  - cram:
+      type: file
+      description: optional filtered/converted CRAM file
+      pattern: "*.{cram}"
+  - sam:
+      type: file
+      description: optional filtered/converted SAM file
+      pattern: "*.{sam}"
+  # bai, csi, and crai are created with `--write-index`
+  - bai:
+      type: file
+      description: optional BAM file index
+      pattern: "*.{bai}"
+  - csi:
+      type: file
+      description: optional tabix BAM file index
+      pattern: "*.{csi}"
+  - crai:
+      type: file
+      description: optional CRAM file index
+      pattern: "*.{crai}"
   - versions:
       type: file
       description: File containing software versions
       pattern: "versions.yml"
 authors:
   - "@drpatelh"
+  - "@joseespinosa"
   - "@FriederikeHanssen"
+  - "@priyanka-surana"

@@ -15,13 +15,14 @@ include { TABIX_TABIX as CUTESV_TABIX_VCF       } from '../../modules/nf-core/ta
 workflow STRUCTURAL_VARIANT_CALLING {
 
     take:
-    ch_bam_bai
+    ch_view_sortbam
     ch_fasta
     ch_fai
 
     main:
     ch_sv_calls_vcf     = Channel.empty()
     ch_sv_calls_vcf_tbi = Channel.empty()
+
     ch_versions         = Channel.empty()
 
     /*
@@ -32,21 +33,21 @@ workflow STRUCTURAL_VARIANT_CALLING {
         /*
          * Call structural variants with sniffles
          */
-        SNIFFLES (ch_bam_bai, ch_fasta)
+        SNIFFLES( ch_view_sortbam )
         ch_versions = ch_versions.mix(SNIFFLES.out.versions)
 
         /*
          * Sort structural variants with bcftools
          */
-        SNIFFLES_SORT_VCF( SNIFFLES.out.sv_vcf )
-        ch_sv_vcf_sorted = SNIFFLES_SORT_VCF.out.vcf
+        SNIFFLES_SORT_VCF( SNIFFLES.out.sv_calls )
+        ch_sv_calls_vcf = SNIFFLES_SORT_VCF.out.vcf
         ch_versions = ch_versions.mix(SNIFFLES_SORT_VCF.out.versions)
 
         /*
          * Index sniffles vcf.gz
          */
-        SNIFFLES_TABIX_VCF( ch_sv_vcf_sorted )
-        ch_sv_vcf_sorted_tbi  = SNIFFLES_TABIX_VCF.out.tbi
+        SNIFFLES_TABIX_VCF( ch_sv_calls_vcf )
+        ch_sv_calls_tbi  = SNIFFLES_TABIX_VCF.out.tbi
         ch_versions = ch_versions.mix(SNIFFLES_TABIX_VCF.out.versions)
 
     } else if (params.structural_variant_caller == 'cutesv') {
@@ -54,26 +55,27 @@ workflow STRUCTURAL_VARIANT_CALLING {
         /*
         * Call structural variants with cutesv
         */
-        CUTESV(ch_bam_bai, ch_fasta)
-        //ch_versions = ch_versions.mix(CUTESV.out.versions)
+        CUTESV( ch_view_sortbam, ch_fasta )
+        ch_versions = ch_versions.mix(CUTESV.out.versions)
 
         /*
          * Sort structural variants with bcftools
          */
-        //CUTESV_SORT_VCF( CUTESV.out.sv_calls )
-        //ch_sv_calls_vcf = CUTESV_SORT_VCF.out.vcf
-        //ch_versions = ch_versions.mix(CUTESV_SORT_VCF.out.versions)
+        CUTESV_SORT_VCF( CUTESV.out.sv_calls )
+        ch_sv_calls_vcf = CUTESV_SORT_VCF.out.vcf
+        ch_versions = ch_versions.mix(CUTESV_SORT_VCF.out.versions)
 
         /*
          * Zip cutesv vcf.gz
          */
-        //CUTESV_TABIX_VCF( ch_sv_calls_vcf )
-        //ch_sv_calls_tbi  = CUTESV_TABIX_VCF.out.tbi
-        //ch_versions = ch_versions.mix(CUTESV_TABIX_VCF.out.versions)
+        CUTESV_TABIX_VCF( ch_sv_calls_vcf )
+        ch_sv_calls_tbi  = CUTESV_TABIX_VCF.out.tbi
+        ch_versions = ch_versions.mix(CUTESV_TABIX_VCF.out.versions)
     }
 
     emit:
     ch_sv_calls_vcf
-    //ch_sv_calls_vcf_tbi
-    //ch_versions
+    ch_sv_calls_vcf_tbi
+    ch_versions
 }
+

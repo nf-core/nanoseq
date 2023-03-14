@@ -5,7 +5,7 @@
 include { MEDAKA_VARIANT                        } from '../../modules/local/medaka_variant'
 include { TABIX_BGZIP as MEDAKA_BGZIP_VCF       } from '../../modules/nf-core/tabix/bgzip/main'
 include { TABIX_TABIX as MEDAKA_TABIX_VCF       } from '../../modules/nf-core/tabix/tabix/main'
-include { DEEPVARIANT                           } from '../../modules/local/deepvariant'
+include { DEEPVARIANT } from '../../modules/nf-core/deepvariant/main'
 include { TABIX_TABIX as DEEPVARIANT_TABIX_VCF  } from '../../modules/nf-core/tabix/tabix/main'
 include { TABIX_TABIX as DEEPVARIANT_TABIX_GVCF } from '../../modules/nf-core/tabix/tabix/main'
 include { PEPPER_MARGIN_DEEPVARIANT             } from '../../modules/local/pepper_margin_deepvariant'
@@ -13,7 +13,8 @@ include { PEPPER_MARGIN_DEEPVARIANT             } from '../../modules/local/pepp
 workflow SHORT_VARIANT_CALLING {
 
     take:
-    ch_view_sortbam
+    ch_sorted_bam
+    ch_sorted_bai
     ch_fasta
     ch_fai
 
@@ -32,7 +33,15 @@ workflow SHORT_VARIANT_CALLING {
         /*
          * Call short variants with medaka
          */
-        MEDAKA_VARIANT( ch_view_sortbam, ch_fasta )
+        ch_sorted_bam
+             .join(ch_sorted_bai, by: 0)
+             .view()
+             .set { ch_sorted_bam_bai }
+        ch_sorted_bam
+             .combine(ch_fasta.map{it->it[1]})
+             .map { it -> it[2] }
+             .set { ch_fasta }
+        MEDAKA_VARIANT ( ch_sorted_bam_bai, ch_fasta )
         ch_versions = ch_versions.mix(medaka_version = MEDAKA_VARIANT.out.versions)
 
         /*
@@ -52,9 +61,23 @@ workflow SHORT_VARIANT_CALLING {
     } else if (params.variant_caller == 'deepvariant') {
 
         /*
-        * Call variants with deepvariant
-        */
-        DEEPVARIANT( ch_view_sortbam, ch_fasta, ch_fai )
+         * Call variants with deepvariant
+         */
+        ch_sorted_bam
+             .join(ch_sorted_bai, by: 0)
+             .map { it -> [ it[0], it[1], it[2], [] ] }
+             .view()
+             .set { ch_deepvariant_input }
+        ch_sorted_bam
+             .combine(ch_fasta.map{it->it[1]})
+             .map { it -> it[2] }
+             .set { ch_fasta }
+        ch_sorted_bam
+             .combine(ch_fai.map{it->it[1]})
+             .map { it -> it[2] }
+             .set { ch_fai }
+
+        DEEPVARIANT( ch_deepvariant_input, ch_fasta, ch_fai )
         ch_short_calls_vcf  = DEEPVARIANT.out.vcf
         ch_short_calls_gvcf = DEEPVARIANT.out.gvcf
         ch_versions = ch_versions.mix(DEEPVARIANT.out.versions)
@@ -84,10 +107,10 @@ workflow SHORT_VARIANT_CALLING {
         ch_versions = ch_versions.mix(PEPPER_MARGIN_DEEPVARIANT.out.versions)
     }
 
-    emit:
-    ch_short_calls_vcf
-    ch_short_calls_vcf_tbi
-    ch_short_calls_gvcf
-    ch_short_calls_gvcf_tbi
-    ch_versions
+//    emit:
+//    ch_short_calls_vcf
+//    ch_short_calls_vcf_tbi
+//    ch_short_calls_gvcf
+//    ch_short_calls_gvcf_tbi
+//    ch_versions
 }
