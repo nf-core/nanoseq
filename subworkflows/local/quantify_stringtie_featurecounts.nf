@@ -35,13 +35,21 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     /*
      * Gene and transcript quantification with featureCounts
      */
-    ch_sorted_bam
-        .combine (ch_stringtie_merged_gtf)
-        .set { ch_featurecounts_input }
-    SUBREAD_FEATURECOUNTS_GENE ( ch_featurecounts_input )
-    SUBREAD_FEATURECOUNTS_TRANSCRIPT ( ch_featurecounts_input )
-    ch_gene_counts                   = SUBREAD_FEATURECOUNTS_GENE.out.counts 
-    ch_transcript_counts             = SUBREAD_FEATURECOUNTS_TRANSCRIPT.out.counts
+    ch_stringtie_merged_gtf
+        .combine( [[id:'gene']] )
+        .combine( [ch_sorted_bam.collect{it[1]}])
+        .map {it -> [it[1], it[2].value, it[0]]}
+        .set { ch_featurecounts_gene_input }
+    ch_stringtie_merged_gtf
+        .combine( [[id:'transcript']] )
+        .combine( [ch_sorted_bam.collect{it[1]}])
+        .map {it -> [it[1], it[2].value, it[0]]}
+        .set { ch_featurecounts_transcript_input }
+
+    SUBREAD_FEATURECOUNTS_GENE ( ch_featurecounts_gene_input )
+    SUBREAD_FEATURECOUNTS_TRANSCRIPT ( ch_featurecounts_transcript_input )
+    ch_gene_counts                   = SUBREAD_FEATURECOUNTS_GENE.out.counts.map{it -> it[1]}
+    ch_transcript_counts             = SUBREAD_FEATURECOUNTS_TRANSCRIPT.out.counts.map{it -> it[1]}
     featurecounts_gene_multiqc       = SUBREAD_FEATURECOUNTS_GENE.out.summary
     featurecounts_transcript_multiqc = SUBREAD_FEATURECOUNTS_TRANSCRIPT.out.summary
     featurecounts_version            = SUBREAD_FEATURECOUNTS_GENE.out.versions

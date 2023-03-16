@@ -111,7 +111,7 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
-//include { BAMBU                 } from '../modules/local/bambu'
+include { BAMBU                 } from '../modules/local/bambu'
 //include { MULTIQC               } from '../modules/local/multiqc'
 
 /*
@@ -344,7 +344,7 @@ workflow NANOSEQ{
             .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0], it[1] ] }
             .set { ch_sample_bam }
         BAM_RENAME ( ch_sample_bam )
-        ch_sortbam = BAM_RENAME.out.bam
+        ch_sorted_bam = BAM_RENAME.out.bam
     }
 
     ch_featurecounts_gene_multiqc       = Channel.empty()
@@ -365,18 +365,16 @@ workflow NANOSEQ{
 
         ch_r_version = Channel.empty()
         if (params.quantification_method == 'bambu') {
-//            ch_sample
-//                .map { it -> [ it[2], it[3] ]}
-//                .unique()
-//                .set { ch_sample_annotation }
-//
-//            /*
-//             * MODULE: Quantification and novel isoform detection with bambu
-//             */
-//            BAMBU ( ch_sample_annotation, ch_sorted_bam.collect{ it [1] } )
-//            ch_gene_counts       = BAMBU.out.ch_gene_counts
-//            ch_transcript_counts = BAMBU.out.ch_transcript_counts
-//            ch_software_versions = ch_software_versions.mix(BAMBU.out.versions.first().ifEmpty(null))
+            ch_sample_annotation=Channel.from(params.fasta,params.gtf).collect()
+            ch_sample_annotation.view()
+
+            /*
+             * MODULE: Quantification and novel isoform detection with bambu
+             */
+            BAMBU ( ch_sample_annotation, ch_sorted_bam.collect{ it [1] } )
+            ch_gene_counts       = BAMBU.out.ch_gene_counts
+            ch_transcript_counts = BAMBU.out.ch_transcript_counts
+            ch_software_versions = ch_software_versions.mix(BAMBU.out.versions.first().ifEmpty(null))
         } else {
 
             /*
@@ -390,15 +388,15 @@ workflow NANOSEQ{
             ch_featurecounts_gene_multiqc       = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.featurecounts_gene_multiqc.ifEmpty([])
             ch_featurecounts_transcript_multiqc = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.featurecounts_transcript_multiqc.ifEmpty([])
         }
-//        if (!params.skip_differential_analysis) {
-//
-//            /*
-//             * SUBWORKFLOW: Differential gene and transcript analysis with DESeq2 and DEXseq
-//             */
-//            DIFFERENTIAL_DESEQ2_DEXSEQ( ch_gene_counts, ch_transcript_counts )
-//            ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.first().ifEmpty(null))
-//            ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.dexseq_version.first().ifEmpty(null))
-//        }
+        if (!params.skip_differential_analysis) {
+
+            /*
+             * SUBWORKFLOW: Differential gene and transcript analysis with DESeq2 and DEXseq
+             */
+            DIFFERENTIAL_DESEQ2_DEXSEQ( ch_gene_counts, ch_transcript_counts )
+            //ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.dexseq_version.first().ifEmpty(null))
+        }
     }
 
 //    if (!params.skip_modification_analysis && params.protocol == 'directRNA') {
@@ -408,18 +406,18 @@ workflow NANOSEQ{
 //         */
 //        RNA_MODIFICATION_XPORE_M6ANET( ch_sample, ch_nanopolish_sortbam )
 //    }
-//
-//    if (!params.skip_fusion_analysis && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
-//
-//        /*
-//         * SUBWORKFLOW: RNA_FUSIONS_JAFFAL
-//         */
-//        ch_fastq
-//            .map { it -> [ it[0], it[1] ] }
-//            .set { ch_fastq_simple }
-//
-//        RNA_FUSIONS_JAFFAL( ch_fastq_simple, params.jaffal_ref_dir )
-//    }
+
+    if (!params.skip_fusion_analysis && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
+
+        /*
+         * SUBWORKFLOW: RNA_FUSIONS_JAFFAL
+         */
+        ch_fastq
+            .map { it -> [ it[0], it[1] ] }
+            .set { ch_fastq }
+
+        RNA_FUSIONS_JAFFAL( ch_fastq, params.jaffal_ref_dir )
+    }
 
     /*
      * MODULE: Parse software version numbers
