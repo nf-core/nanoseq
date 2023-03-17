@@ -12,7 +12,7 @@ process CUTESV {
     path(fasta)
 
     output:
-    tuple val(meta), path("*_cuteSV.vcf"), emit: sv_calls // vcf files
+    tuple val(meta), path("*_cuteSV.vcf"), emit: sv_vcf // vcf files
     path "versions.yml"                  , emit: versions
 
     when:

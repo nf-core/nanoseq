@@ -15,7 +15,8 @@ include { TABIX_TABIX as CUTESV_TABIX_VCF       } from '../../modules/nf-core/ta
 workflow STRUCTURAL_VARIANT_CALLING {
 
     take:
-    ch_view_sortbam
+    ch_sorted_bam
+    ch_sorted_bai
     ch_fasta
     ch_fai
 
@@ -25,6 +26,16 @@ workflow STRUCTURAL_VARIANT_CALLING {
 
     ch_versions         = Channel.empty()
 
+    ch_sorted_bam
+         .join(ch_sorted_bai, by: 0)
+         .map { it -> [ it[0], it[1], it[2] ] }
+         .view()
+         .set { ch_sv_input }
+    ch_sorted_bam
+         .combine(ch_fasta.map{it->it[1]})
+         .map { it -> it[2] }
+         .set { ch_fasta }
+
     /*
      * Call structural variants with sniffles
      */
@@ -33,13 +44,13 @@ workflow STRUCTURAL_VARIANT_CALLING {
         /*
          * Call structural variants with sniffles
          */
-        SNIFFLES( ch_view_sortbam )
+        SNIFFLES( ch_sv_input, ch_fasta )
         ch_versions = ch_versions.mix(SNIFFLES.out.versions)
 
         /*
          * Sort structural variants with bcftools
          */
-        SNIFFLES_SORT_VCF( SNIFFLES.out.sv_calls )
+        SNIFFLES_SORT_VCF( SNIFFLES.out.sv_vcf )
         ch_sv_calls_vcf = SNIFFLES_SORT_VCF.out.vcf
         ch_versions = ch_versions.mix(SNIFFLES_SORT_VCF.out.versions)
 
@@ -55,13 +66,13 @@ workflow STRUCTURAL_VARIANT_CALLING {
         /*
         * Call structural variants with cutesv
         */
-        CUTESV( ch_view_sortbam, ch_fasta )
+        CUTESV( ch_sv_input, ch_fasta )
         ch_versions = ch_versions.mix(CUTESV.out.versions)
 
         /*
          * Sort structural variants with bcftools
          */
-        CUTESV_SORT_VCF( CUTESV.out.sv_calls )
+        CUTESV_SORT_VCF( CUTESV.out.sv_vcf )
         ch_sv_calls_vcf = CUTESV_SORT_VCF.out.vcf
         ch_versions = ch_versions.mix(CUTESV_SORT_VCF.out.versions)
 

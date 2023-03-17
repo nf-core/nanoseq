@@ -5,6 +5,13 @@
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
+                    "bcftools/sort": {
+                        "branch": "master",
+                        "git_sha": "4a21e4cca35e72ec059abd67f790e0b192ce5d81",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
                     "bedtools/bamtobed": {
                         "branch": "master",
                         "git_sha": "1d48427957205cb6acf1ffe330bd35b6bb8baa90",
@@ -183,6 +190,13 @@
                     "ucsc/bedtobigbed": {
                         "branch": "master",
                         "git_sha": "0f8a77ff00e65eaeebc509b8156eaa983192474b",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "untar": {
+                        "branch": "master",
+                        "git_sha": "cc1f997fab6d8fde5dc0e6e2a310814df5b53ce7",
                         "installed_by": [
                             "modules"
                         ]

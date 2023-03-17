@@ -77,7 +77,7 @@ if (params.call_variants) {
     if (params.protocol != 'DNA') {
         exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA'"
     }
-    if (!params.skip_vc && params.variant_caller != 'medaka' && params.variant_caller != 'deepvariant' && params.variant_caller != 'pepper_margin_deepvariant') {
+    if (!params.skip_vc && params.variant_caller != 'clair3' && params.variant_caller != 'deepvariant' && params.variant_caller != 'pepper_margin_deepvariant') {
         exit 1, "Invalid variant caller option: ${params.variant_caller}. Valid options: 'medaka', 'deepvariant' or 'pepper_margin_deepvariant'"
     }
     if (!params.skip_sv && params.structural_variant_caller != 'sniffles' && params.structural_variant_caller != 'cutesv') {
@@ -120,10 +120,10 @@ include { BAMBU                 } from '../modules/local/bambu'
 
 include { INPUT_CHECK                      } from '../subworkflows/local/input_check'
 include { SHORT_VARIANT_CALLING            } from '../subworkflows/local/short_variant_calling'
-//include { STRUCTURAL_VARIANT_CALLING       } from '../subworkflows/local/structural_variant_calling'
+include { STRUCTURAL_VARIANT_CALLING       } from '../subworkflows/local/structural_variant_calling'
 include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'
 //include { RNA_MODIFICATION_XPORE_M6ANET    } from '../subworkflows/local/rna_modifications_xpore_m6anet'
-//include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fusions_jaffal'
+include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fusions_jaffal'
 
 ////////////////////////////////////////////////////
 /* --    IMPORT NF-CORE MODULES/SUBWORKFLOWS   -- */
@@ -218,7 +218,7 @@ workflow NANOSEQ{
             .set { ch_fastq }
         ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
     } else {
-        if (!params.skip_alignment) {
+        if (!params.skip_alignment || !params.skip_fusion_analysis) {
             ch_sample
                 .map { it -> if (it[1].toString().endsWith('.gz')) [ it[0], it[1], it[2], it[3] ] }
                 .set { ch_fastq }
@@ -302,16 +302,16 @@ workflow NANOSEQ{
             */
             if (!params.skip_vc) {
                 SHORT_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
-                //ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+                ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
             }
 
-//            /*
-//            * SUBWORKFLOW: Structural variant calling
-//            */
-//            if (!params.skip_sv) {
-//                STRUCTURAL_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
-//                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
-//            }
+            /*
+            * SUBWORKFLOW: Structural variant calling
+            */
+            if (!params.skip_sv) {
+                STRUCTURAL_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
+                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+            }
         }
 
         ch_bedtools_version = Channel.empty()
@@ -415,6 +415,11 @@ workflow NANOSEQ{
         ch_fastq
             .map { it -> [ it[0], it[1] ] }
             .set { ch_fastq }
+        ch_jaffal_ref_dir = Channel.of(params.jaffal_ref_dir)
+        ch_fastq
+            .combine ( ch_jaffal_ref_dir )
+            .map { it -> it[2] }
+            .set { ch_jaffal_ref_dir }
 
         RNA_FUSIONS_JAFFAL( ch_fastq, params.jaffal_ref_dir )
     }
