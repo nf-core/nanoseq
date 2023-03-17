@@ -3,7 +3,8 @@
  */
 
 include { MINIMAP2_INDEX } from '../../modules/nf-core/minimap2/index/main'
-include { MINIMAP2_ALIGN } from '../../modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_OTHER } from '../../modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_VARIANT } from '../../modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_INDEX } from '../../modules/nf-core/samtools/index/main'
 include { BAM_STATS_SAMTOOLS } from '../../subworkflows/nf-core/bam_stats_samtools/main'
 
@@ -36,8 +37,13 @@ workflow ALIGN_MINIMAP2 {
     bam_format = true
     cigar_paf_format = false
     cigar_bam = false
-    MINIMAP2_ALIGN ( ch_alignment_input, ch_reference, bam_format, cigar_paf_format, cigar_bam )
-    ch_sorted_bam = MINIMAP2_ALIGN.out.bam
+    if (params.call_variants) {
+        MINIMAP2_ALIGN_VARIANT ( ch_alignment_input, ch_reference, bam_format, cigar_paf_format, cigar_bam )
+        ch_sorted_bam = MINIMAP2_ALIGN_VARIANT.out.bam
+    } else {
+        MINIMAP2_ALIGN_OTHER ( ch_alignment_input, ch_reference, bam_format, cigar_paf_format, cigar_bam )
+        ch_sorted_bam = MINIMAP2_ALIGN_OTHER.out.bam
+    }
 
     SAMTOOLS_INDEX ( ch_sorted_bam )
     ch_sorted_bai = SAMTOOLS_INDEX.out.bai

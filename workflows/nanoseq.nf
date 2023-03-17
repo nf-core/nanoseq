@@ -112,7 +112,7 @@ include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
 include { BAMBU                 } from '../modules/local/bambu'
-//include { MULTIQC               } from '../modules/local/multiqc'
+include { MULTIQC               } from '../modules/local/multiqc'
 
 /*
  * SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -122,7 +122,7 @@ include { INPUT_CHECK                      } from '../subworkflows/local/input_c
 include { SHORT_VARIANT_CALLING            } from '../subworkflows/local/short_variant_calling'
 include { STRUCTURAL_VARIANT_CALLING       } from '../subworkflows/local/structural_variant_calling'
 include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'
-//include { RNA_MODIFICATION_XPORE_M6ANET    } from '../subworkflows/local/rna_modifications_xpore_m6anet'
+include { RNA_MODIFICATION_XPORE_M6ANET    } from '../subworkflows/local/rna_modifications_xpore_m6anet'
 include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fusions_jaffal'
 
 ////////////////////////////////////////////////////
@@ -334,11 +334,6 @@ workflow NANOSEQ{
             ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGBED.out.bed12tobigbed_version.first().ifEmpty(null))
         }
         ch_software_versions = ch_software_versions.mix(ch_bedtools_version.first().ifEmpty(null))
-
-        ch_sorted_bam
-            .join(ch_sample,by:0)
-            .map { it -> [ it[0], it[1], it[4] ] }
-            .set { ch_nanopolish_bam_fast5 }
     } else {
         ch_sample
             .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0], it[1] ] }
@@ -366,7 +361,6 @@ workflow NANOSEQ{
         ch_r_version = Channel.empty()
         if (params.quantification_method == 'bambu') {
             ch_sample_annotation=Channel.from(params.fasta,params.gtf).collect()
-            ch_sample_annotation.view()
 
             /*
              * MODULE: Quantification and novel isoform detection with bambu
@@ -394,18 +388,26 @@ workflow NANOSEQ{
              * SUBWORKFLOW: Differential gene and transcript analysis with DESeq2 and DEXseq
              */
             DIFFERENTIAL_DESEQ2_DEXSEQ( ch_gene_counts, ch_transcript_counts )
-            //ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.first().ifEmpty(null))
             ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.dexseq_version.first().ifEmpty(null))
         }
     }
 
-//    if (!params.skip_modification_analysis && params.protocol == 'directRNA') {
-//
-//        /*
-//         * SUBWORKFLOW: RNA modification detection with xPore and m6anet
-//         */
-//        RNA_MODIFICATION_XPORE_M6ANET( ch_sample, ch_nanopolish_sortbam )
-//    }
+    if (!params.skip_modification_analysis && params.protocol == 'directRNA') {
+
+        /*
+         * SUBWORKFLOW: RNA modification detection with xPore and m6anet
+         */
+        ch_sorted_bam
+            .combine([params.fasta])
+            .combine([params.gtf])
+            .join(ch_sorted_bai,by:0)
+            .join(ch_sample,by:0)
+            .map { it -> [ it[0], it[2], it[3], it[7], it[5], it[1], it[4] ] }
+            .set { ch_nanopolish_input }
+
+        RNA_MODIFICATION_XPORE_M6ANET( ch_nanopolish_input )
+    }
 
     if (!params.skip_fusion_analysis && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
 
@@ -431,24 +433,24 @@ workflow NANOSEQ{
         ch_software_versions.unique().collectFile()
     )
 
-//    if (!params.skip_multiqc) {
-//        workflow_summary    = WorkflowNanoseq.paramsSummaryMultiqc(workflow, summary_params)
-//        ch_workflow_summary = Channel.value(workflow_summary)
-//
-//        /*
-//         * MODULE: MultiQC
-//         */
-//        MULTIQC (
-//        ch_multiqc_config,
-//        ch_multiqc_custom_config.collect().ifEmpty([]),
-//        ch_fastqc_multiqc.ifEmpty([]),
-//        ch_samtools_multiqc.collect().ifEmpty([]),
-//        ch_featurecounts_gene_multiqc.ifEmpty([]),
-//        ch_featurecounts_transcript_multiqc.ifEmpty([]),
-//        CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
-//        ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml')
-//        )
-//    }
+    if (!params.skip_multiqc) {
+        workflow_summary    = WorkflowNanoseq.paramsSummaryMultiqc(workflow, summary_params)
+        ch_workflow_summary = Channel.value(workflow_summary)
+
+        /*
+         * MODULE: MultiQC
+         */
+        MULTIQC (
+        ch_multiqc_config,
+        ch_multiqc_custom_config.collect().ifEmpty([]),
+        ch_fastqc_multiqc.ifEmpty([]),
+        ch_samtools_multiqc.collect().ifEmpty([]),
+        ch_featurecounts_gene_multiqc.ifEmpty([]),
+        ch_featurecounts_transcript_multiqc.ifEmpty([]),
+        CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
+        ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml')
+        )
+    }
 }
 
 ////////////////////////////////////////////////////
