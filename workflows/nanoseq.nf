@@ -268,8 +268,8 @@ workflow NANOSEQ{
          * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
          */
         CUSTOM_GETCHROMSIZES( ch_fasta )
-        ch_chr_sizes = CUSTOM_GETCHROMSIZES.out.sizes
-        ch_fai = CUSTOM_GETCHROMSIZES.out.fai
+        ch_chr_sizes         = CUSTOM_GETCHROMSIZES.out.sizes
+        ch_fai               = CUSTOM_GETCHROMSIZES.out.fai
         ch_software_versions = ch_software_versions.mix(CUSTOM_GETCHROMSIZES.out.versions.first().ifEmpty(null))
 
         if (params.aligner == 'minimap2') {
@@ -278,8 +278,8 @@ workflow NANOSEQ{
             * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
             */
             ALIGN_MINIMAP2 ( ch_fasta, ch_fastq )
-            ch_sorted_bam = ALIGN_MINIMAP2.out.ch_sorted_bam
-            ch_sorted_bai = ALIGN_MINIMAP2.out.ch_sorted_bai
+            ch_sorted_bam        = ALIGN_MINIMAP2.out.ch_sorted_bam
+            ch_sorted_bai        = ALIGN_MINIMAP2.out.ch_sorted_bai
             ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.first().ifEmpty(null))
             ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.samtools_version.first().ifEmpty(null))
         } else {
@@ -288,8 +288,8 @@ workflow NANOSEQ{
              * SUBWORKFLOW: Align fastq files with graphmap2 and sort bam files
              */
             ALIGN_GRAPHMAP2 ( ch_fasta, ch_fastq )
-            ch_sorted_bam = ALIGN_GRAPHMAP2.out.ch_sorted_bam
-            ch_sorted_bai = ALIGN_GRAPHMAP2.out.ch_sorted_bai
+            ch_sorted_bam        = ALIGN_GRAPHMAP2.out.ch_sorted_bam
+            ch_sorted_bai        = ALIGN_GRAPHMAP2.out.ch_sorted_bai
             ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
             ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.samtools_version.first().ifEmpty(null))
         }
@@ -320,7 +320,7 @@ workflow NANOSEQ{
              * SUBWORKFLOW: Convert BAM -> BEDGraph -> BigWig
              */
             BEDTOOLS_UCSC_BIGWIG ( ch_sorted_bam, ch_chr_sizes )
-            ch_bedtools_version = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGWIG.out.bedtools_version.first().ifEmpty(null))
+            ch_bedtools_version  = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGWIG.out.bedtools_version.first().ifEmpty(null))
             ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGWIG.out.bedgraphtobigwig_version.first().ifEmpty(null))
         }
         if (!params.skip_bigbed) {
@@ -329,7 +329,7 @@ workflow NANOSEQ{
              * SUBWORKFLOW: Convert BAM -> BED12 -> BigBED
              */
             BEDTOOLS_UCSC_BIGBED ( ch_sorted_bam, ch_chr_sizes )
-            ch_bedtools_version = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGBED.out.bedtools_version.first().ifEmpty(null))
+            ch_bedtools_version  = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGBED.out.bedtools_version.first().ifEmpty(null))
             ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGBED.out.bed12tobigbed_version.first().ifEmpty(null))
         }
         ch_software_versions = ch_software_versions.mix(ch_bedtools_version.first().ifEmpty(null))
@@ -352,17 +352,19 @@ workflow NANOSEQ{
         // Check if we have replicates and multiple conditions in the input samplesheet
         REPLICATES_EXIST    = false
         MULTIPLE_CONDITIONS = false
-        /*  BUG: ".val" halts the pipeline ///////////////////////
+        /*
+         * BUG: ".val" halts the pipeline ///////////////////////
          *  if ( gtfs.map{it[0]} == false || fastas.map{it[0]} == false || gtfs.size().val != 1 || fasta.size().val != 1 ) {
          *      exit 1, """Quantification can only be performed if all samples in the samplesheet have the same reference fasta and GTF file."
          *              Please specify the '--skip_quantification' parameter if you wish to skip these steps."""
          *  }
          *  REPLICATES_EXIST    = ch_sample.map { it -> it[0].split('_')[-1].replaceAll('R','').toInteger() }.max().val > 1
-         */ MULTIPLE_CONDITIONS = ch_sample.map { it -> it[0].split('_')[0..-2].join('_') }.unique().count().val > 1
+         *  MULTIPLE_CONDITIONS = ch_sample.map { it -> it[0].split('_')[0..-2].join('_') }.unique().count().val > 1
+         */
 
         ch_r_version = Channel.empty()
         if (params.quantification_method == 'bambu') {
-            ch_sample_annotation=Channel.from(params.fasta,params.gtf).collect()
+            ch_sample_annotation = Channel.from(params.fasta, params.gtf).collect()
 
             /*
              * MODULE: Quantification and novel isoform detection with bambu
