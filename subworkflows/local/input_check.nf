@@ -20,31 +20,18 @@ workflow INPUT_CHECK {
         .set { ch_sample }
 
     emit:
-    ch_sample // [ meta, input_file, barcode, nanopolish_fast5 ]
+    ch_sample // [[id:, barcode:, nanopolish_fast5:], [input_file]]
 }
 
-// Function to resolve fasta and gtf file if using iGenomes
-// Returns [ sample, input_file, barcode, fasta, gtf, is_transcripts, annotation_str, nanopolish_fast5 ]
-def get_sample_info(LinkedHashMap sample) {
-    def meta = [:]
-    meta.id  = sample.sample
+// Function to get list of [ meta, fastq ]
+def get_sample_info(LinkedHashMap row) {
+    def meta              = [:]
+    meta.id               = row.sample
+    meta.barcode          = row.barcode
+    meta.nanopolish_fast5 = row.nanopolish_fast5
+    input_file            = row.reads ? file(row.reads, checkIfExists: true) : null
 
-    // Resolve fasta and gtf file if using iGenomes
-//    def fasta = false
-//    def gtf   = false
-//    if (sample.fasta) {
-//        if (genomeMap && genomeMap.containsKey(sample.fasta)) {
-//            fasta = file(genomeMap[sample.fasta].fasta, checkIfExists: true)
-//            gtf   = file(genomeMap[sample.fasta].gtf, checkIfExists: true)
-//        } else {
-//            fasta = file(sample.fasta, checkIfExists: true)
-//        }
-//    }
+    fastq_meta = [ meta, [ input_file ] ]
 
-    // Check if input file and gtf file exists
-    input_file = sample.input_file ? file(sample.input_file, checkIfExists: true) : null
-//    gtf        = sample.gtf        ? file(sample.gtf, checkIfExists: true)        : gtf
-
-    return [ meta, input_file, sample.barcode, sample.nanopolish_fast5 ]
+    return fastq_meta
 }
-

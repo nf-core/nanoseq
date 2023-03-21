@@ -25,7 +25,7 @@ if (params.fasta){
     ch_fasta = file(params.fasta)
 }
 
-if (params.gtf){ 
+if (params.gtf){
     ch_gtf = file(params.gtf)
 }
 
@@ -132,9 +132,9 @@ include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fus
 /*
  * MODULE: Installed directly from nf-core/modules
  */
-include { QCAT } from '../modules/nf-core/qcat/main'
-include { NANOLYSE } from '../modules/nf-core/nanolyse/main'
-include { CUSTOM_GETCHROMSIZES } from '../modules/nf-core/custom/getchromsizes/main'
+include { QCAT                        } from '../modules/nf-core/qcat/main'
+include { NANOLYSE                    } from '../modules/nf-core/nanolyse/main'
+include { CUSTOM_GETCHROMSIZES        } from '../modules/nf-core/custom/getchromsizes/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
 /*
@@ -182,9 +182,7 @@ workflow NANOSEQ{
         }
     }
 
-    /*
-     * Create empty software versions channel to mix
-     */
+    // Create empty software versions channel to mix
     ch_software_versions = Channel.empty()
 
     /*
@@ -195,32 +193,30 @@ workflow NANOSEQ{
 
     if (!params.skip_demultiplexing) {
 
+        // Create barcode channel
+        ch_barcode_kit = Channel.from(params.barcode_kit)
+
+        // Map ch_undemultiplexed_fastq
+        ch_input_path
+            .map { it -> [ [id:'undemultiplexed'], it ] }
+            .set { ch_undemultiplexed_fastq }
+
         /*
          * MODULE: Demultipexing using qcat
          */
-        ch_input_path
-            .combine( [[id:'undemultiplexed']] )
-            .map { it -> [ it[1], it[0] ]}
-            .set { ch_undemultiplexed_fastq }
-        ch_barcode_kit = Channel.from(params.barcode_kit)
-
         QCAT ( ch_undemultiplexed_fastq , ch_barcode_kit )
-        ch_fastq = Channel.empty()
-        ch_sample
-            .map { it -> [ it[0], it[2], it[1] ] } // [ meta, barcode, replicate ]
-            .set { ch_sample_fields_reordered }
         QCAT.out.reads
             .map { it -> it[1] }
             .flatten()
-            .map { it -> [ it, it.baseName.substring(0,it.baseName.lastIndexOf('.'))] }
-            .join(ch_sample_fields_reordered, by: 1)
-            .map { it -> [ it[2], it[1], it[0], it[3] ] } // [ meta, replicate, barcode ]
-            .set { ch_fastq }
+            .map { it -> [ it.baseName.substring(0,it.baseName.lastIndexOf('.')), it ] }
+            .join(ch_sample.map{ meta, empty -> [meta.barcode, meta] }, by: [0] )
+            .map { it -> [ it[2], it[1] ] }
+            .set { ch_fastq } // [ meta, .fastq.qz ]
         ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
     } else {
         if (!params.skip_alignment || !params.skip_fusion_analysis) {
             ch_sample
-                .map { it -> if (it[1].toString().endsWith('.gz')) [ it[0], it[1], it[2], it[3] ] }
+                .map { it -> if (it[1].toString().endsWith('.gz')) [ it[0], it[1] ] }
                 .set { ch_fastq }
         } else {
             ch_fastq = Channel.empty()
@@ -228,10 +224,6 @@ workflow NANOSEQ{
     }
 
     if (params.run_nanolyse) {
-        ch_fastq
-            .map { it -> [ it[0], it[1] ] }
-            .set { ch_fastq_nanolyse }
-
         if (!params.nanolyse_fasta) {
             if (!isOffline()) {
                 GET_NANOLYSE_FASTA()
@@ -243,13 +235,17 @@ workflow NANOSEQ{
         } else {
             ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
         }
+
         /*
          * MODULE: DNA contaminant removal using NanoLyse
          */
-        NANOLYSE ( ch_fastq_nanolyse, ch_nanolyse_fasta )
+        NANOLYSE ( ch_fastq, ch_nanolyse_fasta )
         NANOLYSE.out.fastq
-            .set { ch_fastq }
+            .set { ch_fastq_nanolyse }
         ch_software_versions = ch_software_versions.mix(NANOLYSE.out.versions.first().ifEmpty(null))
+    } else {
+        ch_fastq
+            .set { ch_fastq_nanolyse }
     }
 
     ch_fastqc_multiqc = Channel.empty()
@@ -258,7 +254,7 @@ workflow NANOSEQ{
         /*
          * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
          */
-        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq, params.skip_nanoplot, params.skip_fastqc)
+        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq_nanolyse, params.skip_nanoplot, params.skip_fastqc)
         ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
         ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
     }
@@ -266,14 +262,16 @@ workflow NANOSEQ{
     ch_samtools_multiqc = Channel.empty()
     if (!params.skip_alignment) {
 
+        ch_fasta = Channel.from( [id:'reference'], params.fasta ).collect()
+
         /*
          * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
          */
-        ch_fasta = Channel.from( [id:'reference'], params.fasta ).collect()
         CUSTOM_GETCHROMSIZES( ch_fasta )
         ch_chr_sizes = CUSTOM_GETCHROMSIZES.out.sizes
         ch_fai = CUSTOM_GETCHROMSIZES.out.fai
         ch_software_versions = ch_software_versions.mix(CUSTOM_GETCHROMSIZES.out.versions.first().ifEmpty(null))
+
         if (params.aligner == 'minimap2') {
 
             /*
@@ -297,6 +295,7 @@ workflow NANOSEQ{
         }
 
         if (params.call_variants && params.protocol == 'DNA') {
+
             /*
             * SUBWORKFLOW: Short variant calling
             */
@@ -338,6 +337,9 @@ workflow NANOSEQ{
         ch_sample
             .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0], it[1] ] }
             .set { ch_sample_bam }
+        /*
+         * MODULE: Rename bam file
+         */
         BAM_RENAME ( ch_sample_bam )
         ch_sorted_bam = BAM_RENAME.out.bam
     }
@@ -350,13 +352,13 @@ workflow NANOSEQ{
         // Check if we have replicates and multiple conditions in the input samplesheet
         REPLICATES_EXIST    = false
         MULTIPLE_CONDITIONS = false
-        // BUG: ".val" halts the pipeline ///////////////////////
-        //  if ( gtfs.map{it[0]} == false || fastas.map{it[0]} == false || gtfs.size().val != 1 || fasta.size().val != 1 ) {
-        //      exit 1, """Quantification can only be performed if all samples in the samplesheet have the same reference fasta and GTF file."
-        //              Please specify the '--skip_quantification' parameter if you wish to skip these steps."""
-        //  }
-        //  REPLICATES_EXIST    = ch_sample.map { it -> it[0].split('_')[-1].replaceAll('R','').toInteger() }.max().val > 1
-        //  MULTIPLE_CONDITIONS = ch_sample.map { it -> it[0].split('_')[0..-2].join('_') }.unique().count().val > 1
+        /*  BUG: ".val" halts the pipeline ///////////////////////
+         *  if ( gtfs.map{it[0]} == false || fastas.map{it[0]} == false || gtfs.size().val != 1 || fasta.size().val != 1 ) {
+         *      exit 1, """Quantification can only be performed if all samples in the samplesheet have the same reference fasta and GTF file."
+         *              Please specify the '--skip_quantification' parameter if you wish to skip these steps."""
+         *  }
+         *  REPLICATES_EXIST    = ch_sample.map { it -> it[0].split('_')[-1].replaceAll('R','').toInteger() }.max().val > 1
+         */ MULTIPLE_CONDITIONS = ch_sample.map { it -> it[0].split('_')[0..-2].join('_') }.unique().count().val > 1
 
         ch_r_version = Channel.empty()
         if (params.quantification_method == 'bambu') {
