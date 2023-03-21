@@ -46,7 +46,7 @@ def read_head(handle, num_lines=10):
     return "".join(lines)
 
 
-def check_samplesheet(file_in, file_out):
+def check_samplesheet(file_in, updated_path, file_out):
     """
     This function checks that the samplesheet follows the following structure:
     group,replicate,barcode,input_file
@@ -171,7 +171,7 @@ def check_samplesheet(file_in, file_out):
 
 def main(args=None):
     args = parse_args(args)
-    check_samplesheet(args.FILE_IN, args.FILE_OUT)
+    check_samplesheet(args.FILE_IN, args.UPDATED_PATH, args.FILE_OUT)
 
 
 if __name__ == '__main__':
