@@ -14,10 +14,9 @@ workflow DIFFERENTIAL_DESEQ2_DEXSEQ {
     /*
      * DESeq2 differential expression of genes
      */
-    ch_gene_counts
-//    DESEQ2 ( ch_gene_counts )
-//    ch_deseq2_txt  = DESEQ2.out.deseq2_txt
-//    deseq2_version = DESEQ2.out.versions
+    DESEQ2 ( ch_gene_counts )
+    ch_deseq2_txt  = DESEQ2.out.deseq2_txt
+    deseq2_version = DESEQ2.out.versions
 
     /*
      * DEXseq differential expression of transcripts
@@ -27,8 +26,8 @@ workflow DIFFERENTIAL_DESEQ2_DEXSEQ {
     dexseq_version = DEXSEQ.out.versions
 
     emit:
-//    ch_deseq2_txt
+    ch_deseq2_txt
     ch_dexseq_txt
-//    deseq2_version
+    deseq2_version
     dexseq_version
 }

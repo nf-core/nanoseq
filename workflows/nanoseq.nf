@@ -368,7 +368,7 @@ workflow NANOSEQ{
             BAMBU ( ch_sample_annotation, ch_sorted_bam.collect{ it [1] } )
             ch_gene_counts       = BAMBU.out.ch_gene_counts
             ch_transcript_counts = BAMBU.out.ch_transcript_counts
-            ch_software_versions = ch_software_versions.mix(BAMBU.out.versions.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(BAMBU.out.versions.ifEmpty(null))
         } else {
 
             /*
@@ -388,8 +388,8 @@ workflow NANOSEQ{
              * SUBWORKFLOW: Differential gene and transcript analysis with DESeq2 and DEXseq
              */
             DIFFERENTIAL_DESEQ2_DEXSEQ( ch_gene_counts, ch_transcript_counts )
-            ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.dexseq_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.deseq2_version.ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(DIFFERENTIAL_DESEQ2_DEXSEQ.out.dexseq_version.ifEmpty(null))
         }
     }
 
