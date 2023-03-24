@@ -31,7 +31,7 @@ def get_sample_info(LinkedHashMap row) {
     meta.nanopolish_fast5 = row.nanopolish_fast5
     input_file            = row.reads ? file(row.reads, checkIfExists: true) : null
 
-    fastq_meta = [ meta, [ input_file ] ]
+    fastq_meta = [ meta, input_file ]
 
     return fastq_meta
 }

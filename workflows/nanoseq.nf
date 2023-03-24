@@ -241,11 +241,11 @@ workflow NANOSEQ{
          */
         NANOLYSE ( ch_fastq, ch_nanolyse_fasta )
         NANOLYSE.out.fastq
-            .set { ch_fastq_nanolyse }
+            .set { ch_fastq_to_align }
         ch_software_versions = ch_software_versions.mix(NANOLYSE.out.versions.first().ifEmpty(null))
     } else {
         ch_fastq
-            .set { ch_fastq_nanolyse }
+            .set { ch_fastq_to_align }
     }
 
     ch_fastqc_multiqc = Channel.empty()
@@ -254,7 +254,7 @@ workflow NANOSEQ{
         /*
          * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
          */
-        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq_nanolyse, params.skip_nanoplot, params.skip_fastqc)
+        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq_to_align, params.skip_nanoplot, params.skip_fastqc)
         ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
         ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
     }
@@ -277,7 +277,7 @@ workflow NANOSEQ{
             /*
             * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
             */
-            ALIGN_MINIMAP2 ( ch_fasta, ch_fastq )
+            ALIGN_MINIMAP2 ( ch_fasta, ch_fastq_to_align )
             ch_sorted_bam        = ALIGN_MINIMAP2.out.ch_sorted_bam
             ch_sorted_bai        = ALIGN_MINIMAP2.out.ch_sorted_bai
             ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.first().ifEmpty(null))
@@ -287,7 +287,7 @@ workflow NANOSEQ{
             /*
              * SUBWORKFLOW: Align fastq files with graphmap2 and sort bam files
              */
-            ALIGN_GRAPHMAP2 ( ch_fasta, ch_fastq )
+            ALIGN_GRAPHMAP2 ( ch_fasta, ch_fastq_to_align )
             ch_sorted_bam        = ALIGN_GRAPHMAP2.out.ch_sorted_bam
             ch_sorted_bai        = ALIGN_GRAPHMAP2.out.ch_sorted_bai
             ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
@@ -407,7 +407,7 @@ workflow NANOSEQ{
             .combine([params.gtf])
             .join(ch_sorted_bai,by:0)
             .join(ch_sample,by:0)
-            .map { it -> [ it[0], it[2], it[3], it[7], it[5], it[1], it[4] ] }
+            .map { it -> [ it[0], it[2], it[3], it[5], it[1], it[4] ] }
             .set { ch_nanopolish_input }
 
         RNA_MODIFICATION_XPORE_M6ANET( ch_nanopolish_input )

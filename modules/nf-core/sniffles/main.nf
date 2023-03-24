@@ -9,12 +9,12 @@ process SNIFFLES {
 
     input:
     tuple val(meta), path(bam), path(bai)
-    path fasta
+    tuple val(meta2), path(fasta)
 
 
     output:
-    tuple val(meta), path("*_sniffles.vcf"), emit: sv_vcf
-    tuple val(meta), path("*_sniffles.snf"), emit: sv_snf
+    tuple val(meta), path("*.vcf"), emit: vcf
+    tuple val(meta), path("*.snf"), emit: snf
     path "versions.yml"                    , emit: versions
 
     when:
@@ -22,18 +22,18 @@ process SNIFFLES {
 
     script:
     def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     sniffles \\
         --input $bam \\
-        --vcf ${meta.id}_sniffles.vcf \\
-        --snf ${meta.id}_sniffles.snf \\
+        --vcf ${prefix}.vcf \\
+        --snf ${prefix}.snf \\
         --reference $fasta \\
         -t $task.cpus \\
         $args
-
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        sniffles: \$(sniffles --help 2>&1 | grep Version |sed 's/^.*Version: //')
+        sniffles: \$(sniffles --help 2>&1 | grep Version |sed 's/^.*Version //')
     END_VERSIONS
     """
 }

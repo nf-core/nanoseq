@@ -48,7 +48,7 @@ workflow SHORT_VARIANT_CALLING {
         /*
          * Call short variants with medaka
          */
-        CLAIR3 ( ch_shortv_input, ch_fasta, ch_fai )
+        CLAIR3 ( ch_shortv_input.map{ it -> [ it[0], it[1], it[2] ] }, ch_fasta, ch_fai )
         ch_versions = ch_versions.mix(medaka_version = CLAIR3.out.versions)
 
         /*
