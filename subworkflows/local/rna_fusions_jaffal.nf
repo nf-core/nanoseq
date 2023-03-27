@@ -17,26 +17,22 @@ workflow RNA_FUSIONS_JAFFAL {
     } else {
 
         /*
-         * Get jaffel reference
+         * MODULE: Get jaffel reference
          */
         GET_JAFFAL_REF()
 
         /*
-         * Untar jaffel reference
+         * MODULE: Untar jaffel reference
          */
         UNTAR( GET_JAFFAL_REF.out.ch_jaffal_ref )
         UNTAR.out.untar
             .map { it -> [ it[1] ]}
             .set { ch_jaffal_ref_dir }
 
-    ch_jaffal_ref_dir.view()
-
     }
 
-    ch_sample_simple.view()
-
     /*
-    * Align current signals to reference with jaffel
-    */
+     * MODULE: Align current signals to reference with jaffel
+     */
     JAFFAL( ch_sample_simple, ch_jaffal_ref_dir )
 }

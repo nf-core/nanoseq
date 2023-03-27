@@ -418,16 +418,8 @@ workflow NANOSEQ{
         /*
          * SUBWORKFLOW: RNA_FUSIONS_JAFFAL
          */
-        ch_fastq
-            .map { it -> [ it[0], it[1] ] }
-            .set { ch_fastq }
-        ch_jaffal_ref_dir = Channel.of(params.jaffal_ref_dir)
-        ch_fastq
-            .combine ( ch_jaffal_ref_dir )
-            .map { it -> it[2] }
-            .set { ch_jaffal_ref_dir }
-
-        RNA_FUSIONS_JAFFAL( ch_fastq, params.jaffal_ref_dir )
+        ch_jaffal_ref_dir = Channel.of(params.jaffal_ref_dir).collect()
+        RNA_FUSIONS_JAFFAL( ch_fastq, ch_jaffal_ref_dir )
     }
 
     /*
