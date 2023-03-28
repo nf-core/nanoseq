@@ -19,29 +19,29 @@ workflow SHORT_VARIANT_CALLING {
     ch_fai
 
     main:
-    ch_short_calls_vcf              = Channel.empty()
-    ch_short_calls_vcf_tbi          = Channel.empty()
-    ch_short_calls_gvcf             = Channel.empty()
-    ch_short_calls_gvcf_tbi         = Channel.empty()
-    ch_versions                     = Channel.empty()
+    ch_short_calls_vcf      = Channel.empty()
+    ch_short_calls_vcf_tbi  = Channel.empty()
+    ch_short_calls_gvcf     = Channel.empty()
+    ch_short_calls_gvcf_tbi = Channel.empty()
+    ch_versions             = Channel.empty()
 
     /*
      * Call short variants
      */
 
     ch_sorted_bam
-         .join(ch_sorted_bai, by: 0)
-         .map { it -> [ it[0], it[1], it[2], [] ] }
-         .view()
-         .set { ch_shortv_input }
+        .join(ch_sorted_bai, by: 0)
+        .map { it -> [ it[0], it[1], it[2], [] ] }
+        .view()
+        .set { ch_shortv_input }
     ch_sorted_bam
-         .combine(ch_fasta.map{it->it[1]})
-         .map { it -> it[2] }
-         .set { ch_fasta }
+        .combine(ch_fasta.map{it->it[1]})
+        .map { it -> it[2] }
+        .set { ch_fasta }
     ch_sorted_bam
-         .combine(ch_fai.map{it->it[1]})
-         .map { it -> it[2] }
-         .set { ch_fai }
+        .combine(ch_fai.map{it->it[1]})
+        .map { it -> it[2] }
+        .set { ch_fai }
 
     if (params.variant_caller == 'clair3') {
 

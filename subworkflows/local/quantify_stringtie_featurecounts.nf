@@ -2,34 +2,35 @@
  * Transcript Discovery and Quantification with StringTie2 and FeatureCounts
  */
 
-include { STRINGTIE_STRINGTIE } from '../../modules/nf-core/stringtie/stringtie/main'
-include { STRINGTIE_MERGE } from '../../modules/nf-core/stringtie/merge/main'
-include { SUBREAD_FEATURECOUNTS as SUBREAD_FEATURECOUNTS_GENE } from '../../modules/nf-core/subread/featurecounts/main'
+include { STRINGTIE_STRINGTIE                                       } from '../../modules/nf-core/stringtie/stringtie/main'
+include { STRINGTIE_MERGE                                           } from '../../modules/nf-core/stringtie/merge/main'
+include { SUBREAD_FEATURECOUNTS as SUBREAD_FEATURECOUNTS_GENE       } from '../../modules/nf-core/subread/featurecounts/main'
 include { SUBREAD_FEATURECOUNTS as SUBREAD_FEATURECOUNTS_TRANSCRIPT } from '../../modules/nf-core/subread/featurecounts/main'
 
 workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     take:
     ch_sorted_bam
+    ch_gtf
 
     main:
 
     /*
      * Novel isoform detection with StringTie
      */
-    ch_annotation_gtf = Channel.from(file(params.gtf))
-    ch_sorted_bam
-        .combine(ch_annotation_gtf)
-        .map { it -> it[2] }
-        .set { ch_annotation_gtf }
+    //ch_gtf = Channel.from(file(params.gtf)).collect()
+    //ch_sorted_bam
+    //    .combine(ch_annotation_gtf)
+    //    .map { it -> it[2] }
+    //    .set { ch_annotation_gtf }
 
-    STRINGTIE_STRINGTIE ( ch_sorted_bam, ch_annotation_gtf )
+    STRINGTIE_STRINGTIE ( ch_sorted_bam, ch_gtf )
     ch_stringtie_gtf   = STRINGTIE_STRINGTIE.out.transcript_gtf
     stringtie2_version = STRINGTIE_STRINGTIE.out.versions
 
     /*
      * Merge isoforms across samples called by StringTie
      */
-    STRINGTIE_MERGE ( ch_stringtie_gtf.collect{it[1]}, ch_annotation_gtf.unique() )
+    STRINGTIE_MERGE ( ch_stringtie_gtf.collect{it[1]}, ch_gtf )
     ch_stringtie_merged_gtf = STRINGTIE_MERGE.out.gtf
 
     /*

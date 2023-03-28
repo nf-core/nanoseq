@@ -22,11 +22,11 @@ if (params.input) {
 }
 
 if (params.fasta){
-    ch_fasta = file(params.fasta)
+    ch_fasta = Channel.from(file(params.fasta)).collect()
 }
 
 if (params.gtf){
-    ch_gtf = file(params.gtf)
+    ch_gtf = Channel.from(file(params.gtf)).collect()
 }
 
 // Function to check if running offline
@@ -265,7 +265,7 @@ workflow NANOSEQ{
         ch_fasta = Channel.from( [id:'reference'], params.fasta ).collect()
 
         /*
-         * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
+         * MODULE: Make chromosome size file and index fasta
          */
         CUSTOM_GETCHROMSIZES( ch_fasta )
         ch_chr_sizes         = CUSTOM_GETCHROMSIZES.out.sizes
@@ -378,7 +378,7 @@ workflow NANOSEQ{
             /*
              * SUBWORKFLOW: Novel isoform detection with StringTie and Quantification with featureCounts
              */
-            QUANTIFY_STRINGTIE_FEATURECOUNTS( ch_sorted_bam )
+            QUANTIFY_STRINGTIE_FEATURECOUNTS( ch_sorted_bam, ch_gtf )
             ch_gene_counts                      = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_gene_counts
             ch_transcript_counts                = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_transcript_counts
             ch_software_versions                = ch_software_versions.mix(QUANTIFY_STRINGTIE_FEATURECOUNTS.out.stringtie2_version.first().ifEmpty(null))
@@ -402,15 +402,15 @@ workflow NANOSEQ{
         /*
          * SUBWORKFLOW: RNA modification detection with xPore and m6anet
          */
-        ch_sorted_bam
-            .combine([params.fasta])
-            .combine([params.gtf])
-            .join(ch_sorted_bai,by:0)
-            .join(ch_sample,by:0)
-            .map { it -> [ it[0], it[2], it[3], it[5], it[1], it[4] ] }
-            .set { ch_nanopolish_input }
+        //ch_sorted_bam
+        //    .combine([params.fasta])
+        //    .combine([params.gtf])
+        //    .join(ch_sorted_bai,by:0)
+        //    .join(ch_sample,by:0)
+        //    .map { it -> [ it[0], it[2], it[3], it[5], it[1], it[4] ] }
+        //    .set { ch_nanopolish_input }
 
-        RNA_MODIFICATION_XPORE_M6ANET( ch_nanopolish_input )
+        RNA_MODIFICATION_XPORE_M6ANET( ch_nanopolish_input, ch_fasta, ch_gtf )
     }
 
     if (!params.skip_fusion_analysis && (params.protocol == 'cDNA' || params.protocol == 'directRNA')) {
