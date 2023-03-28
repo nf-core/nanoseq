@@ -17,7 +17,7 @@ workflow RNA_MODIFICATION_XPORE_M6ANET {
     main:
 
     /*
-     * Align current signals to reference with Nanopolish
+     * MODULE: Align current signals to reference with Nanopolish
      */
     NANOPOLISH_INDEX_EVENTALIGN { ch_nanopolish_bam_fast5, ch_fasta, ch_gtf }
     ch_nanopolish_outputs = NANOPOLISH_INDEX_EVENTALIGN.out.nanopolish_outputs
@@ -44,8 +44,8 @@ workflow RNA_MODIFICATION_XPORE_M6ANET {
     }
 
     /*
-    * Detect m6A sites with m6anet
-    */
+     * MODULE: Detect m6A sites with m6anet
+     */
     m6anet_version = Channel.empty()
     if (!params.skip_m6anet) {
 
