@@ -3,7 +3,7 @@
  */
 
 include { MINIMAP2_INDEX                           } from '../../modules/nf-core/minimap2/index/main'
-include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_OTHER.  } from '../../modules/nf-core/minimap2/align/main'
+include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_OTHER   } from '../../modules/nf-core/minimap2/align/main'
 include { MINIMAP2_ALIGN as MINIMAP2_ALIGN_VARIANT } from '../../modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_INDEX                           } from '../../modules/nf-core/samtools/index/main'
 include { BAM_STATS_SAMTOOLS                       } from '../../subworkflows/nf-core/bam_stats_samtools/main'

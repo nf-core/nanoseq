@@ -19,12 +19,13 @@ workflow RNA_MODIFICATION_XPORE_M6ANET {
     /*
      * MODULE: Align current signals to reference with Nanopolish
      */
-    NANOPOLISH_INDEX_EVENTALIGN { ch_nanopolish_bam_fast5, ch_fasta, ch_gtf }
+    NANOPOLISH_INDEX_EVENTALIGN( ch_nanopolish_bam_fast5, ch_fasta, ch_gtf )
     ch_nanopolish_outputs = NANOPOLISH_INDEX_EVENTALIGN.out.nanopolish_outputs
     nanopolish_version    = NANOPOLISH_INDEX_EVENTALIGN.out.versions
 
     xpore_version          = Channel.empty()
     ch_xpore_dataprep_dirs = Channel.empty()
+
     if (!params.skip_xpore) {
 
         /*
