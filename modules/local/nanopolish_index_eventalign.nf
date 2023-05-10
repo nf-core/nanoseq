@@ -5,7 +5,7 @@ process NANOPOLISH_INDEX_EVENTALIGN {
     conda "bioconda::nanopolish==0.13.2"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/nanopolish:0.13.2--he3b7ca5_2' :
-        'quay.io/biocontainers/nanopolish:0.13.2--he3b7ca5_2' }"
+        'biocontainers/nanopolish:0.13.2--he3b7ca5_2' }"
 
     input:
     tuple val(meta), path(genome), path(gtf), path(fastq), path(bam), path(bai)

@@ -5,7 +5,7 @@ process CLAIR3 {
     conda 'bioconda::clair3=0.1.10'
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/clair3:0.1.10--hdfd78af_0' :
-        'quay.io/biocontainers/clair3:0.1.10--hdfd78af_0' }"
+        'biocontainers/clair3:0.1.10--hdfd78af_0' }"
 
     input:
     tuple val(meta), path(bam), path(bai)
