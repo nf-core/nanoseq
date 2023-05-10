@@ -9,7 +9,7 @@ process PEPPER_MARGIN_DEEPVARIANT {
     }
 
     input:
-    tuple val(meta), path(input), path(index), val(intervals)
+    tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)
     path(fasta)
     path(fai)
 

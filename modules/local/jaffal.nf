@@ -4,8 +4,8 @@ process JAFFAL {
 
     conda "bioconda::jaffa=2.3.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/jaffa:2.00--hdfd78af_1' :
-        'docker.io/yuukiiwa/jaffa:2.0' }"
+        'https://depot.galaxyproject.org/singularity/jaffa:2.3--hdfd78af_0' :
+        'quay.io/biocontainers/jaffa:2.3--hdfd78af_0' }"
 
     input:
     tuple val(meta), path(fastq)

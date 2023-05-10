@@ -4,7 +4,7 @@ process BAMBU {
     conda "conda-forge::r-base=4.0.3 bioconda::bioconductor-bambu=3.0.8 bioconda::bioconductor-bsgenome=1.66.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/bioconductor-bambu:3.0.8--r42hc247a5b_0' :
-        'biocontainers/bioconductor-bambu:3.0.8--r42hc247a5b_0' }"
+        'quay.io/biocontainers/bioconductor-bambu:3.0.8--r42hc247a5b_0' }"
 
     input:
     tuple path(fasta), path(gtf)
