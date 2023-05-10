@@ -72,24 +72,16 @@ CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
 
 Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
 
-<<<<<<< HEAD
--->
-=======
    ```console
    nextflow run nf-core/nanoseq -profile test,YOURPROFILE
    ```
->>>>>>> origin/update_3_1_dev
 
 Now, you can run the pipeline using:
 
-<<<<<<< HEAD
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
-=======
    > - The pipeline comes with config profiles called `docker`, `singularity`, `podman`, `shifter`, `charliecloud` and `conda` which instruct the pipeline to use the named tool for software management. For example, `-profile test,docker`.
    > - Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
    > - If you are using `singularity` and are persistently observing issues downloading Singularity images directly due to timeout or network issues, then you can use the `--singularity_pull_docker_container` parameter to pull and convert the Docker image instead. Alternatively, you can use the [`nf-core download`](https://nf-co.re/tools/#downloading-pipelines-for-offline-use) command to download images first, before running the pipeline. Setting the [`NXF_SINGULARITY_CACHEDIR` or `singularity.cacheDir`](https://www.nextflow.io/docs/latest/singularity.html?#singularity-docker-hub) Nextflow options enables you to store and re-use the images from a central location for future pipeline runs.
    > - If you are using `conda`, it is highly recommended to use the [`NXF_CONDA_CACHEDIR` or `conda.cacheDir`](https://www.nextflow.io/docs/latest/conda.html) settings to store the environments in a central location for future pipeline runs.
->>>>>>> origin/update_3_1_dev
 
 ```bash
 nextflow run nf-core/nanoseq \
@@ -98,18 +90,7 @@ nextflow run nf-core/nanoseq \
    --outdir <OUTDIR>
 ```
 
-<<<<<<< HEAD
-> **Warning:**
-> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those
-> provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_;
-> see [docs](https://nf-co.re/usage/configuration#custom-configuration-files).
-
-For more details, please refer to the [usage documentation](https://nf-co.re/nanoseq/usage) and the [parameter documentation](https://nf-co.re/nanoseq/parameters).
-
-## Pipeline output
-=======
 ## Documentation
->>>>>>> origin/update_3_1_dev
 
 To see the the results of a test run with a full size dataset refer to the [results](https://nf-co.re/nanoseq/results) tab on the nf-core website pipeline page.
 For more details about the output files and reports, please refer to the
