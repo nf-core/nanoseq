@@ -10,7 +10,7 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": ["input", "protocol"],
             "properties": {
                 "input": {
                     "type": "string",
@@ -19,8 +19,18 @@
                     "pattern": "^\\S+\\.csv$",
                     "schema": "assets/schema_input.json",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/nanoseq/usage#samplesheet-input).",
-                    "fa_icon": "fas fa-file-csv"
+                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/nanoseq/usage).",
+                    "fa_icon": "fas fa-file-csv",
+                    "default": "./samplesheet.csv"
+                },
+                "protocol": {
+                    "type": "string",
+                    "description": "Input sample type. Valid options: 'DNA', 'cDNA',  and 'directRNA'.",
+                    "format": "sample-type",
+                    "mimetype": "text/csv",
+                    "schema": "assets/schema_input.json",
+                    "help_text": "You will need to specify a protocol based on the sample input type. Valid options are 'DNA', 'cDNA', and 'directRNA'.",
+                    "fa_icon": "fas fa-dna"
                 },
                 "outdir": {
                     "type": "string",
@@ -42,26 +52,281 @@
                 }
             }
         },
+        "demultiplexing_options": {
+            "title": "Demultiplexing options",
+            "type": "object",
+            "description": "Options required to basecall and demultiplex samples.",
+            "default": "",
+            "fa_icon": "fab fa-autoprefixer",
+            "properties": {
+                "input_path": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to Nanopore run directory files (e.g. 'fastq_pass/*') or a basecalled fastq file that requires demultiplexing.",
+                    "fa_icon": "far fa-file-code"
+                },
+                "barcode_kit": {
+                    "type": "string",
+                    "description": "Barcode kit used to perform the sequencing e.g. 'SQK-PBK004'.",
+                    "help_text": "If you would like to perform demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):\n\n| `qcat` barcode kit specifications | description                                                                   |\n|-----------------------------------|-------------------------------------------------------------------------------|\n| `Auto`                            | Auto detect barcoding kit                                                     |\n| `RBK001`                          | Rapid barcoding kit                                                           |\n| `RBK004`                          | Rapid barcoding kit v4                                                        |\n| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |\n| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |\n| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |\n| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |\n| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |\n| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |\n| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |\n| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |\n| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |",
+                    "fa_icon": "fas fa-barcode"
+                },
+                "barcode_both_ends": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-barcode",
+                    "description": "Require barcode on both ends for basecaller."
+                },
+                "trim_barcodes": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-barcode",
+                    "description": "Trim barcodes from the output sequences in the FastQ files from basecaller."
+                },
+                "gpu_device": {
+                    "type": "string",
+                    "default": "auto",
+                    "description": "Device specified in GPU mode using '--device'.",
+                    "fa_icon": "fas fa-fish"
+                },
+                "gpu_cluster_options": {
+                    "type": "string",
+                    "description": "Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').",
+                    "fa_icon": "fas fa-fish"
+                },
+                "qcat_min_score": {
+                    "type": "integer",
+                    "default": 60,
+                    "description": "Specify the minimum quality score for qcat in the range 0-100.",
+                    "fa_icon": "fas fa-cut"
+                },
+                "qcat_detect_middle": {
+                    "type": "boolean",
+                    "description": "Search for adapters in the whole read by applying the '--detect-middle' parameter in qcat.",
+                    "fa_icon": "fas fa-cut"
+                },
+                "skip_demultiplexing": {
+                    "type": "boolean",
+                    "description": "Skip demultiplexing with qcat.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "run_nanolyse": {
+                    "type": "boolean",
+                    "description": "Filter reads from FastQ files using NanoLyse",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "nanolyse_fasta": {
+                    "type": "string",
+                    "description": "Fasta file to be filtered against using NanoLyse",
+                    "fa_icon": "far fa-file-code"
+                }
+            }
+        },
+        "alignment_options": {
+            "title": "Alignment options",
+            "type": "object",
+            "description": "Options to adjust parameters and filtering criteria for read alignments.",
+            "default": "",
+            "fa_icon": "fas fa-map-signs",
+            "properties": {
+                "aligner": {
+                    "type": "string",
+                    "default": "minimap2",
+                    "description": "Specifies the aligner to use i.e. 'minimap2' or 'graphmap2'.",
+                    "fa_icon": "fas fa-align-center"
+                },
+                "stranded": {
+                    "type": "boolean",
+                    "description": "Specifies if the data is strand-specific. Automatically activated when using '--protocol directRNA'.",
+                    "help_text": "When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap2`:\n\n| `nanoseq` input              | `minimap2` presets  | `graphmap2` presets |\n|------------------------------|---------------------|---------------------|\n| `--protocol DNA`             | -ax map-ont         | no presets          |\n| `--protocol cDNA`            | -ax splice          | -x rnaseq           |\n| `--protocol directRNA`       | -ax splice -uf -k14 | -x rnaseq           |\n| `--protocol cDNA --stranded` | -ax splice -uf      | -x rnaseq           |",
+                    "fa_icon": "fas fa-exchange-alt"
+                },
+                "save_align_intermeds": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-save",
+                    "description": "Save the '.sam' files from the alignment step - not done by default."
+                },
+                "skip_alignment": {
+                    "type": "boolean",
+                    "description": "Skip alignment and downstream processes.",
+                    "fa_icon": "fas fa-fast-forward"
+                }
+            }
+        },
+        "variant_calling_options": {
+            "title": "Variant calling options",
+            "type": "object",
+            "description": "Options to adjust pameters for DNA varinat calling and structural variant calling.",
+            "default": "",
+            "fa_icon": "fas fa-align-center",
+            "properties": {
+                "call_variants": {
+                    "type": "boolean",
+                    "description": "Specifies if variant calling will executed.",
+                    "fa_icon": "fas fa-exchange-alt"
+                },
+                "variant_caller": {
+                    "type": "string",
+                    "default": "medaka",
+                    "description": "Specifies the variant caller that will used to call small variants (available are: medaka, deepvariant, and pepper_margin_deepvariant). Variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`. Please note `deepvariant` and `pepper_margin_deepvariant` are only avaible if using singularity or docker.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
+                "structural_variant_caller": {
+                    "type": "string",
+                    "default": "sniffles",
+                    "description": "Specifies the variant caller that will be used to call structural variants (available are: sniffles and cutesv). Structural variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
+                "split_mnps": {
+                    "type": "boolean",
+                    "description": "Specifies if MNPs will be split into SNPs when using medaka.",
+                    "fa_icon": "fas fa-file-alt"
+                },
+                "deepvariant_gpu": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-exchange-alt",
+                    "description": "Specifies whether to call variants with pepper_margin_deepvariant in GPU mode."
+                },
+                "phase_vcf": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-exchange-alt",
+                    "description": "Specifies if vcf will be phased when using medaka."
+                },
+                "skip_vc": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip variant calling."
+                },
+                "skip_sv": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip structural variant calling."
+                }
+            }
+        },
+        "differential_analysis_options": {
+            "title": "Differential analysis options",
+            "type": "object",
+            "description": "Options to adjust quantification and differential analysis",
+            "default": "",
+            "fa_icon": "fas fa-calculator",
+            "properties": {
+                "quantification_method": {
+                    "type": "string",
+                    "default": "bambu",
+                    "description": "Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
+                "skip_quantification": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip transcript quantification and differential analysis."
+                },
+                "skip_differential_analysis": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip differential analysis with DESeq2 and DEXSeq."
+                }
+            }
+        },
+        "rna_fusion_analysis_options": {
+            "title": "RNA fusion analysis options",
+            "type": "object",
+            "description": "Options to adjust the RNA fusion analysis",
+            "fa_icon": "fas fa-calculator",
+            "properties": {
+                "jaffal_ref_dir": {
+                    "type": "string",
+                    "default": "for_jaffal",
+                    "description": "Specifies the reference directory for JAFFAL.",
+                    "fa_icon": "fas fa-bezier-curve"
+                },
+                "skip_fusion_analysis": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip differential analysis with DESeq2 and DEXSeq."
+                }
+            }
+        },
+        "rna_modification_analysis_options": {
+            "title": "RNA modification analysis options",
+            "type": "object",
+            "description": "Options to adjust the RNA modification analysis",
+            "default": "",
+            "fa_icon": "fas fa-calculator",
+            "properties": {
+                "skip_modification_analysis": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip RNA modification analysis."
+                },
+                "skip_xpore": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip differential modification analysis with xpore."
+                },
+                "skip_m6anet": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip m6A detection with m6anet."
+                }
+            }
+        },
+        "process_skipping_options": {
+            "title": "Process skipping options",
+            "type": "object",
+            "description": "Options to skip various steps within the workflow.",
+            "default": "",
+            "fa_icon": "fas fa-fast-forward",
+            "properties": {
+                "skip_bigbed": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip BigBed file generation."
+                },
+                "skip_bigwig": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip BigWig file generation."
+                },
+                "skip_nanoplot": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip NanoPlot."
+                },
+                "skip_fastqc": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip FastQC."
+                },
+                "skip_multiqc": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip MultiQC."
+                },
+                "skip_qc": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "Skip all QC steps apart from MultiQC."
+                }
+            }
+        },
         "reference_genome_options": {
             "title": "Reference genome options",
             "type": "object",
             "fa_icon": "fas fa-dna",
             "description": "Reference genome related files and options required for the workflow.",
             "properties": {
+                "fasta": {
+                    "type": "string",
+                    "default": null
+                },
+                "gtf": {
+                    "type": "string",
+                    "default": null
+                },
                 "genome": {
                     "type": "string",
                     "description": "Name of iGenomes reference.",
-                    "fa_icon": "fas fa-book",
-                    "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`. \n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
-                },
-                "fasta": {
-                    "type": "string",
-                    "format": "file-path",
-                    "mimetype": "text/plain",
-                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
-                    "description": "Path to FASTA genome file.",
-                    "help_text": "This parameter is *mandatory* if `--genome` is not specified. If you don't have a BWA index available this will be generated for you automatically. Combine with `--save_reference` to save BWA index for future runs.",
-                    "fa_icon": "far fa-file-code"
+                    "default": "null"
                 },
                 "igenomes_base": {
                     "type": "string",
@@ -182,15 +447,6 @@
                     "fa_icon": "fas fa-question-circle",
                     "hidden": true
                 },
-                "publish_dir_mode": {
-                    "type": "string",
-                    "default": "copy",
-                    "description": "Method used to save pipeline results to output directory.",
-                    "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
-                    "fa_icon": "fas fa-copy",
-                    "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"],
-                    "hidden": true
-                },
                 "email_on_fail": {
                     "type": "string",
                     "description": "Email address for completion summary, only when pipeline fails.",
@@ -232,17 +488,6 @@
                     "fa_icon": "fas fa-cog",
                     "hidden": true
                 },
-                "multiqc_logo": {
-                    "type": "string",
-                    "description": "Custom logo file to supply to MultiQC. File name must also be set in the MultiQC config file",
-                    "fa_icon": "fas fa-image",
-                    "hidden": true
-                },
-                "multiqc_methods_description": {
-                    "type": "string",
-                    "description": "Custom MultiQC yaml file containing HTML including a methods description.",
-                    "fa_icon": "fas fa-cog"
-                },
                 "tracedir": {
                     "type": "string",
                     "description": "Directory to keep pipeline Nextflow logs and reports.",
@@ -270,6 +515,27 @@
     "allOf": [
         {
             "$ref": "#/definitions/input_output_options"
+        },
+        {
+            "$ref": "#/definitions/demultiplexing_options"
+        },
+        {
+            "$ref": "#/definitions/alignment_options"
+        },
+        {
+            "$ref": "#/definitions/variant_calling_options"
+        },
+        {
+            "$ref": "#/definitions/differential_analysis_options"
+        },
+        {
+            "$ref": "#/definitions/rna_fusion_analysis_options"
+        },
+        {
+            "$ref": "#/definitions/rna_modification_analysis_options"
+        },
+        {
+            "$ref": "#/definitions/process_skipping_options"
         },
         {
             "$ref": "#/definitions/reference_genome_options"
