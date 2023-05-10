@@ -137,7 +137,7 @@
                     },
                     "tabix/tabix": {
                         "branch": "master",
-                        "git_sha": "f2d63bd5b68925f98f572eed70993d205cc694b7",
+                        "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
                         "installed_by": ["modules"]
                     },
                     "ucsc/bedgraphtobigwig": {
