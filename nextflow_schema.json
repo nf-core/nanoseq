@@ -326,7 +326,6 @@
                 },
                 "gtf": {
                     "type": "string",
-                    "default": null,
                     "format": "file-path",
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.gtf(\\.gz)?$",
