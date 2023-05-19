@@ -317,7 +317,13 @@
             "properties": {
                 "fasta": {
                     "type": "string",
-                    "default": null
+                    "default": null,
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
+                    "fa_icon": "fas fa-font",
+                    "description": "Path to FASTA genome file.",
+                    "help_text": "This parameter is *mandatory* if `--genome` is not specified."
                 },
                 "gtf": {
                     "type": "string",
