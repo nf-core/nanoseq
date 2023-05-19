@@ -317,7 +317,6 @@
             "properties": {
                 "fasta": {
                     "type": "string",
-                    "default": null,
                     "format": "file-path",
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
