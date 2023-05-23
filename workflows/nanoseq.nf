@@ -29,6 +29,11 @@ if (params.gtf){
     ch_gtf = file(params.gtf)
 }
 
+if (params.genome){
+    ch_fasta = file(params.genomes[params.genome].fasta, checkIfExists: true)
+    ch_gtf   = file(params.genomes[params.genome].gtf, checkIfExists: true)
+}
+
 // Function to check if running offline
 def isOffline() {
     try {
