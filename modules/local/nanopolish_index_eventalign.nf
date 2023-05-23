@@ -20,8 +20,9 @@ process NANOPOLISH_INDEX_EVENTALIGN {
     script:
     sample_summary = "$meta.id" +"_summary.txt"
     sample_eventalign = "$meta.id" +"_eventalign.txt"
+    fast5 = "$meta.nanopolish_fast5"
     """
-    nanopolish index -d $meta.nanopolish_fast5 $fastq
+    nanopolish index -d $fast5 $fastq
     nanopolish eventalign  --reads $fastq --bam $bam --genome $genome --scale-events --signal-index --summary $sample_summary --threads $task.cpus > $sample_eventalign
 
     cat <<-END_VERSIONS > versions.yml

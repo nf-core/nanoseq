@@ -136,7 +136,7 @@ def check_samplesheet(file_in, updated_path, file_out):
                                         print_error('basecalled fastq input does not end with ".fastq.gz" or ".fq.gz"')
                         else:
                             print_error(
-                                'path does not end with ".fastq.gz", ".fq.gz", or ".bam" and is not an existing directory with correct fast5 and/or fastq inputs.'
+                                '{input_file} path does not end with ".fastq.gz", ".fq.gz", or ".bam" and is not an existing directory with correct fast5 and/or fastq inputs.'
                             )
 
             ## Create sample mapping dictionary = {group: {replicate : [ barcode, input_file, nanopolish_fast5 ]}}
