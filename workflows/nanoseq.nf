@@ -23,15 +23,20 @@ if (params.input) {
 
 if (params.fasta){
     ch_fasta = file(params.fasta)
+} else {
+    if (params.genome) {
+        ch_fasta = file(params.genomes[params.genome].fasta, checkIfExists: true)
+    } else {
+        exit 1, 'reference fasta not specified!'
+    }
 }
 
 if (params.gtf){
     ch_gtf = file(params.gtf)
-}
-
-if (params.genome){
-    ch_fasta = file(params.genomes[params.genome].fasta, checkIfExists: true)
-    ch_gtf   = file(params.genomes[params.genome].gtf, checkIfExists: true)
+} else {
+    if (params.genome) {
+        ch_gtf   = file(params.genomes[params.genome].gtf, checkIfExists: true)
+    }
 }
 
 // Function to check if running offline
