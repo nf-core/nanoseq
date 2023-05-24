@@ -88,12 +88,12 @@ if (params.call_variants) {
         exit 1, "Invalid protocol option: ${params.protocol}. Valid options: 'DNA'"
     }
     if (!params.skip_vc && params.variant_caller != 'clair3' && params.variant_caller != 'deepvariant' && params.variant_caller != 'pepper_margin_deepvariant') {
-        exit 1, "Invalid variant caller option: ${params.variant_caller}. Valid options: 'medaka', 'deepvariant' or 'pepper_margin_deepvariant'"
+        exit 1, "Invalid variant caller option: ${params.variant_caller}. Valid options: 'clair3', 'deepvariant' or 'pepper_margin_deepvariant'"
     }
     if (!params.skip_sv && params.structural_variant_caller != 'sniffles' && params.structural_variant_caller != 'cutesv') {
         exit 1, "Invalid structural variant caller option: ${params.structural_variant_caller}. Valid options: 'sniffles', 'cutesv"
     }
-    if (!params.skip_vc && params.enable_conda && params.variant_caller != 'medaka') {
+    if (!params.skip_vc && params.enable_conda && params.variant_caller != 'clair3') {
         exit 1, "Conda environments cannot be used when using the deepvariant or pepper_margin_deepvariant tools. Valid options: 'docker', 'singularity'"
     }
 }

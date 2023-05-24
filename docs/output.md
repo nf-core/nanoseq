@@ -84,7 +84,7 @@ _Documentation_:
 _Description_:
 Reads are mapped to a user-defined genome or transcriptome using either _GraphMap2_ or _Minimap2_. The resulting BAM file is sorted and indexed using _Samtools_. If the same reference is specified multiple times in the input sample sheet then the aligner index will only be built once for re-use across all samples. You can skip the alignment and downstream processes by providing the `--skip_alignment` parameter.
 
-The initial SAM alignment file created by _GraphMap2_ or _Minimap2_ are not saved by default to be more storage space efficient. You can override this behaviour by using the `--save_align_intermeds` parameter.
+The initial SAM alignment file created by _GraphMap2_ or _Minimap2_ are not saved by default to be more storage space efficient. You can override this behavior by using the `--save_align_intermeds` parameter.
 
 ![MultiQC - Samtools stats plot](images/mqc_samtools_stats_plot.png)
 
@@ -115,10 +115,10 @@ The creation of these bigwig and bigbed files can be bypassed by setting the `--
 
 Short variant callers
 
-- Medaka:
+- Clair3:
 
-  - `variant_calling/medaka_variant/<SAMPLE>.vcf.gz`: zipped VCF file with small variants.
-  - `variant_calling/medaka_variant/<SAMPLE>.vcf.gz`: index for zipped VCF file with small variants.
+  - TODO update: `variant_calling/clari3/<SAMPLE>.vcf.gz`: zipped VCF file with small variants.
+  - TODO update: `variant_calling/clair3/<SAMPLE>.vcf.gz`: index for zipped VCF file with small variants.
 
 - DeepVariant:
 
@@ -143,12 +143,12 @@ Structural variant callers
 </details>
 
 _Documentation_:
-[Medaka](https://github.com/nanoporetech/medaka), [DeepVariant](https://github.com/google/deepvariant), [PEPPER-Margin-DeepVariant](https://github.com/kishwarshafin/pepper),
+[Clair3](https://github.com/HKU-BAL/Clair3), [DeepVariant](https://github.com/google/deepvariant), [PEPPER-Margin-DeepVariant](https://github.com/kishwarshafin/pepper),
 [Sniffles](https://github.com/fritzsedlazeck/Sniffles), [cuteSV](https://github.com/tjiangHIT/cuteSV)
 
 _Description_:
 If the `--protocol DNA` and the `--call_variants` parameters are defined then both small and structural variant variant calls can be generated.
-Short variants can be called using _medaka_, _deepvariant_ or _pepper_margin_deepvariant_. The short variant caller is specified using the `--variant_caller` parameter.
+Short variants can be called using _clair3_, _deepvariant_ or _pepper_margin_deepvariant_. The short variant caller is specified using the `--variant_caller` parameter.
 Structural variants can be called using either _cuteSV_ or _sniffles_. The structural variant caller is specified using the `--structural_variant_caller` parameter.
 The short variant and/or structural variant calling steps is skipped if using the `--skip_vc` and `--skip_sniffles` flags.
 

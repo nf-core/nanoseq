@@ -13,21 +13,24 @@ process CLAIR3 {
     path(fai)
 
     output:
-    tuple val(meta), path("${meta.id}/*")        , emit: vcf
-    path "versions.yml"                  , emit: versions
+    tuple val(meta), path("${meta.id}/*.gz")    , emit: vcf
+    tuple val(meta), path("${meta.id}/*.gz.tbi"), emit: tbi
+    path "versions.yml"                         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
+    def platform = params.enable_conda ?: "--platform=${params.platform}"
+    def model_path = params.enable_conda ?: "--model_path=\"/usr/local/bin/models/${params.model_name}\""
     """
     /usr/local/bin/run_clair3.sh \
     --bam_fn=$bam \
     --ref_fn=$fasta \
     --threads=$task.cpus \
-    --platform=${params.platform} \
-    --model_path="/usr/local/bin/models/${params.clair3_model}" \
+    $platform \
+    $model_path \
     --output="${meta.id}" \
     $args
 

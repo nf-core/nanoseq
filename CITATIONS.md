@@ -54,7 +54,7 @@
 
   > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PMID: 29750242; PMCID: PMC6137996.
 
-- [Medaka](https://github.com/nanoporetech/medaka)
+- [Clair3]](https://github.com/HKU-BAL/Clair3)
 
 - [MultiQC](https://www.ncbi.nlm.nih.gov/pubmed/27312411/)
 

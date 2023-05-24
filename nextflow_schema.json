@@ -68,7 +68,7 @@
                 "barcode_kit": {
                     "type": "string",
                     "description": "Barcode kit used to perform the sequencing e.g. 'SQK-PBK004'.",
-                    "help_text": "If you would like to perform demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):\n\n| `qcat` barcode kit specifications | description                                                                   |\n|-----------------------------------|-------------------------------------------------------------------------------|\n| `Auto`                            | Auto detect barcoding kit                                                     |\n| `RBK001`                          | Rapid barcoding kit                                                           |\n| `RBK004`                          | Rapid barcoding kit v4                                                        |\n| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |\n| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |\n| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |\n| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |\n| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |\n| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |\n| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |\n| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |\n| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |",
+                    "help_text": "If you would like to perform demultiplexing please specify a barcode kit that can be recognized by [qcat](https://github.com/nanoporetech/qcat):\n\n| `qcat` barcode kit specifications | description                                                                   |\n|-----------------------------------|-------------------------------------------------------------------------------|\n| `Auto`                            | Auto detect barcoding kit                                                     |\n| `RBK001`                          | Rapid barcoding kit                                                           |\n| `RBK004`                          | Rapid barcoding kit v4                                                        |\n| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |\n| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |\n| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |\n| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |\n| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |\n| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |\n| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |\n| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |\n| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |",
                     "fa_icon": "fas fa-barcode"
                 },
                 "barcode_both_ends": {
@@ -154,7 +154,7 @@
         "variant_calling_options": {
             "title": "Variant calling options",
             "type": "object",
-            "description": "Options to adjust pameters for DNA varinat calling and structural variant calling.",
+            "description": "Options to adjust parameters for DNA variant calling and structural variant calling.",
             "default": "",
             "fa_icon": "fas fa-align-center",
             "properties": {
@@ -165,8 +165,8 @@
                 },
                 "variant_caller": {
                     "type": "string",
-                    "default": "medaka",
-                    "description": "Specifies the variant caller that will used to call small variants (available are: medaka, deepvariant, and pepper_margin_deepvariant). Variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`. Please note `deepvariant` and `pepper_margin_deepvariant` are only avaible if using singularity or docker.",
+                    "default": "clair3",
+                    "description": "Specifies the variant caller that will used to call small variants (available are: clair3, deepvariant, and pepper_margin_deepvariant). Variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`. Please note that `deepvariant` and `pepper_margin_deepvariant` are only available if using singularity or docker.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
                 "structural_variant_caller": {
@@ -175,20 +175,10 @@
                     "description": "Specifies the variant caller that will be used to call structural variants (available are: sniffles and cutesv). Structural variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
-                "split_mnps": {
-                    "type": "boolean",
-                    "description": "Specifies if MNPs will be split into SNPs when using medaka.",
-                    "fa_icon": "fas fa-file-alt"
-                },
                 "deepvariant_gpu": {
                     "type": "boolean",
                     "fa_icon": "fas fa-exchange-alt",
                     "description": "Specifies whether to call variants with pepper_margin_deepvariant in GPU mode."
-                },
-                "phase_vcf": {
-                    "type": "boolean",
-                    "fa_icon": "fas fa-exchange-alt",
-                    "description": "Specifies if vcf will be phased when using medaka."
                 },
                 "skip_vc": {
                     "type": "boolean",
@@ -360,8 +350,8 @@
             "title": "Institutional config options",
             "type": "object",
             "fa_icon": "fas fa-university",
-            "description": "Parameters used to describe centralised config profiles. These should not be edited.",
-            "help_text": "The centralised nf-core configuration profiles use a handful of pipeline parameters to describe themselves. This information is then printed to the Nextflow log when you run a pipeline. You should not need to change these values when you run a pipeline.",
+            "description": "Parameters used to describe centralized config profiles. These should not be edited.",
+            "help_text": "The centralized nf-core configuration profiles use a handful of pipeline parameters to describe themselves. This information is then printed to the Nextflow log when you run a pipeline. You should not need to change these values when you run a pipeline.",
             "properties": {
                 "custom_config_version": {
                     "type": "string",
@@ -444,7 +434,7 @@
             "type": "object",
             "fa_icon": "fas fa-file-import",
             "description": "Less common options for the pipeline, typically set in a config file.",
-            "help_text": "These options are common to all nf-core pipelines and allow you to customise some of the core preferences for how the pipeline runs.\n\nTypically these options would be set in a Nextflow config file loaded for all pipeline runs, such as `~/.nextflow/config`.",
+            "help_text": "These options are common to all nf-core pipelines and allow you to customize some of the core preferences for how the pipeline runs.\n\nTypically these options would be set in a Nextflow config file loaded for all pipeline runs, such as `~/.nextflow/config`.",
             "properties": {
                 "help": {
                     "type": "boolean",

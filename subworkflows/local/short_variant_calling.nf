@@ -2,10 +2,10 @@
  * Short variant calling test
  */
 
-include { CLAIR3                        } from '../../modules/local/clair3'
+include { CLAIR3                                } from '../../modules/local/clair3'
 include { TABIX_BGZIP as CLAIR3_BGZIP_VCF       } from '../../modules/nf-core/tabix/bgzip/main'
 include { TABIX_TABIX as CLAIR3_TABIX_VCF       } from '../../modules/nf-core/tabix/tabix/main'
-include { DEEPVARIANT } from '../../modules/nf-core/deepvariant/main'
+include { DEEPVARIANT                           } from '../../modules/nf-core/deepvariant/main'
 include { TABIX_TABIX as DEEPVARIANT_TABIX_VCF  } from '../../modules/nf-core/tabix/tabix/main'
 include { TABIX_TABIX as DEEPVARIANT_TABIX_GVCF } from '../../modules/nf-core/tabix/tabix/main'
 include { PEPPER_MARGIN_DEEPVARIANT             } from '../../modules/local/pepper_margin_deepvariant'
@@ -30,40 +30,42 @@ workflow SHORT_VARIANT_CALLING {
      */
 
     ch_sorted_bam
-         .join(ch_sorted_bai, by: 0)
-         .map { it -> [ it[0], it[1], it[2], [] ] }
-         .view()
-         .set { ch_shortv_input }
+        .join(ch_sorted_bai, by: 0)
+        .map { it -> [ it[0], it[1], it[2], [] ] }
+        .view()
+        .set { ch_shortv_input }
     ch_sorted_bam
-         .combine(ch_fasta.map{it->it[1]})
-         .map { it -> it[2] }
-         .set { ch_fasta }
+        .combine(ch_fasta.map{it->it[1]})
+        .map { it -> it[2] }
+        .set { ch_fasta }
     ch_sorted_bam
-         .combine(ch_fai.map{it->it[1]})
-         .map { it -> it[2] }
-         .set { ch_fai }
+        .combine(ch_fai.map{it->it[1]})
+        .map { it -> it[2] }
+        .set { ch_fai }
 
     if (params.variant_caller == 'clair3') {
 
         /*
-         * Call short variants with medaka
+         * Call short variants with clair3
          */
         CLAIR3 ( ch_shortv_input.map{ it -> [ it[0], it[1], it[2] ] }, ch_fasta, ch_fai )
-        ch_versions = ch_versions.mix(medaka_version = CLAIR3.out.versions)
+        ch_short_calls_vcf = CLAIR3.out.vcf
+        ch_short_calls_vcf_tbi = CLAIR3.out.tbi
+        ch_versions = ch_versions.mix(CLAIR3.out.versions)
 
         /*
-         * Zip medaka vcf
+         * Zip clair3 vcf
          */
-        CLAIR3_BGZIP_VCF( CLAIR3.out.vcf )
-        ch_short_calls_vcf  = CLAIR3_BGZIP_VCF.out.output
-        ch_versions = ch_versions.mix(bgzip_version = CLAIR3_BGZIP_VCF.out.versions)
+        //CLAIR3_BGZIP_VCF( CLAIR3.out.vcf )
+        //ch_short_calls_vcf  = CLAIR3_BGZIP_VCF.out.output
+        //ch_versions = ch_versions.mix(CLAIR3_BGZIP_VCF.out.versions)
 
         /*
-         * Index medaka vcf.gz
+         * Index clair3 vcf.gz
          */
-        CLAIR3_TABIX_VCF( ch_short_calls_vcf )
-        ch_short_calls_vcf_tbi  = CLAIR3_TABIX_VCF.out.tbi
-        ch_versions = ch_versions.mix(tabix_version = CLAIR3_TABIX_VCF.out.versions)
+        //CLAIR3_TABIX_VCF( ch_short_calls_vcf )
+        //ch_short_calls_vcf_tbi  = CLAIR3_TABIX_VCF.out.tbi
+        //ch_versions = ch_versions.mix(CLAIR3_TABIX_VCF.out.versions)
 
     } else if (params.variant_caller == 'deepvariant') {
 
@@ -71,18 +73,18 @@ workflow SHORT_VARIANT_CALLING {
          * Call variants with deepvariant
          */
         ch_sorted_bam
-             .join(ch_sorted_bai, by: 0)
-             .map { it -> [ it[0], it[1], it[2], [] ] }
-             .view()
-             .set { ch_deepvariant_input }
+            .join(ch_sorted_bai, by: 0)
+            .map { it -> [ it[0], it[1], it[2], [] ] }
+            .view()
+            .set { ch_deepvariant_input }
         ch_sorted_bam
-             .combine(ch_fasta.map{it->it[1]})
-             .map { it -> it[2] }
-             .set { ch_fasta }
+            .combine(ch_fasta.map{it->it[1]})
+            .map { it -> it[2] }
+            .set { ch_fasta }
         ch_sorted_bam
-             .combine(ch_fai.map{it->it[1]})
-             .map { it -> it[2] }
-             .set { ch_fai }
+            .combine(ch_fai.map{it->it[1]})
+            .map { it -> it[2] }
+            .set { ch_fai }
 
         DEEPVARIANT( ch_deepvariant_input, ch_fasta, ch_fai )
         ch_short_calls_vcf  = DEEPVARIANT.out.vcf
