@@ -25,7 +25,7 @@ if (params.fasta){
     ch_fasta = file(params.fasta)
 } else {
     if (params.genome) {
-        ch_fasta = Channel.of(params.genomes[params.genome].fasta)
+        ch_fasta = Channel.fromPath(params.genomes[params.genome].fasta)
         ch_fasta.view()
     } else {
         exit 1, 'reference fasta not specified!'
