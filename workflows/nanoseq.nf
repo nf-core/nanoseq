@@ -26,7 +26,6 @@ if (params.fasta){
 } else {
     if (params.genome) {
         ch_fasta = Channel.fromPath(params.genomes[params.genome].fasta)
-        ch_fasta.view()
     } else {
         exit 1, 'reference fasta not specified!'
     }
@@ -36,7 +35,7 @@ if (params.gtf){
     ch_gtf = file(params.gtf)
 } else {
     if (params.genome) {
-        ch_gtf   = params.genomes[params.genome].gtf
+        ch_gtf   = Channel.fromPath(params.genomes[params.genome].gtf)
     }
 }
 
