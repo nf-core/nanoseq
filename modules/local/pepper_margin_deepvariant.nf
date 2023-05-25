@@ -9,9 +9,10 @@ process PEPPER_MARGIN_DEEPVARIANT {
     }
 
     input:
-    tuple val(meta), path(sizes), val(is_transcripts), path(input), path(index)
-    path(fasta)
-    path(fai)
+    tuple val(meta), path(input), path(index), path(intervals)
+    tuple val(meta2), path(fasta)
+    tuple val(meta3), path(fai)
+    tuple val(meta4), path(gzi)
 
     output:
     tuple val(meta), path("*vcf.gz")    ,  emit: vcf
@@ -22,11 +23,10 @@ process PEPPER_MARGIN_DEEPVARIANT {
     task.ext.when == null || task.ext.when
 
     script:
+    prefix      = task.ext.prefix ?: "${meta.id}"
     def args    = task.ext.args ?: ""
     def gpu     = params.deepvariant_gpu ? "-g" : ""
-    prefix      = task.ext.prefix ?: "${meta.id}"
-    //def regions = intervals ? "--regions ${intervals}" : ""
-    //def gvcf    = params.make_gvcf ? "--gvcf" : ""
+    def regions = intervals ? "--regions ${intervals}" : ""
 
     """
     mkdir -p "${prefix}"

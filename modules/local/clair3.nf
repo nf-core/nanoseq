@@ -8,9 +8,10 @@ process CLAIR3 {
         'biocontainers/clair3:0.1.10--hdfd78af_0' }"
 
     input:
-    tuple val(meta), path(bam), path(bai)
-    path(fasta)
-    path(fai)
+    tuple val(meta), path(input), path(index), path(intervals)
+    tuple val(meta2), path(fasta)
+    tuple val(meta3), path(fai)
+    tuple val(meta4), path(gzi)
 
     output:
     tuple val(meta), path("${meta.id}/*.gz")    , emit: vcf
@@ -24,9 +25,9 @@ process CLAIR3 {
     def args = task.ext.args ?: ''
     """
     /usr/local/bin/run_clair3.sh \
-    --bam_fn=$bam \
-    --ref_fn=$fasta \
-    --threads=$task.cpus \
+    --bam_fn=${input} \
+    --ref_fn=${fasta} \
+    --threads=${task.cpus} \
     --platform=${params.platform} \
     --model_path="/usr/local/bin/models/${params.model_name}" \
     --output="${meta.id}" \

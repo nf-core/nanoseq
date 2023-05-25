@@ -34,7 +34,7 @@ if (params.gtf){
     gtf = file(params.gtf)
 } else {
     if (params.genome) {
-        gtf   = file(params.genomes[params.genome].gtf, checkIfExists: true)
+        gtf = file(params.genomes[params.genome].gtf, checkIfExists: true)
     }
 }
 
@@ -284,8 +284,8 @@ workflow NANOSEQ{
         if (params.aligner == 'minimap2') {
 
             /*
-            * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
-            */
+             * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
+             */
             ALIGN_MINIMAP2 ( ch_fasta, ch_fastq_to_align )
             ch_sorted_bam        = ALIGN_MINIMAP2.out.ch_sorted_bam
             ch_sorted_bai        = ALIGN_MINIMAP2.out.ch_sorted_bai
@@ -306,16 +306,16 @@ workflow NANOSEQ{
         if (params.call_variants && params.protocol == 'DNA') {
 
             /*
-            * SUBWORKFLOW: Short variant calling
-            */
+             * SUBWORKFLOW: Short variant calling
+             */
             if (!params.skip_vc) {
                 SHORT_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
                 ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.ifEmpty(null))
             }
 
             /*
-            * SUBWORKFLOW: Structural variant calling
-            */
+             * SUBWORKFLOW: Structural variant calling
+             */
             if (!params.skip_sv) {
                 STRUCTURAL_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
                 ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.ifEmpty(null))
