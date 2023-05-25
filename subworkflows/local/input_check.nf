@@ -29,7 +29,7 @@ def get_sample_info(LinkedHashMap row) {
     meta.id               = row.sample
     meta.barcode          = row.barcode
     meta.nanopolish_fast5 = row.nanopolish_fast5
-    input_file            = row.reads ? file(row.reads, checkIfExists: true) : null
+    input_file            = row.reads //? file(row.reads, checkIfExists: true) : null
 
     fastq_meta = [ meta, input_file ]
 
