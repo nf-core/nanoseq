@@ -26,6 +26,7 @@ if (params.fasta){
 } else {
     if (params.genome) {
         ch_fasta = file(params.genomes[params.genome].fasta, checkIfExists: true)
+        print ch_fasta
     } else {
         exit 1, 'reference fasta not specified!'
     }
