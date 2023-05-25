@@ -21,20 +21,20 @@ if (params.input) {
 }
 
 if (params.fasta){
-    ch_fasta = file(params.fasta)
+    fasta = file(params.fasta)
 } else {
     if (params.genome) {
-        ch_fasta = Channel.fromPath(params.genomes[params.genome].fasta)
+        fasta = file(params.genomes[params.genome].fasta, checkIfExists: true)
     } else {
         exit 1, 'reference fasta not specified!'
     }
 }
 
 if (params.gtf){
-    ch_gtf = file(params.gtf)
+    gtf = file(params.gtf)
 } else {
     if (params.genome) {
-        ch_gtf   = Channel.fromPath(params.genomes[params.genome].gtf)
+        gtf   = file(params.genomes[params.genome].gtf, checkIfExists: true)
     }
 }
 
@@ -271,7 +271,7 @@ workflow NANOSEQ{
     ch_samtools_multiqc = Channel.empty()
     if (!params.skip_alignment) {
 
-        ch_fasta = Channel.from( [id:'reference'], params.fasta ).collect()
+        ch_fasta = Channel.from( [id:'reference'], fasta ).collect()
 
         /*
          * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
@@ -412,8 +412,8 @@ workflow NANOSEQ{
          * SUBWORKFLOW: RNA modification detection with xPore and m6anet
          */
         ch_sorted_bam
-            .combine([params.fasta])
-            .combine([params.gtf])
+            .combine([fasta])
+            .combine([gtf])
             .join(ch_sorted_bai,by:0)
             .join(ch_sample,by:0)
             .map { it -> [ it[0], it[2], it[3], it[5], it[1], it[4] ] }
