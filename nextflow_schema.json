@@ -154,7 +154,7 @@
         "variant_calling_options": {
             "title": "Variant calling options",
             "type": "object",
-            "description": "Options to adjust parameters for DNA variant calling and structural variant calling.",
+            "description": "Options to adjust parameters for DNA variant structural variant calling.",
             "default": "",
             "fa_icon": "fas fa-align-center",
             "properties": {
@@ -175,11 +175,6 @@
                     "description": "Specifies the variant caller that will be used to call structural variants (available are: sniffles and cutesv). Structural variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
-                "deepvariant_gpu": {
-                    "type": "boolean",
-                    "fa_icon": "fas fa-exchange-alt",
-                    "description": "Specifies whether to call variants with pepper_margin_deepvariant in GPU mode."
-                },
                 "skip_vc": {
                     "type": "boolean",
                     "fa_icon": "fas fa-fast-forward",
@@ -189,6 +184,23 @@
                     "type": "boolean",
                     "fa_icon": "fas fa-fast-forward",
                     "description": "Skip structural variant calling."
+                },
+                "model_name": {
+                    "type": "string",
+                    "default": "r941_prom_sup_g5014",
+                    "description": "Specifies the model to use when calling variants with Clair3.",
+                    "fa_icon": "fas fa-bolt"
+                },
+                "platform": {
+                    "type": "string",
+                    "default": "ont",
+                    "description": "Specifies the model to use when calling variants with Clair3.",
+                    "fa_icon": "fas fa-bolt"
+                },
+                "deepvariant_gpu": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-exchange-alt",
+                    "description": "Specifies whether to call variants with pepper_margin_deepvariant in GPU mode."
                 }
             }
         },

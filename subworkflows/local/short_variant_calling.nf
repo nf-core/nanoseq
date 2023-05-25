@@ -32,7 +32,6 @@ workflow SHORT_VARIANT_CALLING {
     ch_sorted_bam
         .join(ch_sorted_bai, by: 0)
         .map { it -> [ it[0], it[1], it[2], [] ] }
-        .view()
         .set { ch_shortv_input }
     ch_sorted_bam
         .combine(ch_fasta.map{it->it[1]})
@@ -75,7 +74,6 @@ workflow SHORT_VARIANT_CALLING {
         ch_sorted_bam
             .join(ch_sorted_bai, by: 0)
             .map { it -> [ it[0], it[1], it[2], [] ] }
-            .view()
             .set { ch_deepvariant_input }
         ch_sorted_bam
             .combine(ch_fasta.map{it->it[1]})

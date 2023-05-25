@@ -251,7 +251,7 @@ workflow NANOSEQ{
         NANOLYSE ( ch_fastq, ch_nanolyse_fasta )
         NANOLYSE.out.fastq
             .set { ch_fastq_to_align }
-        ch_software_versions = ch_software_versions.mix(NANOLYSE.out.versions.first().ifEmpty(null))
+        ch_software_versions = ch_software_versions.mix(NANOLYSE.out.versions.ifEmpty(null))
     } else {
         ch_fastq
             .set { ch_fastq_to_align }
@@ -264,7 +264,7 @@ workflow NANOSEQ{
          * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
          */
         QCFASTQ_NANOPLOT_FASTQC ( ch_fastq_to_align, params.skip_nanoplot, params.skip_fastqc)
-        ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
+        ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.ifEmpty(null))
         ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
     }
 
@@ -279,7 +279,7 @@ workflow NANOSEQ{
         CUSTOM_GETCHROMSIZES( ch_fasta )
         ch_chr_sizes         = CUSTOM_GETCHROMSIZES.out.sizes
         ch_fai               = CUSTOM_GETCHROMSIZES.out.fai
-        ch_software_versions = ch_software_versions.mix(CUSTOM_GETCHROMSIZES.out.versions.first().ifEmpty(null))
+        ch_software_versions = ch_software_versions.mix(CUSTOM_GETCHROMSIZES.out.versions.ifEmpty(null))
 
         if (params.aligner == 'minimap2') {
 
@@ -289,8 +289,8 @@ workflow NANOSEQ{
             ALIGN_MINIMAP2 ( ch_fasta, ch_fastq_to_align )
             ch_sorted_bam        = ALIGN_MINIMAP2.out.ch_sorted_bam
             ch_sorted_bai        = ALIGN_MINIMAP2.out.ch_sorted_bai
-            ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.samtools_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.samtools_version.ifEmpty(null))
         } else {
 
             /*
@@ -299,8 +299,8 @@ workflow NANOSEQ{
             ALIGN_GRAPHMAP2 ( ch_fasta, ch_fastq_to_align )
             ch_sorted_bam        = ALIGN_GRAPHMAP2.out.ch_sorted_bam
             ch_sorted_bai        = ALIGN_GRAPHMAP2.out.ch_sorted_bai
-            ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.samtools_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.samtools_version.ifEmpty(null))
         }
 
         if (params.call_variants && params.protocol == 'DNA') {
@@ -310,7 +310,7 @@ workflow NANOSEQ{
             */
             if (!params.skip_vc) {
                 SHORT_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
-                ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+                ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.ifEmpty(null))
             }
 
             /*
@@ -318,7 +318,7 @@ workflow NANOSEQ{
             */
             if (!params.skip_sv) {
                 STRUCTURAL_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
-                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.ifEmpty(null))
             }
         }
 
@@ -329,8 +329,8 @@ workflow NANOSEQ{
              * SUBWORKFLOW: Convert BAM -> BEDGraph -> BigWig
              */
             BEDTOOLS_UCSC_BIGWIG ( ch_sorted_bam, ch_chr_sizes )
-            ch_bedtools_version  = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGWIG.out.bedtools_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGWIG.out.bedgraphtobigwig_version.first().ifEmpty(null))
+            ch_bedtools_version  = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGWIG.out.bedtools_version.ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGWIG.out.bedgraphtobigwig_version.ifEmpty(null))
         }
         if (!params.skip_bigbed) {
 
@@ -338,10 +338,10 @@ workflow NANOSEQ{
              * SUBWORKFLOW: Convert BAM -> BED12 -> BigBED
              */
             BEDTOOLS_UCSC_BIGBED ( ch_sorted_bam, ch_chr_sizes )
-            ch_bedtools_version  = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGBED.out.bedtools_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGBED.out.bed12tobigbed_version.first().ifEmpty(null))
+            ch_bedtools_version  = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGBED.out.bedtools_version.ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGBED.out.bed12tobigbed_version.ifEmpty(null))
         }
-        ch_software_versions = ch_software_versions.mix(ch_bedtools_version.first().ifEmpty(null))
+        ch_software_versions = ch_software_versions.mix(ch_bedtools_version.ifEmpty(null))
     } else {
         ch_sample
             .map { it -> if (it[1].toString().endsWith('.bam')) [ it[0], it[1] ] }
@@ -390,8 +390,8 @@ workflow NANOSEQ{
             QUANTIFY_STRINGTIE_FEATURECOUNTS( ch_sorted_bam )
             ch_gene_counts                      = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_gene_counts
             ch_transcript_counts                = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.ch_transcript_counts
-            ch_software_versions                = ch_software_versions.mix(QUANTIFY_STRINGTIE_FEATURECOUNTS.out.stringtie2_version.first().ifEmpty(null))
-            ch_software_versions                = ch_software_versions.mix(QUANTIFY_STRINGTIE_FEATURECOUNTS.out.featurecounts_version.first().ifEmpty(null))
+            ch_software_versions                = ch_software_versions.mix(QUANTIFY_STRINGTIE_FEATURECOUNTS.out.stringtie2_version.ifEmpty(null))
+            ch_software_versions                = ch_software_versions.mix(QUANTIFY_STRINGTIE_FEATURECOUNTS.out.featurecounts_version.ifEmpty(null))
             ch_featurecounts_gene_multiqc       = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.featurecounts_gene_multiqc.map{it->it[1]}.ifEmpty([])
             ch_featurecounts_transcript_multiqc = QUANTIFY_STRINGTIE_FEATURECOUNTS.out.featurecounts_transcript_multiqc.map{it->it[1]}.ifEmpty([])
         }
