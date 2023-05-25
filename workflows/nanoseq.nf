@@ -6,12 +6,11 @@
 
 def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
-////////////////////////////////////////////////////
-/* --          VALIDATE INPUTS                 -- */
-////////////////////////////////////////////////////
+// Validate input parameters
+WorkflowNanoseq.initialise(params, log)
 
 // Check input path parameters to see if they exist
-checkPathParamList = [ params.input, params.multiqc_config ]
+def checkPathParamList = [ params.input, params.multiqc_config ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters (missing protocol or profile will exit the run.)

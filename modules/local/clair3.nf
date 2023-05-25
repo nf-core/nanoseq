@@ -2,7 +2,7 @@ process CLAIR3 {
     tag "$meta.id"
     label 'process_high'
 
-    conda 'bioconda::clair3=0.1.10'
+    conda 'bioconda::clair3=0.1.10 conda-forge::python=3.9.0'
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/clair3:0.1.10--hdfd78af_0' :
         'biocontainers/clair3:0.1.10--hdfd78af_0' }"
@@ -22,15 +22,13 @@ process CLAIR3 {
 
     script:
     def args = task.ext.args ?: ''
-    def platform = params.enable_conda ?: "--platform=${params.platform}"
-    def model_path = params.enable_conda ?: "--model_path=\"/usr/local/bin/models/${params.model_name}\""
     """
     /usr/local/bin/run_clair3.sh \
     --bam_fn=$bam \
     --ref_fn=$fasta \
     --threads=$task.cpus \
-    $platform \
-    $model_path \
+    --platform=${params.platform} \
+    --model_path="/usr/local/bin/models/${params.model_name}" \
     --output="${meta.id}" \
     $args
 
