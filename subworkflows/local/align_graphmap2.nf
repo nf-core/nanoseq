@@ -20,8 +20,8 @@ workflow ALIGN_GRAPHMAP2 {
      */
     ch_fasta
         .map { it -> it[1] }
-        .set { ch_fasta }
-    GRAPHMAP2_INDEX ( ch_fasta )
+        .set { ch_fasta_graphmapindex }
+    GRAPHMAP2_INDEX ( ch_fasta_graphmapindex )
     ch_graphmap_index = GRAPHMAP2_INDEX.out.index
     graphmap2_version = GRAPHMAP2_INDEX.out.versions
 
@@ -32,7 +32,7 @@ workflow ALIGN_GRAPHMAP2 {
         .map { it -> [ it[0], it[1] ] }
         .set { ch_alignment_input }
     ch_alignment_input
-        .combine (ch_fasta)
+        .combine (ch_fasta_graphmapindex)
         .map { it -> it[2] }
         .set { ch_reference }
     ch_alignment_input

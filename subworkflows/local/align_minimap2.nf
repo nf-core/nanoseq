@@ -20,9 +20,6 @@ workflow ALIGN_MINIMAP2 {
     MINIMAP2_INDEX ( ch_fasta )
     ch_minimap_index   = MINIMAP2_INDEX.out.index
     minimap2_version = MINIMAP2_INDEX.out.versions
-    ch_fasta
-        .map { it -> it[1] }
-        .set { ch_fasta }
 
     /*
      * Map reads with MINIMAP2
