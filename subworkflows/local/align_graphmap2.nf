@@ -42,15 +42,12 @@ workflow ALIGN_GRAPHMAP2 {
 
     GRAPHMAP2_ALIGN ( ch_alignment_input, ch_reference, ch_reference_index )
     GRAPHMAP2_ALIGN.out.sam
-        .map { it -> [ it[0], it[1], [] ] }
+        .map { it -> [ it[0], it[1], it[1] ] }
         .set { ch_samtools_input }
     ch_samtools_input
         .map { it -> it[2] }
-        .set { ch_notneeded_fasta }
-    ch_samtools_input
-        .map { it -> it[2] }
         .set { ch_notneeded_qname }
-    SAMTOOLS_VIEW ( ch_samtools_input, ch_notneeded_fasta, ch_notneeded_qname )
+    SAMTOOLS_VIEW ( ch_samtools_input, ch_fasta, ch_notneeded_qname )
     SAMTOOLS_SORT ( SAMTOOLS_VIEW.out.bam )
     ch_sorted_bam = SAMTOOLS_SORT.out.bam
     SAMTOOLS_INDEX ( ch_sorted_bam )
