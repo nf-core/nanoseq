@@ -10,19 +10,14 @@ include { M6ANET_INFERENCE      } from '../../modules/local/m6anet_inference'
 
 workflow RNA_MODIFICATION_XPORE_M6ANET {
     take:
-    ch_sample
-    ch_nanopolish_sortbam
+    ch_nanopolish_bam_fast5
 
     main:
-    ch_sample
-        .join(ch_nanopolish_sortbam)
-        .map { it -> [ it[0], it[2], it[3], it[7], it[6], it[8], it[9] ] }
-        .set { ch_nanopolish_input }
 
     /*
      * Align current signals to reference with Nanopolish
      */
-    NANOPOLISH_INDEX_EVENTALIGN { ch_nanopolish_input }
+    NANOPOLISH_INDEX_EVENTALIGN { ch_nanopolish_bam_fast5 }
     ch_nanopolish_outputs = NANOPOLISH_INDEX_EVENTALIGN.out.nanopolish_outputs
     nanopolish_version    = NANOPOLISH_INDEX_EVENTALIGN.out.versions
 

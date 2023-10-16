@@ -2,30 +2,35 @@
  * Convert BAM to BigBed
  */
 
-include { BEDTOOLS_BAMBED     } from '../../modules/local/bedtools_bamtobed'
-include { UCSC_BED12TOBIGBED  } from '../../modules/local/ucsc_bed12tobigbed'
+include { BEDTOOLS_BAMTOBED } from '../../modules/nf-core/bedtools/bamtobed/main'
+include { UCSC_BEDTOBIGBED } from '../../modules/nf-core/ucsc/bedtobigbed/main'
 
 workflow BEDTOOLS_UCSC_BIGBED {
     take:
-    ch_sortbam
+    ch_sorted_bam
+    ch_chr_sizes
 
     main:
     /*
      * Convert BAM to BED12
      */
-    BEDTOOLS_BAMBED ( ch_sortbam )
-    ch_bed12         = BEDTOOLS_BAMBED.out.bed12
-    bedtools_version = BEDTOOLS_BAMBED.out.versions
+    BEDTOOLS_BAMTOBED ( ch_sorted_bam )
+    ch_bed         = BEDTOOLS_BAMTOBED.out.bed
+    bedtools_version = BEDTOOLS_BAMTOBED.out.versions
 
     /*
      * Convert BED12 to BigBED
      */
-    UCSC_BED12TOBIGBED ( ch_bed12 )
-    ch_bigbed = UCSC_BED12TOBIGBED.out.bigbed
-    bed12tobigbed_version = UCSC_BED12TOBIGBED.out.versions
+    ch_bed
+        .combine(ch_chr_sizes)
+        .map { it -> it[3] }
+        .set { ch_sizes }
+    UCSC_BEDTOBIGBED ( ch_bed, ch_sizes, [] )
+    ch_bigbed = UCSC_BEDTOBIGBED.out.bigbed
+    bed12tobigbed_version = UCSC_BEDTOBIGBED.out.versions
 
     emit:
-    bedtools_version
     ch_bigbed
+    bedtools_version
     bed12tobigbed_version
 }

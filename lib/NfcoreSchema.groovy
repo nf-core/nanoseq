@@ -2,6 +2,7 @@
 // This file holds several functions used to perform JSON parameter validation, help and summary rendering for the nf-core pipeline template.
 //
 
+import nextflow.Nextflow
 import org.everit.json.schema.Schema
 import org.everit.json.schema.loader.SchemaLoader
 import org.everit.json.schema.ValidationException
@@ -83,6 +84,7 @@ class NfcoreSchema {
             'stub-run',
             'test',
             'w',
+            'with-apptainer',
             'with-charliecloud',
             'with-conda',
             'with-dag',
@@ -121,7 +123,7 @@ class NfcoreSchema {
                 has_error = true
             }
             // unexpected params
-            def params_ignore = params.schema_ignore_params.split(',') + 'schema_ignore_params'
+            def params_ignore = params.validationSchemaIgnoreParams.split(',') + 'schema_ignore_params'
             def expectedParamsLowerCase = expectedParams.collect{ it.replace("-", "").toLowerCase() }
             def specifiedParamLowerCase = specifiedParam.replace("-", "").toLowerCase()
             def isCamelCaseBug = (specifiedParam.contains("-") && !expectedParams.contains(specifiedParam) && expectedParamsLowerCase.contains(specifiedParamLowerCase))
@@ -177,7 +179,7 @@ class NfcoreSchema {
         }
 
         if (has_error) {
-            System.exit(1)
+            Nextflow.error('Exiting!')
         }
     }
 
@@ -384,7 +386,7 @@ class NfcoreSchema {
     //
     private static JSONObject removeIgnoredParams(raw_schema, params) {
         // Remove anything that's in params.schema_ignore_params
-        params.schema_ignore_params.split(',').each{ ignore_param ->
+        params.validationSchemaIgnoreParams.split(',').each{ ignore_param ->
             if(raw_schema.keySet().contains('definitions')){
                 raw_schema.definitions.each { definition ->
                     for (key in definition.keySet()){

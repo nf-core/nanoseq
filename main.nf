@@ -4,13 +4,21 @@
     nf-core/nanoseq
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Github : https://github.com/nf-core/nanoseq
-
     Website: https://nf-co.re/nanoseq
     Slack  : https://nfcore.slack.com/channels/nanoseq
 ----------------------------------------------------------------------------------------
 */
 
 nextflow.enable.dsl = 2
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    GENOME PARAMETER VALUES
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+params.fasta = WorkflowMain.getGenomeAttribute(params, 'fasta')
+params.gtf   = WorkflowMain.getGenomeAttribute(params, 'gtf')
 
 /*
 ========================================================================================
