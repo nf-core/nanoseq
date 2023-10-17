@@ -12,7 +12,7 @@ process GET_TEST_DATA {
     task.ext.when == null || task.ext.when
 
     script:
-    barcoded = (workflow.profile.contains('test_bc_nodx') || workflow.profile.contains('rnamod')) ? "nonbarcoded" : "barcoded"
+    barcoded = (workflow.profile.contains('test_bc_nodx') || workflow.profile.contains('rnamod')) ? "nonbarcoded_multi" : "barcoded_multi"
     """
     git clone https://github.com/nf-core/test-datasets.git --branch nanoseq --single-branch
 
