@@ -4,7 +4,7 @@ process GET_TEST_DATA {
     container "docker.io/yuukiiwa/git:latest"
 
     output:
-    path "test-datasets/fast5/$barcoded/*"        , emit: ch_input_fast5s_path
+    path "test-datasets/fast5/$barcoded/"         , emit: ch_input_fast5_dir_path
     path "test-datasets/modification_fast5_fastq/", emit: ch_input_dir_path
     path "versions.yml"                           , emit: versions
 

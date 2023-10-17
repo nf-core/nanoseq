@@ -22,6 +22,7 @@ process QCAT {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
+    echo
     ## Unzip fastq file
     ## qcat doesn't support zipped files yet
     FILE=$reads
@@ -34,7 +35,7 @@ process QCAT {
     qcat \\
         -f \$FILE \\
         -b ./fastq \\
-        --kit $barcode_kit
+        -k $barcode_kit
 
     ## Zip fastq files
     gzip fastq/*
