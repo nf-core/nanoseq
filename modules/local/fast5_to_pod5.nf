@@ -21,7 +21,7 @@ process FAST5_TO_POD5 {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        pod5: 
+        pod5: \$(echo \$(pod5 --version 2>&1) | sed -r 's/..............//')
     END_VERSIONS
     """
 }
