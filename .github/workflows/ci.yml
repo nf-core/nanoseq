@@ -51,7 +51,7 @@ jobs:
         profiles:
           - "test_bc_nodx"
           - "test_nobc_dx"
-          - "test_nodx_vc"
+          - "test_nobc_nodx_vc"
           - "test_nobc_nodx_stringtie"
           - "test_nobc_nodx_noaln"
           - "test_nobc_nodx_rnamod"
