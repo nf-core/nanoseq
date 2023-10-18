@@ -64,7 +64,11 @@ if (!params.skip_demultiplexing) {
 
     if (params.barcode_kit && qcatBarcodeKitList.contains(params.barcode_kit)) {
         if (params.input_path) {
-            ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+            if (workflow.profile.contains('test')){
+                ch_input_path = params.input_path
+            } else {
+                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+            }
         } else {
             exit 1, "Please specify a valid input fastq file to perform demultiplexing!"
         }
@@ -210,14 +214,12 @@ workflow NANOSEQ{
         .set { ch_sample }
 
     if (!params.skip_basecalling) {
-        ch_sample
-            .first()
-            .map { it[0] }
-            .set { ch_sample_name }
+
         if (!params.skip_demultiplexing) {
-            ch_sample
+            ch_input_path
                 .map { it -> [ [id:'undemultiplexed'], it ] }
                 .set { ch_fast5_dir }
+            ch_fast5_dir.view()
         } else {
             ch_sample
                 .set { ch_fast5_dir }
