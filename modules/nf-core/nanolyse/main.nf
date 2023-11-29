@@ -1,11 +1,15 @@
+/*
+* Remove Reads mapping to Lambda phage genome with NanoLyse
+*/
+
 process NANOLYSE {
     tag "$meta.id"
     label 'process_low'
 
-    conda "bioconda::nanolyse=1.2.0"
+    conda "bioconda::nanolyse=1.2.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/nanolyse:1.2.0--py_0' :
-        'quay.io/biocontainers/nanolyse:1.2.0--py_0' }"
+        'https://depot.galaxyproject.org/singularity/nanolyse:1.2.1--pyhdfd78af_0' :
+        'quay.io/biocontainers/nanolyse:1.2.1--pyhdfd78af_0' }"
 
     input:
     tuple val(meta), path(fastq)
