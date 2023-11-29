@@ -35,7 +35,7 @@ workflow PREPARE_GENOME {
     /*
      * Convert GTF to BED12
      */
-    GTF2BED ( ch_fastq_gtf )
+    GTF2BED ( ch_chrom_sizes )
     ch_gtf_bed = GTF2BED.out.gtf_bed
     gtf2bed_version = GTF2BED.out.versions
 
