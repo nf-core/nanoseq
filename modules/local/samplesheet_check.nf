@@ -19,7 +19,7 @@ process SAMPLESHEET_CHECK {
     task.ext.when == null || task.ext.when
 
     script: // This script is bundled with the pipeline, in nf-core/nanoseq/bin/
-    updated_path = workflow.profile.contains('test_nodx_rnamod') ? "$input_path" : "not_changed"
+    updated_path = (workflow.profile.contains('test_bc_nodx') || workflow.profile.contains('rnamod')) ? "$input_path" : "not_changed"
     """
     check_samplesheet.py \\
         $samplesheet \\

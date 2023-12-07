@@ -81,16 +81,34 @@
                     "fa_icon": "fas fa-barcode",
                     "description": "Trim barcodes from the output sequences in the FastQ files from basecaller."
                 },
-                "gpu_device": {
+                "kit": {
                     "type": "string",
-                    "default": "auto",
-                    "description": "Device specified in GPU mode using '--device'.",
+                    "default": "",
+                    "description": "sequencing kit'.",
                     "fa_icon": "fas fa-fish"
                 },
-                "gpu_cluster_options": {
+                "flowcell": {
                     "type": "string",
-                    "description": "Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').",
+                    "default": "",
+                    "description": "flowcell'.",
                     "fa_icon": "fas fa-fish"
+                },
+                "dorado_device": {
+                    "type": "string",
+                    "default": "cuda:all",
+                    "description": "Device specified using '--device'.",
+                    "fa_icon": "fas fa-fish"
+                },
+                "dorado_model": {
+                    "type": "string",
+                    "default": "",
+                    "description": "model used for basecalling.",
+                    "fa_icon": "fas fa-fish"
+                },
+                "skip_basecalling": {
+                    "type": "boolean",
+                    "description": "Skip basecalling with dorado.",
+                    "fa_icon": "fas fa-fast-forward"
                 },
                 "qcat_min_score": {
                     "type": "integer",

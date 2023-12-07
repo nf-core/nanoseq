@@ -49,10 +49,12 @@ jobs:
     strategy:
       matrix:
         profiles:
-          - "test_nodx_vc"
-          - "test_nodx_stringtie"
-          - "test_nodx_noaln"
-          - "test_nodx_rnamod"
+          - "test_bc_nodx"
+          - "test_nobc_dx"
+          - "test_nobc_nodx_vc"
+          - "test_nobc_nodx_stringtie"
+          - "test_nobc_nodx_noaln"
+          - "test_nobc_nodx_rnamod"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3

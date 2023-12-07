@@ -64,7 +64,11 @@ if (!params.skip_demultiplexing) {
 
     if (params.barcode_kit && qcatBarcodeKitList.contains(params.barcode_kit)) {
         if (params.input_path) {
-            ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+            if (workflow.profile.contains('test')){
+                ch_input_path = params.input_path
+            } else {
+                ch_input_path = Channel.fromPath(params.input_path, checkIfExists: true)
+            }
         } else {
             exit 1, "Please specify a valid input fastq file to perform demultiplexing!"
         }
@@ -120,6 +124,8 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 
 include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
+include { FAST5_TO_POD5         } from '../modules/local/fast5_to_pod5'
+include { DORADO                } from '../modules/local/dorado'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
 include { BAMBU                 } from '../modules/local/bambu'
 include { MULTIQC               } from '../modules/local/multiqc'
@@ -169,11 +175,16 @@ workflow NANOSEQ{
     // Pre-download test-dataset to get files for '--input_path' parameter
     // Nextflow is unable to recursively download directories via HTTPS
     if (workflow.profile.contains('test') && !workflow.profile.contains('vc')) {
-        if (!params.skip_modification_analysis) {
+        if (!params.skip_basecalling || !params.skip_modification_analysis) {
             if (!isOffline()) {
                 GET_TEST_DATA ()
-                GET_TEST_DATA.out.ch_input_dir_path
-                    .set { ch_input_path }
+                if (params.skip_modification_analysis) {
+                    GET_TEST_DATA.out.ch_input_fast5_dir_path
+                        .set { ch_input_path }
+                } else {
+                    GET_TEST_DATA.out.ch_input_dir_path
+                        .set { ch_input_path }
+                }
             } else {
                 exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download and run any test dataset!"
             }
@@ -192,6 +203,7 @@ workflow NANOSEQ{
         }
     }
 
+
     // Create empty software versions channel to mix
     ch_software_versions = Channel.empty()
 
@@ -201,35 +213,90 @@ workflow NANOSEQ{
     INPUT_CHECK ( ch_input, ch_input_path )
         .set { ch_sample }
 
-    if (!params.skip_demultiplexing) {
+    if (!params.skip_basecalling) {
 
-        // Create barcode channel
-        ch_barcode_kit = Channel.from(params.barcode_kit)
-
-        // Map ch_undemultiplexed_fastq
-        ch_input_path
-            .map { it -> [ [id:'undemultiplexed'], it ] }
-            .set { ch_undemultiplexed_fastq }
+        if (!params.skip_demultiplexing) {
+            ch_input_path
+                .map { it -> [ [id:'undemultiplexed'], it ] }
+                .set { ch_fast5_dir }
+            ch_fast5_dir.view()
+        } else {
+            ch_sample
+                .set { ch_fast5_dir }
+        }
 
         /*
-         * MODULE: Demultipexing using qcat
+         * MODULE: Convert fast5 to pod5 
          */
-        QCAT ( ch_undemultiplexed_fastq , ch_barcode_kit )
-        QCAT.out.reads
-            .map { it -> it[1] }
-            .flatten()
-            .map { it -> [ it.baseName.substring(0,it.baseName.lastIndexOf('.')), it ] }
-            .join(ch_sample.map{ meta, empty -> [meta.barcode, meta] }, by: [0] )
-            .map { it -> [ it[2], it[1] ] }
-            .set { ch_fastq } // [ meta, .fastq.qz ]
-        ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
-    } else {
-        if (!params.skip_alignment || !params.skip_fusion_analysis) {
-            ch_sample
-                .map { it -> if (it[1].toString().endsWith('.gz')) [ it[0], it[1] ] }
-                .set { ch_fastq }
+        FAST5_TO_POD5 ( ch_fast5_dir )
+        ch_pod5 = FAST5_TO_POD5.out.pod5
+
+        /*
+         * MODULE: Basecalling and demultipexing using Dorado
+         */
+        DORADO ( ch_pod5, params.dorado_device, params.dorado_model )
+        ch_software_versions = ch_software_versions.mix(DORADO.out.versions.ifEmpty(null))
+
+        if (!params.skip_demultiplexing) {
+
+            /*
+             * MODULE: Demultipexing using qcat
+             */
+            ch_barcode_kit = Channel.from(params.barcode_kit)
+
+            /*
+             * MODULE: Demultipexing using qcat
+             */
+            QCAT ( DORADO.out.fastq , ch_barcode_kit )
+            QCAT.out.reads
+                .map { it -> it[1] }
+                .flatten()
+                .map { it -> [ it.baseName.substring(0,it.baseName.lastIndexOf('.')), it ] }
+                .join(ch_sample.map{ meta, empty -> [meta.barcode, meta] }, by: [0] )
+                .map { it -> [ it[2], it[1] ] }
+                .set { ch_fastq } // [ meta, .fastq.qz ]
+            ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
+
         } else {
-            ch_fastq = Channel.empty()
+            DORADO.out.fastq
+                .set { ch_fastq }
+        }
+
+    } else {
+
+        if (!params.skip_demultiplexing) {
+
+            /*
+             * MODULE: Demultipexing using qcat
+             */
+            ch_barcode_kit = Channel.from(params.barcode_kit)
+
+            // Map ch_undemultiplexed_fastq
+            ch_input_path
+                .map { it -> [ [id:'undemultiplexed'], it ] }
+                .set { ch_undemultiplexed_fastq }
+
+            /*
+             * MODULE: Demultipexing using qcat
+             */
+            QCAT ( ch_undemultiplexed_fastq , ch_barcode_kit )
+            QCAT.out.reads
+                .map { it -> it[1] }
+                .flatten()
+                .map { it -> [ it.baseName.substring(0,it.baseName.lastIndexOf('.')), it ] }
+                .join(ch_sample.map{ meta, empty -> [meta.barcode, meta] }, by: [0] )
+                .map { it -> [ it[2], it[1] ] }
+                .set { ch_fastq } // [ meta, .fastq.qz ]
+            ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
+
+        } else {
+            if (!params.skip_alignment || !params.skip_fusion_analysis) {
+                ch_sample
+                    .map { it -> if (it[1].toString().endsWith('.gz')) [ it[0], it[1] ] }
+                    .set { ch_fastq }
+            } else {
+                ch_fastq = Channel.empty()
+            }
         }
     }
 
