@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Major enhancements
 
 - Removed the `guppy` basecaller as distributing it via a docker image is a breach to EULA
-- Bump minimum Nextflow version from 21.10.3 -> 21.10.3
+- Bump minimum Nextflow version from 21.10.3 -> 22.10.1
 - Update pipeline template to nf-core/tools `2.7.2`
 - Update `bambu` version from `1.0.2` to `2.0.0`
 
