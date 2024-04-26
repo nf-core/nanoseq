@@ -219,7 +219,6 @@ workflow NANOSEQ{
             ch_input_path
                 .map { it -> [ [id:'undemultiplexed'], it ] }
                 .set { ch_fast5_dir }
-            ch_fast5_dir.view()
         } else {
             ch_sample
                 .set { ch_fast5_dir }
