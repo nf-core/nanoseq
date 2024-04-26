@@ -84,7 +84,7 @@
                 "kit": {
                     "type": "string",
                     "default": "",
-                    "description": "sequencing kit'.",
+                    "description": "sequencing kit.",
                     "fa_icon": "fas fa-fish"
                 },
                 "flowcell": {
