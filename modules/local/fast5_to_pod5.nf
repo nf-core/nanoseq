@@ -9,7 +9,7 @@ process FAST5_TO_POD5 {
     tuple val(meta), path(input_path)
 
     output:
-    tuple val(meta), path("pod5/")    , emit: pod5
+    tuple val(meta), path("pod5/"), emit: pod5
 
     when:
     task.ext.when == null || task.ext.when
