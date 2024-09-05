@@ -1,17 +1,12 @@
-
-from latch.types.metadata import (
-    NextflowMetadata,
-    LatchAuthor,
-    NextflowRuntimeResources
-)
 from latch.types.directory import LatchDir
+from latch.types.metadata import LatchAuthor, NextflowMetadata, NextflowRuntimeResources
 
-from .parameters import generated_parameters
+from .parameters import flow, generated_parameters
 
 NextflowMetadata(
-    display_name='nf-core/nanoseq',
+    display_name="nf-core/nanoseq",
     author=LatchAuthor(
-        name="Your Name",
+        name="nf-core",
     ),
     parameters=generated_parameters,
     runtime_resources=NextflowRuntimeResources(
@@ -19,5 +14,6 @@ NextflowMetadata(
         memory=8,
         storage_gib=100,
     ),
+    flow=flow,
     log_dir=LatchDir("latch:///your_log_dir"),
 )

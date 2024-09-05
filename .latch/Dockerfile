@@ -1,5 +1,5 @@
 # DO NOT CHANGE
-from 812206152185.dkr.ecr.us-west-2.amazonaws.com/latch-base:fe0b-main
+from 812206152185.dkr.ecr.us-west-2.amazonaws.com/latch-base-nextflow:v1.1.7
 
 workdir /tmp/docker-build/work/
 
@@ -19,22 +19,17 @@ env LANG='en_US.UTF-8'
 
 arg DEBIAN_FRONTEND=noninteractive
 
+run pip install pandas numpy
+
 # Latch SDK
 # DO NOT REMOVE
-run pip install latch==2.46.6
+run pip install latch==2.52.1
 run mkdir /opt/latch
-run apt-get update && apt-get install -y default-jre-headless
 
 
 # Copy workflow data (use .dockerignore to skip files)
 
 copy . /root/
-
-# Latch nextflow workflow entrypoint
-# DO NOT CHANGE
-
-run ln -s /root/.latch/bin/nextflow /root/nextflow
-run ln -s /root/.latch/.nextflow /root/.nextflow
 
 
 # Latch workflow registration metadata
