@@ -1,5 +1,5 @@
 # DO NOT CHANGE
-from 812206152185.dkr.ecr.us-west-2.amazonaws.com/latch-base-nextflow:v1.1.7
+from 812206152185.dkr.ecr.us-west-2.amazonaws.com/latch-base-nextflow:v2.0.0
 
 workdir /tmp/docker-build/work/
 
@@ -18,8 +18,6 @@ env TZ='Etc/UTC'
 env LANG='en_US.UTF-8'
 
 arg DEBIAN_FRONTEND=noninteractive
-
-run pip install pandas numpy
 
 # Latch SDK
 # DO NOT REMOVE

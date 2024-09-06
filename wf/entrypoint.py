@@ -5,7 +5,7 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Optional, Union
 
 import requests
 from flytekit.core.annotation import FlyteAnnotation
@@ -32,9 +32,9 @@ sys.stdout.reconfigure(line_buffering=True)
 class SampleSheet:
     group: str
     replicate: int
-    barcode: int
+    barcode: Optional[int]
     input_file: Optional[LatchFile]
-    fasta: Optional[LatchFile]
+    fasta: Optional[Union[LatchFile, str]]
     gtf: Optional[LatchFile]
 
 
@@ -69,7 +69,8 @@ def initialize() -> str:
 
     print("Provisioning shared storage volume... ", end="")
     resp = requests.post(
-        "http://nf-dispatcher-service.flyte.svc.cluster.local/provision-storage-ofs",
+        # "http://nf-dispatcher-service.flyte.svc.cluster.local/provision-storage-ofs",
+        "http://nf-dispatcher-service.flyte.svc.cluster.local/provision-storage",
         headers=headers,
         json={
             "storage_expiration_hours": 0,
@@ -80,6 +81,11 @@ def initialize() -> str:
     print("Done.")
 
     return resp.json()["name"]
+
+
+input_construct_samplesheet = metadata._nextflow_metadata.parameters[
+    "input"
+].samplesheet_constructor
 
 
 @nextflow_runtime_task(cpu=4, memory=8, storage_gib=100)
@@ -132,6 +138,8 @@ def nextflow_runtime(
     shared_dir = Path("/nf-workdir")
     rename_current_execution(str(run_name))
 
+    input_samplesheet = input_construct_samplesheet(input)
+
     ignore_list = [
         "latch",
         ".latch",
@@ -167,11 +175,11 @@ def nextflow_runtime(
         "-work-dir",
         str(shared_dir),
         "-profile",
-        profiles,
+        "docker",
         "-c",
         "latch.config",
         "-resume",
-        *get_flag("input", input),
+        *get_flag("input", input_samplesheet),
         *get_flag("protocol", protocol),
         *get_flag("outdir", LatchOutputDir(f"{outdir.remote_path}/{run_name}")),
         *get_flag("email", email),

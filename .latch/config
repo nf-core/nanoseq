@@ -1,1 +1,1 @@
-{"latch_version": "2.52.1", "base_image": "812206152185.dkr.ecr.us-west-2.amazonaws.com/latch-base-nextflow:v1.1.7", "date": "2024-09-02T13:32:49.866028"}
+{"latch_version": "2.52.1", "base_image": "812206152185.dkr.ecr.us-west-2.amazonaws.com/latch-base-nextflow:v2.0.0", "date": "2024-09-02T13:32:49.866028"}

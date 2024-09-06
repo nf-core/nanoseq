@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from flytekit.core.annotation import FlyteAnnotation
 from latch.types.directory import LatchDir, LatchOutputDir
@@ -20,9 +20,9 @@ from latch.types.metadata import (
 class SampleSheet:
     group: str
     replicate: int
-    barcode: int
+    barcode: Optional[int]
     input_file: Optional[LatchFile]
-    fasta: Optional[LatchFile]
+    fasta: Optional[Union[LatchFile, str]]
     gtf: Optional[LatchFile]
 
 
