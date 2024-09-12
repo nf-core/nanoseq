@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Union
 
-from flytekit.core.annotation import FlyteAnnotation
 from latch.types.directory import LatchDir, LatchOutputDir
 from latch.types.file import LatchFile
 from latch.types.metadata import (
@@ -56,10 +55,15 @@ flow = [
         ),
     ),
     Section(
-        "Demultiplexing",
+        "Advanced Demultiplexing",
+        Fork(
+            "input_path_source",
+            "",
+            file=ForkBranch("File", Params("input_path_file")),
+            directory=ForkBranch("Directory", Params("input_path_dir")),
+        ),
         Params(
             "skip_demultiplexing",
-            "input_path",
             "barcode_kit",
         ),
     ),
@@ -70,81 +74,78 @@ flow = [
         Params("outdir"),
     ),
     Spoiler(
-        "Advanced options",
-        Section(
-            "Demultiplexing Advanced Options",
-            Params(
-                "barcode_both_ends",
-                "trim_barcodes",
-                "gpu_device",
-                "gpu_cluster_options",
-                "qcat_min_score",
-                "qcat_detect_middle",
-                "skip_demultiplexing",
-                "run_nanolyse",
-                "nanolyse_fasta",
-            ),
+        "Advanced Demultiplexing",
+        Params(
+            "barcode_both_ends",
+            "trim_barcodes",
+            "gpu_device",
+            "gpu_cluster_options",
+            "qcat_min_score",
+            "qcat_detect_middle",
+            "run_nanolyse",
+            "nanolyse_fasta",
         ),
-        Section(
-            "Alignment Options",
-            Params(
-                "aligner",
-                "stranded",
-                "save_align_intermeds",
-                "skip_alignment",
-            ),
+    ),
+    Spoiler(
+        "Alignment",
+        Params(
+            "aligner",
+            "stranded",
+            "save_align_intermeds",
+            "skip_alignment",
         ),
-        Section(
-            "Variant Calling Options",
-            Params(
-                "call_variants",
-                "variant_caller",
-                "structural_variant_caller",
-                "split_mnps",
-                "deepvariant_gpu",
-                "phase_vcf",
-                "skip_vc",
-                "skip_sv",
-            ),
+    ),
+    Spoiler(
+        "Variant Calling",
+        Params(
+            "call_variants",
+            "variant_caller",
+            "structural_variant_caller",
+            "split_mnps",
+            "deepvariant_gpu",
+            "phase_vcf",
+            "skip_vc",
+            "skip_sv",
         ),
-        Section(
-            "Differential Analysis Options",
-            Params(
-                "quantification_method",
-                "skip_quantification",
-                "skip_differential_analysis",
-            ),
+    ),
+    Spoiler(
+        "Differential Analysis",
+        Params(
+            "quantification_method",
+            "skip_quantification",
+            "skip_differential_analysis",
         ),
-        Section(
-            "RNA Fusion Analysis Options",
-            Params(
-                "jaffal_ref_dir",
-                "skip_fusion_analysis",
-            ),
+    ),
+    Spoiler(
+        "RNA Fusion Analysis",
+        Params(
+            "jaffal_ref_dir",
+            "skip_fusion_analysis",
         ),
-        Section(
-            "RNA Modification Analysis Options",
-            Params(
-                "skip_modification_analysis",
-                "skip_xpore",
-                "skip_m6anet",
-            ),
+    ),
+    Spoiler(
+        "RNA Modification Analysis",
+        Params(
+            "skip_modification_analysis",
+            "skip_xpore",
+            "skip_m6anet",
         ),
-        Section(
-            "General Options",
-            Params(
-                "email",
-                "multiqc_title",
-                "skip_bigbed",
-                "skip_bigwig",
-                "skip_nanoplot",
-                "skip_fastqc",
-                "skip_multiqc",
-                "skip_qc",
-            ),
+    ),
+    Spoiler(
+        "General Options",
+        Params(
+            "email",
+            "multiqc_title",
+            "skip_bigbed",
+            "skip_bigwig",
+            "skip_nanoplot",
+            "skip_fastqc",
+            "skip_multiqc",
+            "skip_qc",
         ),
     ),
 ]
+
 
 generated_parameters = {
     "run_name": NextflowParameter(
@@ -184,11 +185,17 @@ generated_parameters = {
         default=None,
         description="MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
     ),
-    "input_path": NextflowParameter(
+    "input_path_file": NextflowParameter(
         type=Optional[LatchFile],
-        display_name="Input Path",
+        display_name="Input Basecalled File",
         default=None,
-        description="Path to Nanopore run directory files (e.g. 'fastq_pass/*') or a basecalled fastq file that requires demultiplexing.",
+        description="Path to Nanopore basecalled fastq file that requires demultiplexing.",
+    ),
+    "input_path_dir": NextflowParameter(
+        type=Optional[LatchDir],
+        display_name="Input Run Directory",
+        default=None,
+        description="Path to Nanopore run directory files (e.g. 'fastq_pass/*') that requires demultiplexing.",
     ),
     "barcode_kit": NextflowParameter(
         type=Optional[BarcodeKit],

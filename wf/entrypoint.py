@@ -5,16 +5,14 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, List, Optional, Union
+from typing import List, Optional, Union
 
 import requests
-from flytekit.core.annotation import FlyteAnnotation
 from latch.executions import rename_current_execution, report_nextflow_used_storage
 from latch.ldata.path import LPath
 from latch.resources.tasks import custom_task, nextflow_runtime_task
-from latch.resources.workflow import workflow
 from latch.types import metadata
-from latch.types.directory import LatchOutputDir
+from latch.types.directory import LatchDir, LatchOutputDir
 from latch.types.file import LatchFile
 from latch_cli.nextflow.utils import _get_execution_name
 from latch_cli.nextflow.workflow import get_flag
@@ -23,7 +21,6 @@ from latch_cli.utils import urljoins
 
 meta = Path("latch_metadata") / "__init__.py"
 import_module_by_path(meta)
-import latch_metadata
 
 sys.stdout.reconfigure(line_buffering=True)
 
@@ -59,8 +56,15 @@ class BarcodeKit(Enum):
     VMK001 = "VMK001"
 
 
+class Aligner(Enum):
+    minimap2 = "minimap2"
+    graphmap2 = "graphmap2"
+
+
 @custom_task(cpu=0.25, memory=0.5, storage_gib=1)
-def initialize() -> str:
+def initialize(run_name: str) -> str:
+    rename_current_execution(str(run_name))
+
     token = os.environ.get("FLYTE_INTERNAL_EXECUTION_ID")
     if token is None:
         raise RuntimeError("failed to get execution token")
@@ -94,10 +98,11 @@ def nextflow_runtime(
     pvc_name: str,
     input: List[SampleSheet],
     protocol: Protocol,
-    outdir: LatchOutputDir,
     email: Optional[str],
     multiqc_title: Optional[str],
-    input_path: Optional[LatchFile],
+    input_path_source: str,
+    input_path_file: Optional[LatchFile],
+    input_path_dir: Optional[LatchDir],
     barcode_kit: Optional[BarcodeKit],
     barcode_both_ends: bool,
     trim_barcodes: bool,
@@ -105,16 +110,20 @@ def nextflow_runtime(
     qcat_detect_middle: bool,
     skip_demultiplexing: bool,
     run_nanolyse: bool,
-    nanolyse_fasta: Optional[str],
+    nanolyse_fasta: Optional[LatchFile],
+    aligner: Aligner,
     stranded: bool,
     save_align_intermeds: bool,
     skip_alignment: bool,
     call_variants: bool,
+    variant_caller: Optional[str],
+    structural_variant_caller: Optional[str],
     split_mnps: bool,
     deepvariant_gpu: bool,
     phase_vcf: bool,
     skip_vc: bool,
     skip_sv: bool,
+    quantification_method: Optional[str],
     skip_quantification: bool,
     skip_differential_analysis: bool,
     skip_fusion_analysis: bool,
@@ -129,14 +138,10 @@ def nextflow_runtime(
     skip_qc: bool,
     gpu_device: Optional[str],
     qcat_min_score: Optional[int],
-    aligner: Optional[str],
-    variant_caller: Optional[str],
-    structural_variant_caller: Optional[str],
-    quantification_method: Optional[str],
     jaffal_ref_dir: Optional[str],
+    outdir: LatchOutputDir,
 ) -> None:
     shared_dir = Path("/nf-workdir")
-    rename_current_execution(str(run_name))
 
     input_samplesheet = input_construct_samplesheet(input)
 
@@ -161,13 +166,6 @@ def nextflow_runtime(
         dirs_exist_ok=True,
     )
 
-    profile_list = ["docker", "test"]
-
-    if len(profile_list) == 0:
-        profile_list.append("standard")
-
-    profiles = ",".join(profile_list)
-
     cmd = [
         "/root/nextflow",
         "run",
@@ -184,7 +182,7 @@ def nextflow_runtime(
         *get_flag("outdir", LatchOutputDir(f"{outdir.remote_path}/{run_name}")),
         *get_flag("email", email),
         *get_flag("multiqc_title", multiqc_title),
-        *get_flag("input_path", input_path),
+        *get_flag("input_path", input_path_dir if input_path_dir else input_path_file),
         *get_flag("barcode_kit", barcode_kit),
         *get_flag("barcode_both_ends", barcode_both_ends),
         *get_flag("trim_barcodes", trim_barcodes),
@@ -287,104 +285,3 @@ def nextflow_runtime(
 
     if failed:
         sys.exit(1)
-
-
-@workflow(metadata._nextflow_metadata)
-def nf_nf_core_nanoseq(
-    run_name: str,
-    input: List[SampleSheet],
-    outdir: LatchOutputDir,
-    email: Optional[str],
-    multiqc_title: Optional[str],
-    input_path: Optional[LatchFile],
-    barcode_kit: Optional[BarcodeKit],
-    barcode_both_ends: bool,
-    trim_barcodes: bool,
-    gpu_cluster_options: Optional[str],
-    qcat_detect_middle: bool,
-    skip_demultiplexing: bool,
-    run_nanolyse: bool,
-    nanolyse_fasta: Optional[str],
-    stranded: bool,
-    save_align_intermeds: bool,
-    skip_alignment: bool,
-    call_variants: bool,
-    split_mnps: bool,
-    deepvariant_gpu: bool,
-    phase_vcf: bool,
-    skip_vc: bool,
-    skip_sv: bool,
-    skip_quantification: bool,
-    skip_differential_analysis: bool,
-    skip_fusion_analysis: bool,
-    skip_modification_analysis: bool,
-    skip_xpore: bool,
-    skip_m6anet: bool,
-    skip_bigbed: bool,
-    skip_bigwig: bool,
-    skip_nanoplot: bool,
-    skip_fastqc: bool,
-    skip_multiqc: bool,
-    skip_qc: bool,
-    protocol: Protocol = Protocol.cDNA,
-    gpu_device: Optional[str] = "auto",
-    qcat_min_score: Optional[int] = 60,
-    aligner: Optional[str] = "minimap2",
-    variant_caller: Optional[str] = "medaka",
-    structural_variant_caller: Optional[str] = "sniffles",
-    quantification_method: Optional[str] = "bambu",
-    jaffal_ref_dir: Optional[str] = "for_jaffal",
-) -> None:
-    """
-    nf-core/nanoseq
-
-    Sample Description
-    """
-
-    pvc_name: str = initialize()
-    nextflow_runtime(
-        run_name=run_name,
-        pvc_name=pvc_name,
-        input=input,
-        protocol=protocol,
-        outdir=outdir,
-        email=email,
-        multiqc_title=multiqc_title,
-        input_path=input_path,
-        barcode_kit=barcode_kit,
-        barcode_both_ends=barcode_both_ends,
-        trim_barcodes=trim_barcodes,
-        gpu_device=gpu_device,
-        gpu_cluster_options=gpu_cluster_options,
-        qcat_min_score=qcat_min_score,
-        qcat_detect_middle=qcat_detect_middle,
-        skip_demultiplexing=skip_demultiplexing,
-        run_nanolyse=run_nanolyse,
-        nanolyse_fasta=nanolyse_fasta,
-        aligner=aligner,
-        stranded=stranded,
-        save_align_intermeds=save_align_intermeds,
-        skip_alignment=skip_alignment,
-        call_variants=call_variants,
-        variant_caller=variant_caller,
-        structural_variant_caller=structural_variant_caller,
-        split_mnps=split_mnps,
-        deepvariant_gpu=deepvariant_gpu,
-        phase_vcf=phase_vcf,
-        skip_vc=skip_vc,
-        skip_sv=skip_sv,
-        quantification_method=quantification_method,
-        skip_quantification=skip_quantification,
-        skip_differential_analysis=skip_differential_analysis,
-        jaffal_ref_dir=jaffal_ref_dir,
-        skip_fusion_analysis=skip_fusion_analysis,
-        skip_modification_analysis=skip_modification_analysis,
-        skip_xpore=skip_xpore,
-        skip_m6anet=skip_m6anet,
-        skip_bigbed=skip_bigbed,
-        skip_bigwig=skip_bigwig,
-        skip_nanoplot=skip_nanoplot,
-        skip_fastqc=skip_fastqc,
-        skip_multiqc=skip_multiqc,
-        skip_qc=skip_qc,
-    )
