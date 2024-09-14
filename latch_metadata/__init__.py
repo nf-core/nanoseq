@@ -8,6 +8,7 @@ NextflowMetadata(
     author=LatchAuthor(
         name="nf-core",
     ),
+    repository="https://github.com/latchbio-nfcore/nanoseq",
     parameters=generated_parameters,
     runtime_resources=NextflowRuntimeResources(
         cpus=4,
