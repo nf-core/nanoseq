@@ -6,33 +6,72 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
+You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated file with 6 columns and a header row:
 
-## Samplesheet input
+| Column       | Description                                                                                                                                                                                                                                                                               |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `group`      | Group identifier for sample. This will be identical for replicate samples from the same experimental group.                                                                                                                                                                               |
+| `replicate`  | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                                                                       |
+| `barcode`    | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                                                                                                                                                                                     |
+| `input_file` | Full path to FastQ file if previously demultiplexed, BAM file if previously aligned, or a path to a directory with subdirectories containing fastq or fast5 files. FastQ file has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam". |
+| `fasta`      | Genome fasta file or transcriptome fasta file for alignment. This can either be a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz".                         |
+| `gtf`        | Annotation gtf file for transcript discovery and quantification and RNA modification detection. This can either be blank or a local path. Must have the extension ".gtf".                                                                                                                 |
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+### Skip demultiplexing
+
+As shown in the examples below, the accepted samplesheet format is different depending on if you would like to run the pipeline with or without demultiplexing.
+
+#### With demultiplexing
+
+##### Example `samplesheet.csv` for non-demultiplexed fastq inputs
 
 ```bash
---input '[path to samplesheet file]'
+group,replicate,barcode,input_file,fasta,gtf
+WT_MOUSE,1,1,,mm10,
+WT_HUMAN,1,2,,hg19,
+WT_POMBE,1,3,,/path/to/local/genome.fa,
+WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
+WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
+WT_UNKNOWN,3,6,,,
 ```
 
-### Multiple runs of the same sample
+##### Example command for non-demultiplexed fastq inputs
 
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
-
-```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --input_path ./undemultiplexed.fastq.gz \
+    --barcode_kit 'NBD103/NBD104' \
+    --skip_quantification \
+    -profile <docker/singularity/institute>
 ```
 
-### Full samplesheet
+#### Without demultiplexing
 
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
+##### Example `samplesheet.csv` for demultiplexed fastq inputs
 
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
+```bash
+group,replicate,barcode,input_file,fasta,gtf
+WT,1,,SAM101A1.fastq.gz,hg19,
+WT,2,,SAM101A2.fastq.gz,hg19,
+KO,1,,SAM101A3.fastq.gz,hg19,
+KO,2,,SAM101A4.fastq.gz,hg19,
+```
 
+##### Example command for demultiplexed fastq inputs
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
+
+##### Without demultiplexing and alignment
+
+<<<<<<< HEAD
 ```csv title="samplesheet.csv"
 sample,fastq_1,fastq_2
 CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
@@ -42,22 +81,75 @@ TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
 TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
 TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
 TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
+=======
+##### Example `samplesheet.csv` for BAM inputs
+
+```bash
+group,replicate,barcode,input_file,fasta,gtf
+WT,1,,SAM101A1.bam,hg19,
+WT,2,,SAM101A2.bam,hg19,
+KO,1,,SAM101A3.bam,hg19,
+KO,2,,SAM101A4.bam,hg19,
+>>>>>>> origin/add_dorado
 ```
 
-| Column    | Description                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `fastq_1` | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2` | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
+##### Example command for BAM inputs
 
-An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --skip_demultiplexing \
+    --skip_alignment \
+    -profile <docker/singularity/institute>
+```
+
+##### RNA modification detection (please run basecalling prior)
+
+##### Example `samplesheet.csv` for FAST5 and FASTQ input directories
+
+```bash
+group,replicate,barcode,input_file,fasta,gtf
+WT,1,,/full/path/to/SAM101A1/,hg19.fasta,hg19.gtf
+WT,2,,/full/path/to/SAM101A2/,hg19.fasta,hg19.gtf
+KO,1,,/full/path/to/SAM101A3/,hg19.fasta,hg19.gtf
+KO,2,,/full/path/to/SAM101A4/,hg19.fasta,hg19.gtf
+```
+
+##### Each of the FAST5 and FASTQ input directory should have the following structure:
+
+```bash
+<group_rep>
+  ├── fast5
+    ├── xxxxxxxxxxxxxxx1.fast5
+    ├── xxxxxxxxxxxxxxx2.fast5
+    ├── .
+    ├── .
+    └── .
+  ├── fastq
+    └── <group_rep>_basecalled.fastq.gz
+```
+
+##### Example command for RNA modification detection
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol directRNA \
+    --skip_demultiplexing \
+    -profile <docker/singularity/institute>
+```
 
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
 
-```bash
-nextflow run nf-core/nanoseq --input ./samplesheet.csv --outdir ./results --genome GRCh37 -profile docker
+```console
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --barcode_kit SQK-PBK004 \
+    -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.

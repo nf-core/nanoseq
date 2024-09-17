@@ -17,15 +17,12 @@ nextflow.enable.dsl = 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { NANOSEQ  } from './workflows/nanoseq'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_nanoseq_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_nanoseq_pipeline'
-
-include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_nanoseq_pipeline'
+params.fasta = WorkflowMain.getGenomeAttribute(params, 'fasta')
+params.gtf   = WorkflowMain.getGenomeAttribute(params, 'gtf')
 
 /*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    GENOME PARAMETER VALUES
+========================================================================================
+    VALIDATE & PRINT PARAMETER SUMMARY
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
