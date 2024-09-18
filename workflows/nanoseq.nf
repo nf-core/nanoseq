@@ -126,6 +126,7 @@ include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
 include { FAST5_TO_POD5         } from '../modules/local/fast5_to_pod5'
 include { DORADO                } from '../modules/local/dorado'
+include { GTF2BED               } from '../modules/local/gtf2bed'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
 include { BAMBU                 } from '../modules/local/bambu'
 include { MULTIQC               } from '../modules/local/multiqc'
@@ -345,6 +346,11 @@ workflow NANOSEQ{
     ch_chr_sizes         = CUSTOM_GETCHROMSIZES.out.sizes
     ch_fai               = CUSTOM_GETCHROMSIZES.out.fai
     ch_software_versions = ch_software_versions.mix(CUSTOM_GETCHROMSIZES.out.versions.first().ifEmpty(null))
+
+    // will add the following in when nf-core/modules/minimap2/align supports junction bed input
+    //GTF2BED ( ch_chr_sizes )
+    //ch_gtf_bed = GTF2BED.out.gtf_bed
+    //gtf2bed_version = GTF2BED.out.versions
 
     ch_samtools_multiqc = Channel.empty()
     if (!params.skip_alignment) {

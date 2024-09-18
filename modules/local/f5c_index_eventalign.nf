@@ -8,7 +8,7 @@ process F5C_INDEX_EVENTALIGN {
         'quay.io/biocontainers/f5c:1.5--h56e2c18_1' }"
 
     input:
-    tuple val(meta), path(genome), path(gtf), path(fastq), path(bam), path(bai), path(blow5)
+    tuple val(meta), path(genome), path(gtf), path(fastqgz), path(bam), path(bai)
 
     output:
     tuple val(meta), path(genome), path(gtf), path("*eventalign.txt"), path("*summary.txt"), emit: f5c_outputs
@@ -20,9 +20,14 @@ process F5C_INDEX_EVENTALIGN {
     script:
     sample_summary = "$meta.id" +"_summary.txt"
     sample_eventalign = "$meta.id" +"_eventalign.txt"
+    fastq="$meta.id"+".fastq"
+    fast5 = "$meta.fast5"
+    fastqi="$fastq"+"*"
     """
-    f5c index --slow5 $blow5 $fastq
-    f5c eventalign  --reads $fastq --bam $bam --genome $genome --slow5 $blow5 --scale-events --signal-index --summary $sample_summary --threads $task.cpus > $sample_eventalign
+    gunzip -c $fastqgz > $fastq
+    f5c index -d $fast5 $fastq
+    echo $fastqi
+    f5c eventalign --reads $fastq --bam $bam --genome $genome --scale-events --signal-index --rna --min-mapq 0 --min-recalib-events 1 --summary $sample_summary --threads $task.cpus > $sample_eventalign
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
