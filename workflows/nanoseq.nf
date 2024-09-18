@@ -152,6 +152,7 @@ include { QCAT                        } from '../modules/nf-core/qcat/main'
 include { NANOLYSE                    } from '../modules/nf-core/nanolyse/main'
 include { CUSTOM_GETCHROMSIZES        } from '../modules/nf-core/custom/getchromsizes/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { SAMTOOLS_INDEX              } from '../modules/nf-core/samtools/index/main'
 
 /*
  * SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -335,18 +336,18 @@ workflow NANOSEQ{
         ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
     }
 
+    ch_fasta = Channel.from( [id:'reference'], fasta ).collect()
+
+    /*
+        * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
+        */
+    CUSTOM_GETCHROMSIZES( ch_fasta )
+    ch_chr_sizes         = CUSTOM_GETCHROMSIZES.out.sizes
+    ch_fai               = CUSTOM_GETCHROMSIZES.out.fai
+    ch_software_versions = ch_software_versions.mix(CUSTOM_GETCHROMSIZES.out.versions.first().ifEmpty(null))
+
     ch_samtools_multiqc = Channel.empty()
     if (!params.skip_alignment) {
-
-        ch_fasta = Channel.from( [id:'reference'], fasta ).collect()
-
-        /*
-         * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
-         */
-        CUSTOM_GETCHROMSIZES( ch_fasta )
-        ch_chr_sizes         = CUSTOM_GETCHROMSIZES.out.sizes
-        ch_fai               = CUSTOM_GETCHROMSIZES.out.fai
-        ch_software_versions = ch_software_versions.mix(CUSTOM_GETCHROMSIZES.out.versions.first().ifEmpty(null))
 
         if (params.aligner == 'minimap2') {
 
@@ -368,25 +369,6 @@ workflow NANOSEQ{
             ch_sorted_bai        = ALIGN_GRAPHMAP2.out.ch_sorted_bai
             ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
             ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.samtools_version.first().ifEmpty(null))
-        }
-
-        if (params.call_variants && params.protocol == 'DNA') {
-
-            /*
-            * SUBWORKFLOW: Short variant calling
-            */
-            if (!params.skip_vc) {
-                SHORT_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
-                ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
-            }
-
-            /*
-            * SUBWORKFLOW: Structural variant calling
-            */
-            if (!params.skip_sv) {
-                STRUCTURAL_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
-                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
-            }
         }
 
         ch_bedtools_version = Channel.empty()
@@ -418,6 +400,29 @@ workflow NANOSEQ{
          */
         BAM_RENAME ( ch_sample_bam )
         ch_sorted_bam = BAM_RENAME.out.bam
+    }
+
+    if (params.call_variants && params.protocol == 'DNA') {
+
+        SAMTOOLS_INDEX ( ch_sorted_bam )
+        ch_sorted_bai = SAMTOOLS_INDEX.out.bai
+        samtools_version = SAMTOOLS_INDEX.out.versions
+
+        /*
+        * SUBWORKFLOW: Short variant calling
+        */
+        if (!params.skip_vc) {
+            SHORT_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
+            ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+        }
+
+        /*
+        * SUBWORKFLOW: Structural variant calling
+        */
+        if (!params.skip_sv) {
+            STRUCTURAL_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
+            ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+        }
     }
 
     ch_featurecounts_gene_multiqc       = Channel.empty()
