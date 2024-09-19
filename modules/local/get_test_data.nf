@@ -6,6 +6,7 @@ process GET_TEST_DATA {
     output:
     path "test-datasets/fast5/$barcoded/"         , emit: ch_input_fast5_dir_path
     path "test-datasets/modification_fast5_fastq/", emit: ch_input_dir_path
+    path "test-datasets/pod5/"                    , emit: ch_pod5_dir_path
     path "versions.yml"                           , emit: versions
 
     when:

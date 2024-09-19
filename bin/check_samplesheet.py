@@ -116,7 +116,7 @@ def check_samplesheet(file_in, updated_path, file_out):
                         input_file = "/".join([updated_path, input_file.split("/")[-1]])
                     list_dir = os.listdir(input_file)
                     fast5 = input_file
-                    if not (all(fname.endswith(".fast5") for fname in list_dir)):
+                    if not (all(fname.endswith(".fast5") for fname in list_dir)) and not (all(fname.endswith(".pod5") for fname in list_dir)):
                         if "fast5" in list_dir and "fastq" in list_dir:
                             fast5 = input_file + "/fast5"
                             ## CHECK FAST5 DIRECTORY

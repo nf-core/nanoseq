@@ -125,7 +125,9 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
 include { FAST5_TO_POD5         } from '../modules/local/fast5_to_pod5'
-include { DORADO                } from '../modules/local/dorado'
+include { DORADO_BASECALLER     } from '../modules/local/dorado_basecaller'
+include { DORADO_ALIGNER        } from '../modules/local/dorado_aligner'
+include { MODKIT_PILEUP         } from '../modules/local/modkit_pileup'
 include { GTF2BED               } from '../modules/local/gtf2bed'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
 include { BAMBU                 } from '../modules/local/bambu'
@@ -181,8 +183,13 @@ workflow NANOSEQ{
             if (!isOffline()) {
                 GET_TEST_DATA ()
                 if (params.skip_modification_analysis) {
-                    GET_TEST_DATA.out.ch_input_fast5_dir_path
-                        .set { ch_input_path }
+                    if (params.bedmethyl_out){
+                        GET_TEST_DATA.out.ch_pod5_dir_path
+                            .set { ch_input_path }
+                    } else {
+                        GET_TEST_DATA.out.ch_input_fast5_dir_path
+                            .set { ch_input_path }
+                    }
                 } else {
                     GET_TEST_DATA.out.ch_input_dir_path
                         .set { ch_input_path }
@@ -216,51 +223,68 @@ workflow NANOSEQ{
         .set { ch_sample }
 
     if (!params.skip_basecalling) {
+        if (params.input_path_file_type == 'fast5'){
+            if (!params.skip_demultiplexing) {
+                ch_input_path
+                    .map { it -> [ [id:'undemultiplexed'], it ] }
+                    .set { ch_fast5_dir }
+            } else {
+                ch_sample
+                    .set { ch_fast5_dir }
+            }
 
-        if (!params.skip_demultiplexing) {
-            ch_input_path
-                .map { it -> [ [id:'undemultiplexed'], it ] }
-                .set { ch_fast5_dir }
+            /*
+             * MODULE: Convert fast5 to pod5 
+             */
+            FAST5_TO_POD5 ( ch_fast5_dir )
+            ch_pod5 = FAST5_TO_POD5.out.pod5
         } else {
-            ch_sample
-                .set { ch_fast5_dir }
+            if (!params.skip_demultiplexing) {
+                ch_input_path
+                    .map { it -> [ [id:'undemultiplexed'], it ] }
+                    .set { ch_pod5 }
+            } else {
+                ch_sample
+                    .set { ch_pod5 }
+            }
         }
-
-        /*
-         * MODULE: Convert fast5 to pod5 
-         */
-        FAST5_TO_POD5 ( ch_fast5_dir )
-        ch_pod5 = FAST5_TO_POD5.out.pod5
 
         /*
          * MODULE: Basecalling and demultipexing using Dorado
          */
-        DORADO ( ch_pod5, params.dorado_device, params.dorado_model )
-        ch_software_versions = ch_software_versions.mix(DORADO.out.versions.ifEmpty(null))
 
-        if (!params.skip_demultiplexing) {
+        DORADO_BASECALLER ( ch_pod5, params.dorado_device, params.dorado_model )
+        ch_software_versions = ch_software_versions.mix(DORADO_BASECALLER.out.versions.ifEmpty(null))
+        if (!params.bedmethyl_out) {
+            if (!params.skip_demultiplexing) {
 
-            /*
-             * MODULE: Demultipexing using qcat
-             */
-            ch_barcode_kit = Channel.from(params.barcode_kit)
+                /*
+                * MODULE: Demultipexing using qcat
+                */
+                ch_barcode_kit = Channel.from(params.barcode_kit)
 
-            /*
-             * MODULE: Demultipexing using qcat
-             */
-            QCAT ( DORADO.out.fastq , ch_barcode_kit )
-            QCAT.out.reads
-                .map { it -> it[1] }
-                .flatten()
-                .map { it -> [ it.baseName.substring(0,it.baseName.lastIndexOf('.')), it ] }
-                .join(ch_sample.map{ meta, empty -> [meta.barcode, meta] }, by: [0] )
-                .map { it -> [ it[2], it[1] ] }
-                .set { ch_fastq } // [ meta, .fastq.qz ]
-            ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
+                /*
+                * MODULE: Demultipexing using qcat
+                */
+                QCAT ( DORADO_BASECALLER.out.dorado_out , ch_barcode_kit )
+                QCAT.out.reads
+                    .map { it -> it[1] }
+                    .flatten()
+                    .map { it -> [ it.baseName.substring(0,it.baseName.lastIndexOf('.')), it ] }
+                    .join(ch_sample.map{ meta, empty -> [meta.barcode, meta] }, by: [0] )
+                    .map { it -> [ it[2], it[1] ] }
+                    .set { ch_fastq } // [ meta, .fastq.qz ]
+                ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
 
+            } else {
+                DORADO_BASECALLER.out.dorado_out
+                    .set { ch_fastq }
+            }
         } else {
-            DORADO.out.fastq
-                .set { ch_fastq }
+            ch_fastq = Channel.empty()
+            ch_fasta = Channel.empty()
+            DORADO_ALIGNER( DORADO_BASECALLER.out.dorado_out, params.fasta )
+            MODKIT_PILEUP ( DORADO_ALIGNER.out.aligned_bam )
         }
 
     } else {
@@ -301,6 +325,7 @@ workflow NANOSEQ{
         }
     }
 
+
     if (params.run_nanolyse) {
         if (!params.nanolyse_fasta) {
             if (!isOffline()) {
@@ -337,20 +362,22 @@ workflow NANOSEQ{
         ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
     }
 
-    ch_fasta = Channel.from( [id:'reference'], fasta ).collect()
+    if (!params.bedmethyl_out){
+        ch_fasta = Channel.from( [id:'reference'], fasta ).collect()
 
-    /*
+       /*
         * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
         */
-    CUSTOM_GETCHROMSIZES( ch_fasta )
-    ch_chr_sizes         = CUSTOM_GETCHROMSIZES.out.sizes
-    ch_fai               = CUSTOM_GETCHROMSIZES.out.fai
-    ch_software_versions = ch_software_versions.mix(CUSTOM_GETCHROMSIZES.out.versions.first().ifEmpty(null))
+        CUSTOM_GETCHROMSIZES( ch_fasta )
+        ch_chr_sizes         = CUSTOM_GETCHROMSIZES.out.sizes
+        ch_fai               = CUSTOM_GETCHROMSIZES.out.fai
+        ch_software_versions = ch_software_versions.mix(CUSTOM_GETCHROMSIZES.out.versions.first().ifEmpty(null))
 
-    // will add the following in when nf-core/modules/minimap2/align supports junction bed input
-    //GTF2BED ( ch_chr_sizes )
-    //ch_gtf_bed = GTF2BED.out.gtf_bed
-    //gtf2bed_version = GTF2BED.out.versions
+        // will add the following in when nf-core/modules/minimap2/align supports junction bed input
+        //GTF2BED ( ch_chr_sizes )
+        //ch_gtf_bed = GTF2BED.out.gtf_bed
+        //gtf2bed_version = GTF2BED.out.versions
+    }
 
     ch_samtools_multiqc = Channel.empty()
     if (!params.skip_alignment) {
