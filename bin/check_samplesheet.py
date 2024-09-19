@@ -101,7 +101,7 @@ def check_samplesheet(file_in, updated_path, file_out):
                     barcode = "barcode%s" % (barcode.zfill(2))
 
             ## Check input file extension
-            nanopolish_fast5 = ""
+            fast5 = ""
             if input_file:
                 if input_file.find(" ") != -1:
                     print_error("Input file contains spaces!", "Line", line)
@@ -115,12 +115,12 @@ def check_samplesheet(file_in, updated_path, file_out):
                     if updated_path != "not_changed":
                         input_file = "/".join([updated_path, input_file.split("/")[-1]])
                     list_dir = os.listdir(input_file)
-                    nanopolish_fast5 = input_file
-                    if not (all(fname.endswith(".fast5") for fname in list_dir)):
+                    fast5 = input_file
+                    if not (all(fname.endswith(".fast5") for fname in list_dir)) and not (all(fname.endswith(".pod5") for fname in list_dir)):
                         if "fast5" in list_dir and "fastq" in list_dir:
-                            nanopolish_fast5 = input_file + "/fast5"
+                            fast5 = input_file + "/fast5"
                             ## CHECK FAST5 DIRECTORY
-                            if not (all(fname.endswith(".fast5") for fname in os.listdir(nanopolish_fast5))):
+                            if not (all(fname.endswith(".fast5") for fname in os.listdir(fast5))):
                                 print_error("fast5 directory contains non-fast5 files.")
                             ## CHECK PROVIDED BASECALLED FASTQ
                             fastq_path = input_file + "/fastq"
@@ -139,8 +139,8 @@ def check_samplesheet(file_in, updated_path, file_out):
                                 '{input_file} path does not end with ".fastq.gz", ".fq.gz", or ".bam" and is not an existing directory with correct fast5 and/or fastq inputs.'
                             )
 
-            ## Create sample mapping dictionary = {group: {replicate : [ barcode, input_file, nanopolish_fast5 ]}}
-            sample_info = [barcode, input_file, nanopolish_fast5]
+            ## Create sample mapping dictionary = {group: {replicate : [ barcode, input_file, fast5 ]}}
+            sample_info = [barcode, input_file, fast5]
             if group not in sample_info_dict:
                 sample_info_dict[group] = {}
             if replicate not in sample_info_dict[group]:
@@ -161,7 +161,7 @@ def check_samplesheet(file_in, updated_path, file_out):
         out_dir = os.path.dirname(file_out)
         make_dir(out_dir)
         with open(file_out, "w") as fout:
-            fout.write(",".join(["sample", "barcode", "reads", "nanopolish_fast5"]) + "\n")
+            fout.write(",".join(["sample", "barcode", "reads", "fast5"]) + "\n")
             for sample in sorted(sample_info_dict.keys()):
                 ## Check that replicate ids are in format 1..<NUM_REPS>
                 uniq_rep_ids = set(sample_info_dict[sample].keys())
