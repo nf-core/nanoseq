@@ -1,2 +1,16 @@
+bump_version: null
+lint: null
+nf_core_version: 3.0.0
+org_path: null
 repository_type: pipeline
-nf_core_version: "2.14.1"
+template:
+  author: Chelsea Sawyer, Yuk Kei Wan
+  description: A pipeline to demultiplex, QC and map Nanopore data
+  force: false
+  is_nfcore: true
+  name: nanoseq
+  org: nf-core
+  outdir: .
+  skip_features: null
+  version: 3.1.0
+update: null
