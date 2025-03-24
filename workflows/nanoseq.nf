@@ -105,7 +105,7 @@ include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
 include { QCAT                  } from '../modules/local/qcat'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
 include { BAMBU                 } from '../modules/local/bambu'
-include { MULTIQC               } from '../modules/local/multiqc'
+include { MULTIQC               } from '../modules/nf-core/multiqc/main'
 
 /*
  * SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -429,18 +429,22 @@ workflow NANOSEQ{
         workflow_summary    = WorkflowNanoseq.paramsSummaryMultiqc(workflow, summary_params)
         ch_workflow_summary = Channel.value(workflow_summary)
 
-        /*
-         * MODULE: MultiQC
-         */
+        // Collect all MultiQC inputs into a single channel
+        ch_multiqc_files = Channel.empty()
+        ch_multiqc_files = ch_multiqc_files.mix(
+            ch_fastqc_multiqc.collect().ifEmpty([]),
+            ch_samtools_multiqc.collect().ifEmpty([]),
+            ch_featurecounts_gene_multiqc.collect().ifEmpty([]),
+            ch_featurecounts_transcript_multiqc.collect().ifEmpty([]),
+            CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
+            ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml')
+        )
+
         MULTIQC (
-        ch_multiqc_config,
-        ch_multiqc_custom_config.collect().ifEmpty([]),
-        ch_fastqc_multiqc.ifEmpty([]),
-        ch_samtools_multiqc.collect().ifEmpty([]),
-        ch_featurecounts_gene_multiqc.ifEmpty([]),
-        ch_featurecounts_transcript_multiqc.ifEmpty([]),
-        CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
-        ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml')
+            ch_multiqc_files,        // All input files in a single channel
+            ch_multiqc_config,       // Main config
+            ch_multiqc_custom_config.collect().ifEmpty([]), // Extra config
+            []                       // No custom logo
         )
     }
 }
