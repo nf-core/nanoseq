@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Dev
 
 - Updated Schema to latest nf-core version (nf-core tools 3.2.0)
+- updated conf and removed lib/groovy files that are depreciated in nf-core tools v. 3.2.0
 
 ### Major enhancements
 
