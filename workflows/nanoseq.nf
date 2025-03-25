@@ -117,7 +117,7 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 ////////////////////////////////////////////////////
 /* --    IMPORT LOCAL MODULES/SUBWORKFLOWS     -- */
 ////////////////////////////////////////////////////
-
+include { paramsSummaryMap                                  } from 'plugin/nf-schema'
 include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
@@ -450,6 +450,7 @@ workflow NANOSEQ{
     if (!params.skip_multiqc) {
         workflow_summary    = WorkflowNanoseq.paramsSummaryMultiqc(workflow, summary_params)
         ch_workflow_summary = Channel.value(workflow_summary)
+        summary_params                        = paramsSummaryMap(workflow, parameters_schema: "nextflow_schema.json")
 
         /*
          * MODULE: MultiQC
