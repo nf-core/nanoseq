@@ -1,0 +1,71 @@
+// TODO nf-core: Once you have added the required tests, please run the following command to build this file:
+// nf-core modules test dorado/aligner
+nextflow_process {
+
+    name "Test Process DORADO_ALIGNER"
+    script "../main.nf"
+    process "DORADO_ALIGNER"
+
+    tag "modules"
+    tag "modules_"
+    tag "dorado"
+    tag "dorado/aligner"
+
+    test("sarscov2 - fastq, fasta") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test', single_end:true ], // meta map
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/nanopore/fastq/test.fastq.gz', checkIfExists: true)
+                ]
+                input[1] = [
+                    [ id:'test_ref' ], // meta map
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(
+                    process.out
+                ).match() }
+                // See https://nf-co.re/docs/contributing/tutorials/nf-test_assertions for more information and examples.
+            )
+        }
+
+    }
+
+    test("sarscov2 - fastq, fasta - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test', single_end:true ], // meta map
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/nanopore/fastq/test.fastq.gz', checkIfExists: true)
+                ]
+                input[1] = [
+                    [ id:'test_ref' ], // meta map
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+
+    }
+
+}
