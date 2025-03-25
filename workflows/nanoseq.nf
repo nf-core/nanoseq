@@ -186,7 +186,14 @@ workflow NANOSEQ{
     INPUT_CHECK ( ch_input, ch_input_path )
         .set { ch_sample }
 
-    if (!params.skip_demultiplexing) {
+    ch_samples.view()
+
+    if (params.dorado) {
+        DORADO(dorado_samplesheet,input_path,ref,barcode_kit)
+    }
+    else {
+        //everything
+        if (!params.skip_demultiplexing) {
 
         /*
          * MODULE: Demultipexing using qcat
@@ -200,140 +207,142 @@ workflow NANOSEQ{
             .map { it -> [ it[2], it[1], it[3], it[4], it[5], it[6] ] }
             .set { ch_fastq }
         ch_software_versions = ch_software_versions.mix(QCAT.out.versions.ifEmpty(null))
-    } else {
-        if (!params.skip_alignment) {
-            ch_sample
-                .map { it -> if (it[6].toString().endsWith('.gz')) [ it[0], it[6], it[2], it[1], it[4], it[5] ] }
-                .set { ch_fastq }
         } else {
-            ch_fastq = Channel.empty()
-        }
-    }
-
-    if (params.run_nanolyse) {
-        ch_fastq
-            .map { it -> [ it[0], it[1] ] }
-            .set { ch_fastq_nanolyse }
-
-        if (!params.nanolyse_fasta) {
-            if (!isOffline()) {
-                GET_NANOLYSE_FASTA()
-                GET_NANOLYSE_FASTA.out.ch_nanolyse_fasta
-                    .set{ ch_nanolyse_fasta }
+            if (!params.skip_alignment) {
+                ch_sample
+                    .map { it -> if (it[6].toString().endsWith('.gz')) [ it[0], it[6], it[2], it[1], it[4], it[5] ] }
+                    .set { ch_fastq }
             } else {
-                exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
+                ch_fastq = Channel.empty()
             }
-        } else {
-            ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
         }
-        /*
-         * MODULE: DNA contaminant removal using NanoLyse
-         */
-        NANOLYSE ( ch_fastq_nanolyse, ch_nanolyse_fasta )
-        NANOLYSE.out.fastq
-            .join( ch_sample )
-            .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ]}
-            .set { ch_fastq }
-        ch_software_versions = ch_software_versions.mix(NANOLYSE.out.versions.first().ifEmpty(null))
-    }
 
-    ch_fastqc_multiqc = Channel.empty()
-    if (!params.skip_qc) {
+        if (params.run_nanolyse) {
+            ch_fastq
+                .map { it -> [ it[0], it[1] ] }
+                .set { ch_fastq_nanolyse }
 
-        /*
-         * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
-         */
-        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq, params.skip_nanoplot, params.skip_fastqc)
-        ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
-        ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
-    }
-
-    ch_samtools_multiqc = Channel.empty()
-    if (!params.skip_alignment) {
-
-        /*
-         * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
-         */
-        PREPARE_GENOME ( ch_fastq )
-        ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
-        ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
-        ch_fasta       = PREPARE_GENOME.out.ch_fasta
-        ch_fai         = PREPARE_GENOME.out.ch_fai
-        ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
-        ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
-        if (params.aligner == 'minimap2') {
-
+            if (!params.nanolyse_fasta) {
+                if (!isOffline()) {
+                    GET_NANOLYSE_FASTA()
+                    GET_NANOLYSE_FASTA.out.ch_nanolyse_fasta
+                        .set{ ch_nanolyse_fasta }
+                } else {
+                    exit 1, "NXF_OFFLINE=true or -offline has been set so cannot download lambda.fasta.gz file for running NanoLyse! Please explicitly specify --nanolyse_fasta."
+                }
+            } else {
+                ch_nanolyse_fasta = file(params.nanolyse_fasta, checkIfExists: true)
+            }
             /*
-            * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
+            * MODULE: DNA contaminant removal using NanoLyse
             */
-            ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq )
-            ch_align_sam = ALIGN_MINIMAP2.out.ch_align_sam
-            ch_index = ALIGN_MINIMAP2.out.ch_index
-            ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.first().ifEmpty(null))
-        } else {
-
-            /*
-             * SUBWORKFLOW: Align fastq files with graphmap2 and sort bam files
-             */
-            ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
-            ch_align_sam = ALIGN_GRAPHMAP2.out.ch_align_sam
-            ch_index = ALIGN_GRAPHMAP2.out.ch_index
-            ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
+            NANOLYSE ( ch_fastq_nanolyse, ch_nanolyse_fasta )
+            NANOLYSE.out.fastq
+                .join( ch_sample )
+                .map { it -> [ it[0], it[1], it[3], it[4], it[5], it[6] ]}
+                .set { ch_fastq }
+            ch_software_versions = ch_software_versions.mix(NANOLYSE.out.versions.first().ifEmpty(null))
         }
 
+        ch_fastqc_multiqc = Channel.empty()
+        if (!params.skip_qc) {
+
+            /*
+            * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
+            */
+            QCFASTQ_NANOPLOT_FASTQC ( ch_fastq, params.skip_nanoplot, params.skip_fastqc)
+            ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
+            ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
+        }
+
+        ch_samtools_multiqc = Channel.empty()
+        if (!params.skip_alignment) {
+
+            /*
+            * SUBWORKFLOW: Make chromosome size file and covert GTF to BED12
+            */
+            PREPARE_GENOME ( ch_fastq )
+            ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
+            ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
+            ch_fasta       = PREPARE_GENOME.out.ch_fasta
+            ch_fai         = PREPARE_GENOME.out.ch_fai
+            ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
+            ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
+            if (params.aligner == 'minimap2') {
+
+                /*
+                * SUBWORKFLOW: Align fastq files with minimap2 and sort bam files
+                */
+                ALIGN_MINIMAP2 ( ch_fasta_index, ch_fastq )
+                ch_align_sam = ALIGN_MINIMAP2.out.ch_align_sam
+                ch_index = ALIGN_MINIMAP2.out.ch_index
+                ch_software_versions = ch_software_versions.mix(ALIGN_MINIMAP2.out.minimap2_version.first().ifEmpty(null))
+            } else {
+
+                /*
+                * SUBWORKFLOW: Align fastq files with graphmap2 and sort bam files
+                */
+                ALIGN_GRAPHMAP2 ( ch_fasta_index, ch_fastq )
+                ch_align_sam = ALIGN_GRAPHMAP2.out.ch_align_sam
+                ch_index = ALIGN_GRAPHMAP2.out.ch_index
+                ch_software_versions = ch_software_versions.mix(ALIGN_GRAPHMAP2.out.graphmap2_version.first().ifEmpty(null))
+            }
+        }
+    }
+
+    /*
+    * SUBWORKFLOW: View, then  sort, and index bam files
+    */
+    BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam, params.call_variants, ch_fasta )
+    ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
+    ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.samtools_versions.first().ifEmpty(null))
+    ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
+
+    if (params.call_variants && params.protocol == 'DNA') {
         /*
-        * SUBWORKFLOW: View, then  sort, and index bam files
+        * SUBWORKFLOW: Short variant calling
         */
-        BAM_SORT_INDEX_SAMTOOLS ( ch_align_sam, params.call_variants, ch_fasta )
-        ch_view_sortbam = BAM_SORT_INDEX_SAMTOOLS.out.sortbam
-        ch_software_versions = ch_software_versions.mix(BAM_SORT_INDEX_SAMTOOLS.out.samtools_versions.first().ifEmpty(null))
-        ch_samtools_multiqc  = BAM_SORT_INDEX_SAMTOOLS.out.sortbam_stats_multiqc.ifEmpty([])
+        if (!params.skip_vc) {
+            SHORT_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
+            ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+        }
 
-        if (params.call_variants && params.protocol == 'DNA') {
-            /*
-            * SUBWORKFLOW: Short variant calling
+        /*
+        * SUBWORKFLOW: Structural variant calling
+        */
+        if (!params.skip_sv) {
+            STRUCTURAL_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
+            ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
+        }
+    }
+
+    ch_bedtools_version = Channel.empty()
+    if (!params.skip_bigwig) {
+
+        /*
+            * SUBWORKFLOW: Convert BAM -> BEDGraph -> BigWig
             */
-            if (!params.skip_vc) {
-                SHORT_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
-                ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
-            }
+        BEDTOOLS_UCSC_BIGWIG ( ch_view_sortbam )
+        ch_bedtools_version = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGWIG.out.bedtools_version.first().ifEmpty(null))
+        ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGWIG.out.bedgraphtobigwig_version.first().ifEmpty(null))
+    }
+    if (!params.skip_bigbed) {
 
-            /*
-            * SUBWORKFLOW: Structural variant calling
+        /*
+            * SUBWORKFLOW: Convert BAM -> BED12 -> BigBED
             */
-            if (!params.skip_sv) {
-                STRUCTURAL_VARIANT_CALLING ( ch_view_sortbam, ch_fasta.map{ it [1] }, ch_fai.map{ it [1] } )
-                ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
-            }
-        }
+        BEDTOOLS_UCSC_BIGBED ( ch_view_sortbam )
+        ch_bedtools_version = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGBED.out.bedtools_version.first().ifEmpty(null))
+        ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGBED.out.bed12tobigbed_version.first().ifEmpty(null))
+    }
+    ch_software_versions = ch_software_versions.mix(ch_bedtools_version.first().ifEmpty(null))
 
-        ch_bedtools_version = Channel.empty()
-        if (!params.skip_bigwig) {
-
-            /*
-             * SUBWORKFLOW: Convert BAM -> BEDGraph -> BigWig
-             */
-            BEDTOOLS_UCSC_BIGWIG ( ch_view_sortbam )
-            ch_bedtools_version = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGWIG.out.bedtools_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGWIG.out.bedgraphtobigwig_version.first().ifEmpty(null))
-        }
-        if (!params.skip_bigbed) {
-
-            /*
-             * SUBWORKFLOW: Convert BAM -> BED12 -> BigBED
-             */
-            BEDTOOLS_UCSC_BIGBED ( ch_view_sortbam )
-            ch_bedtools_version = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGBED.out.bedtools_version.first().ifEmpty(null))
-            ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGBED.out.bed12tobigbed_version.first().ifEmpty(null))
-        }
-        ch_software_versions = ch_software_versions.mix(ch_bedtools_version.first().ifEmpty(null))
-
-        ch_view_sortbam
-            .map { it -> [ it[0], it[3] ] }
-            .set { ch_sortbam }
-        ch_view_sortbam
-            .map { it -> [ it[0], it[3], it[4] ] }
-            .set { ch_nanopolish_sortbam }
+    ch_view_sortbam
+        .map { it -> [ it[0], it[3] ] }
+        .set { ch_sortbam }
+    ch_view_sortbam
+        .map { it -> [ it[0], it[3], it[4] ] }
+        .set { ch_nanopolish_sortbam }
     } else {
         ch_sample
             .map { it -> if (it[6].toString().endsWith('.bam')) [ it[0], it[6] ] }
