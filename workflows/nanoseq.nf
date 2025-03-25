@@ -1,43 +1,43 @@
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    VALIDATE INPUTS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
+// /*
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//     VALIDATE INPUTS
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// */
 
-def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
+// def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
-////////////////////////////////////////////////////
-/* --          VALIDATE INPUTS                 -- */
-////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////
+// /* --          VALIDATE INPUTS                 -- */
+// ////////////////////////////////////////////////////
 
-// Check input path parameters to see if they exist
-checkPathParamList = [ params.input, params.multiqc_config ]
-for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
+// // Check input path parameters to see if they exist
+// checkPathParamList = [ params.input, params.multiqc_config ]
+// for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
-// Check mandatory parameters (missing protocol or profile will exit the run.)
-if (params.input) {
-    ch_input = file(params.input)
-} else {
-    exit 1, 'Input samplesheet not specified!'
-}
+// // Check mandatory parameters (missing protocol or profile will exit the run.)
+// if (params.input) {
+//     ch_input = file(params.input)
+// } else {
+//     exit 1, 'Input samplesheet not specified!'
+// }
 
-if (params.fasta){
-    fasta = file(params.fasta)
-} else {
-    if (params.genome) {
-        fasta = file(params.genomes[params.genome].fasta, checkIfExists: true)
-    } else {
-        exit 1, 'reference fasta not specified!'
-    }
-}
+// if (params.fasta){
+//     fasta = file(params.fasta)
+// } else {
+//     if (params.genome) {
+//         fasta = file(params.genomes[params.genome].fasta, checkIfExists: true)
+//     } else {
+//         exit 1, 'reference fasta not specified!'
+//     }
+// }
 
-if (params.gtf){
-    gtf = file(params.gtf)
-} else {
-    if (params.genome) {
-        gtf   = file(params.genomes[params.genome].gtf, checkIfExists: true)
-    }
-}
+// if (params.gtf){
+//     gtf = file(params.gtf)
+// } else {
+//     if (params.genome) {
+//         gtf   = file(params.genomes[params.genome].gtf, checkIfExists: true)
+//     }
+// }
 
 // Function to check if running offline
 def isOffline() {
@@ -117,6 +117,7 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 ////////////////////////////////////////////////////
 /* --    IMPORT LOCAL MODULES/SUBWORKFLOWS     -- */
 ////////////////////////////////////////////////////
+include { validateParameters; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
 include { paramsSummaryMap                                  } from 'plugin/nf-schema'
 include { GET_TEST_DATA         } from '../modules/local/get_test_data'
 include { GET_NANOLYSE_FASTA    } from '../modules/local/get_nanolyse_fasta'
@@ -160,6 +161,15 @@ include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantif
 ////////////////////////////////////////////////////
 /* --           RUN MAIN WORKFLOW              -- */
 ////////////////////////////////////////////////////
+
+// Validate input parameters
+validateParameters() // get rid of old code up at top
+
+// Print summary of supplied parameters
+log.info paramsSummaryLog(workflow)
+
+// Create a new channel of metadata from a sample sheet passed to the pipeline through the --input parameter
+ch_input = Channel.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
 
 // Info required for completion email and summary
 def multiqc_report      = []
