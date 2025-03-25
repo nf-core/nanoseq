@@ -190,10 +190,22 @@ workflow NANOSEQ{
     ch_samples.view()
 
     if (params.dorado) {
-        DORADO(dorado_samplesheet,input_path,ref,barcode_kit)
+        /*
+        * SUBWORKFLOW: Dorado - performs demux, chopper trimming and alignment. Reads in basecalling fastq file
+        */
+
+        PREPARE_GENOME ( ch_fastq )
+        ch_fasta_index = PREPARE_GENOME.out.ch_fasta_index
+        ch_gtf_bed     = PREPARE_GENOME.out.ch_gtf_bed
+        ch_fasta       = PREPARE_GENOME.out.ch_fasta
+        ch_fai         = PREPARE_GENOME.out.ch_fai
+        ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.samtools_version.first().ifEmpty(null))
+        ch_software_versions = ch_software_versions.mix(PREPARE_GENOME.out.gtf2bed_version.first().ifEmpty(null))
+
+        DORADO(dorado_samplesheet,input_path,ch_fasta,barcode_kit,params.barcode_both_ends)
+        ch_align_sam.DORADO.out.sample_bam
     }
     else {
-        //everything
         if (!params.skip_demultiplexing) {
 
         /*
@@ -330,25 +342,25 @@ workflow NANOSEQ{
     if (!params.skip_bigbed) {
 
         /*
-            * SUBWORKFLOW: Convert BAM -> BED12 -> BigBED
-            */
+        * SUBWORKFLOW: Convert BAM -> BED12 -> BigBED
+        */
         BEDTOOLS_UCSC_BIGBED ( ch_view_sortbam )
         ch_bedtools_version = ch_bedtools_version.mix(BEDTOOLS_UCSC_BIGBED.out.bedtools_version.first().ifEmpty(null))
         ch_software_versions = ch_software_versions.mix(BEDTOOLS_UCSC_BIGBED.out.bed12tobigbed_version.first().ifEmpty(null))
-    }
-    ch_software_versions = ch_software_versions.mix(ch_bedtools_version.first().ifEmpty(null))
+    
+        ch_software_versions = ch_software_versions.mix(ch_bedtools_version.first().ifEmpty(null))
 
-    ch_view_sortbam
-        .map { it -> [ it[0], it[3] ] }
-        .set { ch_sortbam }
-    ch_view_sortbam
-        .map { it -> [ it[0], it[3], it[4] ] }
-        .set { ch_nanopolish_sortbam }
+        ch_view_sortbam
+            .map { it -> [ it[0], it[3] ] }
+            .set { ch_sortbam }
+        ch_view_sortbam
+            .map { it -> [ it[0], it[3], it[4] ] }
+            .set { ch_nanopolish_sortbam }
     } else {
         ch_sample
             .map { it -> if (it[6].toString().endsWith('.bam')) [ it[0], it[6] ] }
             .set { ch_sample_bam }
-        BAM_RENAME ( ch_sample_bam )
+        BAM_RENAME( ch_sample_bam )
         ch_sortbam = BAM_RENAME.out.bam
     }
 
