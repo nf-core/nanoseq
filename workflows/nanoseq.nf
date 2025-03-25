@@ -106,6 +106,7 @@ include { QCAT                  } from '../modules/local/qcat'
 include { BAM_RENAME            } from '../modules/local/bam_rename'
 include { BAMBU                 } from '../modules/local/bambu'
 include { MULTIQC               } from '../modules/nf-core/multiqc/main'
+include { DORADO                } from '../subworkflows/local/dorado.nf'
 
 /*
  * SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
