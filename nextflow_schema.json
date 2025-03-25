@@ -1,36 +1,27 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/nf-core/nanoseq/master/nextflow_schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/nf-core/nanoseq//nextflow_schema.json",
     "title": "nf-core/nanoseq pipeline parameters",
     "description": "A pipeline to demultiplex, QC and map Nanopore data",
     "type": "object",
-    "definitions": {
+    "$defs": {
         "input_output_options": {
             "title": "Input/output options",
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "protocol"],
+            "required": ["input", "outdir"],
             "properties": {
                 "input": {
                     "type": "string",
                     "format": "file-path",
+                    "exists": true,
+                    "schema": "assets/schema_input.json",
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
-                    "schema": "assets/schema_input.json",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/nanoseq/usage).",
-                    "fa_icon": "fas fa-file-csv",
-                    "default": "./samplesheet.csv"
-                },
-                "protocol": {
-                    "type": "string",
-                    "description": "Input sample type. Valid options: 'DNA', 'cDNA',  and 'directRNA'.",
-                    "format": "sample-type",
-                    "mimetype": "text/csv",
-                    "schema": "assets/schema_input.json",
-                    "help_text": "You will need to specify a protocol based on the sample input type. Valid options are 'DNA', 'cDNA', and 'directRNA'.",
-                    "fa_icon": "fas fa-dna"
+                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row.",
+                    "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
                     "type": "string",
@@ -38,382 +29,309 @@
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
                     "fa_icon": "fas fa-folder-open"
                 },
-                "email": {
+                "protocol": {
                     "type": "string",
-                    "description": "Email address for completion summary.",
-                    "fa_icon": "fas fa-envelope",
-                    "help_text": "Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.",
-                    "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
+                    "description": "Input sample type. Valid options: 'DNA', 'cDNA',  and 'directRNA'."
                 },
                 "multiqc_title": {
                     "type": "string",
-                    "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
-                    "fa_icon": "fas fa-file-signature"
+                    "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.",
+                    "pattern": "^([a-zA-Z0-9_\\\\-\\\\.]+)@([a-zA-Z0-9_\\\\-\\\\.]+)\\\\.([a-zA-Z]{2,5})$"
                 }
             }
         },
         "demultiplexing_options": {
-            "title": "Demultiplexing options",
+            "title": "Demultiplexing Options",
             "type": "object",
-            "description": "Options required to basecall and demultiplex samples.",
+            "description": "\"Options required to basecall and demultiplex samples.",
             "default": "",
-            "fa_icon": "fab fa-autoprefixer",
             "properties": {
                 "input_path": {
                     "type": "string",
-                    "format": "file-path",
-                    "description": "Path to Nanopore run directory files (e.g. 'fastq_pass/*') or a basecalled fastq file that requires demultiplexing.",
-                    "fa_icon": "far fa-file-code"
+                    "description": "Path to Nanopore run directory files (e.g. 'fastq_pass/*') or a basecalled fastq file that requires demultiplexing"
                 },
                 "barcode_kit": {
                     "type": "string",
-                    "description": "Barcode kit used to perform the sequencing e.g. 'SQK-PBK004'.",
-                    "help_text": "If you would like to perform demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):\n\n| `qcat` barcode kit specifications | description                                                                   |\n|-----------------------------------|-------------------------------------------------------------------------------|\n| `Auto`                            | Auto detect barcoding kit                                                     |\n| `RBK001`                          | Rapid barcoding kit                                                           |\n| `RBK004`                          | Rapid barcoding kit v4                                                        |\n| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |\n| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |\n| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |\n| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |\n| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |\n| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |\n| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |\n| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |\n| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |",
-                    "fa_icon": "fas fa-barcode"
+                    "description": "Barcode kit used to perform the sequencing e.g. 'SQK-PBK004'",
+                    "help_text": "If you would like to perform demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):\\n\\n| `qcat` barcode kit specifications | description                                                                   |\\n|-----------------------------------|-------------------------------------------------------------------------------|\\n| `Auto`                            | Auto detect barcoding kit                                                     |\\n| `RBK001`                          | Rapid barcoding kit                                                           |\\n| `RBK004`                          | Rapid barcoding kit v4                                                        |\\n| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |\\n| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |\\n| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |\\n| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |\\n| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |\\n| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |\\n| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |\\n| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |\\n| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |\""
                 },
                 "barcode_both_ends": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-barcode",
                     "description": "Require barcode on both ends for basecaller."
                 },
                 "trim_barcodes": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-barcode",
                     "description": "Trim barcodes from the output sequences in the FastQ files from basecaller."
                 },
                 "gpu_device": {
                     "type": "string",
                     "default": "auto",
-                    "description": "Device specified in GPU mode using '--device'.",
-                    "fa_icon": "fas fa-fish"
+                    "description": "Device specified in GPU mode using '--device'."
                 },
                 "gpu_cluster_options": {
                     "type": "string",
-                    "description": "Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1').",
-                    "fa_icon": "fas fa-fish"
+                    "description": "Cluster options required to use GPU resources (e.g. '--part=gpu --gres=gpu:1')."
                 },
                 "qcat_min_score": {
                     "type": "integer",
                     "default": 60,
-                    "description": "Specify the minimum quality score for qcat in the range 0-100.",
-                    "fa_icon": "fas fa-cut"
+                    "description": "Specify the minimum quality score for qcat in the range 0-100."
                 },
                 "qcat_detect_middle": {
                     "type": "boolean",
-                    "description": "Search for adapters in the whole read by applying the '--detect-middle' parameter in qcat.",
-                    "fa_icon": "fas fa-cut"
+                    "description": "Search for adapters in the whole read by applying the '--detect-middle' parameter in qcat."
                 },
                 "skip_demultiplexing": {
                     "type": "boolean",
-                    "description": "Skip demultiplexing with qcat.",
-                    "fa_icon": "fas fa-fast-forward"
-                },
-                "run_nanolyse": {
-                    "type": "boolean",
-                    "description": "Filter reads from FastQ files using NanoLyse",
-                    "fa_icon": "fas fa-fast-forward"
+                    "description": "Skip demultiplexing with qcat."
                 },
                 "nanolyse_fasta": {
                     "type": "string",
-                    "description": "Fasta file to be filtered against using NanoLyse",
-                    "fa_icon": "far fa-file-code"
+                    "description": "Fasta file to be filtered against using NanoLyse"
+                },
+                "run_nanolyse": {
+                    "type": "boolean",
+                    "description": "Filter reads from FastQ files using NanoLyse"
                 }
             }
         },
         "alignment_options": {
-            "title": "Alignment options",
+            "title": "Alignment Options",
             "type": "object",
             "description": "Options to adjust parameters and filtering criteria for read alignments.",
             "default": "",
-            "fa_icon": "fas fa-map-signs",
             "properties": {
                 "aligner": {
                     "type": "string",
                     "default": "minimap2",
-                    "description": "Specifies the aligner to use i.e. 'minimap2' or 'graphmap2'.",
-                    "fa_icon": "fas fa-align-center"
+                    "description": "Specifies the aligner to use i.e. 'minimap2' or 'graphmap2'."
                 },
                 "stranded": {
                     "type": "boolean",
                     "description": "Specifies if the data is strand-specific. Automatically activated when using '--protocol directRNA'.",
-                    "help_text": "When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap2`:\n\n| `nanoseq` input              | `minimap2` presets  | `graphmap2` presets |\n|------------------------------|---------------------|---------------------|\n| `--protocol DNA`             | -ax map-ont         | no presets          |\n| `--protocol cDNA`            | -ax splice          | -x rnaseq           |\n| `--protocol directRNA`       | -ax splice -uf -k14 | -x rnaseq           |\n| `--protocol cDNA --stranded` | -ax splice -uf      | -x rnaseq           |",
-                    "fa_icon": "fas fa-exchange-alt"
+                    "help_text": "When using `--protocol`/`--stranded` the following command-line arguments will be set for `minimap2` and `graphmap2`:\\n\\n| `nanoseq` input              | `minimap2` presets  | `graphmap2` presets |\\n|------------------------------|---------------------|---------------------|\\n| `--protocol DNA`             | -ax map-ont         | no presets          |\\n| `--protocol cDNA`            | -ax splice          | -x rnaseq           |\\n| `--protocol directRNA`       | -ax splice -uf -k14 | -x rnaseq           |\\n| `--protocol cDNA --stranded` | -ax splice -uf      | -x rnaseq           |\""
                 },
                 "save_align_intermeds": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-save",
                     "description": "Save the '.sam' files from the alignment step - not done by default."
                 },
                 "skip_alignment": {
                     "type": "boolean",
-                    "description": "Skip alignment and downstream processes.",
-                    "fa_icon": "fas fa-fast-forward"
+                    "description": "Skip alignment and downstream processes."
                 }
             }
         },
         "variant_calling_options": {
-            "title": "Variant calling options",
+            "title": "Variant Calling Options",
             "type": "object",
             "description": "Options to adjust pameters for DNA varinat calling and structural variant calling.",
             "default": "",
-            "fa_icon": "fas fa-align-center",
             "properties": {
                 "call_variants": {
                     "type": "boolean",
-                    "description": "Specifies if variant calling will executed.",
-                    "fa_icon": "fas fa-exchange-alt"
+                    "description": "Specifies if variant calling will executed."
                 },
                 "variant_caller": {
                     "type": "string",
                     "default": "medaka",
-                    "description": "Specifies the variant caller that will used to call small variants (available are: medaka, deepvariant, and pepper_margin_deepvariant). Variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`. Please note `deepvariant` and `pepper_margin_deepvariant` are only avaible if using singularity or docker.",
-                    "fa_icon": "fas fa-bezier-curve"
+                    "description": "Specifies the variant caller that will used to call small variants (available are: medaka, deepvariant, and pepper_margin_deepvariant). Variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`. Please note `deepvariant` and `pepper_margin_deepvariant` are only avaible if using singularity or docker."
                 },
                 "structural_variant_caller": {
                     "type": "string",
                     "default": "sniffles",
-                    "description": "Specifies the variant caller that will be used to call structural variants (available are: sniffles and cutesv). Structural variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`.",
-                    "fa_icon": "fas fa-bezier-curve"
+                    "description": "Specifies the variant caller that will be used to call structural variants (available are: sniffles and cutesv). Structural variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`."
                 },
                 "split_mnps": {
                     "type": "boolean",
-                    "description": "Specifies if MNPs will be split into SNPs when using medaka.",
-                    "fa_icon": "fas fa-file-alt"
-                },
-                "deepvariant_gpu": {
-                    "type": "boolean",
-                    "fa_icon": "fas fa-exchange-alt",
-                    "description": "Specifies whether to call variants with pepper_margin_deepvariant in GPU mode."
+                    "description": "Specifies if MNPs will be split into SNPs when using medaka."
                 },
                 "phase_vcf": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-exchange-alt",
                     "description": "Specifies if vcf will be phased when using medaka."
                 },
                 "skip_vc": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip variant calling."
                 },
                 "skip_sv": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip structural variant calling."
+                },
+                "deepvariant_gpu": {
+                    "type": "boolean",
+                    "description": "Specifies whether to call variants with pepper_margin_deepvariant in GPU mode."
                 }
             }
         },
-        "differential_analysis_options": {
-            "title": "Differential analysis options",
+        "differential_analysis_option": {
+            "title": "Differential Analysis Option",
             "type": "object",
-            "description": "Options to adjust quantification and differential analysis",
+            "description": "Options to adjust quantification and differential analysis.",
             "default": "",
-            "fa_icon": "fas fa-calculator",
             "properties": {
                 "quantification_method": {
                     "type": "string",
                     "default": "bambu",
-                    "description": "Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.",
-                    "fa_icon": "fas fa-bezier-curve"
+                    "description": "Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA."
                 },
                 "skip_quantification": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip transcript quantification and differential analysis."
                 },
                 "skip_differential_analysis": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip differential analysis with DESeq2 and DEXSeq."
                 }
             }
         },
         "rna_fusion_analysis_options": {
-            "title": "RNA fusion analysis options",
+            "title": "RNA Fusion Analysis Options",
             "type": "object",
             "description": "Options to adjust the RNA fusion analysis",
-            "fa_icon": "fas fa-calculator",
+            "default": "",
             "properties": {
-                "jaffal_ref_dir": {
-                    "type": "string",
-                    "default": "for_jaffal",
-                    "description": "Specifies the reference directory for JAFFAL.",
-                    "fa_icon": "fas fa-bezier-curve"
-                },
                 "skip_fusion_analysis": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip differential analysis with DESeq2 and DEXSeq."
+                },
+                "jaffal_ref_dir": {
+                    "type": "string",
+                    "description": "Specifies the reference directory for JAFFAL."
                 }
             }
         },
         "rna_modification_analysis_options": {
-            "title": "RNA modification analysis options",
+            "title": "RNA Modification Analysis Options",
             "type": "object",
             "description": "Options to adjust the RNA modification analysis",
             "default": "",
-            "fa_icon": "fas fa-calculator",
             "properties": {
                 "skip_modification_analysis": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip RNA modification analysis."
                 },
                 "skip_xpore": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip differential modification analysis with xpore."
                 },
                 "skip_m6anet": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip m6A detection with m6anet."
                 }
             }
         },
         "process_skipping_options": {
-            "title": "Process skipping options",
+            "title": "Process Skipping Options",
             "type": "object",
             "description": "Options to skip various steps within the workflow.",
             "default": "",
-            "fa_icon": "fas fa-fast-forward",
             "properties": {
                 "skip_bigbed": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip BigBed file generation."
                 },
                 "skip_bigwig": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip BigWig file generation."
+                },
+                "skip_qc": {
+                    "type": "boolean",
+                    "description": "Skip all QC steps apart from MultiQC."
                 },
                 "skip_nanoplot": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip NanoPlot."
                 },
                 "skip_fastqc": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip FastQC."
                 },
                 "skip_multiqc": {
                     "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
                     "description": "Skip MultiQC."
-                },
-                "skip_qc": {
-                    "type": "boolean",
-                    "fa_icon": "fas fa-fast-forward",
-                    "description": "Skip all QC steps apart from MultiQC."
                 }
             }
         },
         "reference_genome_options": {
-            "title": "Reference genome options",
+            "title": "Reference Genome Options",
             "type": "object",
-            "fa_icon": "fas fa-dna",
             "description": "Reference genome related files and options required for the workflow.",
+            "default": "",
             "properties": {
+                "genome": {
+                    "type": "string",
+                    "description": "Name of iGenomes reference.",
+                    "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`. \\n\\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
+                },
+                "fasta": {
+                    "type": "string",
+                    "pattern": "\"^\\\\S+\\\\.fn?a(sta)?(\\\\.gz)?$",
+                    "description": "Path to FASTA genome file",
+                    "help_text": "This parameter is *mandatory* if `--genome` is not specified."
+                },
+                "gtf": {
+                    "type": "string",
+                    "pattern": "^\\\\S+\\\\.gtf(\\\\.gz)?$",
+                    "help_text": "This parameter is *mandatory* if `--genome` is not specified.",
+                    "description": "Path to GTF annotation file."
+                },
                 "igenomes_base": {
                     "type": "string",
-                    "format": "directory-path",
-                    "description": "Directory / URL base for iGenomes references.",
                     "default": "s3://ngi-igenomes/igenomes",
-                    "fa_icon": "fas fa-cloud-download-alt",
-                    "hidden": true
+                    "hidden": true,
+                    "description": "Directory / URL base for iGenomes references."
                 },
                 "igenomes_ignore": {
                     "type": "boolean",
                     "description": "Do not load the iGenomes reference config.",
-                    "fa_icon": "fas fa-ban",
-                    "hidden": true,
-                    "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`."
+                    "hidden": true
                 }
             }
         },
         "institutional_config_options": {
-            "title": "Institutional config options",
+            "title": "Institutional Config Options",
             "type": "object",
-            "fa_icon": "fas fa-university",
             "description": "Parameters used to describe centralised config profiles. These should not be edited.",
-            "help_text": "The centralised nf-core configuration profiles use a handful of pipeline parameters to describe themselves. This information is then printed to the Nextflow log when you run a pipeline. You should not need to change these values when you run a pipeline.",
+            "default": "",
             "properties": {
                 "custom_config_version": {
                     "type": "string",
-                    "description": "Git commit id for Institutional configs.",
                     "default": "master",
                     "hidden": true,
-                    "fa_icon": "fas fa-users-cog"
+                    "description": "Git commit id for Institutional configs."
                 },
                 "custom_config_base": {
                     "type": "string",
-                    "description": "Base directory for Institutional configs.",
                     "default": "https://raw.githubusercontent.com/nf-core/configs/master",
                     "hidden": true,
-                    "help_text": "If you're running offline, Nextflow will not be able to fetch the institutional config files from the internet. If you don't need them, then this is not a problem. If you do need them, you should download the files from the repo and tell Nextflow where to find them with this parameter.",
-                    "fa_icon": "fas fa-users-cog"
+                    "description": "Base directory for Institutional configs.",
+                    "help_text": "If you're running offline, Nextflow will not be able to fetch the institutional config files from the internet. If you don't need them, then this is not a problem. If you do need them, you should download the files from the repo and tell Nextflow where to find them with this parameter."
                 },
                 "config_profile_name": {
                     "type": "string",
-                    "description": "Institutional config name.",
-                    "hidden": true,
-                    "fa_icon": "fas fa-users-cog"
+                    "description": "Institutional config name."
                 },
                 "config_profile_description": {
                     "type": "string",
-                    "description": "Institutional config description.",
                     "hidden": true,
-                    "fa_icon": "fas fa-users-cog"
+                    "description": "Institutional config description."
                 },
                 "config_profile_contact": {
                     "type": "string",
-                    "description": "Institutional config contact information.",
                     "hidden": true,
-                    "fa_icon": "fas fa-users-cog"
+                    "description": "Institutional config contact information."
                 },
                 "config_profile_url": {
                     "type": "string",
-                    "description": "Institutional config URL link.",
                     "hidden": true,
-                    "fa_icon": "fas fa-users-cog"
+                    "description": "Institutional config URL link."
                 }
-            }
-        },
-        "max_job_request_options": {
-            "title": "Max job request options",
-            "type": "object",
-            "fa_icon": "fab fa-acquisitions-incorporated",
-            "description": "Set the top limit for requested resources for any single job.",
-            "help_text": "If you are running on a smaller system, a pipeline step requesting more resources than are available may cause the Nextflow to stop the run with an error. These options allow you to cap the maximum resources requested by any single job so that the pipeline will run on your system.\n\nNote that you can not _increase_ the resources requested by any job using these options. For that you will need your own configuration file. See [the nf-core website](https://nf-co.re/usage/configuration) for details.",
-            "properties": {
-                "max_cpus": {
-                    "type": "integer",
-                    "description": "Maximum number of CPUs that can be requested for any single job.",
-                    "default": 16,
-                    "fa_icon": "fas fa-microchip",
-                    "hidden": true,
-                    "help_text": "Use to set an upper-limit for the CPU requirement for each process. Should be an integer e.g. `--max_cpus 1`"
-                },
-                "max_memory": {
-                    "type": "string",
-                    "description": "Maximum amount of memory that can be requested for any single job.",
-                    "default": "128.GB",
-                    "fa_icon": "fas fa-memory",
-                    "pattern": "^\\d+(\\.\\d+)?\\.?\\s*(K|M|G|T)?B$",
-                    "hidden": true,
-                    "help_text": "Use to set an upper-limit for the memory requirement for each process. Should be a string in the format integer-unit e.g. `--max_memory '8.GB'`"
-                },
-                "max_time": {
-                    "type": "string",
-                    "description": "Maximum amount of time that can be requested for any single job.",
-                    "default": "240.h",
-                    "fa_icon": "far fa-clock",
-                    "pattern": "^(\\d+\\.?\\s*(s|m|h|day)\\s*)+$",
-                    "hidden": true,
-                    "help_text": "Use to set an upper-limit for the time requirement for each process. Should be a string in the format integer-unit e.g. `--max_time '2.h'`"
-                }
-            }
+            },
+            "help_text": "The centralised nf-core configuration profiles use a handful of pipeline parameters to describe themselves. This information is then printed to the Nextflow log when you run a pipeline. You should not need to change these values when you run a pipeline."
         },
         "generic_options": {
             "title": "Generic options",
@@ -422,10 +340,34 @@
             "description": "Less common options for the pipeline, typically set in a config file.",
             "help_text": "These options are common to all nf-core pipelines and allow you to customise some of the core preferences for how the pipeline runs.\n\nTypically these options would be set in a Nextflow config file loaded for all pipeline runs, such as `~/.nextflow/config`.",
             "properties": {
-                "help": {
+                "multiqc_config": {
+                    "type": "string",
+                    "hidden": true
+                },
+                "max_multiqc_email_size": {
+                    "type": "string",
+                    "default": "25.MB",
+                    "pattern": "^\\d+(\\.\\d*)?\\s*(K|M|G|T)?B$",
+                    "hidden": true
+                },
+                "email_on_fail": {
+                    "type": "string",
+                    "description": "Email address for completion summary, only when pipeline fails.",
+                    "pattern": "^([a-zA-Z0-9_\\\\-\\\\.]+)@([a-zA-Z0-9_\\\\-\\\\.]+)\\\\.([a-zA-Z]{2,5})$",
+                    "hidden": true
+                },
+                "plaintext_email": {
                     "type": "boolean",
-                    "description": "Display help text.",
-                    "fa_icon": "fas fa-question-circle",
+                    "description": "Send plain-text email instead of HTML.",
+                    "hidden": true
+                },
+                "monochrome_logs": {
+                    "type": "boolean",
+                    "hidden": true
+                },
+                "hook_url": {
+                    "type": "string",
+                    "description": "Incoming hook URL for messaging service",
                     "hidden": true
                 },
                 "version": {
@@ -434,107 +376,49 @@
                     "fa_icon": "fas fa-question-circle",
                     "hidden": true
                 },
-                "email_on_fail": {
-                    "type": "string",
-                    "description": "Email address for completion summary, only when pipeline fails.",
-                    "fa_icon": "fas fa-exclamation-triangle",
-                    "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$",
-                    "help_text": "An email address to send a summary email to when the pipeline is completed - ONLY sent if the pipeline does not exit successfully.",
-                    "hidden": true
-                },
-                "plaintext_email": {
-                    "type": "boolean",
-                    "description": "Send plain-text email instead of HTML.",
-                    "fa_icon": "fas fa-remove-format",
-                    "hidden": true
-                },
-                "max_multiqc_email_size": {
-                    "type": "string",
-                    "description": "File size limit when attaching MultiQC reports to summary emails.",
-                    "pattern": "^\\d+(\\.\\d+)?\\.?\\s*(K|M|G|T)?B$",
-                    "default": "25.MB",
-                    "fa_icon": "fas fa-file-upload",
-                    "hidden": true
-                },
-                "monochrome_logs": {
-                    "type": "boolean",
-                    "description": "Do not use coloured log outputs.",
-                    "fa_icon": "fas fa-palette",
-                    "hidden": true
-                },
-                "hook_url": {
-                    "type": "string",
-                    "description": "Incoming hook URL for messaging service",
-                    "fa_icon": "fas fa-people-group",
-                    "help_text": "Incoming hook URL for messaging service. Currently, MS Teams and Slack are supported.",
-                    "hidden": true
-                },
-                "multiqc_config": {
-                    "type": "string",
-                    "description": "Custom config file to supply to MultiQC.",
-                    "fa_icon": "fas fa-cog",
-                    "hidden": true
-                },
-                "tracedir": {
-                    "type": "string",
-                    "description": "Directory to keep pipeline Nextflow logs and reports.",
-                    "default": "${params.outdir}/pipeline_info",
-                    "fa_icon": "fas fa-cogs",
-                    "hidden": true
-                },
                 "validate_params": {
                     "type": "boolean",
                     "description": "Boolean whether to validate parameters against the schema at runtime",
                     "default": true,
                     "fa_icon": "fas fa-check-square",
                     "hidden": true
-                },
-                "show_hidden_params": {
-                    "type": "boolean",
-                    "fa_icon": "far fa-eye-slash",
-                    "description": "Show all params when using `--help`",
-                    "hidden": true,
-                    "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
                 }
             }
         }
     },
     "allOf": [
         {
-            "$ref": "#/definitions/input_output_options"
+            "$ref": "#/$defs/input_output_options"
         },
         {
-            "$ref": "#/definitions/demultiplexing_options"
+            "$ref": "#/$defs/demultiplexing_options"
         },
         {
-            "$ref": "#/definitions/alignment_options"
+            "$ref": "#/$defs/alignment_options"
         },
         {
-            "$ref": "#/definitions/variant_calling_options"
+            "$ref": "#/$defs/variant_calling_options"
         },
         {
-            "$ref": "#/definitions/differential_analysis_options"
+            "$ref": "#/$defs/differential_analysis_option"
         },
         {
-            "$ref": "#/definitions/rna_fusion_analysis_options"
+            "$ref": "#/$defs/rna_fusion_analysis_options"
         },
         {
-            "$ref": "#/definitions/rna_modification_analysis_options"
+            "$ref": "#/$defs/rna_modification_analysis_options"
         },
         {
-            "$ref": "#/definitions/process_skipping_options"
+            "$ref": "#/$defs/process_skipping_options"
         },
         {
-            "$ref": "#/definitions/reference_genome_options"
+            "$ref": "#/$defs/reference_genome_options"
         },
         {
-            "$ref": "#/definitions/institutional_config_options"
+            "$ref": "#/$defs/institutional_config_options"
         },
         {
-            "$ref": "#/definitions/max_job_request_options"
-        },
-        {
-            "$ref": "#/definitions/generic_options"
+            "$ref": "#/$defs/generic_options"
         }
     ]
 }

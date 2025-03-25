@@ -21,7 +21,14 @@ process BCFTOOLS_SORT {
 
     script:
     def args = task.ext.args ?: '--output-type z'
+    def args = task.ext.args ?: '--output-type z'
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def extension = args.contains("--output-type b") || args.contains("-Ob") ? "bcf.gz" :
+                    args.contains("--output-type u") || args.contains("-Ou") ? "bcf" :
+                    args.contains("--output-type z") || args.contains("-Oz") ? "vcf.gz" :
+                    args.contains("--output-type v") || args.contains("-Ov") ? "vcf" :
+                    "vcf"
+
     def extension = args.contains("--output-type b") || args.contains("-Ob") ? "bcf.gz" :
                     args.contains("--output-type u") || args.contains("-Ou") ? "bcf" :
                     args.contains("--output-type z") || args.contains("-Oz") ? "vcf.gz" :
@@ -31,6 +38,8 @@ process BCFTOOLS_SORT {
     """
     bcftools \\
         sort \\
+        --output ${prefix}.${extension} \\
+        --temp-dir . \\
         --output ${prefix}.${extension} \\
         --temp-dir . \\
         $args \\
@@ -43,6 +52,7 @@ process BCFTOOLS_SORT {
     """
 
     stub:
+    def args = task.ext.args ?: '--output-type z'
     def args = task.ext.args ?: '--output-type z'
     def prefix = task.ext.prefix ?: "${meta.id}"
 
