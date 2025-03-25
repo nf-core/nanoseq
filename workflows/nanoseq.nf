@@ -162,14 +162,7 @@ include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantif
 /* --           RUN MAIN WORKFLOW              -- */
 ////////////////////////////////////////////////////
 
-// Validate input parameters
-validateParameters() // get rid of old code up at top
 
-// Print summary of supplied parameters
-log.info paramsSummaryLog(workflow)
-
-// Create a new channel of metadata from a sample sheet passed to the pipeline through the --input parameter
-ch_input = Channel.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
 
 // Info required for completion email and summary
 def multiqc_report      = []
@@ -210,6 +203,15 @@ workflow NANOSEQ{
      */
     INPUT_CHECK ( ch_input, ch_input_path )
         .set { ch_sample }
+
+        // Validate input parameters
+    validateParameters() // get rid of old code up at top
+
+    // Print summary of supplied parameters
+    log.info paramsSummaryLog(workflow)
+
+    // Create a new channel of metadata from a sample sheet passed to the pipeline through the --input parameter
+    ch_input = Channel.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
 
     if (!params.skip_demultiplexing) {
 
