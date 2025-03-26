@@ -64,7 +64,8 @@ process DORADO_DEMULTIPLEXING {
         $both_ends_option \\
         $args \\
         --output-dir . \\
-        $reads
+        $reads && \\
+    gzip .*.fastq
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
