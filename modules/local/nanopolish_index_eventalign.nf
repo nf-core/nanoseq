@@ -8,7 +8,7 @@ process NANOPOLISH_INDEX_EVENTALIGN {
         'quay.io/biocontainers/nanopolish:0.13.2--he3b7ca5_2' }"
 
     input:
-    tuple val(meta), path(genome), path(gtf), path(fast5), path(fastq), path(bam), path(bai)
+    tuple val(meta), path(genome), path(gtf), path(fastq), path(bam), path(bai)
 
     output:
     tuple val(meta), path(genome), path(gtf), path("*eventalign.txt"), path("*summary.txt"), emit: nanopolish_outputs
@@ -20,6 +20,7 @@ process NANOPOLISH_INDEX_EVENTALIGN {
     script:
     sample_summary = "$meta.id" +"_summary.txt"
     sample_eventalign = "$meta.id" +"_eventalign.txt"
+    fast5 = "$meta.nanopolish_fast5"
     """
     nanopolish index -d $fast5 $fastq
     nanopolish eventalign  --reads $fastq --bam $bam --genome $genome --scale-events --signal-index --summary $sample_summary --threads $task.cpus > $sample_eventalign

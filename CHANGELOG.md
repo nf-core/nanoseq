@@ -3,12 +3,25 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Dev
+
+- Updated Schema to latest nf-core version (nf-core tools 3.2.0)
+- updated conf and removed lib/groovy files that are depreciated in nf-core tools v. 3.2.0
+
+### Major enhancements
+
+### Software dependencies
+
+### Parameters
+
+### Bug fix
+
 ## [3.1.0] - 2023-03-10
 
 ### Major enhancements
 
 - Removed the `guppy` basecaller as distributing it via a docker image is a breach to EULA
-- Bump minimum Nextflow version from 21.10.3 -> 21.10.3
+- Bump minimum Nextflow version from 21.10.3 -> 22.10.1
 - Update pipeline template to nf-core/tools `2.7.2`
 - Update `bambu` version from `1.0.2` to `2.0.0`
 
