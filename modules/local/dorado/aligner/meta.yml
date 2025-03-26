@@ -9,13 +9,10 @@ keywords:
   - nanopore
 tools:
   - "dorado":
-      ## TODO nf-core: Add a description and other details for the software below
-      description: ""
-      homepage: ""
-      documentation: ""
-      tool_dev_url: ""
-      doi: ""
-      licence: 
+      description: "ONT developed basecaller but also includes demux and aligner tools"
+      homepage: "https://nanoporetech.com/software/other/dorado"
+      documentation: "https://dorado-docs.readthedocs.io/en/latest/basecaller/alignment/"
+      tool_dev_url: "https://github.com/nanoporetech/dorado"
       identifier: biotools:dorado
 
 ## TODO nf-core: Add a description of all of the variables used as input
@@ -25,18 +22,16 @@ input:
         type: map
         description: |
           Groovy Map containing sample information
-          e.g. `[ id:'sample1', single_end:false ]`
-  
+          e.g. `[ sample_id:'SQK-NBD114-24' , position_id: 'P2S-01069-A', flow_cell_id: 'PBA43828', kit: 'SQK-NBD114-24', experiment_id: 'experiment1', barcode: 'barcode04', alias: 'sample1']`
+
   ## TODO nf-core: Delete / customise this example input
-    - bam:
-        type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_25722"
-          - edam: "http://edamontology.org/format_2573"
-          - edam: "http://edamontology.org/format_3462"
-          
+    - fastq:
+        type: path
+        description: Path to demultiplexed fastq files
+        pattern: "*.{fastq}"
+    - fasta:
+        type: path
+        description: Path to reference fasta
 
 ## TODO nf-core: Add a description of all of the variables used as output
 output:
@@ -47,16 +42,11 @@ output:
         description: |
           Groovy Map containing sample information
           e.g. `[ id:'sample1', single_end:false ]`
-  ## TODO nf-core: Delete / customise this example output
     - "*.bam":
-        type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_25722"
-          - edam: "http://edamontology.org/format_2573"
-          - edam: "http://edamontology.org/format_3462"
-          
+        type: path
+        description: Aligned bam files
+        pattern: "*.{bam}"
+
   - versions:
     - "versions.yml":
         type: file
@@ -65,5 +55,6 @@ output:
 
 authors:
   - "@EKPayne"
+  - "@kwi11iams"
 maintainers:
   - "@EKPayne"
