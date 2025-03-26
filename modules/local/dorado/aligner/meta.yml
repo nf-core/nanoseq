@@ -1,0 +1,60 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "dorado_aligner"
+description: Aligns reads to reference genome
+keywords:
+  - dorado
+  - aligner
+  - genomics
+  - nanopore
+tools:
+  - "dorado":
+      description: "ONT developed basecaller but also includes demux and aligner tools"
+      homepage: "https://nanoporetech.com/software/other/dorado"
+      documentation: "https://dorado-docs.readthedocs.io/en/latest/basecaller/alignment/"
+      tool_dev_url: "https://github.com/nanoporetech/dorado"
+      identifier: biotools:dorado
+
+## TODO nf-core: Add a description of all of the variables used as input
+input:
+  # Only when we have meta
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ sample_id:'SQK-NBD114-24' , position_id: 'P2S-01069-A', flow_cell_id: 'PBA43828', kit: 'SQK-NBD114-24', experiment_id: 'experiment1', barcode: 'barcode04', alias: 'sample1']`
+
+  ## TODO nf-core: Delete / customise this example input
+    - fastq:
+        type: path
+        description: Path to demultiplexed fastq files
+        pattern: "*.{fastq}"
+    - fasta:
+        type: path
+        description: Path to reference fasta
+
+## TODO nf-core: Add a description of all of the variables used as output
+output:
+  - bam:
+  #Only when we have meta
+    - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ id:'sample1', single_end:false ]`
+    - "*.bam":
+        type: path
+        description: Aligned bam files
+        pattern: "*.{bam}"
+
+  - versions:
+    - "versions.yml":
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+
+authors:
+  - "@EKPayne"
+  - "@kwi11iams"
+maintainers:
+  - "@EKPayne"
