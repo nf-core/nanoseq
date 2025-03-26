@@ -10,7 +10,10 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": [
+                "input",
+                "outdir"
+            ],
             "properties": {
                 "input": {
                     "type": "string",
@@ -31,7 +34,12 @@
                 },
                 "protocol": {
                     "type": "string",
-                    "description": "Input sample type. Valid options: 'DNA', 'cDNA',  and 'directRNA'."
+                    "description": "Input sample type. Valid options: 'DNA', 'cDNA',  and 'directRNA'.",
+                    "enum": [
+                        "DNA",
+                        "cDNA",
+                        "directRNA"
+                    ]
                 },
                 "multiqc_title": {
                     "type": "string",
@@ -57,7 +65,22 @@
                 "barcode_kit": {
                     "type": "string",
                     "description": "Barcode kit used to perform the sequencing e.g. 'SQK-PBK004'",
-                    "help_text": "If you would like to perform demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):\\n\\n| `qcat` barcode kit specifications | description                                                                   |\\n|-----------------------------------|-------------------------------------------------------------------------------|\\n| `Auto`                            | Auto detect barcoding kit                                                     |\\n| `RBK001`                          | Rapid barcoding kit                                                           |\\n| `RBK004`                          | Rapid barcoding kit v4                                                        |\\n| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |\\n| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |\\n| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |\\n| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |\\n| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |\\n| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |\\n| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |\\n| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |\\n| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |\""
+                    "help_text": "If you would like to perform demultiplexing please specify a barcode kit that can be recognised by [qcat](https://github.com/nanoporetech/qcat):\\n\\n| `qcat` barcode kit specifications | description                                                                   |\\n|-----------------------------------|-------------------------------------------------------------------------------|\\n| `Auto`                            | Auto detect barcoding kit                                                     |\\n| `RBK001`                          | Rapid barcoding kit                                                           |\\n| `RBK004`                          | Rapid barcoding kit v4                                                        |\\n| `NBD103/NBD104`                   | Native barcoding kit with barcodes 1-12                                       |\\n| `NBD114`                          | Native barcoding kit with barcodes 13-24                                      |\\n| `NBD104/NBD114`                   | Native barcoding kit with barcodes 1-24                                       |\\n| `PBC001`                          | PCR barcoding kits with 12 barcodes                                           |\\n| `PBC096`                          | PCR barcoding kits with 96 barcodes                                           |\\n| `RPB004/RLB001`                   | Rapid PCR Barcoding Kit (SQK-RPB004) and Rapid Low Input by PCR Barcoding Kit |\\n| `RPB004/LWB001`                   | Low Input by PCR Barcoding Kit                                                |\\n| `RAB204`                          | 16S Rapid Amplicon Barcoding Kit with 12 Barcodes                             |\\n| `VMK001`                          | Voltrax Barcoding Kit with 4 barcodes                                         |\"",
+                    "enum": [
+                        "Auto",
+                        "RBK001",
+                        "RBK004",
+                        "NBD103/NBD104",
+                        "NBD114",
+                        "NBD104/NBD114",
+                        "PBC001",
+                        "PBC096",
+                        "RPB004/RLB001",
+                        "PBK004/LWB001",
+                        "RAB204",
+                        "VMK001",
+                        "DUAL"
+                    ]
                 },
                 "barcode_both_ends": {
                     "type": "boolean",
@@ -108,7 +131,11 @@
                 "aligner": {
                     "type": "string",
                     "default": "minimap2",
-                    "description": "Specifies the aligner to use i.e. 'minimap2' or 'graphmap2'."
+                    "description": "Specifies the aligner to use i.e. 'minimap2' or 'graphmap2'.",
+                    "enum": [
+                        "minimap2",
+                        "graphmap2"
+                    ]
                 },
                 "stranded": {
                     "type": "boolean",
@@ -138,12 +165,22 @@
                 "variant_caller": {
                     "type": "string",
                     "default": "medaka",
-                    "description": "Specifies the variant caller that will used to call small variants (available are: medaka, deepvariant, and pepper_margin_deepvariant). Variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`. Please note `deepvariant` and `pepper_margin_deepvariant` are only avaible if using singularity or docker."
+                    "description": "Specifies the variant caller that will used to call small variants (available are: medaka, deepvariant, and pepper_margin_deepvariant). Variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`. Please note `deepvariant` and `pepper_margin_deepvariant` are only avaible if using singularity or docker.",
+                    "enum": [
+                        "clair3",
+                        "medaka",
+                        "deepvariant",
+                        "pepper_margin_deepvariant"
+                    ]
                 },
                 "structural_variant_caller": {
                     "type": "string",
                     "default": "sniffles",
-                    "description": "Specifies the variant caller that will be used to call structural variants (available are: sniffles and cutesv). Structural variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`."
+                    "description": "Specifies the variant caller that will be used to call structural variants (available are: sniffles and cutesv). Structural variant calling is only available if '--call_variants' is set and the protocol is set to `DNA`.",
+                    "enum": [
+                        "sniffles",
+                        "cutesv"
+                    ]
                 },
                 "split_mnps": {
                     "type": "boolean",
@@ -176,7 +213,11 @@
                 "quantification_method": {
                     "type": "string",
                     "default": "bambu",
-                    "description": "Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA."
+                    "description": "Specifies the transcript quantification method to use (available are: bambu or stringtie2). Only available when protocol is cDNA or directRNA.",
+                    "enum": [
+                        "bambu",
+                        "stringtie2"
+                    ]
                 },
                 "skip_quantification": {
                     "type": "boolean",
