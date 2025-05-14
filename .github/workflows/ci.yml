@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         NXF_VER:
-          - "24.04.2"
+          - "25.04.2"
           - "latest-everything"
         profile:
           - "conda"
@@ -63,7 +63,7 @@ jobs:
     if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
     runs-on: ubuntu-latest
     env:
-      NXF_VER: "22.10.3"
+      NXF_VER: "25.04.2"
       NXF_ANSI_LOG: false
     strategy:
       matrix:
@@ -92,7 +92,7 @@ jobs:
     if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
     runs-on: ubuntu-latest
     env:
-      NXF_VER: "22.10.3"
+      NXF_VER: "25.04.2"
       NXF_ANSI_LOG: false
     strategy:
       matrix:
