@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         NXF_VER:
-          - "22.10.1"
+          - "23.10.0"
           - "latest-everything"
     steps:
       - name: Check out pipeline code
@@ -44,7 +44,7 @@ jobs:
     if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
     runs-on: ubuntu-latest
     env:
-      NXF_VER: "22.10.3"
+      NXF_VER: "23.10.0"
       NXF_ANSI_LOG: false
     strategy:
       matrix:
@@ -71,7 +71,7 @@ jobs:
     if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
     runs-on: ubuntu-latest
     env:
-      NXF_VER: "22.10.3"
+      NXF_VER: "23.10.0"
       NXF_ANSI_LOG: false
     strategy:
       matrix:
