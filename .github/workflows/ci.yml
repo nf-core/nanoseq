@@ -28,7 +28,7 @@ jobs:
           - "latest-everything"
     steps:
       - name: Check out pipeline code
-        uses: actions/checkout@v3
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
 
       - name: Install Nextflow
         uses: nf-core/setup-nextflow@v1
@@ -54,7 +54,7 @@ jobs:
           - "test_nobc_nodx_rnamod"
     steps:
       - name: Check out pipeline code
-        uses: actions/checkout@v3
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
 
       - name: Install Nextflow
         uses: nf-core/setup-nextflow@v1
@@ -81,7 +81,7 @@ jobs:
           - "--skip_quantification"
     steps:
       - name: Check out pipeline code
-        uses: actions/checkout@v2
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
 
       - name: Install Nextflow
         env:
