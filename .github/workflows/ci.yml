@@ -54,35 +54,64 @@ jobs:
         with:
           version: "${{ matrix.NXF_VER }}"
 
-      - name: Set up Apptainer
-        if: matrix.profile == 'singularity'
-        uses: eWaterCycle/setup-apptainer@main
-
-      - name: Set up Singularity
-        if: matrix.profile == 'singularity'
+      - name: Run pipeline with test data
         run: |
-          mkdir -p $NXF_SINGULARITY_CACHEDIR
-          mkdir -p $NXF_SINGULARITY_LIBRARYDIR
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --outdir ./results
 
-      - name: Set up Miniconda
-        if: matrix.profile == 'conda'
-        uses: conda-incubator/setup-miniconda@a4260408e20b96e80095f42ff7f1a15b27dd94ca # v3
+  profile:
+    name: Run profile tests
+    if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
+    runs-on: ubuntu-latest
+    env:
+      NXF_VER: "22.10.3"
+      NXF_ANSI_LOG: false
+    strategy:
+      matrix:
+        profiles:
+          - "test_bc_nodx"
+          - "test_nobc_dx"
+          - "test_nobc_nodx_vc"
+          - "test_nobc_nodx_stringtie"
+          - "test_nobc_nodx_noaln"
+          - "test_nobc_nodx_rnamod"
+    steps:
+      - name: Check out pipeline code
+        uses: actions/checkout@v3
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v1
         with:
-          miniconda-version: "latest"
-          auto-update-conda: true
-          conda-solver: libmamba
-          channels: conda-forge,bioconda
+          version: "${{ matrix.NXF_VER }}"
 
-      - name: Set up Conda
-        if: matrix.profile == 'conda'
+      - name: Run pipeline with different profiles
         run: |
-          echo $(realpath $CONDA)/condabin >> $GITHUB_PATH
-          echo $(realpath python) >> $GITHUB_PATH
+          nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profiles }},docker --outdir ./results
 
-      - name: Clean up Disk space
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+  parameters:
+    name: Run parameter tests
+    if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
+    runs-on: ubuntu-latest
+    env:
+      NXF_VER: "22.10.3"
+      NXF_ANSI_LOG: false
+    strategy:
+      matrix:
+        parameters:
+          - "--aligner graphmap2"
+          - "--skip_alignment"
+          - "--skip_qc"
+          - "--skip_quantification"
+    steps:
+      - name: Check out pipeline code
+        uses: actions/checkout@v2
 
-      - name: "Run pipeline with test data ${{ matrix.NXF_VER }} | ${{ matrix.test_name }} | ${{ matrix.profile }}"
-        continue-on-error: ${{ matrix.NXF_VER == 'latest-everything' }}
+      - name: Install Nextflow
+        env:
+          CAPSULE_LOG: none
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.test_name }},${{ matrix.profile }} --outdir ./results
+          wget -qO- get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+
+      - name: Run pipeline with different parameters
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker ${{ matrix.parameters }}

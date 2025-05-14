@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "sarscov2 custom_prefix": {
         "content": [
             [
@@ -388,5 +389,14 @@
             "nextflow": "24.04.3"
         },
         "timestamp": "2024-07-22T11:02:53.550742"
+=======
+    "versions": {
+        "content": [
+            [
+                "versions.yml:md5,fe97b802cfb90f1f335e8a77f6258e30"
+            ]
+        ],
+        "timestamp": "2023-10-02T15:26:43+0000"
+>>>>>>> origin/add_dorado
     }
 }
