@@ -4,13 +4,8 @@ process FASTQC {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-<<<<<<< HEAD
         'https://depot.galaxyproject.org/singularity/fastqc:0.12.1--hdfd78af_0' :
         'biocontainers/fastqc:0.12.1--hdfd78af_0' }"
-=======
-        'https://depot.galaxyproject.org/singularity/fastqc:0.11.9--0' :
-        'biocontainers/fastqc:0.11.9--0' }"
->>>>>>> origin/add_dorado
 
     input:
     tuple val(meta), path(reads)
@@ -44,16 +39,10 @@ process FASTQC {
     done
 
     fastqc \\
-<<<<<<< HEAD
         ${args} \\
         --threads ${task.cpus} \\
         --memory ${fastqc_memory} \\
         ${renamed_files}
-=======
-        $args \\
-        --threads $task.cpus \\
-        $renamed_files
->>>>>>> origin/add_dorado
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

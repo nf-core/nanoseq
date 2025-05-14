@@ -479,7 +479,6 @@
                     "fa_icon": "fas fa-cog",
                     "hidden": true
                 },
-<<<<<<< HEAD
                 "multiqc_logo": {
                     "type": "string",
                     "description": "Custom logo file to supply to MultiQC. File name must also be set in the MultiQC config file",
@@ -491,7 +490,6 @@
                     "description": "Custom MultiQC yaml file containing HTML including a methods description.",
                     "fa_icon": "fas fa-cog"
                 },
-=======
                 "tracedir": {
                     "type": "string",
                     "description": "Directory to keep pipeline Nextflow logs and reports.",
@@ -499,7 +497,6 @@
                     "fa_icon": "fas fa-cogs",
                     "hidden": true
                 },
->>>>>>> origin/add_dorado
                 "validate_params": {
                     "type": "boolean",
                     "description": "Boolean whether to validate parameters against the schema at runtime",
@@ -507,7 +504,6 @@
                     "fa_icon": "fas fa-check-square",
                     "hidden": true
                 },
-<<<<<<< HEAD
                 "pipelines_testdata_base_path": {
                     "type": "string",
                     "fa_icon": "far fa-check-circle",
@@ -520,23 +516,18 @@
                     "fa_icon": "far calendar",
                     "description": "Suffix to add to the trace report filename. Default is the date and time in the format yyyy-MM-dd_HH-mm-ss.",
                     "hidden": true
-=======
                 "validationShowHiddenParams": {
                     "type": "boolean",
                     "fa_icon": "far fa-eye-slash",
                     "description": "Show all params when using `--help`",
                     "hidden": true,
                     "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
->>>>>>> origin/add_dorado
                 }
             }
         }
     },
     "allOf": [
         {
-<<<<<<< HEAD
-            "$ref": "#/$defs/input_output_options"
-=======
             "$ref": "#/definitions/input_output_options"
         },
         {
@@ -562,7 +553,6 @@
         },
         {
             "$ref": "#/definitions/reference_genome_options"
->>>>>>> origin/add_dorado
         },
         {
             "$ref": "#/$defs/reference_genome_options"
