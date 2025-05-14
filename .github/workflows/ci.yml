@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         NXF_VER:
-          - "23.10.0"
+          - "24.04.2"
           - "latest-everything"
     steps:
       - name: Check out pipeline code
@@ -44,15 +44,15 @@ jobs:
     if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
     runs-on: ubuntu-latest
     env:
-      NXF_VER: "23.10.0"
+      NXF_VER: "24.04.2"
       NXF_ANSI_LOG: false
     strategy:
       matrix:
         profiles:
-          - "test_nodx_vc"
-          - "test_nodx_stringtie"
-          - "test_nodx_noaln"
-          - "test_nodx_rnamod"
+          - "test_nobc_nodx_vc"
+          - "test_nobc_nodx_stringtie"
+          - "test_nobc_nodx_noaln"
+          - "test_nobc_nodx_rnamod"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3
@@ -71,7 +71,7 @@ jobs:
     if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/nanoseq') }}"
     runs-on: ubuntu-latest
     env:
-      NXF_VER: "23.10.0"
+      NXF_VER: "24.04.2"
       NXF_ANSI_LOG: false
     strategy:
       matrix:
