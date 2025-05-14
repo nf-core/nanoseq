@@ -30,6 +30,7 @@ include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_nano
 //   This is an example of how to use getGenomeAttribute() to fetch parameters
 //   from igenomes.config using `--genome`
 params.fasta = getGenomeAttribute('fasta')
+params.gtf = getGenomeAttribute('gtf')
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,19 +43,18 @@ params.fasta = getGenomeAttribute('fasta')
 //
 workflow NFCORE_NANOSEQ {
 
-    take:
-    samplesheet // channel: samplesheet read in from --input
+    // take:
+    // samplesheet // channel: samplesheet read in from --input
 
     main:
 
     //
     // WORKFLOW: Run pipeline
-    //
-    NANOSEQ (
-        samplesheet
-    )
-    emit:
-    multiqc_report = NANOSEQ.out.multiqc_report // channel: /path/to/multiqc_report.html
+    NANOSEQ ()
+    //    samplesheet
+    // )
+    //emit:
+    //multiqc_report = NANOSEQ.out.multiqc_report // channel: /path/to/multiqc_report.html
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,21 +80,21 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
-    NFCORE_NANOSEQ (
-        PIPELINE_INITIALISATION.out.samplesheet
-    )
+    NFCORE_NANOSEQ ()
+    //      PIPELINE_INITIALISATION.out.samplesheet
+    // )
     //
     // SUBWORKFLOW: Run completion tasks
     //
-    PIPELINE_COMPLETION (
-        params.email,
-        params.email_on_fail,
-        params.plaintext_email,
-        params.outdir,
-        params.monochrome_logs,
-        params.hook_url,
-        NFCORE_NANOSEQ.out.multiqc_report
-    )
+    //PIPELINE_COMPLETION (
+    //    params.email,
+    //    params.email_on_fail,
+    //    params.plaintext_email,
+    //    params.outdir,
+    //    params.monochrome_logs,
+    //    params.hook_url,
+    //    NFCORE_NANOSEQ.out.multiqc_report
+    //)
 }
 
 /*
