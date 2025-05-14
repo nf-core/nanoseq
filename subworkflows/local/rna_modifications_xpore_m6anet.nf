@@ -2,7 +2,9 @@
  * RNA MODIFICATION DETECTION WITH XPORE AND M6ANET
  */
 
-include { NANOPOLISH_INDEX_EVENTALIGN } from '../../modules/local/nanopolish_index_eventalign'
+
+// include { F5C_INDEX_EVENTALIGN } from '../../modules/local/f5c_index_eventalign' // f5c works for my other pipeline, but idk how it got screwed here
+include { NANOPOLISH_INDEX_EVENTALIGN } from '../../modules/local/nanopolish_index_eventalign' // nanopolish does the job
 include { XPORE_DATAPREP        } from '../../modules/local/xpore_dataprep'
 include { XPORE_DIFFMOD         } from '../../modules/local/xpore_diffmod'
 include { M6ANET_DATAPREP        } from '../../modules/local/m6anet_dataprep'
@@ -10,14 +12,14 @@ include { M6ANET_INFERENCE      } from '../../modules/local/m6anet_inference'
 
 workflow RNA_MODIFICATION_XPORE_M6ANET {
     take:
-    ch_nanopolish_bam_fast5
+    ch_bam_fast5
 
     main:
 
     /*
      * Align current signals to reference with Nanopolish
      */
-    NANOPOLISH_INDEX_EVENTALIGN { ch_nanopolish_bam_fast5 }
+    NANOPOLISH_INDEX_EVENTALIGN { ch_bam_fast5 }
     ch_nanopolish_outputs = NANOPOLISH_INDEX_EVENTALIGN.out.nanopolish_outputs
     nanopolish_version    = NANOPOLISH_INDEX_EVENTALIGN.out.versions
 
