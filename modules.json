@@ -5,6 +5,11 @@
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
+<<<<<<< HEAD
+                    "fastqc": {
+                        "branch": "master",
+                        "git_sha": "08108058ea36a63f141c25c4e75f9f872a5b2296",
+=======
                     "bcftools/sort": {
                         "branch": "master",
                         "git_sha": "d6d112a1af2ee8c97fc1932df008183341e7d8fe",
@@ -63,10 +68,14 @@
                     "minimap2/index": {
                         "branch": "master",
                         "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+>>>>>>> origin/add_dorado
                         "installed_by": ["modules"]
                     },
                     "multiqc": {
                         "branch": "master",
+<<<<<<< HEAD
+                        "git_sha": "f0719ae309075ae4a291533883847c3f7c441dad",
+=======
                         "git_sha": "a6e11ac655e744f7ebc724be669dd568ffdc0e80",
                         "installed_by": ["modules"]
                     },
@@ -168,12 +177,33 @@
                     "untar": {
                         "branch": "master",
                         "git_sha": "d0b4fc03af52a1cc8c6fb4493b921b57352b1dd8",
+>>>>>>> origin/add_dorado
                         "installed_by": ["modules"]
                     }
                 }
             },
             "subworkflows": {
+<<<<<<< HEAD
+                "nf-core": {
+                    "utils_nextflow_pipeline": {
+                        "branch": "master",
+                        "git_sha": "c2b22d85f30a706a3073387f30380704fcae013b",
+                        "installed_by": ["subworkflows"]
+                    },
+                    "utils_nfcore_pipeline": {
+                        "branch": "master",
+                        "git_sha": "51ae5406a030d4da1e49e4dab49756844fdd6c7a",
+                        "installed_by": ["subworkflows"]
+                    },
+                    "utils_nfschema_plugin": {
+                        "branch": "master",
+                        "git_sha": "2fd2cd6d0e7b273747f32e465fdc6bcc3ae0814e",
+                        "installed_by": ["subworkflows"]
+                    }
+                }
+=======
                 "nf-core": {}
+>>>>>>> origin/add_dorado
             }
         }
     }
