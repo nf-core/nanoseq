@@ -14,9 +14,9 @@ jobs:
   EditorConfig:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
 
       - name: Install editorconfig-checker
         run: npm install -g editorconfig-checker
@@ -27,9 +27,9 @@ jobs:
   Prettier:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
 
       - name: Install Prettier
         run: npm install -g prettier
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out pipeline code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Nextflow
         uses: nf-core/setup-nextflow@v1
@@ -99,7 +99,7 @@ jobs:
 
       - name: Upload linting log file artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linting-logs
           path: |
