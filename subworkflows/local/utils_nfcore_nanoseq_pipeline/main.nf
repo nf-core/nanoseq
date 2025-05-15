@@ -50,23 +50,24 @@ workflow PIPELINE_INITIALISATION {
     //
     // Validate parameters and generate parameter summary to stdout
     //
-    //UTILS_NFSCHEMA_PLUGIN (
-    //    workflow,
-    //    validate_params,
-    //    null
-    //)
+    validate_params = false //nanopore sequencing has different input formats, so not validating them here
+    UTILS_NFSCHEMA_PLUGIN (
+        workflow,
+        validate_params,
+        null
+    )
 
     //
     // Check config provided to the pipeline
     //
-    //UTILS_NFCORE_PIPELINE (
-    //    nextflow_cli_args
-    //)
+    UTILS_NFCORE_PIPELINE (
+        nextflow_cli_args
+    )
 
     //
     // Custom validation for pipeline parameters
     //
-    //validateInputParameters()
+    validateInputParameters()
 
     //
     // Create channel from input file provided through params.input
