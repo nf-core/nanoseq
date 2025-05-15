@@ -106,6 +106,12 @@ An extensive list of references for the tools used by the pipeline can be found 
 
 You can cite the `nf-core` publication as follows:
 
+> **A systematic benchmark of Nanopore long-read RNA sequencing for transcript-level analysis in human cell lines.**
+>
+> Ying Chen, Nadia M. Davidson, Yuk Kei Wan, Fei Yao, Yan Su, Hasindu Gamaarachchi, Andre Sim, Harshil Patel, Hwee Meng Low, Christopher Hendra, Laura Wratten, Christopher Hakkaart, Chelsea Sawyer, Viktoriia Iakovleva, Puay Leng Lee, Lixia Xin, Hui En Vanessa Ng, Jia Min Loo, Xuewen Ong, Hui Qi Amanda Ng, Jiaxu Wang, Wei Qian Casslynn Koh, Suk Yeah Polly Poon, Dominik Stanojevic, Hoang-Dai Tran, Kok Hao Edwin Lim, Shen Yon Toh, Philip Andrew Ewels, Huck-Hui Ng, N. Gopalakrishna Iyer, Alexandre Thiery, Wee Joo Chng, Leilei Chen, Ramanuj DasGupta, Mile Sikic, Yun-Shen Chan, Boon Ooi Patrick Tan, Yue Wan, Wai Leong Tam, Qiang Yu, Chiea Chuan Khor, Torsten Wüstefeld, Alexander Lezhava, Ploy N. Pratanwanich, Michael I. Love, Wee Siong Sho Goh, Sarah B. Ng, Alicia Oshlack, SG-NEx consortium & Jonathan Göke
+>
+> _Nat Methods_ 2025 Mar 13. doi: [10.1038/s41592-025-02623-4](https://doi.org/10.1038/s41592-025-02623-4).
+
 > **The nf-core framework for community-curated bioinformatics pipelines.**
 >
 > Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
