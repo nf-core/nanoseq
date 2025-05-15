@@ -43,7 +43,7 @@ workflow STRUCTURAL_VARIANT_CALLING {
         /*
          * Call structural variants with sniffles
          */
-        SNIFFLES( ch_sv_input, ch_fasta )
+        SNIFFLES( ch_sv_input, ch_fasta, [], true, false )
         ch_versions = ch_versions.mix(SNIFFLES.out.versions)
 
         /*
