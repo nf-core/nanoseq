@@ -171,10 +171,9 @@ include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantif
 /* --           RUN MAIN WORKFLOW              -- */
 ////////////////////////////////////////////////////
 
-// Info required for completion email and summary
-def multiqc_report      = []
-
 workflow NANOSEQ{
+
+    multiqc_report   = Channel.empty()
 
     // Pre-download test-dataset to get files for '--input_path' parameter
     // Nextflow is unable to recursively download directories via HTTPS
@@ -551,41 +550,25 @@ workflow NANOSEQ{
         ch_software_versions.unique().collectFile()
     )
 
-    //if (!params.skip_multiqc) {
-        // workflow_summary    = WorkflowNanoseq.paramsSummaryMultiqc(workflow, summary_params)
-        // ch_workflow_summary = Channel.value(workflow_summary)
-
+    if (!params.skip_multiqc) {
         /*
          * MODULE: MultiQC
          */
-    //    MULTIQC (
-    //    ch_multiqc_config,
-    //    ch_multiqc_custom_config.collect().ifEmpty([]),
-    //    ch_fastqc_multiqc.ifEmpty([]),
-    //    ch_samtools_multiqc.collect().ifEmpty([]),
-    //    ch_featurecounts_gene_multiqc.ifEmpty([]),
-    //    ch_featurecounts_transcript_multiqc.ifEmpty([]),
-    //    CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
-    //    ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml')
-    //    )
-    //}
+        MULTIQC (
+        ch_multiqc_config,
+        ch_multiqc_custom_config.collect().ifEmpty([]),
+        ch_fastqc_multiqc.ifEmpty([]),
+        ch_samtools_multiqc.collect().ifEmpty([]),
+        ch_featurecounts_gene_multiqc.ifEmpty([]),
+        ch_featurecounts_transcript_multiqc.ifEmpty([]),
+        CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
+        []
+        )
+    }
+
+    emit:
+    multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
 }
-
-////////////////////////////////////////////////////
-/* --              COMPLETION EMAIL            -- */
-////////////////////////////////////////////////////
-
-//workflow.onComplete {
-//    if (params.email) {
-//        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-        //Completion.email(workflow, params, params.summary_params, log, multiqc_report)
-//    }
-//    Completion.summary(workflow, params, log)
-//    NfcoreTemplate.summary(workflow, params, log)
-//    if (params.hook_url) {
-//        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
-//    }
-//}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
