@@ -22,8 +22,8 @@ workflow BEDTOOLS_UCSC_BIGWIG {
         .map { it -> it[4] }
         .set { ch_sizes }
     extension = 'bedGraph'
-
-    BEDTOOLS_GENOMECOV ( ch_genomecov_input, ch_sizes, extension )
+    to_sort   = false
+    BEDTOOLS_GENOMECOV ( ch_genomecov_input, ch_sizes, extension, to_sort )
     ch_bedgraph      = BEDTOOLS_GENOMECOV.out.genomecov
     bedtools_version = BEDTOOLS_GENOMECOV.out.versions
 

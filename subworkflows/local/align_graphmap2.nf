@@ -57,8 +57,8 @@ workflow ALIGN_GRAPHMAP2 {
         .set { ch_samtools_input }
     ch_samtools_input.view()
     ch_notneeded_qname.view()
-    SAMTOOLS_VIEW ( ch_samtools_input, ch_fasta, ch_notneeded_qname )
-    SAMTOOLS_SORT ( SAMTOOLS_VIEW.out.bam )
+    SAMTOOLS_VIEW ( ch_samtools_input, ch_fasta, ch_notneeded_qname, [] )
+    SAMTOOLS_SORT ( SAMTOOLS_VIEW.out.bam, [] )
     ch_sorted_bam = SAMTOOLS_SORT.out.bam
     SAMTOOLS_INDEX ( ch_sorted_bam )
     ch_sorted_bai = SAMTOOLS_INDEX.out.bai

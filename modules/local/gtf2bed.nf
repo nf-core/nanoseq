@@ -7,7 +7,7 @@ process GTF2BED {
         'quay.io/biocontainers/perl:5.26.2' }"
 
     input:
-    tuple path(gtf), val(name)
+    tuple val(name), path(gtf)
 
     output:
     tuple path('*.bed'), val(name), emit: gtf_bed

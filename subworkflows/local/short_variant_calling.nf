@@ -32,7 +32,6 @@ workflow SHORT_VARIANT_CALLING {
     ch_sorted_bam
          .join(ch_sorted_bai, by: 0)
          .map { it -> [ it[0], it[1], it[2], [] ] }
-         .view()
          .set { ch_shortv_input }
     ch_sorted_bam
          .combine(ch_fasta.map{it->it[1]})
@@ -72,19 +71,18 @@ workflow SHORT_VARIANT_CALLING {
          */
         ch_sorted_bam
              .join(ch_sorted_bai, by: 0)
-             .map { it -> [ it[0], it[1], it[2], [] ] }
+             .map { it -> [ [id: it[0].id,single_end:true], it[1], it[2], [] ] }
              .view()
              .set { ch_deepvariant_input }
-        ch_sorted_bam
-             .combine(ch_fasta.map{it->it[1]})
-             .map { it -> it[2] }
-             .set { ch_fasta }
-        ch_sorted_bam
-             .combine(ch_fai.map{it->it[1]})
-             .map { it -> it[2] }
-             .set { ch_fai }
-
-        DEEPVARIANT( ch_deepvariant_input, ch_fasta, ch_fai )
+        //ch_sorted_bam
+        //     .combine(ch_fasta.map{it->it[1]})
+        //     .map { it -> it[2] }
+        //     .set { ch_fasta }
+        //ch_sorted_bam
+        //     .combine(ch_fai.map{it->it[1]})
+        //     .map { it -> it[2] }
+        //     .set { ch_fai }
+        DEEPVARIANT( ch_deepvariant_input, [[id:'genome'],ch_fasta], [[id:'genome'], ch_fai], [[],[]], [[],[]] )
         ch_short_calls_vcf  = DEEPVARIANT.out.vcf
         ch_short_calls_gvcf = DEEPVARIANT.out.gvcf
         ch_versions = ch_versions.mix(DEEPVARIANT.out.versions)

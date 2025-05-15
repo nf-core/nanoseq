@@ -27,18 +27,19 @@ workflow ALIGN_MINIMAP2 {
     ch_fastq
         .map { it -> [ it[0], it[1] ] }
         .set { ch_alignment_input }
-    ch_alignment_input
-        .combine ( ch_minimap_index )
-        .map { it -> it[3] }
-        .set { ch_reference }
+    // ch_alignment_input
+    //    .combine ( ch_minimap_index )
+    //    .map { it -> it[3] }
+    //    .set { ch_reference }
     bam_format = true
+    bam_index_extension = 'bai'
     cigar_paf_format = false
     cigar_bam = false
     if (params.call_variants) {
-        MINIMAP2_ALIGN_VARIANT ( ch_alignment_input, ch_reference, bam_format, cigar_paf_format, cigar_bam )
+        MINIMAP2_ALIGN_VARIANT ( ch_alignment_input, ch_minimap_index, bam_format, bam_index_extension, cigar_paf_format, cigar_bam )
         ch_sorted_bam = MINIMAP2_ALIGN_VARIANT.out.bam
     } else {
-        MINIMAP2_ALIGN_OTHER ( ch_alignment_input, ch_reference, bam_format, cigar_paf_format, cigar_bam )
+        MINIMAP2_ALIGN_OTHER ( ch_alignment_input, ch_minimap_index, bam_format, bam_index_extension, cigar_paf_format, cigar_bam )
         ch_sorted_bam = MINIMAP2_ALIGN_OTHER.out.bam
     }
 
