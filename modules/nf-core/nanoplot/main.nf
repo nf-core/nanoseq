@@ -5,7 +5,7 @@ process NANOPLOT {
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/96/9633ba7d2adf5e17e7d219d60efebb1d1e76cbea6e3f7440320f11cc99da37ac/data' :
-        'quay.io/biocontainers/nanoplot:1.41.0--pyhdfd78af_0'}"
+        'community.wave.seqera.io/library/nanoplot:1.44.1--e754907b17cfacc2'}"
 
     input:
     tuple val(meta), path(ontfile)
