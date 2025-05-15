@@ -356,7 +356,7 @@ workflow NANOSEQ{
         /*
          * SUBWORKFLOW: Fastq QC with Nanoplot and fastqc
          */
-        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq_to_align, params.skip_nanoplot, params.skip_fastqc)
+        QCFASTQ_NANOPLOT_FASTQC ( ch_fastq, params.skip_nanoplot, params.skip_toulligqc, params.skip_fastqc)
         ch_software_versions = ch_software_versions.mix(QCFASTQ_NANOPLOT_FASTQC.out.fastqc_version.first().ifEmpty(null))
         ch_fastqc_multiqc    = QCFASTQ_NANOPLOT_FASTQC.out.fastqc_multiqc.ifEmpty([])
     }

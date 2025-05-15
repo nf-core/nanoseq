@@ -3,12 +3,14 @@
  */
 
 include { NANOPLOT     } from '../../modules/nf-core/nanoplot/main'
+include { TOULLIGQC    } from '../../modules/nf-core/toulligqc/main'
 include { FASTQC       } from '../../modules/nf-core/fastqc/main'
 
 workflow QCFASTQ_NANOPLOT_FASTQC {
     take:
     ch_fastq
     skip_nanoplot
+    skip_toulligqc
     skip_fastqc
 
     main:
@@ -32,7 +34,22 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
         nanoplot_log     = NANOPLOT.out.log
         nanoplot_version = NANOPLOT.out.versions
     }
-
+    /*
+     * FastQ QC using ToulligQC
+     */
+    toulligqc_report_data   = Channel.empty()
+    toulligqc_report_html   = Channel.empty()
+    toulligqc_plots_html    = Channel.empty()
+    toulligqc_plotly_js     = Channel.empty()
+    toulligqc_version       = Channel.empty()
+    if (!skip_toulligqc){
+        TOULLIGQC ( ch_fastq )
+        toulligqc_report_data  = TOULLIGQC.out.report_data
+        toulligqc_report_html  = TOULLIGQC.out.report_html
+        toulligqc_plots_html   = TOULLIGQC.out.plots_html
+        toulligqc_plotly_js    = TOULLIGQC.out.plotly_js
+        toulligqc_version      = TOULLIGQC.out.versions
+    }
     /*
      * FastQ QC using FASTQC
      */
@@ -60,6 +77,12 @@ workflow QCFASTQ_NANOPLOT_FASTQC {
     nanoplot_txt
     nanoplot_log
     nanoplot_version
+
+    toulligqc_report_data
+    toulligqc_report_html
+    toulligqc_plots_html
+    toulligqc_plotly_js
+    toulligqc_version
 
     fastqc_zip
     fastqc_html

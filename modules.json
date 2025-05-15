@@ -185,7 +185,7 @@
                         "git_sha": "05954dab2ff481bcb999f24455da29a5828af08d",
                         "installed_by": ["modules"]
                     },
-                    "ucsc/bedtobigbed": {
+                    "toulligqc": {
                         "branch": "master",
                         "git_sha": "60156e82dbb12327f553a41043cf93c3da1547c8",
                         "installed_by": ["modules"]

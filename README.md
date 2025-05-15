@@ -25,7 +25,7 @@ On release, automated continuous integration tests run the pipeline on a [full-s
 
 1. Demultiplexing ([`qcat`](https://github.com/nanoporetech/qcat); _optional_)
 2. Raw read cleaning ([NanoLyse](https://github.com/wdecoster/nanolyse); _optional_)
-3. Raw read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot), [`FastQC`](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
+3. Raw read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot), [`ToulligQC`](https://github.com/GenomiqueENS/toulligQC), [`FastQC`](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
 4. Alignment ([`GraphMap2`](https://github.com/lbcb-sci/graphmap2) or [`minimap2`](https://github.com/lh3/minimap2))
    - Both aligners are capable of performing unspliced and spliced alignment. Sensible defaults will be applied automatically based on a combination of the input data and user-specified parameters
    - Each sample can be mapped to its own reference genome if multiplexed in this way
