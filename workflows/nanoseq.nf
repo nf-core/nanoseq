@@ -138,8 +138,6 @@ include { MULTIQC               } from '../modules/local/multiqc'
  */
 
 include { INPUT_CHECK                      } from '../subworkflows/local/input_check'
-include { SHORT_VARIANT_CALLING            } from '../subworkflows/local/short_variant_calling'
-include { STRUCTURAL_VARIANT_CALLING       } from '../subworkflows/local/structural_variant_calling'
 include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'
 include { RNA_MODIFICATION_XPORE_M6ANET    } from '../subworkflows/local/rna_modifications_xpore_m6anet'
 include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fusions_jaffal'
@@ -432,29 +430,6 @@ workflow NANOSEQ{
          */
         BAM_RENAME ( ch_sample_bam )
         ch_sorted_bam = BAM_RENAME.out.bam
-    }
-
-    if (params.call_variants && params.protocol == 'DNA') {
-
-        SAMTOOLS_INDEX ( ch_sorted_bam )
-        ch_sorted_bai = SAMTOOLS_INDEX.out.bai
-        samtools_version = SAMTOOLS_INDEX.out.versions
-
-        /*
-        * SUBWORKFLOW: Short variant calling
-        */
-        if (!params.skip_vc) {
-            SHORT_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
-            ch_software_versions = ch_software_versions.mix(SHORT_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
-        }
-
-        /*
-        * SUBWORKFLOW: Structural variant calling
-        */
-        if (!params.skip_sv) {
-            STRUCTURAL_VARIANT_CALLING ( ch_sorted_bam, ch_sorted_bai, ch_fasta, ch_fai )
-            ch_software_versions = ch_software_versions.mix(STRUCTURAL_VARIANT_CALLING.out.ch_versions.first().ifEmpty(null))
-        }
     }
 
     ch_featurecounts_gene_multiqc       = Channel.empty()

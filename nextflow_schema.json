@@ -149,32 +149,6 @@
         "skip_alignment": {
             "type": "boolean"
         },
-        "call_variants": {
-            "type": "boolean"
-        },
-        "variant_caller": {
-            "type": "string",
-            "default": "deepvariant"
-        },
-        "structural_variant_caller": {
-            "type": "string",
-            "default": "sniffles"
-        },
-        "split_mnps": {
-            "type": "boolean"
-        },
-        "phase_vcf": {
-            "type": "boolean"
-        },
-        "skip_vc": {
-            "type": "boolean"
-        },
-        "skip_sv": {
-            "type": "boolean"
-        },
-        "deepvariant_gpu": {
-            "type": "boolean"
-        },
         "skip_bigbed": {
             "type": "boolean"
         },
