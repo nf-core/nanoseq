@@ -82,8 +82,7 @@ workflow {
     // WORKFLOW: Run main workflow
     //
     NFCORE_NANOSEQ ()
-    //      PIPELINE_INITIALISATION.out.samplesheet
-    // )
+
     //
     // SUBWORKFLOW: Run completion tasks
     //

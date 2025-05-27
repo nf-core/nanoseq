@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added the `dorado` basecaller for basecalling and DNA/RNA modification calling
 - Added `toulligQC` for nanopore read quality check
+- Removed DNA structural and small variant calling functionalities (prepare for nanoRNAseq)
 - Bump minimum Nextflow version from 21.10.3 -> 24.04.2
 - Update pipeline template to nf-core/tools `3.2.1`
 - Updated all nf-core/modules to their latest
@@ -25,22 +26,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `--dorado_device` as `dorado` is added for basecalling and modification calling
 - Added `--skip_basecalling` as `dorado` is added for basecalling and modification calling
 - Added `--skip_toulligqc` as `toulligqc` is added for nanopore read quality check
+- Removed `--call_variants` as `nanoseq` no longer supports DNA variant calling
+- Removed `--variant_caller` as `nanoseq` no longer supports DNA variant calling
+- Removed `--structural_variant_caller` as `nanoseq` no longer supports DNA variant calling
+- Removed `--split_mnps` as `nanoseq` no longer supports DNA variant calling
+- Removed `--phase_vcf` as `nanoseq` no longer supports DNA variant calling
+- Removed `--skip_vc` as `nanoseq` no longer supports DNA variant calling
+- Removed `--skip_sv` as `nanoseq` no longer supports DNA variant calling
+- Removed `--deepvariant_gpu` as `nanoseq` no longer supports DNA variant calling
 
 ### Software dependencies
 
 | Dependency              | Old version | New version |
 | ----------------------- | ----------- | ----------- |
 | `bioconductor-bambu`    | 3.0.8       | 3.4.0       |
-| `bcftools`              | 1.16        | 1.21        |
 | `bedtools`              | 2.29.2      | 2.31.1      |
-| `cutesv`                | 1.0.12      | 2.0.2       |
-| `deepvariant`           | 1.4.0       | 1.8.0       |
 | `fastqc`                | 0.11.9      | 0.12.1      |
 | `minimap2`              | 2.17        | 2.29        |
 | `multiqc`               | 1.11        | 1.28        |
 | `nanoplot`              | 1.41.0      | 1.44.1      |
 | `samtools`              | 1.61.1      | 1.21        |
-| `sniffles`              | 1.0.12      | 2.4         |
 | `stringtie`             | 2.1.4       | 2.2.3       |
 | `subread`               | 2.0.1       | 2.0.6       |
 | `htslib`                | 1.11        | 1.21        |
