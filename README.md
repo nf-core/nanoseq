@@ -77,7 +77,7 @@ The nf-core/nanoseq pipeline comes with documentation about the pipeline [usage]
 ```bash
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
-    --protocol directRNA \
+    --protocol directRNA/cDNA \
     -profile <docker/singularity/podman/institute>
 ```
 
