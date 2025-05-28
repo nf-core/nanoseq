@@ -3,6 +3,55 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2025-06-22
+
+### Major enhancements
+
+- Added the `dorado` basecaller for basecalling and DNA/RNA modification calling
+- Added `toulligQC` for nanopore read quality check
+- Removed DNA structural and small variant calling functionalities (prepare for nanoRNAseq)
+- Bump minimum Nextflow version from 21.10.3 -> 24.04.2
+- Update pipeline template to nf-core/tools `3.2.1`
+- Updated all nf-core/modules to their latest
+- Update `bambu` version from `3.0.8` to `3.4.0`
+
+### Parameters
+
+- Added `--input_path_file_type` as `dorado` is added for basecalling and modification calling
+- Added `--bedmethyl_out` as `dorado` is added for basecalling and modification calling
+- Added `--flowcell` as `dorado` is added for basecalling and modification calling
+- Added `--kit` as `dorado` is added for basecalling and modification calling
+- Added `--dorado_model` as `dorado` is added for basecalling and modification calling
+- Added `--doraro_modification` as `dorado` is added for basecalling and modification calling
+- Added `--dorado_device` as `dorado` is added for basecalling and modification calling
+- Added `--skip_basecalling` as `dorado` is added for basecalling and modification calling
+- Added `--skip_toulligqc` as `toulligqc` is added for nanopore read quality check
+- Removed `--call_variants` as `nanoseq` no longer supports DNA variant calling
+- Removed `--variant_caller` as `nanoseq` no longer supports DNA variant calling
+- Removed `--structural_variant_caller` as `nanoseq` no longer supports DNA variant calling
+- Removed `--split_mnps` as `nanoseq` no longer supports DNA variant calling
+- Removed `--phase_vcf` as `nanoseq` no longer supports DNA variant calling
+- Removed `--skip_vc` as `nanoseq` no longer supports DNA variant calling
+- Removed `--skip_sv` as `nanoseq` no longer supports DNA variant calling
+- Removed `--deepvariant_gpu` as `nanoseq` no longer supports DNA variant calling
+
+### Software dependencies
+
+| Dependency              | Old version | New version |
+| ----------------------- | ----------- | ----------- |
+| `bioconductor-bambu`    | 3.0.8       | 3.4.0       |
+| `bedtools`              | 2.29.2      | 2.31.1      |
+| `fastqc`                | 0.11.9      | 0.12.1      |
+| `minimap2`              | 2.17        | 2.29        |
+| `multiqc`               | 1.11        | 1.28        |
+| `nanoplot`              | 1.41.0      | 1.44.1      |
+| `samtools`              | 1.61.1      | 1.21        |
+| `stringtie`             | 2.1.4       | 2.2.3       |
+| `subread`               | 2.0.1       | 2.0.6       |
+| `htslib`                | 1.11        | 1.21        |
+| `ucsc-bedtobigbed`      | 377         | 447         |
+| `ucsc-bedgraphtobigwig` | 377         | 469         |
+
 ## [3.1.0] - 2023-03-10
 
 ### Major enhancements

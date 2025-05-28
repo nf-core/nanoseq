@@ -6,7 +6,11 @@ outfile_name = sys.argv[1]
 samples = sys.argv[2:]
 outfile = open(outfile_name, "w")
 outfile.write(
-    "notes: Pairwise comparison without replicates with default parameter setting." + "\n" + "\n" + "data:" + "\n"
+    "notes: Pairwise comparison without replicates with default parameter setting."
+    + "\n"
+    + "\n"
+    + "data:"
+    + "\n"
 )
 
 dict = {}

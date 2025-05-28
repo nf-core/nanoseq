@@ -1,0 +1,55 @@
+name: graphmap2_align
+description: A versatile pairwise aligner for genomic and spliced nucleotide sequences
+keywords:
+  - align
+  - fasta
+  - fastq
+  - genome
+  - reference
+tools:
+  - graphmap2:
+      description: |
+        A versatile pairwise aligner for genomic and spliced nucleotide sequences.
+      homepage: https://github.com/lbcb-sci/graphmap2
+      documentation: https://github.com/lbcb-sci/graphmap2#graphmap2---a-highly-sensitive-and-accurate-mapper-for-long-error-prone-reads
+      licence: ["MIT"]
+      identifier: biotools:Graphmap2
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'test', single_end:false ]
+    - reads:
+        type: file
+        description: file containing reads to be aligned.
+  - - fasta:
+        type: file
+        description: |
+          Reference database in FASTA format.
+  - - index:
+        type: file
+        description: |
+          FASTA index in gmidx.
+output:
+  - sam:
+      - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'test', single_end:false ]
+      - "*.sam":
+          type: file
+          description: Alignment in SAM format
+          pattern: "*.sam"
+  - versions:
+      - versions.yml:
+          type: file
+          description: File containing software versions
+          pattern: "versions.yml"
+authors:
+  - "@yuukiiwa"
+  - "@drpatelh"
+maintainers:
+  - "@yuukiiwa"
+  - "@drpatelh"
