@@ -36,12 +36,12 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
      * Gene and transcript quantification with featureCounts
      */
     ch_stringtie_merged_gtf
-        .combine( [[id:'gene']] )
+        .combine( [[id:'gene', single_end:true]] )
         .combine( [ch_sorted_bam.collect{it[1]}])
         .map {it -> [it[1], it[2].value, it[0]]}
         .set { ch_featurecounts_gene_input }
     ch_stringtie_merged_gtf
-        .combine( [[id:'transcript']] )
+        .combine( [[id:'transcript', single_end:true]] )
         .combine( [ch_sorted_bam.collect{it[1]}])
         .map {it -> [it[1], it[2].value, it[0]]}
         .set { ch_featurecounts_transcript_input }

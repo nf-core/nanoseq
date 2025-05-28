@@ -1,1 +1,28 @@
+bump_version: null
+lint:
+  actions_ci: false
+  files_exist:
+    - .github/workflows/awsfulltest.yml
+    - .github/workflows/awstest.yml
+    - conf/modules.config
+  files_unchanged:
+    - .gitignore
+    - assets/nf-core-nanoseq_logo_light.png
+    - docs/images/nf-core-nanoseq_logo_dark.png
+    - docs/images/nf-core-nanoseq_logo_light.png
+  modules_config: false
+  template_strings: false
+nf_core_version: 3.2.1
+org_path: null
 repository_type: pipeline
+template:
+  author: Yuk Kei Wan, Harshil Patel, Chelsea Sawyer
+  description: Nanopore demultiplexing, QC and alignment pipeline
+  force: false
+  is_nfcore: true
+  name: nanoseq
+  org: nf-core
+  outdir: .
+  skip_features: null
+  version: 3.2.0
+update: null

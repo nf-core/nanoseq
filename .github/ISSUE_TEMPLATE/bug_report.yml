@@ -9,7 +9,6 @@ body:
 
         - [nf-core website: troubleshooting](https://nf-co.re/usage/troubleshooting)
         - [nf-core/nanoseq pipeline documentation](https://nf-co.re/nanoseq/usage)
-
   - type: textarea
     id: description
     attributes:
