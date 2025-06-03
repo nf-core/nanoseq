@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/nf-core/nanoseq/master/nextflow_schema.json",
     "title": "nf-core/nanoseq pipeline parameters",
-    "description": "A pipeline to demultiplex, QC and map Nanopore data",
+    "description": "Nanopore demultiplexing, QC and alignment pipeline",
     "type": "object",
     "$defs": {
         "input_output_options": {
