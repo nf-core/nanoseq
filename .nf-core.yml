@@ -10,7 +10,7 @@ lint:
     - docs/images/nf-core-nanoseq_logo_light.png
   modules_config: false
   template_strings: false
-nf_core_version: 3.5.1
+nf_core_version: 4.0.2
 repository_type: pipeline
 template:
   author: Yuk Kei Wan, Harshil Patel, Chelsea Sawyer
