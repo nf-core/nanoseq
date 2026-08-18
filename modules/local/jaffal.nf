@@ -2,10 +2,10 @@ process JAFFAL {
     echo true
     label 'process_medium'
 
-    conda "bioconda::jaffa=2.3.0"
+    conda "bioconda::jaffa=2.5.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/jaffa:2.3--hdfd78af_0' :
-        'quay.io/biocontainers/jaffa:2.3--hdfd78af_0' }"
+        'https://depot.galaxyproject.org/singularity/jaffa:2.5--hdfd78af_0' :
+        'quay.io/biocontainers/jaffa:2.5--hdfd78af_0' }"
 
     input:
     tuple val(meta), path(fastq)
@@ -25,7 +25,7 @@ process JAFFAL {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        jaffa: \$( echo 'jaffa 2.0' )
+        jaffa: \$( jaffa --version 2>&1 | head -n1 || echo 'jaffa (unknown)' )
     END_VERSIONS
     """
 }
