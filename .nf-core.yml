@@ -8,6 +8,7 @@ lint:
   files_unchanged:
     - .gitignore
     - .github/workflows/linting.yml
+    - .github/workflows/ci.yml
     - assets/nf-core-nanoseq_logo_light.png
     - docs/images/nf-core-nanoseq_logo_dark.png
     - docs/images/nf-core-nanoseq_logo_light.png
