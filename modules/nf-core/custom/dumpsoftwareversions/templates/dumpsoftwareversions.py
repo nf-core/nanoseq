@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 """Provide functions to merge multiple versions.yml files."""
 
 import platform
