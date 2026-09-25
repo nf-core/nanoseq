@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated all nf-core/modules to their latest
 - Update `bambu` version from `3.0.8` to `3.4.0`
 
+### Bug fixes
+
+- Replace removed `echo` process directive with `debug` in `JAFFAL` and `M6ANET_INFERENCE` modules ([#340](https://github.com/nf-core/nanoseq/issues/340))
+
 ### Parameters
 
 - Added `--input_path_file_type` as `dorado` is added for basecalling and modification calling

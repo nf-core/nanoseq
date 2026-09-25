@@ -1,5 +1,5 @@
 process JAFFAL {
-    echo true
+    debug true
     label 'process_medium'
 
     conda "bioconda::jaffa=2.3.0"
