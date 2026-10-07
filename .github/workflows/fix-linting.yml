@@ -1,55 +1,21 @@
 name: Fix linting from a comment
 on:
   issue_comment:
-    types: [created]
+    types: [created] # Add "@nf-core-bot fix linting" as a PR comment to trigger this workflow.
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
 
 jobs:
-  deploy:
-    # Only run if comment is on a PR with the main repo, and if it contains the magic keywords
-    if: >
-      contains(github.event.comment.html_url, '/pull/') &&
-      contains(github.event.comment.body, '@nf-core-bot fix linting') &&
-      github.repository == 'nf-core/nanoseq'
-    runs-on: ubuntu-latest
-    steps:
-      # Use the @nf-core-bot token to check out so we can push later
-      - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.nf_core_bot_auth_token }}
+  fix-linting:
+    uses: nf-core/actions/.github/workflows/fix-linting.yml@v1
+    with:
+      nextflow-versions: '["25.10.4","latest-everything"]'
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
 
-      # Action runs on the issue comment, so we don't get the PR by default
-      # Use the gh cli to check out the PR
-      - name: Checkout Pull Request
-        run: gh pr checkout ${{ github.event.issue.number }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.nf_core_bot_auth_token }}
-
-      - uses: actions/setup-node@v3
-
-      - name: Install Prettier
-        run: npm install -g prettier @prettier/plugin-php
-
-      # Check that we actually need to fix something
-      - name: Run 'prettier --check'
-        id: prettier_status
-        run: |
-          if prettier --check ${GITHUB_WORKSPACE}; then
-            echo "result=pass" >> $GITHUB_OUTPUT
-          else
-            echo "result=fail" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run 'prettier --write'
-        if: steps.prettier_status.outputs.result == 'fail'
-        run: prettier --write ${GITHUB_WORKSPACE}
-
-      - name: Commit & push changes
-        if: steps.prettier_status.outputs.result == 'fail'
-        run: |
-          git config user.email "core@nf-co.re"
-          git config user.name "nf-core-bot"
-          git config push.default upstream
-          git add .
-          git status
-          git commit -m "[automated] Fix linting with Prettier"
-          git push
+    secrets:
+      BOT_TOKEN: ${{ secrets.nf_core_bot_auth_token }}
