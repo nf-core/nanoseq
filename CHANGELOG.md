@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update pipeline template to nf-core/tools `4.1.0` ([#338](https://github.com/nf-core/nanoseq/pull/338), supersedes [#323](https://github.com/nf-core/nanoseq/pull/323), [#329](https://github.com/nf-core/nanoseq/pull/329), [#330](https://github.com/nf-core/nanoseq/pull/330), [#333](https://github.com/nf-core/nanoseq/pull/333), [#334](https://github.com/nf-core/nanoseq/pull/334))
 - Updated all nf-core/modules to their latest; software versions are now collected with the `versions` topic channel
 - Restore per-module options and publishing paths in `conf/modules.config`
-- Samplesheet and parameters are validated with `nf-schema` (`assets/schema_input.json`, `nextflow_schema.json`)
+- Samplesheet and parameters are validated with `nf-schema` (`assets/schema_input.json`, `nextflow_schema.json`); the samplesheet is read with `samplesheetToList`, replacing `bin/check_samplesheet.py`
 - Remove top-level code from `workflows/nanoseq.nf` and `params` access from local modules and subworkflows
 - Remove unused `blue-crab`, `gtf2bed`, `get_chrom_sizes` and local `multiqc` modules, and `conf/test_withpull.config`
 - Replace local `modkit_pileup`, `get_nanolyse_fasta` and `get_jaffal_ref` modules with nf-core `modkit/pileup` and `wget`; replace deprecated nf-core `custom/getchromsizes` with `samtools/faidx`
@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `params.pipelines_testdata_base_path` in test configs
 - Basecalling test profiles (`test`, `test_bc_nodx`) now use R10.4.1 (5 kHz) POD5 data from the nf-core/methylong test data, as current dorado releases no longer support R9.4.1 data. `test_bc_nodx` now tests modified base calling with `--bedmethyl_out` ([#337](https://github.com/nf-core/nanoseq/pull/337))
 - Allow `.pod5` and `.fast5` files in the samplesheet `input_file` column
+- Remove unused `--flowcell` and `--kit` parameters
+- Remove DNA protocol support; `--protocol` accepts `cDNA` or `directRNA`
+- Move local modules and subworkflows to the nf-core component layout with `meta.yml`; replace personal Docker images with Seqera Containers
+- Add a v3.2 metro map made with nf-metro
+- Stage FAST5 directories, the GraphMap2 GTF and cloned test data as process inputs
+- Request a GPU for dorado basecalling on CUDA devices
+- Sort collected files before bambu, StringTie merge and featureCounts for reproducible output
 - Add `manifest.diagram` and restore the metro map images ([#339](https://github.com/nf-core/nanoseq/pull/339))
 - Update `bambu` version from `3.0.8` to `3.4.0`
 

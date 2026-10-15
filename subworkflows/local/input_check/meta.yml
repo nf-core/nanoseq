@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: input_check
+description: Read the input samplesheet with nf-schema and resolve the input files of each sample
+keywords:
+  - samplesheet
+  - validation
+  - nanopore
+components: []
+input:
+  - samplesheet:
+      description: |
+        Samplesheet validated against assets/schema_input.json
+        Structure: path(csv)
+  - input_path:
+      description: |
+        Directory used to resolve 'input_file' entries by name (e.g. cloned test data), or [] if not needed
+        Structure: path(directory)
+output:
+  - sample:
+      description: |
+        Samples with their reads or raw data
+        Structure: [ val(meta), path(reads) ] where meta = [ id, group, replicate, barcode, fast5 ]
+authors:
+  - "@yuukiiwa"
+maintainers:
+  - "@yuukiiwa"

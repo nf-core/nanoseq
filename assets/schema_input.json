@@ -11,13 +11,17 @@
                 "type": "string",
                 "pattern": "^\\S+$",
                 "errorMessage": "Group name must be provided and cannot contain spaces",
-                "meta": ["group"]
+                "meta": [
+                    "group"
+                ]
             },
             "replicate": {
                 "type": "integer",
                 "minimum": 1,
                 "errorMessage": "Replicate must be an integer starting from 1",
-                "meta": ["replicate"]
+                "meta": [
+                    "replicate"
+                ]
             },
             "barcode": {
                 "anyOf": [
@@ -31,14 +35,23 @@
                     }
                 ],
                 "errorMessage": "Barcode must be a positive integer or left empty",
-                "meta": ["barcode"]
+                "meta": [
+                    "barcode"
+                ]
             },
             "input_file": {
                 "type": "string",
                 "pattern": "^\\S*$",
-                "errorMessage": "Input file cannot contain spaces. It must be a '.fastq.gz', '.fq.gz' or '.bam' file, or a directory of raw (FAST5/POD5) data. Leave empty when demultiplexing with '--input_path'."
+                "errorMessage": "Input file cannot contain spaces. It must be a '.fastq.gz', '.fq.gz', '.bam', '.pod5' or '.fast5' file, or a directory of raw (FAST5/POD5) data. Leave empty when demultiplexing with '--input_path'."
             }
         },
-        "required": ["group", "replicate"]
-    }
+        "required": [
+            "group",
+            "replicate"
+        ]
+    },
+    "uniqueEntries": [
+        "group",
+        "replicate"
+    ]
 }
