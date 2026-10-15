@@ -278,7 +278,8 @@ workflow NANOSEQ {
             //
             BAMBU (
                 channel.value([ fasta, gtf ]),
-                ch_sorted_bam.map { _meta, bam -> bam }.collect()
+                // Sort so that sample columns are in a reproducible order
+                ch_sorted_bam.map { _meta, bam -> bam }.collect(sort: { a, b -> a.name <=> b.name })
             )
             ch_gene_counts       = BAMBU.out.gene_counts
             ch_transcript_counts = BAMBU.out.transcript_counts

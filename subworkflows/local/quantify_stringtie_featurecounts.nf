@@ -27,7 +27,7 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
      */
     ch_stringtie_gtfs = STRINGTIE_STRINGTIE.out.transcript_gtf
         .map { _meta, gtf -> gtf }
-        .collect()
+        .collect(sort: { a, b -> a.name <=> b.name })
         .map { gtfs -> [[id: 'stringtie.merged'], gtfs] }
     STRINGTIE_MERGE(
         ch_stringtie_gtfs,
@@ -40,7 +40,7 @@ workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
      */
     ch_bams = ch_bam
         .map { _meta, bam -> bam }
-        .collect()
+        .collect(sort: { a, b -> a.name <=> b.name })
 
     SUBREAD_FEATURECOUNTS_GENE(
         ch_bams
