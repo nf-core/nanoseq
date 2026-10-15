@@ -15,9 +15,9 @@
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": ["modules"]
                     },
-                    "custom/getchromsizes": {
+                    "bedtools/sort": {
                         "branch": "master",
-                        "git_sha": "eac429d4c67ac5114ce7d4287d460d8f05fd9fab",
+                        "git_sha": "06054b469d0997aa3442ba1373e17a641260f451",
                         "installed_by": ["modules"]
                     },
                     "fastqc": {
@@ -43,6 +43,11 @@
                     "minimap2/index": {
                         "branch": "master",
                         "git_sha": "135d883a43b1a2324b4112cd270cf22e20835533",
+                        "installed_by": ["modules"]
+                    },
+                    "modkit/pileup": {
+                        "branch": "master",
+                        "git_sha": "924e729cc75be5ab9ff8d37c8e7c2edfb36a8ce5",
                         "installed_by": ["modules"]
                     },
                     "multiqc": {
@@ -134,6 +139,11 @@
                     "untar": {
                         "branch": "master",
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "installed_by": ["modules"]
+                    },
+                    "wget": {
+                        "branch": "master",
+                        "git_sha": "8dfb9868efd0e39f27ae0fed1ed204dc8f0b2a13",
                         "installed_by": ["modules"]
                     }
                 }
