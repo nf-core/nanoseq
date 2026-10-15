@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: deseq2
+description: Differential gene expression analysis with DESeq2 on bambu or featureCounts gene counts
+keywords:
+  - differential expression
+  - rna-seq
+  - counts
+  - deseq2
+tools:
+  - deseq2:
+      description: Differential gene expression analysis based on the negative binomial distribution.
+      homepage: https://bioconductor.org/packages/DESeq2/
+      documentation: https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html
+      doi: 10.1186/s13059-014-0550-8
+      licence:
+        - LGPL-3.0-or-later
+      identifier: biotools:deseq2
+input:
+  - counts:
+      type: file
+      description: Gene count matrix from bambu (counts_gene.txt) or featureCounts
+      pattern: '*.{txt,tsv}'
+      ontologies:
+        - edam: http://edamontology.org/format_3475
+  - quantification_method:
+      type: string
+      description: 'Method used to generate the counts: ''bambu'' or ''stringtie2'''
+output:
+  deseq2_txt:
+    - '*.txt':
+        type: file
+        description: DESeq2 results table (CSV-formatted)
+        pattern: deseq2.results.txt
+        ontologies:
+          - edam: http://edamontology.org/format_3752
+  versions_r:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - r-base:
+          type: string
+          description: The name of the tool
+      - R --version 2>&1 | sed '1!d;s/^R version //;s/ .*//':
+          type: eval
+          description: The expression to obtain the version of the tool
+  versions_deseq2:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-deseq2:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('DESeq2')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - r-base:
+          type: string
+          description: The name of the tool
+      - R --version 2>&1 | sed '1!d;s/^R version //;s/ .*//':
+          type: eval
+          description: The expression to obtain the version of the tool
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-deseq2:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('DESeq2')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

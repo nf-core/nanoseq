@@ -1,0 +1,37 @@
+Changes in component 'nf-core/qcat'
+'modules/nf-core/qcat/environment.yml' is unchanged
+'modules/nf-core/qcat/meta.yml' is unchanged
+Changes in 'qcat/main.nf':
+--- modules/nf-core/qcat/main.nf
++++ modules/nf-core/qcat/main.nf
+@@ -19,6 +19,7 @@
+     task.ext.when == null || task.ext.when
+ 
+     script:
++    def args = task.ext.args ?: ''
+     """
+     ## Unzip fastq file
+     ## qcat doesn't support zipped files yet
+@@ -32,7 +33,8 @@
+     qcat \\
+         -f \$FILE \\
+         -b ./fastq \\
+-        --kit ${barcode_kit}
++        --kit ${barcode_kit} \\
++        ${args}
+ 
+     ## Zip fastq files
+     gzip fastq/*
+@@ -42,7 +44,7 @@
+     """
+     mkdir -p fastq
+ 
+-    echo "" | gzip > fastq/barcode00.fastq.gz
++    echo "" | gzip > fastq/barcode01.fastq.gz
+     echo "" | gzip > fastq/none.fastq.gz
+     """
+ }
+
+'modules/nf-core/qcat/tests/main.nf.test.snap' is unchanged
+'modules/nf-core/qcat/tests/main.nf.test' is unchanged
+************************************************************

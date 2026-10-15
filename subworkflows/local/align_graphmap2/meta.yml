@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: align_graphmap2
+description: Index a reference, align long reads with GraphMap2, sort/index the BAM and collect SAMtools statistics
+keywords:
+  - alignment
+  - long-read
+  - nanopore
+  - graphmap2
+  - bam
+components:
+  - graphmap2/index
+  - graphmap2/align
+  - samtools/sort
+  - bam_stats_samtools
+input:
+  - ch_fasta_fai:
+      description: |
+        Reference FASTA and its index
+        Structure: [ val(meta), path(fasta), path(fai) ]
+  - ch_fastq:
+      description: |
+        Reads to align
+        Structure: [ val(meta), path(fastq) ]
+  - ch_gtf:
+      description: |
+        Annotation GTF for spliced alignment, or [] for unspliced alignment
+        Structure: path(gtf)
+output:
+  - index:
+      description: |
+        GraphMap2 index
+        Structure: path(gmidx)
+  - bam:
+      description: |
+        Coordinate-sorted BAM
+        Structure: [ val(meta), path(bam) ]
+  - bai:
+      description: |
+        BAM index
+        Structure: [ val(meta), path(bai) ]
+  - stats:
+      description: |
+        SAMtools stats
+        Structure: [ val(meta), path(stats) ]
+  - flagstat:
+      description: |
+        SAMtools flagstat
+        Structure: [ val(meta), path(flagstat) ]
+  - idxstats:
+      description: |
+        SAMtools idxstats
+        Structure: [ val(meta), path(idxstats) ]
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

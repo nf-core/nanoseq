@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: xpore_dataprep
+description: Prepare nanopolish eventalign output for differential modification analysis with xpore dataprep
+keywords:
+  - rna modification
+  - nanopore
+  - m6a
+  - xpore
+tools:
+  - xpore:
+      description: Identification of differential RNA modifications from nanopore direct RNA sequencing.
+      homepage: https://github.com/GoekeLab/xpore
+      documentation: https://xpore.readthedocs.io/
+      doi: 10.1038/s41587-021-00949-w
+      licence:
+        - MIT
+      identifier: biotools:xpore
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - genome:
+        type: file
+        description: Reference transcriptome FASTA file
+        pattern: '*.{fa,fasta}'
+        ontologies:
+          - edam: http://edamontology.org/format_1929
+    - gtf:
+        type: file
+        description: Reference annotation GTF file
+        pattern: '*.gtf'
+        ontologies:
+          - edam: http://edamontology.org/format_2306
+    - eventalign:
+        type: file
+        description: nanopolish eventalign output
+        pattern: '*eventalign.txt'
+        ontologies:
+          - edam: http://edamontology.org/format_3475
+    - nanopolish_summary:
+        type: file
+        description: nanopolish eventalign read summary
+        pattern: '*summary.txt'
+        ontologies:
+          - edam: http://edamontology.org/format_3475
+output:
+  dataprep_outputs:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - ${prefix}:
+          type: directory
+          description: xpore dataprep output directory (data.json, data.index, data.readcount, data.log)
+          ontologies: []
+  versions_xpore:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - xpore:
+          type: string
+          description: The name of the tool
+      - xpore --version 2>&1 | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - xpore:
+          type: string
+          description: The name of the tool
+      - xpore --version 2>&1 | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

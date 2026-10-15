@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: m6anet_inference
+description: Predict m6A modification probabilities with m6anet inference
+keywords:
+  - rna modification
+  - nanopore
+  - m6a
+  - m6anet
+tools:
+  - m6anet:
+      description: Detection of m6A RNA modifications from nanopore direct RNA sequencing data.
+      homepage: https://github.com/GoekeLab/m6anet
+      documentation: https://m6anet.readthedocs.io/
+      doi: 10.1038/s41592-022-01666-1
+      licence:
+        - MIT
+      identifier: biotools:m6anet
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - input_dir:
+        type: directory
+        description: m6anet dataprep output directory
+        ontologies: []
+output:
+  m6anet_outputs:
+    - ${prefix}_results:
+        type: directory
+        description: m6anet inference output directory (site and read-level probabilities)
+        ontologies: []
+  versions_m6anet:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - m6anet:
+          type: string
+          description: The name of the tool
+      - m6anet --version 2>&1 | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - m6anet:
+          type: string
+          description: The name of the tool
+      - m6anet --version 2>&1 | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

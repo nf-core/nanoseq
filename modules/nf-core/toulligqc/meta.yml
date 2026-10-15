@@ -1,5 +1,3 @@
----
-# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
 name: "toulligqc"
 description: "A post sequencing QC tool for Oxford Nanopore sequencers"
 keywords:
@@ -12,55 +10,112 @@ tools:
       homepage: https://github.com/GenomiqueENS/toulligQC
       documentation: https://github.com/GenomiqueENS/toulligQC
       tool_dev_url: https://github.com/GenomiqueENS/toulligQC
-      licence: ["CECILL-2.1"]
-
+      licence:
+        - "CECILL-2.1"
+      identifier: biotools:ToulligQC
 input:
-  - meta:
-      type: map
-      description: |
-        Groovy Map containing sample information
-        e.g. [ id:'test', single_end:false ]
-  - seq_summary:
-      type: file
-      description: Basecaller sequencing summary source
-      pattern: "*.txt"
-  - fastq:
-      type: file
-      description: FASTQ file (necessary if no sequencing summary file)
-      pattern: "*.{fq,fastq,fq.gz,fastq.gz}"
-  - bam:
-      type: file
-      description: BAM file (necessary if no sequencing summary file)
-      pattern: "*.bam"
-
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'test', single_end:false ]
+    - ontfile:
+        type: file
+        description: Input ONT file
+        pattern: "*.{fastq,fastq.gz,fq,fq.gz,txt,txt.gz,bam}"
+        ontologies:
+          - edam: http://edamontology.org/format_1930
 output:
-  - meta:
-      type: map
-      description: |
-        Groovy Map containing sample information
-        e.g. [ id:'test', single_end:false ]
-  - report_data:
-      type: file
-      description: Report data emitted from toulligqc
-      pattern: "*.data"
-  - report_html:
-      type: file
-      description: Report data in html format
-      pattern: "*.html"
-  - plots_html:
-      type: file
-      description: Plots emitted in html format
-      pattern: "*.html"
-  - plotly_js:
-      type: file
-      description: Plots emitted from toulligqc
-      pattern: "plotly.min.js"
-  - versions:
-      type: file
-      description: File containing software versions
-      pattern: "versions.yml"
-
+  report_data:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'test', single_end:false ]
+      - "*/*.data":
+          type: file
+          description: Report data emitted from toulligqc
+          pattern: "*.data"
+          ontologies: []
+  report_html:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'test', single_end:false ]
+      - "*/*.html":
+          type: file
+          description: Report data in html format
+          pattern: "*.html"
+          ontologies: []
+  plots_html:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'test', single_end:false ]
+      - "*/images/*.html":
+          type: file
+          description: Plots emitted in html format
+          pattern: "*.html"
+          ontologies: []
+  plotly_js:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'test', single_end:false ]
+      - "*/images/plotly.min.js":
+          type: file
+          description: Plots emitted from toulligqc
+          pattern: "plotly.min.js"
+          ontologies: []
+  versions_toulligqc:
+    - - ${task.process}:
+          type: string
+          description: Name of the process
+      - toulligqc:
+          type: string
+          description: Name of the tool
+      - toulligqc --version:
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: Name of the process
+      - toulligqc:
+          type: string
+          description: Name of the tool
+      - toulligqc --version:
+          type: eval
+          description: The expression to obtain the version of the tool
 authors:
   - "@Salome-Brunon"
 maintainers:
   - "@Salome-Brunon"
+containers:
+  docker:
+    linux/arm64:
+      name: community.wave.seqera.io/library/toulligqc_huggingface_hub_matplotlib_numpy_pruned:6794431f01aedd68
+      build_id: bd-6794431f01aedd68_1
+      scan_id: sc-fa0eb7956da49b04_1
+    linux/amd64:
+      name: community.wave.seqera.io/library/toulligqc_huggingface_hub_matplotlib_numpy_pruned:30ed42003347882d
+      build_id: bd-30ed42003347882d_1
+      scan_id: sc-f7fe375474814ba0_1
+  singularity:
+    linux/arm64:
+      name: oras://community.wave.seqera.io/library/toulligqc_huggingface_hub_matplotlib_numpy_pruned:5a857b85377c698b
+      build_id: bd-5a857b85377c698b_1
+      https: https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/86/8646daf243414b5584b1a4ade297040f0e4734bb92c6b061c43d81e50eb44838/data
+    linux/amd64:
+      name: oras://community.wave.seqera.io/library/toulligqc_huggingface_hub_matplotlib_numpy_pruned:3249a2e7fdcf2ce4
+      build_id: bd-3249a2e7fdcf2ce4_1
+      https: https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/95/958e7692f05dbbae6937b082b0e2863f1ec26be7dd6d2b016ae130eaef6cdc85/data
+  conda:
+    linux/amd64:
+      lock_file: modules/nf-core/toulligqc/.conda-lock/linux_amd64-bd-30ed42003347882d_1.txt
+    linux/arm64:
+      lock_file: modules/nf-core/toulligqc/.conda-lock/linux_arm64-bd-6794431f01aedd68_1.txt

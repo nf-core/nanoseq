@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: quantify_stringtie_featurecounts
+description: Transcript discovery with StringTie2, merging across samples and gene/transcript quantification with featureCounts
+keywords:
+  - quantification
+  - transcript discovery
+  - long-read
+  - stringtie
+  - featurecounts
+components:
+  - stringtie/stringtie
+  - stringtie/merge
+  - subread/featurecounts
+input:
+  - ch_bam:
+      description: |
+        Coordinate-sorted BAM
+        Structure: [ val(meta), path(bam) ]
+  - ch_gtf:
+      description: |
+        Reference annotation GTF
+        Structure: path(gtf)
+output:
+  - stringtie_gtf:
+      description: |
+        Per-sample StringTie transcript GTF
+        Structure: [ val(meta), path(gtf) ]
+  - merged_gtf:
+      description: |
+        Merged StringTie GTF
+        Structure: path(gtf)
+  - gene_counts:
+      description: |
+        featureCounts gene-level counts
+        Structure: path(tsv)
+  - transcript_counts:
+      description: |
+        featureCounts transcript-level counts
+        Structure: path(tsv)
+  - featurecounts_gene_summary:
+      description: |
+        featureCounts gene-level summary
+        Structure: path(summary)
+  - featurecounts_transcript_summary:
+      description: |
+        featureCounts transcript-level summary
+        Structure: path(summary)
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

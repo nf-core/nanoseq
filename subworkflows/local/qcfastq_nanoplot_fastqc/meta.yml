@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: qcfastq_nanoplot_fastqc
+description: Read QC with NanoPlot, ToulligQC and FastQC
+keywords:
+  - qc
+  - fastq
+  - nanopore
+  - nanoplot
+  - fastqc
+  - toulligqc
+components:
+  - nanoplot
+  - toulligqc
+  - fastqc
+input:
+  - ch_fastq:
+      description: |
+        Reads
+        Structure: [ val(meta), path(fastq) ]
+  - skip_nanoplot:
+      description: |
+        Skip NanoPlot
+        Structure: val(boolean)
+  - skip_toulligqc:
+      description: |
+        Skip ToulligQC
+        Structure: val(boolean)
+  - skip_fastqc:
+      description: |
+        Skip FastQC
+        Structure: val(boolean)
+output:
+  - nanoplot_html:
+      description: |
+        NanoPlot HTML reports
+        Structure: [ val(meta), path(html) ]
+  - nanoplot_txt:
+      description: |
+        NanoPlot statistics
+        Structure: [ val(meta), path(txt) ]
+  - toulligqc_report_html:
+      description: |
+        ToulligQC HTML report
+        Structure: [ val(meta), path(html) ]
+  - toulligqc_report_data:
+      description: |
+        ToulligQC report data
+        Structure: [ val(meta), path(data) ]
+  - fastqc_zip:
+      description: |
+        FastQC zip archives
+        Structure: [ val(meta), path(zip) ]
+  - fastqc_html:
+      description: |
+        FastQC HTML reports
+        Structure: [ val(meta), path(html) ]
+  - multiqc_files:
+      description: |
+        Files for MultiQC
+        Structure: path(file)
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

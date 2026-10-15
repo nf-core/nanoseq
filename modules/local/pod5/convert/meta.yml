@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: fast5_to_pod5
+description: Convert ONT FAST5 files to POD5 format with pod5 convert fast5
+keywords:
+  - nanopore
+  - fast5
+  - pod5
+  - convert
+tools:
+  - pod5:
+      description: Oxford Nanopore Technologies POD5 file format Python API and tools.
+      homepage: https://github.com/nanoporetech/pod5-file-format
+      documentation: https://pod5-file-format.readthedocs.io/
+      licence:
+        - MPL-2.0
+      identifier: ''
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - input_path:
+        type: file
+        description: FAST5 file(s), or a directory of FAST5 files, to convert
+        pattern: '*.fast5'
+        ontologies: []
+output:
+  pod5:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - pod5/*:
+          type: file
+          description: Converted POD5 file
+          pattern: pod5/*.pod5
+          ontologies: []
+  versions_pod5:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - pod5:
+          type: string
+          description: The name of the tool
+      - pod5 --version 2>&1 | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - pod5:
+          type: string
+          description: The name of the tool
+      - pod5 --version 2>&1 | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

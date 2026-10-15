@@ -1,0 +1,95 @@
+{
+    "-profile test | fast5 input | basecalling + qcat demultiplexing - stub": {
+        "content": [
+            {
+                "BEDTOOLS_BAMTOBED": {
+                    "bedtools": "2.31.1"
+                },
+                "BEDTOOLS_GENOMECOV": {
+                    "bedtools": "2.31.1"
+                },
+                "BEDTOOLS_SORT": {
+                    "bedtools": "2.31.1"
+                },
+                "DORADO_BASECALLER": {
+                    "dorado": "2.1.1"
+                },
+                "FAST5_TO_POD5": {
+                    "pod5": "0.3.47"
+                },
+                "FASTQC": {
+                    "fastqc": "0.13.0"
+                },
+                "MINIMAP2_ALIGN": {
+                    "minimap2": "2.30-r1287"
+                },
+                "MINIMAP2_INDEX": {
+                    "minimap2": "2.30-r1287"
+                },
+                "NANOLYSE": {
+                    "nanolyse": "1.2.0"
+                },
+                "NANOPLOT": {
+                    "NanoPlot": "1.47.0"
+                },
+                "QCAT": {
+                    "qcat": "1.1.0"
+                },
+                "SAMTOOLS_FAIDX": {
+                    "samtools": 1.24
+                },
+                "SAMTOOLS_FLAGSTAT": {
+                    "samtools": 1.24
+                },
+                "SAMTOOLS_IDXSTATS": {
+                    "samtools": 1.24
+                },
+                "SAMTOOLS_STATS": {
+                    "samtools": 1.24
+                },
+                "TOULLIGQC": {
+                    "toulligqc": "2.8.4"
+                },
+                "UCSC_BEDGRAPHTOBIGWIG": {
+                    "ucsc": 482
+                },
+                "UCSC_BEDTOBIGBED": {
+                    "ucsc": 482
+                },
+                "WGET_NANOLYSE_FASTA": {
+                    "wget": "1.21.4"
+                },
+                "Workflow": {
+                    "nf-core/nanoseq": "v3.2.0"
+                }
+            },
+            [
+                "BEDTOOLS_BAMTOBED",
+                "BEDTOOLS_GENOMECOV",
+                "BEDTOOLS_SORT",
+                "DORADO_BASECALLER",
+                "FAST5_TO_POD5",
+                "FASTQC",
+                "MINIMAP2_ALIGN",
+                "MINIMAP2_INDEX",
+                "MULTIQC",
+                "NANOLYSE",
+                "NANOPLOT",
+                "QCAT",
+                "SAMTOOLS_FAIDX",
+                "SAMTOOLS_FLAGSTAT",
+                "SAMTOOLS_IDXSTATS",
+                "SAMTOOLS_STATS",
+                "TOULLIGQC",
+                "UCSC_BEDGRAPHTOBIGWIG",
+                "UCSC_BEDTOBIGBED",
+                "WGET_NANOLYSE_FASTA"
+            ]
+        ],
+        "timestamp": "2026-10-15T17:04:34.436304",
+        "meta": {
+            "nf-test": "0.9.4",
+            "nextflow": "26.10.0"
+        }
+    }
+}

@@ -3,26 +3,48 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.2.0] - 2025-06-22
+## v3.2.0 - [unreleased]
 
 ### Major enhancements
 
 - Added the `dorado` basecaller for basecalling and DNA/RNA modification calling
 - Added `toulligQC` for nanopore read quality check
 - Removed DNA structural and small variant calling functionalities (prepare for nanoRNAseq)
-- Bump minimum Nextflow version from 21.10.3 -> 24.04.2
-- Update pipeline template to nf-core/tools `3.2.1`
-- Updated all nf-core/modules to their latest
+- Bump minimum Nextflow version from 21.10.3 -> 25.10.4; pipeline code follows Nextflow strict syntax and is tested with Nextflow 26.10.0
+- Update pipeline template to nf-core/tools `4.1.0` ([#338](https://github.com/nf-core/nanoseq/pull/338), supersedes [#323](https://github.com/nf-core/nanoseq/pull/323), [#329](https://github.com/nf-core/nanoseq/pull/329), [#330](https://github.com/nf-core/nanoseq/pull/330), [#333](https://github.com/nf-core/nanoseq/pull/333), [#334](https://github.com/nf-core/nanoseq/pull/334))
+- Updated all nf-core/modules to their latest; software versions are now collected with the `versions` topic channel
+- Restore per-module options and publishing paths in `conf/modules.config`
+- Samplesheet and parameters are validated with `nf-schema` (`assets/schema_input.json`, `nextflow_schema.json`); the samplesheet is read with `samplesheetToList`, replacing `bin/check_samplesheet.py`
+- Remove top-level code from `workflows/nanoseq.nf` and `params` access from local modules and subworkflows
+- Remove unused `blue-crab`, `gtf2bed`, `get_chrom_sizes` and local `multiqc` modules, and `conf/test_withpull.config`
+- Replace local `modkit_pileup`, `get_nanolyse_fasta` and `get_jaffal_ref` modules with nf-core `modkit/pileup` and `wget`; replace deprecated nf-core `custom/getchromsizes` with `samtools/faidx`
+- Sort BED12 files with nf-core `bedtools/sort` before creating bigBed files
+- Use `params.pipelines_testdata_base_path` in test configs
+- Basecalling test profiles (`test`, `test_bc_nodx`) now use R10.4.1 (5 kHz) POD5 data from the nf-core/methylong test data, as current dorado releases no longer support R9.4.1 data. `test_bc_nodx` now tests modified base calling with `--bedmethyl_out` ([#337](https://github.com/nf-core/nanoseq/pull/337))
+- Allow `.pod5` and `.fast5` files in the samplesheet `input_file` column
+- Remove unused `--flowcell` and `--kit` parameters
+- Remove DNA protocol support; `--protocol` accepts `cDNA` or `directRNA`
+- Move local modules and subworkflows to the nf-core component layout with `meta.yml`; replace personal Docker images with Seqera Containers
+- Add a v3.2 metro map made with nf-metro
+- Stage FAST5 directories, the GraphMap2 GTF and cloned test data as process inputs
+- Request a GPU for dorado basecalling on CUDA devices
+- Sort collected files before bambu, StringTie merge and featureCounts for reproducible output
+- Add `manifest.diagram` and restore the metro map images ([#339](https://github.com/nf-core/nanoseq/pull/339))
 - Update `bambu` version from `3.0.8` to `3.4.0`
+
+### Bug fixes
+
+- Replace removed `echo` process directive with `debug` in `JAFFAL` and `M6ANET_INFERENCE` modules ([#340](https://github.com/nf-core/nanoseq/issues/340))
+- Fix MultiQC not receiving FastQC, samtools and featureCounts results
+- Pin the `dorado` container instead of using `latest`
+- Fix `qcat` options (`--qcat_min_score`, `--qcat_detect_middle`, `--trim_barcodes`) being ignored
 
 ### Parameters
 
 - Added `--input_path_file_type` as `dorado` is added for basecalling and modification calling
 - Added `--bedmethyl_out` as `dorado` is added for basecalling and modification calling
-- Added `--flowcell` as `dorado` is added for basecalling and modification calling
-- Added `--kit` as `dorado` is added for basecalling and modification calling
 - Added `--dorado_model` as `dorado` is added for basecalling and modification calling
-- Added `--doraro_modification` as `dorado` is added for basecalling and modification calling
+- Added `--dorado_modification` as `dorado` is added for basecalling and modification calling
 - Added `--dorado_device` as `dorado` is added for basecalling and modification calling
 - Added `--skip_basecalling` as `dorado` is added for basecalling and modification calling
 - Added `--skip_toulligqc` as `toulligqc` is added for nanopore read quality check
@@ -40,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | Dependency              | Old version | New version |
 | ----------------------- | ----------- | ----------- |
 | `bioconductor-bambu`    | 3.0.8       | 3.4.0       |
+| `jaffa`                 | 2.3         | 2.5         |
 | `bedtools`              | 2.29.2      | 2.31.1      |
 | `fastqc`                | 0.11.9      | 0.12.1      |
 | `minimap2`              | 2.17        | 2.29        |

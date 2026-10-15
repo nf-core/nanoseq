@@ -1,0 +1,151 @@
+%% nf-core/nanoseq v3.2 metro map source for nf-metro 2.1.0 (https://github.com/seqeralabs/nf-metro).
+%% Regenerate from docs/images/:
+%%   nf-metro render --strict nanoseq_metro_map.mmd -o nanoseq_metro_map_v3.2.svg
+%%   nf-metro render --strict nanoseq_metro_map.mmd -o nanoseq_metro_map_v3.2.png --mode light
+%%   nf-metro render --strict nanoseq_metro_map.mmd -o nanoseq_metro_map_v3.2_dark.png --mode dark
+%%metro title: nf-core/nanoseq
+%%metro logo: nf-core-nanoseq_logo_light.png | nf-core-nanoseq_logo_dark.png
+%%metro style: nfcore
+%%metro legend: bl
+%%metro logo_scale: 0.6
+%%metro line: cdna | cDNA | #2db572
+%%metro line: drna | direct RNA | #f08c00
+%%metro line: modbase | Modified base calling (--bedmethyl_out) | #8e44ad
+%%metro file: fast5_in | FAST5
+%%metro file: pod5_in | POD5
+%%metro file: fastq_in | FASTQ
+%%metro file: bedmethyl_out | BED | bedMethyl
+%%metro file: bigwig_out | bigWig
+%%metro file: bigbed_out | bigBed
+%%metro file: bam_in | BAM
+%%metro file: fast5_mod_in | FAST5
+%%metro file: multiqc_out | HTML | MultiQC report
+%%metro off_track: fast5_mod_in
+%%metro grid: basecalling | 0,0
+%%metro grid: preprocessing | 1,0
+%%metro grid: alignment | 2,0
+%%metro grid: coverage | 3,0
+%%metro grid: modbases | 1,1
+%%metro grid: fusions | 2,1
+%%metro grid: quant | 3,1
+%%metro grid: de | 4,1
+%%metro grid: rnamod | 3,2
+%%metro grid: reporting | 4,0
+
+graph LR
+    subgraph basecalling [Basecalling]
+        fast5_in[ ]
+        pod5_in[ ]
+        pod5_convert[pod5 convert]
+        dorado[dorado basecaller]
+
+        fast5_in -->|cdna,drna,modbase| pod5_convert
+        pod5_convert -->|cdna,drna,modbase| dorado
+        pod5_in -->|cdna,drna,modbase| dorado
+    end
+
+    subgraph modbases [Modified bases]
+        dorado_aligner[dorado aligner]
+        modkit[modkit pileup]
+        bedmethyl_out[ ]
+
+        dorado_aligner -->|modbase| modkit
+        modkit -->|modbase| bedmethyl_out
+    end
+
+    subgraph preprocessing [Demultiplexing, read QC and cleaning]
+        fastq_in[ ]
+        qcat[qcat]
+        nanoplot[NanoPlot]
+        toulligqc[ToulligQC]
+        fastqc[FastQC]
+        nanolyse[NanoLyse]
+
+        fastq_in -->|cdna,drna| qcat
+        qcat -->|cdna,drna| nanoplot
+        nanoplot -->|cdna,drna| toulligqc
+        toulligqc -->|cdna,drna| fastqc
+        fastqc -->|cdna,drna| nanolyse
+    end
+
+    subgraph alignment [Alignment]
+        minimap2[minimap2]
+        graphmap2[GraphMap2]
+        samtools[SAMtools]
+
+        minimap2 -->|cdna,drna| samtools
+        graphmap2 -->|cdna,drna| samtools
+    end
+
+    subgraph coverage [Coverage tracks]
+        genomecov[bedtools genomecov]
+        bg2bw[bedGraphToBigWig]
+        bigwig_out[ ]
+        bamtobed[bedtools bamtobed]
+        bedsort[bedtools sort]
+        bed2bb[bedToBigBed]
+        bigbed_out[ ]
+
+        genomecov -->|cdna,drna| bg2bw
+        bg2bw -->|cdna,drna| bigwig_out
+        bamtobed -->|cdna,drna| bedsort
+        bedsort -->|cdna,drna| bed2bb
+        bed2bb -->|cdna,drna| bigbed_out
+    end
+
+    subgraph fusions [RNA fusions]
+        jaffal[JAFFAL]
+    end
+
+    subgraph quant [Quantification]
+        bam_in[ ]
+        bambu[bambu]
+        stringtie[StringTie2]
+        featurecounts[featureCounts]
+
+        bam_in -->|cdna,drna| bambu
+        bam_in -->|cdna,drna| stringtie
+        stringtie -->|cdna,drna| featurecounts
+    end
+
+    subgraph de [Differential analysis]
+        %%metro number: 9
+        deseq2[DESeq2]
+        dexseq[DEXSeq]
+    end
+
+    subgraph rnamod [RNA modifications]
+        fast5_mod_in[ ]
+        nanopolish[nanopolish eventalign]
+        xpore[xPore]
+        m6anet[m6anet]
+
+        fast5_mod_in -->|drna| nanopolish
+        nanopolish -->|drna| xpore
+        nanopolish -->|drna| m6anet
+    end
+
+    subgraph reporting [Reporting]
+        %%metro number: 10
+        multiqc[MultiQC]
+        multiqc_out[ ]
+
+        multiqc -->|cdna,drna| multiqc_out
+    end
+
+    %% Inter-section edges
+    bambu -->|cdna,drna| deseq2
+    bambu -->|cdna,drna| dexseq
+    featurecounts -->|cdna,drna| deseq2
+    featurecounts -->|cdna,drna| dexseq
+    dorado -->|modbase| dorado_aligner
+    dorado -->|cdna,drna| qcat
+    fastqc -->|cdna,drna| jaffal
+    nanolyse -->|cdna,drna| minimap2
+    nanolyse -->|cdna,drna| graphmap2
+    samtools -->|cdna,drna| genomecov
+    samtools -->|cdna,drna| bamtobed
+    samtools -->|cdna,drna| bambu
+    samtools -->|cdna,drna| stringtie
+    samtools -->|drna| nanopolish
+    featurecounts -->|cdna,drna| multiqc

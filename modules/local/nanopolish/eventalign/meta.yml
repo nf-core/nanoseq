@@ -1,0 +1,114 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: nanopolish_eventalign
+description: Index FAST5 signal data with nanopolish index and align signal events to the reference with nanopolish eventalign
+keywords:
+  - nanopore
+  - signal
+  - eventalign
+  - rna modification
+  - nanopolish
+tools:
+  - nanopolish:
+      description: Signal-level algorithms for MinION data, used here to align raw signal events to a reference.
+      homepage: https://github.com/jts/nanopolish
+      documentation: https://nanopolish.readthedocs.io/
+      doi: 10.1038/nmeth.3444
+      licence:
+        - MIT
+      identifier: biotools:nanopolish
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - genome:
+        type: file
+        description: Reference (transcriptome or genome) FASTA file
+        pattern: '*.{fa,fasta}'
+        ontologies:
+          - edam: http://edamontology.org/format_1929
+    - gtf:
+        type: file
+        description: Reference annotation GTF file (passed through to the output)
+        pattern: '*.gtf'
+        ontologies:
+          - edam: http://edamontology.org/format_2306
+    - fastq:
+        type: file
+        description: Basecalled reads in FASTQ format
+        pattern: '*.{fastq,fastq.gz}'
+        ontologies:
+          - edam: http://edamontology.org/format_3989
+    - bam:
+        type: file
+        description: Reads aligned to the reference
+        pattern: '*.bam'
+        ontologies:
+          - edam: http://edamontology.org/format_2572
+    - bai:
+        type: file
+        description: BAM index
+        pattern: '*.bai'
+        ontologies:
+          - edam: http://edamontology.org/format_3327
+    - fast5:
+        type: directory
+        description: Directory containing the FAST5 files of the sample (staged as fast5_dir)
+        ontologies: []
+output:
+  nanopolish_outputs:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - genome:
+          type: file
+          description: Reference FASTA file (passed through)
+          pattern: '*.{fa,fasta}'
+          ontologies:
+            - edam: http://edamontology.org/format_1929
+      - gtf:
+          type: file
+          description: Reference annotation GTF file (passed through)
+          pattern: '*.gtf'
+          ontologies:
+            - edam: http://edamontology.org/format_2306
+      - '*eventalign.txt':
+          type: file
+          description: nanopolish eventalign output
+          pattern: '*eventalign.txt'
+          ontologies:
+            - edam: http://edamontology.org/format_3475
+      - '*summary.txt':
+          type: file
+          description: nanopolish eventalign read summary
+          pattern: '*summary.txt'
+          ontologies:
+            - edam: http://edamontology.org/format_3475
+  versions_nanopolish:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - nanopolish:
+          type: string
+          description: The name of the tool
+      - nanopolish --version | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - nanopolish:
+          type: string
+          description: The name of the tool
+      - nanopolish --version | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

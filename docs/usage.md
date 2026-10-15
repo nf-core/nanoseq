@@ -6,16 +6,99 @@
 
 ## Introduction
 
-You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated file with 6 columns and a header row:
+You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated file with 4 columns and a header row:
 
-| Column       | Description                                                                                                                                                                                                                                                                               |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `group`      | Group identifier for sample. This will be identical for replicate samples from the same experimental group.                                                                                                                                                                               |
-| `replicate`  | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                                                                       |
-| `barcode`    | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                                                                                                                                                                                     |
-| `input_file` | Full path to FastQ file if previously demultiplexed, BAM file if previously aligned, or a path to a directory with subdirectories containing fastq or fast5 files. FastQ file has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam". |
-| `fasta`      | Genome fasta file or transcriptome fasta file for alignment. This can either be a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz".                         |
-| `gtf`        | Annotation gtf file for transcript discovery and quantification and RNA modification detection. This can either be blank or a local path. Must have the extension ".gtf".                                                                                                                 |
+| Column       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `group`      | Group identifier for sample. This will be identical for replicate samples from the same experimental group.                                                                                                                                                                                                                                                                                                                                                                      |
+| `replicate`  | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                                                                                                                                                                                                                                                              |
+| `barcode`    | Barcode identifier attributed to that sample during multiplexing. Must be an integer. Leave empty if the data is not demultiplexed by the pipeline.                                                                                                                                                                                                                                                                                                                              |
+| `input_file` | Path to the input data for the sample. Accepted inputs are a gzipped FASTQ file (`.fastq.gz` or `.fq.gz`) if previously basecalled and demultiplexed, a BAM file (`.bam`) if previously aligned, a single POD5 (`.pod5`) or FAST5 (`.fast5`) file for basecalling, or a directory of raw data. A directory must contain only POD5 or FAST5 files, or `fast5` and `fastq` subdirectories for RNA modification analysis. Leave empty if the data is demultiplexed by the pipeline. |
+
+The sample name used for output files is `<group>_R<replicate>`, for example `WT_R1`.
+
+### Basecalling with dorado
+
+The pipeline basecalls raw Oxford Nanopore data with [dorado](https://github.com/nanoporetech/dorado) unless `--skip_basecalling` is used. Basecalling uses the following parameters:
+
+- `--input_path_file_type`: the raw data format, `fast5` (default) or `pod5`. FAST5 data is converted to POD5 with [pod5](https://github.com/nanoporetech/pod5-file-format) before basecalling.
+- `--dorado_model`: the dorado basecalling model. This parameter has no default and is required for basecalling. Choose the model that matches the flow cell, kit and sampling rate of your data, for example `dna_r10.4.1_e8.2_400bps_hac@v5.2.0` for cDNA (cDNA is basecalled with DNA models) or `rna004_130bps_hac@v6.0.0` for direct RNA (RNA004). See the [dorado documentation](https://github.com/nanoporetech/dorado#available-basecalling-models) for the available models.
+- `--dorado_device`: the device used for basecalling, for example `cpu`, `cuda:all` (default) or `metal`. Set `--dorado_device cpu` on machines without an NVIDIA GPU.
+
+> [!WARNING]
+> Current versions of dorado do not support R9.4.1 (4 kHz) data.
+
+To basecall on NVIDIA GPUs inside Docker, Singularity or Apptainer containers, add the `gpu` profile to make the GPUs available to the container, for example `-profile docker,gpu`.
+
+How the raw data is provided depends on whether the data is demultiplexed by the pipeline:
+
+- With `--skip_demultiplexing`, each sample is basecalled separately from the POD5 or FAST5 file, or the directory of raw data, given in the `input_file` column of the samplesheet.
+- Without `--skip_demultiplexing`, the raw data given with `--input_path` is basecalled as a single unit and demultiplexed with [qcat](https://github.com/nanoporetech/qcat). Reads are assigned to samples with the `barcode` column of the samplesheet. Set the barcode kit with `--barcode_kit`.
+
+#### Example `samplesheet.csv` for POD5 basecalling
+
+```csv title="samplesheet.csv"
+group,replicate,barcode,input_file
+HG002,1,,/path/to/HG002_run1.pod5
+HG002,2,,/path/to/HG002_run2/
+```
+
+#### Example command for POD5 basecalling
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --fasta /path/to/genome.fa \
+    --input_path_file_type pod5 \
+    --dorado_model dna_r10.4.1_e8.2_400bps_hac@v5.2.0 \
+    --dorado_device cuda:all \
+    --skip_demultiplexing \
+    --skip_quantification \
+    --skip_fusion_analysis \
+    --skip_modification_analysis \
+    --outdir <OUTDIR> \
+    -profile docker,gpu
+```
+
+#### Example command for basecalling and demultiplexing
+
+Use the samplesheet format shown in [With demultiplexing](#with-demultiplexing) and give the directory of raw data with `--input_path`:
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol cDNA \
+    --fasta /path/to/genome.fa \
+    --input_path /path/to/pod5_dir/ \
+    --input_path_file_type pod5 \
+    --dorado_model dna_r10.4.1_e8.2_400bps_hac@v5.2.0 \
+    --barcode_kit 'NBD103/NBD104' \
+    --skip_quantification \
+    --outdir <OUTDIR> \
+    -profile docker,gpu
+```
+
+#### Modified base calling
+
+Use `--bedmethyl_out` together with `--dorado_modification` to call modified bases on direct RNA data, for example `--dorado_modification m6A_DRACH` with the `rna004_130bps_hac@v6.0.0` model. Other RNA004 modification models include `inosine_m6A`, `pseU` and `m5C`. dorado writes the modified base calls to an unaligned BAM file. The pipeline then aligns this BAM file to `--fasta` with dorado aligner and creates a bedMethyl file with [modkit](https://github.com/nanoporetech/modkit) `pileup`. Modified base calling requires `--fasta` and `--skip_demultiplexing`. The read QC, NanoLyse, alignment and downstream steps are not run for modified base calling.
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol directRNA \
+    --fasta /path/to/transcriptome.fa \
+    --input_path_file_type pod5 \
+    --dorado_model rna004_130bps_hac@v6.0.0 \
+    --bedmethyl_out \
+    --dorado_modification m6A_DRACH \
+    --skip_demultiplexing \
+    --skip_quantification \
+    --skip_fusion_analysis \
+    --skip_modification_analysis \
+    --outdir <OUTDIR> \
+    -profile docker,gpu
+```
 
 ### Skip demultiplexing
 
@@ -26,13 +109,11 @@ As shown in the examples below, the accepted samplesheet format is different dep
 ##### Example `samplesheet.csv` for non-demultiplexed fastq inputs
 
 ```bash
-group,replicate,barcode,input_file,fasta,gtf
-WT_MOUSE,1,1,,mm10,
-WT_HUMAN,1,2,,hg19,
-WT_POMBE,1,3,,/path/to/local/genome.fa,
-WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
-WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
-WT_UNKNOWN,3,6,,,
+group,replicate,barcode,input_file
+WT,1,1,
+WT,2,2,
+KO,1,3,
+KO,2,4,
 ```
 
 ##### Example command for non-demultiplexed fastq inputs
@@ -40,10 +121,13 @@ WT_UNKNOWN,3,6,,,
 ```bash
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
-    --protocol DNA \
+    --protocol cDNA \
+    --fasta /path/to/genome.fa \
     --input_path ./undemultiplexed.fastq.gz \
     --barcode_kit 'NBD103/NBD104' \
+    --skip_basecalling \
     --skip_quantification \
+    --outdir <OUTDIR> \
     -profile <docker/singularity/institute>
 ```
 
@@ -52,11 +136,11 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for demultiplexed fastq inputs
 
 ```bash
-group,replicate,barcode,input_file,fasta,gtf
-WT,1,,SAM101A1.fastq.gz,hg19,
-WT,2,,SAM101A2.fastq.gz,hg19,
-KO,1,,SAM101A3.fastq.gz,hg19,
-KO,2,,SAM101A4.fastq.gz,hg19,
+group,replicate,barcode,input_file
+WT,1,,SAM101A1.fastq.gz
+WT,2,,SAM101A2.fastq.gz
+KO,1,,SAM101A3.fastq.gz
+KO,2,,SAM101A4.fastq.gz
 ```
 
 ##### Example command for demultiplexed fastq inputs
@@ -65,7 +149,11 @@ KO,2,,SAM101A4.fastq.gz,hg19,
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol cDNA \
+    --fasta /path/to/genome.fa \
+    --gtf /path/to/annotation.gtf \
+    --skip_basecalling \
     --skip_demultiplexing \
+    --outdir <OUTDIR> \
     -profile <docker/singularity/institute>
 ```
 
@@ -74,11 +162,11 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for BAM inputs
 
 ```bash
-group,replicate,barcode,input_file,fasta,gtf
-WT,1,,SAM101A1.bam,hg19,
-WT,2,,SAM101A2.bam,hg19,
-KO,1,,SAM101A3.bam,hg19,
-KO,2,,SAM101A4.bam,hg19,
+group,replicate,barcode,input_file
+WT,1,,SAM101A1.bam
+WT,2,,SAM101A2.bam
+KO,1,,SAM101A3.bam
+KO,2,,SAM101A4.bam
 ```
 
 ##### Example command for BAM inputs
@@ -87,8 +175,12 @@ KO,2,,SAM101A4.bam,hg19,
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol cDNA \
+    --fasta /path/to/genome.fa \
+    --gtf /path/to/annotation.gtf \
+    --skip_basecalling \
     --skip_demultiplexing \
     --skip_alignment \
+    --outdir <OUTDIR> \
     -profile <docker/singularity/institute>
 ```
 
@@ -97,11 +189,11 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for FAST5 and FASTQ input directories
 
 ```bash
-group,replicate,barcode,input_file,fasta,gtf
-WT,1,,/full/path/to/SAM101A1/,hg19.fasta,hg19.gtf
-WT,2,,/full/path/to/SAM101A2/,hg19.fasta,hg19.gtf
-KO,1,,/full/path/to/SAM101A3/,hg19.fasta,hg19.gtf
-KO,2,,/full/path/to/SAM101A4/,hg19.fasta,hg19.gtf
+group,replicate,barcode,input_file
+WT,1,,/full/path/to/SAM101A1/
+WT,2,,/full/path/to/SAM101A2/
+KO,1,,/full/path/to/SAM101A3/
+KO,2,,/full/path/to/SAM101A4/
 ```
 
 ##### Each of the FAST5 and FASTQ input directory should have the following structure:
@@ -124,7 +216,11 @@ KO,2,,/full/path/to/SAM101A4/,hg19.fasta,hg19.gtf
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol directRNA \
+    --fasta /path/to/transcriptome.fa \
+    --gtf /path/to/annotation.gtf \
+    --skip_basecalling \
     --skip_demultiplexing \
+    --outdir <OUTDIR> \
     -profile <docker/singularity/institute>
 ```
 
@@ -135,8 +231,12 @@ The typical command for running the pipeline is as follows:
 ```console
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
-    --protocol DNA \
-    --barcode_kit SQK-PBK004 \
+    --protocol cDNA \
+    --fasta /path/to/genome.fa \
+    --gtf /path/to/annotation.gtf \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    --outdir <OUTDIR> \
     -profile docker
 ```
 
@@ -151,6 +251,32 @@ work                # Directory containing the nextflow working files
 # Other nextflow hidden files, eg. history of pipeline runs and old logs.
 ```
 
+If you wish to repeatedly use the same parameters for multiple runs, rather than specifying each flag in the command, you can specify these in a params file.
+
+Pipeline settings can be provided in a `yaml` or `json` file via `-params-file <file>`.
+
+> [!WARNING]
+> Do not use `-c <file>` to specify parameters as this will result in errors. Custom config files specified with `-c` must only be used for [tuning process resource specifications](https://nf-co.re/docs/running/run-pipelines#configuring-pipelines), other infrastructural tweaks (such as output directories), or module arguments (args).
+
+The above pipeline run specified with a params file in yaml format:
+
+```bash
+nextflow run nf-core/nanoseq -profile docker -params-file params.yaml
+```
+
+with:
+
+```yaml title="params.yaml"
+input: './samplesheet.csv'
+outdir: './results/'
+protocol: 'cDNA'
+fasta: '/path/to/genome.fa'
+gtf: '/path/to/annotation.gtf'
+<...>
+```
+
+You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
+
 ### Updating the pipeline
 
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
@@ -161,15 +287,21 @@ nextflow pull nf-core/nanoseq
 
 ### Reproducibility
 
-It is a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
+It is a good idea to specify the pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
 
 First, go to the [nf-core/nanoseq releases page](https://github.com/nf-core/nanoseq/releases) and find the latest pipeline version - numeric only (eg. `1.3.1`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.3.1`. Of course, you can switch to another version by changing the number after the `-r` flag.
 
 This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future. For example, at the bottom of the MultiQC reports.
 
+To further assist in reproducibility, you can use share and reuse [parameter files](#running-the-pipeline) to repeat pipeline runs with the same settings without having to write out a command with every single parameter.
+
+> [!TIP]
+> If you wish to share such profile (such as upload as supplementary material for academic publications), make sure to NOT include cluster specific paths to files, nor institutional specific profiles.
+
 ## Core Nextflow arguments
 
-> **NB:** These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
+> [!NOTE]
+> These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen)
 
 ### `-profile`
 
@@ -177,14 +309,15 @@ Use this parameter to choose a configuration profile. Profiles can give configur
 
 Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity, Podman, Shifter, Charliecloud, Conda) - see below.
 
+> [!IMPORTANT]
 > We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility, however when this is not possible, Conda is also supported.
 
-The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to see if your system is available in these configs please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
+The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to check if your system is supported, please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
 
 Note that multiple profiles can be loaded, for example: `-profile test,docker` - the order of arguments is important!
 They are loaded in sequence, so later profiles can overwrite earlier profiles.
 
-If `-profile` is not specified, the pipeline will run locally and expect all software to be installed and available on the `PATH`. This is _not_ recommended, since it can lead to different results on different machines dependent on the computer enviroment.
+If `-profile` is not specified, the pipeline will run locally and expect all software to be installed and available on the `PATH`. This is _not_ recommended, since it can lead to different results on different machines dependent on the computer environment.
 
 - `test`
   - A profile with a complete configuration for automated testing
@@ -198,7 +331,13 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 - `shifter`
   - A generic configuration profile to be used with [Shifter](https://nersc.gitlab.io/development/shifter/how-to-use/)
 - `charliecloud`
-  - A generic configuration profile to be used with [Charliecloud](https://hpc.github.io/charliecloud/)
+  - A generic configuration profile to be used with [Charliecloud](https://charliecloud.io/)
+- `apptainer`
+  - A generic configuration profile to be used with [Apptainer](https://apptainer.org/)
+- `wave`
+  - A generic configuration profile to enable [Wave](https://seqera.io/wave/) containers. Use together with one of the above (requires Nextflow `24.03.0-edge` or later).
+- `gpu`
+  - A configuration profile that makes NVIDIA GPUs available to Docker, Singularity and Apptainer containers for basecalling with dorado. Use together with one of the container profiles, for example `-profile docker,gpu`.
 - `conda`
   - A generic configuration profile to be used with [Conda](https://conda.io/docs/). Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker, Singularity, Podman, Shifter or Charliecloud.
 
@@ -216,104 +355,30 @@ Specify the path to a specific config file (this is a core Nextflow command). Se
 
 ### Resource requests
 
-Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the steps in the pipeline, if the job exits with any of the error codes specified [here](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18) it will automatically be resubmitted with higher requests (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
+Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the pipeline steps, if the job exits with any of the error codes specified [here](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18) it will automatically be resubmitted with higher resources request (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
 
-For example, if the nf-core/rnaseq pipeline is failing after multiple re-submissions of the `STAR_ALIGN` process due to an exit code of `137` this would indicate that there is an out of memory issue:
+To change the resource requests, please see the [max resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#set-max-resources) and [customise process resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#customize-process-resources) section of the nf-core website.
 
 ```console
 [62/149eb0] NOTE: Process `NFCORE_RNASEQ:RNASEQ:ALIGN_STAR:STAR_ALIGN (WT_REP1)` terminated with an error exit status (137) -- Execution is retried (1)
 Error executing process > 'NFCORE_RNASEQ:RNASEQ:ALIGN_STAR:STAR_ALIGN (WT_REP1)'
-
-Caused by:
-    Process `NFCORE_RNASEQ:RNASEQ:ALIGN_STAR:STAR_ALIGN (WT_REP1)` terminated with an error exit status (137)
-
-Command executed:
-    STAR \
-        --genomeDir star \
-        --readFilesIn WT_REP1_trimmed.fq.gz  \
-        --runThreadN 2 \
-        --outFileNamePrefix WT_REP1. \
-        <TRUNCATED>
 
 Command exit status:
     137
 
 Command output:
     (empty)
-
-Command error:
-    .command.sh: line 9:  30 Killed    STAR --genomeDir star --readFilesIn WT_REP1_trimmed.fq.gz --runThreadN 2 --outFileNamePrefix WT_REP1. <TRUNCATED>
-Work dir:
-    /home/pipelinetest/work/9d/172ca5881234073e8d76f2a19c88fb
-
-Tip: you can replicate the issue by changing to the process work dir and entering the command `bash .command.run`
 ```
 
-#### For beginners
+### Custom Containers
 
-A first step to bypass this error, you could try to increase the amount of CPUs, memory, and time for the whole pipeline. Therefor you can try to increase the resource for the parameters `--max_cpus`, `--max_memory`, and `--max_time`. Based on the error above, you have to increase the amount of memory. Therefore you can go to the [parameter documentation of rnaseq](https://nf-co.re/rnaseq/3.9/parameters) and scroll down to the `show hidden parameter` button to get the default value for `--max_memory`. In this case 128GB, you than can try to run your pipeline again with `--max_memory 200GB -resume` to skip all process, that were already calculated. If you can not increase the resource of the complete pipeline, you can try to adapt the resource for a single process as mentioned below.
+In some cases, you may wish to change the container or conda environment used by a pipeline steps for a particular tool. By default, nf-core pipelines use containers and software from the [biocontainers](https://biocontainers.pro/) or [bioconda](https://bioconda.github.io/) projects. However, in some cases the pipeline specified version maybe out of date.
 
-#### Advanced option on process level
+To use a different container from the default container or conda environment specified in a pipeline, please see the [updating tool versions](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#update-tool-versions) section of the nf-core website.
 
-To bypass this error you would need to find exactly which resources are set by the `STAR_ALIGN` process. The quickest way is to search for `process STAR_ALIGN` in the [nf-core/rnaseq Github repo](https://github.com/nf-core/rnaseq/search?q=process+STAR_ALIGN).
-We have standardised the structure of Nextflow DSL2 pipelines such that all module files will be present in the `modules/` directory and so, based on the search results, the file we want is `modules/nf-core/star/align/main.nf`.
-If you click on the link to that file you will notice that there is a `label` directive at the top of the module that is set to [`label process_high`](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/modules/nf-core/software/star/align/main.nf#L9).
-The [Nextflow `label`](https://www.nextflow.io/docs/latest/process.html#label) directive allows us to organise workflow processes in separate groups which can be referenced in a configuration file to select and configure subset of processes having similar computing requirements.
-The default values for the `process_high` label are set in the pipeline's [`base.config`](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L33-L37) which in this case is defined as 72GB.
-Providing you haven't set any other standard nf-core parameters to **cap** the [maximum resources](https://nf-co.re/usage/configuration#max-resources) used by the pipeline then we can try and bypass the `STAR_ALIGN` process failure by creating a custom config file that sets at least 72GB of memory, in this case increased to 100GB.
-The custom config below can then be provided to the pipeline via the [`-c`](#-c) parameter as highlighted in previous sections.
+### Custom Tool Arguments
 
-```nextflow
-process {
-    withName: 'NFCORE_RNASEQ:RNASEQ:ALIGN_STAR:STAR_ALIGN' {
-        memory = 100.GB
-    }
-}
-```
-
-> **NB:** We specify the full process name i.e. `NFCORE_RNASEQ:RNASEQ:ALIGN_STAR:STAR_ALIGN` in the config file because this takes priority over the short name (`STAR_ALIGN`) and allows existing configuration using the full process name to be correctly overridden.
->
-> If you get a warning suggesting that the process selector isn't recognised check that the process name has been specified correctly.
-
-### Updating containers (advanced users)
-
-The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. If for some reason you need to use a different version of a particular tool with the pipeline then you just need to identify the `process` name and override the Nextflow `container` definition for that process using the `withName` declaration. For example, in the [nf-core/viralrecon](https://nf-co.re/viralrecon) pipeline a tool called [Pangolin](https://github.com/cov-lineages/pangolin) has been used during the COVID-19 pandemic to assign lineages to SARS-CoV-2 genome sequenced samples. Given that the lineage assignments change quite frequently it doesn't make sense to re-release the nf-core/viralrecon everytime a new version of Pangolin has been released. However, you can override the default container used by the pipeline by creating a custom config file and passing it as a command-line argument via `-c custom.config`.
-
-1. Check the default version used by the pipeline in the module file for [Pangolin](https://github.com/nf-core/viralrecon/blob/a85d5969f9025409e3618d6c280ef15ce417df65/modules/nf-core/software/pangolin/main.nf#L14-L19)
-2. Find the latest version of the Biocontainer available on [Quay.io](https://quay.io/repository/biocontainers/pangolin?tag=latest&tab=tags)
-3. Create the custom config accordingly:
-
-   - For Docker:
-
-     ```nextflow
-     process {
-         withName: PANGOLIN {
-             container = 'quay.io/biocontainers/pangolin:3.0.5--pyhdfd78af_0'
-         }
-     }
-     ```
-
-   - For Singularity:
-
-     ```nextflow
-     process {
-         withName: PANGOLIN {
-             container = 'https://depot.galaxyproject.org/singularity/pangolin:3.0.5--pyhdfd78af_0'
-         }
-     }
-     ```
-
-   - For Conda:
-
-     ```nextflow
-     process {
-         withName: PANGOLIN {
-             conda = 'bioconda::pangolin=3.0.5'
-         }
-     }
-     ```
-
-> **NB:** If you wish to periodically update individual tool-specific results (e.g. Pangolin) generated by the pipeline then you must ensure to keep the `work/` directory otherwise the `-resume` ability of the pipeline will be compromised and it will restart from scratch.
+To learn how to provide additional arguments to a particular tool of the pipeline, please see the [customising tool arguments](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#modifying-tool-arguments) section of the nf-core website.
 
 ### nf-core/configs
 
@@ -322,14 +387,6 @@ In most cases, you will only need to create a custom config as a one-off but if 
 See the main [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more information about creating your own configuration files.
 
 If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
-
-## Azure Resource Requests
-
-To be used with the `azurebatch` profile by specifying the `-profile azurebatch`.
-We recommend providing a compute `params.vm_type` of `Standard_D16_v3` VMs by default but these options can be changed if required.
-
-Note that the choice of VM size depends on your quota and the overall workload during the analysis.
-For a thorough list, please refer the [Azure Sizes for virtual machines in Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes).
 
 ## Running in the background
 

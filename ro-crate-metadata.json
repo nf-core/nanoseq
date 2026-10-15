@@ -1,6 +1,6 @@
 {
     "@context": [
-        "https://w3id.org/ro/crate/1.1/context",
+        "https://w3id.org/ro/crate/1.2/context",
         {
             "GithubService": "https://w3id.org/ro/terms/test#GithubService",
             "JenkinsService": "https://w3id.org/ro/terms/test#JenkinsService",
@@ -22,8 +22,8 @@
             "@id": "./",
             "@type": "Dataset",
             "creativeWorkStatus": "Stable",
-            "datePublished": "2025-04-30T12:26:52+00:00",
-            "description": "<h1>\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"docs/images/nf-core-nanoseq_logo_dark.png\">\n    <img alt=\"nf-core/nanoseq\" src=\"docs/images/nf-core-nanoseq_logo_light.png\">\n  </picture>\n</h1>\n\n[![GitHub Actions CI Status](https://github.com/nf-core/nanoseq/actions/workflows/ci.yml/badge.svg)](https://github.com/nf-core/nanoseq/actions/workflows/ci.yml)\n[![GitHub Actions Linting Status](https://github.com/nf-core/nanoseq/actions/workflows/linting.yml/badge.svg)](https://github.com/nf-core/nanoseq/actions/workflows/linting.yml)[![AWS CI](https://img.shields.io/badge/CI%20tests-full%20size-FF9900?labelColor=000000&logo=Amazon%20AWS)](https://nf-co.re/nanoseq/results)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)\n[![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)\n\n[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A524.04.2-23aa62.svg)](https://www.nextflow.io/)\n[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)\n[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)\n[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)\n[![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/nf-core/nanoseq)\n\n[![Get help on Slack](http://img.shields.io/badge/slack-nf--core%20%23nanoseq-4A154B?labelColor=000000&logo=slack)](https://nfcore.slack.com/channels/nanoseq)[![Follow on Twitter](http://img.shields.io/badge/twitter-%40nf__core-1DA1F2?labelColor=000000&logo=twitter)](https://twitter.com/nf_core)[![Follow on Mastodon](https://img.shields.io/badge/mastodon-nf__core-6364ff?labelColor=FFFFFF&logo=mastodon)](https://mstdn.science/@nf_core)[![Watch on YouTube](http://img.shields.io/badge/youtube-nf--core-FF0000?labelColor=000000&logo=youtube)](https://www.youtube.com/c/nf-core)\n\n## Introduction\n\n**nf-core/nanoseq** is a bioinformatics pipeline that ...\n\n<!-- TODO nf-core:\n   Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the\n   major pipeline sections and the types of output it produces. You're giving an overview to someone new\n   to nf-core here, in 15-20 seconds. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction\n-->\n\n<!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core\n     workflows use the \"tube map\" design for that. See https://nf-co.re/docs/contributing/design_guidelines#examples for examples.   -->\n<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))\n\n## Usage\n\n> [!NOTE]\n> If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.\n\n<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.\n     Explain what rows and columns represent. For instance (please edit as appropriate):\n\nFirst, prepare a samplesheet with your input data that looks as follows:\n\n`samplesheet.csv`:\n\n```csv\nsample,fastq_1,fastq_2\nCONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz\n```\n\nEach row represents a fastq file (single-end) or a pair of fastq files (paired end).\n\n-->\n\nNow, you can run the pipeline using:\n\n<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->\n\n```bash\nnextflow run nf-core/nanoseq \\\n   -profile <docker/singularity/.../institute> \\\n   --input samplesheet.csv \\\n   --outdir <OUTDIR>\n```\n\n> [!WARNING]\n> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/usage/getting_started/configuration#custom-configuration-files).\n\nFor more details and further functionality, please refer to the [usage documentation](https://nf-co.re/nanoseq/usage) and the [parameter documentation](https://nf-co.re/nanoseq/parameters).\n\n## Pipeline output\n\nTo see the results of an example test run with a full size dataset refer to the [results](https://nf-co.re/nanoseq/results) tab on the nf-core website pipeline page.\nFor more details about the output files and reports, please refer to the\n[output documentation](https://nf-co.re/nanoseq/output).\n\n## Credits\n\nnf-core/nanoseq was originally written by Chelsea Sawyer, Yuk Kei Wan.\n\nWe thank the following people for their extensive assistance in the development of this pipeline:\n\n<!-- TODO nf-core: If applicable, make list of people who have also contributed -->\n\n## Contributions and Support\n\nIf you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).\n\nFor further information or help, don't hesitate to get in touch on the [Slack `#nanoseq` channel](https://nfcore.slack.com/channels/nanoseq) (you can join with [this invite](https://nf-co.re/join/slack)).\n\n## Citations\n\n<!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->\n<!-- If you use nf-core/nanoseq for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->\n\n<!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->\n\nAn extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.\n\nYou can cite the `nf-core` publication as follows:\n\n> **The nf-core framework for community-curated bioinformatics pipelines.**\n>\n> Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.\n>\n> _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).\n",
+            "datePublished": "2026-09-01T12:58:48+00:00",
+            "description": "<h1>\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"docs/images/nf-core-nanoseq_logo_dark.png\">\n    <img alt=\"nf-core/nanoseq\" src=\"docs/images/nf-core-nanoseq_logo_light.png\">\n  </picture>\n</h1>\n\n[![Open in GitHub Codespaces](https://img.shields.io/badge/Open_In_GitHub_Codespaces-black?labelColor=grey&logo=github)](https://github.com/codespaces/new/nf-core/nanoseq)\n[![GitHub Actions CI Status](https://github.com/nf-core/nanoseq/actions/workflows/nf-test.yml/badge.svg)](https://github.com/nf-core/nanoseq/actions/workflows/nf-test.yml)\n[![GitHub Actions Linting Status](https://github.com/nf-core/nanoseq/actions/workflows/linting.yml/badge.svg)](https://github.com/nf-core/nanoseq/actions/workflows/linting.yml)[![AWS CI](https://img.shields.io/badge/CI%20tests-full%20size-FF9900?labelColor=000000&logo=Amazon%20AWS)](https://nf-co.re/nanoseq/results)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.3697959-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.3697959)\n[![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)\n\n[![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.10.4-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)\n[![nf-core template version](https://img.shields.io/badge/nf--core_template-4.1.0-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/4.1.0)\n[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)\n[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)\n[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)\n[![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/nf-core/nanoseq)\n\n[![Get help on Slack](http://img.shields.io/badge/slack-nf--core%20%23nanoseq-4A154B?labelColor=000000&logo=slack)](https://nfcore.slack.com/channels/nanoseq)[![Follow on Bluesky](https://img.shields.io/badge/bluesky-%40nf__core-1185fe?labelColor=000000&logo=bluesky)](https://bsky.app/profile/nf-co.re)[![Follow on Mastodon](https://img.shields.io/badge/mastodon-nf__core-6364ff?labelColor=FFFFFF&logo=mastodon)](https://mstdn.science/@nf_core)[![Watch on YouTube](http://img.shields.io/badge/youtube-nf--core-FF0000?labelColor=000000&logo=youtube)](https://www.youtube.com/c/nf-core)\n\n## Introduction\n\n**nf-core/nanoseq** is a bioinformatics analysis pipeline for Nanopore RNA sequencing data (cDNA and direct RNA) that can be used to perform basecalling, demultiplexing, QC, alignment, and downstream analysis.\n\nThe pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. Where possible, these processes have been submitted to and installed from [nf-core/modules](https://github.com/nf-core/modules) in order to make them available to all nf-core pipelines, and to everyone within the Nextflow community!\n\nOn release, automated continuous integration tests run the pipeline on a [full-sized dataset](https://github.com/nf-core/test-datasets/tree/nanoseq#full-sized-test-data) obtained from the [Singapore Nanopore Expression Consortium](https://github.com/GoekeLab/sg-nex-data) on the AWS cloud infrastructure. This ensures that the pipeline runs on AWS, has sensible resource allocation defaults set to run on real-world datasets, and permits the persistent storage of results to benchmark between pipeline releases and other analysis sources. The results obtained from the full-sized test can be viewed on the [nf-core website](https://nf-co.re/nanoseq/results).\n\n## Pipeline Summary\n\n1. Basecalling of POD5 or FAST5 data ([`dorado`](https://github.com/nanoporetech/dorado); _optional_)\n   - FAST5 data is converted to POD5 first ([`pod5`](https://github.com/nanoporetech/pod5-file-format))\n   - Modified base calling, alignment with `dorado aligner` and bedMethyl creation ([`modkit`](https://github.com/nanoporetech/modkit)); _optional_\n2. Demultiplexing ([`qcat`](https://github.com/nanoporetech/qcat); _optional_)\n3. Raw read cleaning ([`NanoLyse`](https://github.com/wdecoster/nanolyse); _optional_)\n4. Raw read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot), [`ToulligQC`](https://github.com/GenomiqueENS/toulligQC), [`FastQC`](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/))\n5. Alignment ([`minimap2`](https://github.com/lh3/minimap2) or [`GraphMap2`](https://github.com/lbcb-sci/graphmap2))\n   - Both aligners are capable of performing unspliced and spliced alignment. Sensible defaults will be applied automatically based on a combination of the input data and user-specified parameters\n   - Convert SAM to co-ordinate sorted BAM and obtain mapping metrics ([`samtools`](http://www.htslib.org/doc/samtools.html))\n6. Create bigWig ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/)) and bigBed ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedToBigBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)) coverage tracks for visualisation\n7. RNA-specific downstream analysis:\n   - Transcript reconstruction and quantification ([`bambu`](https://bioconductor.org/packages/release/bioc/html/bambu.html) or [`StringTie2`](https://ccb.jhu.edu/software/stringtie/))\n     - bambu performs both transcript reconstruction and quantification\n     - When StringTie2 is chosen, each sample is processed individually and the transcripts are merged. [`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/) is then used for both gene and transcript quantification.\n   - Differential expression analysis ([`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) and/or [`DEXSeq`](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html))\n   - RNA modification detection ([`nanopolish`](https://github.com/jts/nanopolish), [`xPore`](https://github.com/GoekeLab/xpore) and/or [`m6anet`](https://github.com/GoekeLab/m6anet))\n   - RNA fusion detection ([`JAFFAL`](https://github.com/Oshlack/JAFFA))\n8. Present QC for raw read and alignment results ([`MultiQC`](https://multiqc.info/docs/))\n\n### Functionality Overview\n\n> [!NOTE]\n> If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/get_started/environment_setup/overview) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/get_started/run-your-first-pipeline) with `-profile test` before running the workflow on actual data.\n\nA graphical overview of suggested routes through the pipeline depending on the desired output can be seen below.\n\n<p align=\"center\">\n    <img src=\"docs/images/nanoseq_metro_map_v3.2.png\" alt=\"nf-core/nanoseq v3.2 metro map: basecalling, demultiplexing, read QC, alignment, coverage tracks, RNA quantification, differential analysis, RNA modification and fusion detection, and MultiQC reporting\" width=\"90%\">\n</p>\n\n## Quick Start\n\n1. Install [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=25.10.4`)\n\n2. Install any of [`Docker`](https://docs.docker.com/engine/installation/), [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) (you can follow [this tutorial](https://singularity-tutorial.github.io/01-installation/)), [`Podman`](https://podman.io/), [`Shifter`](https://nersc.gitlab.io/development/shifter/how-to-use/) or [`Charliecloud`](https://hpc.github.io/charliecloud/) for full pipeline reproducibility _(you can use [`Conda`](https://conda.io/miniconda.html) both to install Nextflow itself and also to manage software within pipelines. Please only use it within pipelines as a last resort; see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles))_.\n\n3. Download the pipeline and test it on a minimal dataset with a single command:\n\n   ```console\n   nextflow run nf-core/nanoseq -profile test,YOURPROFILE --outdir <OUTDIR>\n   ```\n\n   Note that some form of configuration will be needed so that Nextflow knows how to fetch the required software. This is usually done in the form of a config profile (`YOURPROFILE` in the example command above). You can chain multiple config profiles in a comma-separated string.\n\n   > - The pipeline comes with config profiles called `docker`, `singularity`, `podman`, `shifter`, `charliecloud` and `conda` which instruct the pipeline to use the named tool for software management. For example, `-profile test,docker`.\n   > - Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.\n   > - If you are using `singularity` and are persistently observing issues downloading Singularity images directly due to timeout or network issues, then you can use the `--singularity_pull_docker_container` parameter to pull and convert the Docker image instead. Alternatively, you can use the [`nf-core download`](https://nf-co.re/tools/#downloading-pipelines-for-offline-use) command to download images first, before running the pipeline. Setting the [`NXF_SINGULARITY_CACHEDIR` or `singularity.cacheDir`](https://www.nextflow.io/docs/latest/singularity.html?#singularity-docker-hub) Nextflow options enables you to store and re-use the images from a central location for future pipeline runs.\n   > - If you are using `conda`, it is highly recommended to use the [`NXF_CONDA_CACHEDIR` or `conda.cacheDir`](https://www.nextflow.io/docs/latest/conda.html) settings to store the environments in a central location for future pipeline runs.\n\n4. Start running your own analysis!\n\n## Documentation\n\nThe nf-core/nanoseq pipeline comes with documentation about the pipeline [usage](https://nf-co.re/nanoseq/usage), [parameters](https://nf-co.re/nanoseq/parameters) and [output](https://nf-co.re/nanoseq/output).\n\n```bash\nnextflow run nf-core/nanoseq \\\n    --input samplesheet.csv \\\n    --protocol directRNA/cDNA \\\n    --fasta /path/to/genome.fa \\\n    --gtf /path/to/annotation.gtf \\\n    --outdir <OUTDIR> \\\n    -profile <docker/singularity/podman/institute>\n```\n\nSee [usage docs](https://nf-co.re/nanoseq/usage) for all of the available options when running the pipeline.\n\nAn example input samplesheet for performing both basecalling and demultiplexing can be found [here](assets/samplesheet.csv).\n\n## Credits\n\nnf-core/nanoseq was originally written by [Chelsea Sawyer](https://github.com/csawye01) and [Harshil Patel](https://github.com/drpatelh) from [The Bioinformatics & Biostatistics Group](https://www.crick.ac.uk/research/science-technology-platforms/bioinformatics-and-biostatistics/) for use at [The Francis Crick Institute](https://www.crick.ac.uk/), London. Other primary contributors include [Laura Wratten](https://github.com/lwratten), [Ying Chen](https://github.com/cying111), [Yuk Kei Wan](https://github.com/yuukiiwa) and [Jonathan Goeke](https://github.com/jonathangoeke) from the [Genome Institute of Singapore](https://www.a-star.edu.sg/gis), [Christopher Hakkaart](https://github.com/christopher-hakkaart) from [Institute of Medical Genetics and Applied Genomics](https://www.medizin.uni-tuebingen.de/de/das-klinikum/einrichtungen/institute/medizinische-genetik-und-angewandte-genomik), Germany, [Salom\u00e9 Brunon](https://github.com/Salome-Brunon) from [GenomiqueENS](https://github.com/GenomiqueENS), France, and [Johannes Alneberg](https://github.com/alneberg) and [Franziska Bonath](https://github.com/FranBonath) from [SciLifeLab](https://www.scilifelab.se/), Sweden.\n\nMany thanks to others who have helped out along the way too, including (but not limited to): [@crickbabs](https://github.com/crickbabs), [@AnnaSyme](https://github.com/AnnaSyme), [@ekushele](https://github.com/ekushele).\n\n## Contributions and Support\n\nIf you would like to contribute to this pipeline, please see the [contributing guidelines](docs/CONTRIBUTING.md).\n\nFor further information or help, don't hesitate to get in touch on [Slack](https://nfcore.slack.com/channels/nanoseq) (you can join with [this invite](https://nf-co.re/join/slack)).\n\n## Citations\n\nIf you use nf-core/nanoseq for your analysis, please cite it using the following doi: [10.5281/zenodo.3697959](https://doi.org/10.5281/zenodo.3697959)\n\nAn extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.\n\nYou can cite the `nf-core` publication as follows:\n\n> **A systematic benchmark of Nanopore long-read RNA sequencing for transcript-level analysis in human cell lines.**\n>\n> Ying Chen, Nadia M. Davidson, Yuk Kei Wan, Fei Yao, Yan Su, Hasindu Gamaarachchi, Andre Sim, Harshil Patel, Hwee Meng Low, Christopher Hendra, Laura Wratten, Christopher Hakkaart, Chelsea Sawyer, Viktoriia Iakovleva, Puay Leng Lee, Lixia Xin, Hui En Vanessa Ng, Jia Min Loo, Xuewen Ong, Hui Qi Amanda Ng, Jiaxu Wang, Wei Qian Casslynn Koh, Suk Yeah Polly Poon, Dominik Stanojevic, Hoang-Dai Tran, Kok Hao Edwin Lim, Shen Yon Toh, Philip Andrew Ewels, Huck-Hui Ng, N. Gopalakrishna Iyer, Alexandre Thiery, Wee Joo Chng, Leilei Chen, Ramanuj DasGupta, Mile Sikic, Yun-Shen Chan, Boon Ooi Patrick Tan, Yue Wan, Wai Leong Tam, Qiang Yu, Chiea Chuan Khor, Torsten W\u00fcstefeld, Alexander Lezhava, Ploy N. Pratanwanich, Michael I. Love, Wee Siong Sho Goh, Sarah B. Ng, Alicia Oshlack, SG-NEx consortium & Jonathan G\u00f6ke\n>\n> _Nat Methods_ 2025 Mar 13. doi: [10.1038/s41592-025-02623-4](https://doi.org/10.1038/s41592-025-02623-4).\n\n> **The nf-core framework for community-curated bioinformatics pipelines.**\n>\n> Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.\n>\n> _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).\n",
             "hasPart": [
                 {
                     "@id": "main.nf"
@@ -99,7 +99,7 @@
             },
             "mentions": [
                 {
-                    "@id": "#69d45787-5b3a-405b-82ca-9adcb9bbca2d"
+                    "@id": "#00c66c4f-1df7-4dd9-ab14-437739814c4a"
                 }
             ],
             "name": "nf-core/nanoseq"
@@ -112,7 +112,7 @@
             },
             "conformsTo": [
                 {
-                    "@id": "https://w3id.org/ro/crate/1.1"
+                    "@id": "https://w3id.org/ro/crate/1.2"
                 },
                 {
                     "@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0"
@@ -121,21 +121,52 @@
         },
         {
             "@id": "main.nf",
-            "@type": ["File", "SoftwareSourceCode", "ComputationalWorkflow"],
+            "@type": [
+                "File",
+                "SoftwareSourceCode",
+                "ComputationalWorkflow"
+            ],
+            "contributor": [
+                {
+                    "@id": "#5dcd7be8-f0ba-4895-bd14-837c2d422282"
+                },
+                {
+                    "@id": "#ec103dc8-045b-48df-8d47-0184378ece29"
+                },
+                {
+                    "@id": "#1dcea230-949f-4560-b842-1eaa42b00da4"
+                }
+            ],
             "dateCreated": "",
-            "dateModified": "2025-04-30T12:26:52Z",
+            "dateModified": "2026-09-01T12:58:48Z",
             "dct:conformsTo": "https://bioschemas.org/profiles/ComputationalWorkflow/1.0-RELEASE/",
-            "keywords": ["nf-core", "nextflow", "alignment", "demultiplexing", "nanopore", "qc"],
-            "license": ["MIT"],
-            "name": ["nf-core/nanoseq"],
+            "keywords": [
+                "nf-core",
+                "nextflow",
+                "alignment",
+                "demultiplexing",
+                "nanopore",
+                "qc"
+            ],
+            "license": [
+                "MIT"
+            ],
+            "name": [
+                "nf-core/nanoseq"
+            ],
             "programmingLanguage": {
                 "@id": "https://w3id.org/workflowhub/workflow-ro-crate#nextflow"
             },
             "sdPublisher": {
                 "@id": "https://nf-co.re/"
             },
-            "url": ["https://github.com/nf-core/nanoseq", "https://nf-co.re/nanoseq/3.1.0/"],
-            "version": ["3.1.0"]
+            "url": [
+                "https://github.com/nf-core/nanoseq",
+                "https://nf-co.re/nanoseq/3.2.0/"
+            ],
+            "version": [
+                "3.2.0"
+            ]
         },
         {
             "@id": "https://w3id.org/workflowhub/workflow-ro-crate#nextflow",
@@ -147,14 +178,14 @@
             "url": {
                 "@id": "https://www.nextflow.io/"
             },
-            "version": "!>=24.04.2"
+            "version": "!>=25.10.4"
         },
         {
-            "@id": "#69d45787-5b3a-405b-82ca-9adcb9bbca2d",
+            "@id": "#00c66c4f-1df7-4dd9-ab14-437739814c4a",
             "@type": "TestSuite",
             "instance": [
                 {
-                    "@id": "#3e30ad00-1a8d-486b-89fd-0d09b447196b"
+                    "@id": "#b9791532-18be-4f15-8d25-8e570ee91e0d"
                 }
             ],
             "mainEntity": {
@@ -163,10 +194,10 @@
             "name": "Test suite for nf-core/nanoseq"
         },
         {
-            "@id": "#3e30ad00-1a8d-486b-89fd-0d09b447196b",
+            "@id": "#b9791532-18be-4f15-8d25-8e570ee91e0d",
             "@type": "TestInstance",
             "name": "GitHub Actions workflow for testing nf-core/nanoseq",
-            "resource": "repos/nf-core/nanoseq/actions/workflows/ci.yml",
+            "resource": "repos/nf-core/nanoseq/actions/workflows/nf-test.yml",
             "runsOn": {
                 "@id": "https://w3id.org/ro/terms/test#GithubService"
             },
@@ -290,6 +321,22 @@
             "@type": "Organization",
             "name": "nf-core",
             "url": "https://nf-co.re/"
+        },
+        {
+            "@id": "#5dcd7be8-f0ba-4895-bd14-837c2d422282",
+            "@type": "Person",
+            "name": "Yuk Kei Wan"
+        },
+        {
+            "@id": "#ec103dc8-045b-48df-8d47-0184378ece29",
+            "@type": "Person",
+            "email": "drpatelh@users.noreply.github.com",
+            "name": "Harshil Patel"
+        },
+        {
+            "@id": "#1dcea230-949f-4560-b842-1eaa42b00da4",
+            "@type": "Person",
+            "name": "Chelsea Sawyer"
         }
     ]
 }

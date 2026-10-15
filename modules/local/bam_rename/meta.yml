@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: bam_rename
+description: Expose a BAM file under the sample prefix (symlink) so that downstream file names are consistent
+keywords:
+  - bam
+  - rename
+  - symlink
+tools:
+  - sed:
+      description: GNU sed, a non-interactive stream editor. Used here only to report the version of the image that provides the shell utilities.
+      homepage: https://www.gnu.org/software/sed/
+      documentation: https://www.gnu.org/software/sed/manual/sed.html
+      licence:
+        - GPL-3.0-or-later
+      identifier: ''
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - bam:
+        type: file
+        description: BAM file
+        pattern: '*.bam'
+        ontologies:
+          - edam: http://edamontology.org/format_2572
+output:
+  bam:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - '*.bam':
+          type: file
+          description: BAM file named after the sample prefix
+          pattern: '*.bam'
+          ontologies:
+            - edam: http://edamontology.org/format_2572
+  versions_sed:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - sed:
+          type: string
+          description: The name of the tool
+      - sed --version 2>&1 | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - sed:
+          type: string
+          description: The name of the tool
+      - sed --version 2>&1 | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

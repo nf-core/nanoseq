@@ -1,5 +1,6 @@
 name: graphmap2_align
-description: A versatile pairwise aligner for genomic and spliced nucleotide sequences
+description: A versatile pairwise aligner for genomic and spliced nucleotide
+  sequences
 keywords:
   - align
   - fasta
@@ -12,7 +13,8 @@ tools:
         A versatile pairwise aligner for genomic and spliced nucleotide sequences.
       homepage: https://github.com/lbcb-sci/graphmap2
       documentation: https://github.com/lbcb-sci/graphmap2#graphmap2---a-highly-sensitive-and-accurate-mapper-for-long-error-prone-reads
-      licence: ["MIT"]
+      licence:
+        - "MIT"
       identifier: biotools:Graphmap2
 input:
   - - meta:
@@ -23,17 +25,20 @@ input:
     - reads:
         type: file
         description: file containing reads to be aligned.
-  - - fasta:
-        type: file
-        description: |
-          Reference database in FASTA format.
-  - - index:
-        type: file
-        description: |
-          FASTA index in gmidx.
+        ontologies: []
+  - fasta:
+      type: file
+      description: |
+        Reference database in FASTA format.
+      ontologies: []
+  - index:
+      type: file
+      description: |
+        FASTA index in gmidx.
+      ontologies: []
 output:
-  - sam:
-      - meta:
+  sam:
+    - - meta:
           type: map
           description: |
             Groovy Map containing sample information
@@ -42,11 +47,28 @@ output:
           type: file
           description: Alignment in SAM format
           pattern: "*.sam"
-  - versions:
-      - versions.yml:
-          type: file
-          description: File containing software versions
-          pattern: "versions.yml"
+          ontologies: []
+  versions_graphmap2:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - graphmap2:
+          type: string
+          description: The name of the tool
+      - "graphmap2 2>&1 | sed -n 's/Version: v//p'":
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - graphmap2:
+          type: string
+          description: The name of the tool
+      - "graphmap2 2>&1 | sed -n 's/Version: v//p'":
+          type: eval
+          description: The expression to obtain the version of the tool
 authors:
   - "@yuukiiwa"
   - "@drpatelh"

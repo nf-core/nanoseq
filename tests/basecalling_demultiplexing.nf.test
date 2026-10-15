@@ -1,0 +1,45 @@
+nextflow_pipeline {
+
+    name "Test basecalling from FAST5 followed by demultiplexing"
+    script "../main.nf"
+    tag "pipeline"
+    tag "basecalling_demultiplexing"
+
+    // There is no barcoded R10.4.1 FAST5/POD5 test data that current dorado releases can basecall,
+    // so this path (FAST5_TO_POD5 -> DORADO_BASECALLER -> QCAT -> sample assignment -> downstream)
+    // is tested with stub runs. FAST5_TO_POD5 is also tested with real data in
+    // modules/local/pod5/convert/tests/main.nf.test, and QCAT with real data by -profile test_nobc_dx.
+    test("-profile test | fast5 input | basecalling + qcat demultiplexing - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir               = "$outputDir"
+                input                = 'https://raw.githubusercontent.com/nf-core/test-datasets/nanoseq/3.2/samplesheet/samplesheet_bc_dx.csv'
+                input_path           = 'https://raw.githubusercontent.com/nf-core/test-datasets/nanoseq/fast5/barcoded_multi/batch_0.fast5'
+                input_path_file_type = 'fast5'
+                protocol             = 'cDNA'
+                skip_demultiplexing  = false
+                barcode_kit          = 'NBD103/NBD104'
+            }
+        }
+
+        then {
+            def succeeded = workflow.trace.succeeded()*.name.collect { name -> name.tokenize(':')[-1].tokenize(' ')[0] }.unique().sort()
+            assertAll(
+                { assert workflow.success },
+                // Every step of the basecalling and demultiplexing path ran
+                { assert succeeded.containsAll([ 'FAST5_TO_POD5', 'DORADO_BASECALLER', 'QCAT' ]) },
+                // Demultiplexed reads were assigned to the sample with barcode 1 and processed downstream
+                { assert workflow.trace.succeeded().any { task -> task.name.contains('NANOLYSE (K562_RUN1_R1)') } },
+                { assert workflow.trace.succeeded().any { task -> task.name.contains('MINIMAP2_ALIGN (K562_RUN1_R1)') } },
+                { assert snapshot(
+                    // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_nanoseq_software_mqc_versions.yml"),
+                    succeeded
+                ).match() }
+            )
+        }
+    }
+}

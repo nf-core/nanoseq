@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: xpore_diffmod
+description: Differential RNA modification analysis across conditions with xpore diffmod
+keywords:
+  - rna modification
+  - nanopore
+  - differential
+  - xpore
+tools:
+  - xpore:
+      description: Identification of differential RNA modifications from nanopore direct RNA sequencing.
+      homepage: https://github.com/GoekeLab/xpore
+      documentation: https://xpore.readthedocs.io/
+      doi: 10.1038/s41587-021-00949-w
+      licence:
+        - MIT
+      identifier: biotools:xpore
+input:
+  - - conditions:
+        type: list
+        description: Condition labels, one per dataprep directory (same order as dataprep_dirs)
+    - dataprep_dirs:
+        type: directory
+        description: xpore dataprep output directories, one per sample
+        ontologies: []
+output:
+  diffmod_outputs:
+    - diffmod*:
+        type: file
+        description: xpore diffmod configuration file and output directory
+        pattern: diffmod*
+        ontologies: []
+  versions_xpore:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - xpore:
+          type: string
+          description: The name of the tool
+      - xpore --version 2>&1 | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - xpore:
+          type: string
+          description: The name of the tool
+      - xpore --version 2>&1 | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

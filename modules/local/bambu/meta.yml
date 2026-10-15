@@ -1,0 +1,122 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: bambu
+description: Transcript discovery and gene/transcript quantification from long-read alignments with bambu
+keywords:
+  - long-read
+  - transcript discovery
+  - quantification
+  - isoform
+  - rna-seq
+tools:
+  - bambu:
+      description: Context-aware transcript discovery and quantification from long-read RNA-seq data.
+      homepage: https://bioconductor.org/packages/bambu/
+      documentation: https://github.com/GoekeLab/bambu
+      doi: 10.1038/s41592-023-01908-w
+      licence:
+        - GPL-3.0-only
+      identifier: biotools:bambu
+input:
+  - - fasta:
+        type: file
+        description: Reference genome FASTA file
+        pattern: '*.{fa,fasta}'
+        ontologies:
+          - edam: http://edamontology.org/format_1929
+    - gtf:
+        type: file
+        description: Reference annotation GTF file
+        pattern: '*.gtf'
+        ontologies:
+          - edam: http://edamontology.org/format_2306
+  - bams:
+      type: file
+      description: Coordinate-sorted BAM files for all samples
+      pattern: '*.bam'
+      ontologies:
+        - edam: http://edamontology.org/format_2572
+output:
+  gene_counts:
+    - counts_gene.txt:
+        type: file
+        description: Gene-level counts for all samples
+        pattern: counts_gene.txt
+        ontologies:
+          - edam: http://edamontology.org/format_3475
+  transcript_counts:
+    - counts_transcript.txt:
+        type: file
+        description: Transcript-level counts for all samples
+        pattern: counts_transcript.txt
+        ontologies:
+          - edam: http://edamontology.org/format_3475
+  extended_gtf:
+    - extended_annotations.gtf:
+        type: file
+        description: Reference annotation extended with novel transcripts
+        pattern: extended_annotations.gtf
+        ontologies:
+          - edam: http://edamontology.org/format_2306
+  versions_r:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - r-base:
+          type: string
+          description: The name of the tool
+      - R --version 2>&1 | sed '1!d;s/^R version //;s/ .*//':
+          type: eval
+          description: The expression to obtain the version of the tool
+  versions_bambu:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-bambu:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('bambu')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+  versions_bsgenome:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-bsgenome:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('BSgenome')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - r-base:
+          type: string
+          description: The name of the tool
+      - R --version 2>&1 | sed '1!d;s/^R version //;s/ .*//':
+          type: eval
+          description: The expression to obtain the version of the tool
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-bambu:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('bambu')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-bsgenome:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('BSgenome')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

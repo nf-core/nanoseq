@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: bedtools_ucsc_bigwig
+description: Convert BAM alignments to a coverage bedGraph with BEDTools genomecov and to BigWig with UCSC bedGraphToBigWig
+keywords:
+  - bam
+  - bedgraph
+  - bigwig
+  - coverage
+  - genome browser
+components:
+  - bedtools/genomecov
+  - ucsc/bedgraphtobigwig
+input:
+  - ch_bam:
+      description: |
+        Aligned reads
+        Structure: [ val(meta), path(bam) ]
+  - ch_sizes:
+      description: |
+        Chromosome sizes file
+        Structure: [ val(meta), path(sizes) ]
+output:
+  - bedgraph:
+      description: |
+        Coverage bedGraph
+        Structure: [ val(meta), path(bedGraph) ]
+  - bigwig:
+      description: |
+        Coverage BigWig
+        Structure: [ val(meta), path(bigWig) ]
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

@@ -22,18 +22,6 @@ include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_nano
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    GENOME PARAMETER VALUES
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-// TODO nf-core: Remove this line if you don't need a FASTA file
-//   This is an example of how to use getGenomeAttribute() to fetch parameters
-//   from igenomes.config using `--genome`
-params.fasta = getGenomeAttribute('fasta')
-params.gtf = getGenomeAttribute('gtf')
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOWS FOR PIPELINE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -43,16 +31,25 @@ params.gtf = getGenomeAttribute('gtf')
 //
 workflow NFCORE_NANOSEQ {
 
-    // take:
-    // samplesheet // channel: samplesheet read in from --input
+    take:
+    samplesheet // channel: samplesheet read in from --input
+    fasta       // string : path to reference FASTA
+    gtf         // string : path to annotation GTF
 
     main:
 
     //
     // WORKFLOW: Run pipeline
-    NANOSEQ ()
-    //    samplesheet
-    // )
+    //
+    NANOSEQ (
+        samplesheet,
+        fasta,
+        gtf,
+        params.multiqc_config,
+        params.multiqc_logo,
+        params.multiqc_methods_description,
+        params.outdir,
+    )
 
     emit:
     multiqc_report = NANOSEQ.out.multiqc_report // channel: /path/to/multiqc_report.html
@@ -67,6 +64,12 @@ workflow {
 
     main:
     //
+    // Resolve reference files from --fasta/--gtf or the iGenomes --genome config
+    //
+    def fasta = params.fasta ?: getGenomeAttribute('fasta')
+    def gtf   = params.gtf   ?: getGenomeAttribute('gtf')
+
+    //
     // SUBWORKFLOW: Run initialisation tasks
     //
     PIPELINE_INITIALISATION (
@@ -75,14 +78,22 @@ workflow {
         params.monochrome_logs,
         args,
         params.outdir,
-        params.input
+        params.input,
+        params.help,
+        params.help_full,
+        params.show_hidden,
+        fasta,
+        gtf
     )
 
     //
     // WORKFLOW: Run main workflow
     //
-    NFCORE_NANOSEQ ()
-
+    NFCORE_NANOSEQ (
+        PIPELINE_INITIALISATION.out.samplesheet,
+        fasta,
+        gtf
+    )
     //
     // SUBWORKFLOW: Run completion tasks
     //
@@ -92,7 +103,6 @@ workflow {
         params.plaintext_email,
         params.outdir,
         params.monochrome_logs,
-        params.hook_url,
         NFCORE_NANOSEQ.out.multiqc_report
     )
 }

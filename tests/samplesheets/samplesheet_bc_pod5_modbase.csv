@@ -1,0 +1,2 @@
+group,replicate,barcode,input_file
+HG002,1,,https://raw.githubusercontent.com/nf-core/test-datasets/methylong/v2.0.0/test_data/test_pod5/HG002_Chr1_5mb-7mb.pod5
