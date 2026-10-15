@@ -22,7 +22,7 @@ The sample name used for output files is `<group>_R<replicate>`, for example `WT
 The pipeline basecalls raw Oxford Nanopore data with [dorado](https://github.com/nanoporetech/dorado) unless `--skip_basecalling` is used. Basecalling uses the following parameters:
 
 - `--input_path_file_type`: the raw data format, `fast5` (default) or `pod5`. FAST5 data is converted to POD5 with [pod5](https://github.com/nanoporetech/pod5-file-format) before basecalling.
-- `--dorado_model`: the dorado basecalling model. This parameter has no default and is required for basecalling. Choose the model that matches the flow cell, kit and sampling rate of your data, for example `dna_r10.4.1_e8.2_400bps_hac@v5.2.0` (high accuracy) or `dna_r10.4.1_e8.2_400bps_sup@v5.2.0` (super accuracy). See the [dorado documentation](https://github.com/nanoporetech/dorado#available-basecalling-models) for the available models.
+- `--dorado_model`: the dorado basecalling model. This parameter has no default and is required for basecalling. Choose the model that matches the flow cell, kit and sampling rate of your data, for example `dna_r10.4.1_e8.2_400bps_hac@v5.2.0` for cDNA (cDNA is basecalled with DNA models) or `rna004_130bps_hac@v6.0.0` for direct RNA (RNA004). See the [dorado documentation](https://github.com/nanoporetech/dorado#available-basecalling-models) for the available models.
 - `--dorado_device`: the device used for basecalling, for example `cpu`, `cuda:all` (default) or `metal`. Set `--dorado_device cpu` on machines without an NVIDIA GPU.
 
 > [!WARNING]
@@ -48,7 +48,7 @@ HG002,2,,/path/to/HG002_run2/
 ```bash
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
-    --protocol DNA \
+    --protocol cDNA \
     --fasta /path/to/genome.fa \
     --input_path_file_type pod5 \
     --dorado_model dna_r10.4.1_e8.2_400bps_hac@v5.2.0 \
@@ -68,7 +68,7 @@ Use the samplesheet format shown in [With demultiplexing](#with-demultiplexing) 
 ```bash
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
-    --protocol DNA \
+    --protocol cDNA \
     --fasta /path/to/genome.fa \
     --input_path /path/to/pod5_dir/ \
     --input_path_file_type pod5 \
@@ -81,17 +81,17 @@ nextflow run nf-core/nanoseq \
 
 #### Modified base calling
 
-Use `--bedmethyl_out` together with `--dorado_modification` to call modified bases, for example `--dorado_modification 5mCG_5hmCG`. dorado writes the modified base calls to an unaligned BAM file. The pipeline then aligns this BAM file to `--fasta` with dorado aligner and creates a bedMethyl file with [modkit](https://github.com/nanoporetech/modkit) `pileup`. Modified base calling requires `--fasta` and `--skip_demultiplexing`. The read QC, NanoLyse, alignment and downstream steps are not run for modified base calling.
+Use `--bedmethyl_out` together with `--dorado_modification` to call modified bases on direct RNA data, for example `--dorado_modification m6A_DRACH` with the `rna004_130bps_hac@v6.0.0` model. Other RNA004 modification models include `inosine_m6A`, `pseU` and `m5C`. dorado writes the modified base calls to an unaligned BAM file. The pipeline then aligns this BAM file to `--fasta` with dorado aligner and creates a bedMethyl file with [modkit](https://github.com/nanoporetech/modkit) `pileup`. Modified base calling requires `--fasta` and `--skip_demultiplexing`. The read QC, NanoLyse, alignment and downstream steps are not run for modified base calling.
 
 ```bash
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
-    --protocol DNA \
-    --fasta /path/to/genome.fa \
+    --protocol directRNA \
+    --fasta /path/to/transcriptome.fa \
     --input_path_file_type pod5 \
-    --dorado_model dna_r10.4.1_e8.2_400bps_hac@v6.0.0 \
+    --dorado_model rna004_130bps_hac@v6.0.0 \
     --bedmethyl_out \
-    --dorado_modification 5mCG_5hmCG \
+    --dorado_modification m6A_DRACH \
     --skip_demultiplexing \
     --skip_quantification \
     --skip_fusion_analysis \
@@ -121,7 +121,7 @@ KO,2,4,
 ```bash
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
-    --protocol DNA \
+    --protocol cDNA \
     --fasta /path/to/genome.fa \
     --input_path ./undemultiplexed.fastq.gz \
     --barcode_kit 'NBD103/NBD104' \

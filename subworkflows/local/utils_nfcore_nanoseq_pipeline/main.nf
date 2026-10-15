@@ -177,10 +177,6 @@ def validateInputParameters(fasta, gtf) {
         error("Reference FASTA not specified! Please provide --fasta or a valid --genome.")
     }
 
-    def rna_protocols = ['cDNA', 'directRNA']
-    if (!params.skip_quantification && !rna_protocols.contains(params.protocol)) {
-        error("Invalid protocol option for quantification: ${params.protocol}. Valid options: ${rna_protocols.join(', ')}. Use --skip_quantification for DNA data.")
-    }
     if (!params.skip_quantification && !gtf) {
         error("A GTF annotation is required for quantification. Please provide --gtf, a --genome with a GTF, or use --skip_quantification.")
     }

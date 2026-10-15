@@ -8,7 +8,6 @@
 %%metro style: nfcore
 %%metro legend: bl
 %%metro logo_scale: 0.6
-%%metro line: dna | DNA | #0570b0
 %%metro line: cdna | cDNA | #2db572
 %%metro line: drna | direct RNA | #f08c00
 %%metro line: modbase | Modified base calling (--bedmethyl_out) | #8e44ad
@@ -40,9 +39,9 @@ graph LR
         pod5_convert[pod5 convert]
         dorado[dorado basecaller]
 
-        fast5_in -->|dna,cdna,drna,modbase| pod5_convert
-        pod5_convert -->|dna,cdna,drna,modbase| dorado
-        pod5_in -->|dna,cdna,drna,modbase| dorado
+        fast5_in -->|cdna,drna,modbase| pod5_convert
+        pod5_convert -->|cdna,drna,modbase| dorado
+        pod5_in -->|cdna,drna,modbase| dorado
     end
 
     subgraph modbases [Modified bases]
@@ -62,11 +61,11 @@ graph LR
         fastqc[FastQC]
         nanolyse[NanoLyse]
 
-        fastq_in -->|dna,cdna,drna| qcat
-        qcat -->|dna,cdna,drna| nanoplot
-        nanoplot -->|dna,cdna,drna| toulligqc
-        toulligqc -->|dna,cdna,drna| fastqc
-        fastqc -->|dna,cdna,drna| nanolyse
+        fastq_in -->|cdna,drna| qcat
+        qcat -->|cdna,drna| nanoplot
+        nanoplot -->|cdna,drna| toulligqc
+        toulligqc -->|cdna,drna| fastqc
+        fastqc -->|cdna,drna| nanolyse
     end
 
     subgraph alignment [Alignment]
@@ -74,8 +73,8 @@ graph LR
         graphmap2[GraphMap2]
         samtools[SAMtools]
 
-        minimap2 -->|dna,cdna,drna| samtools
-        graphmap2 -->|dna,cdna,drna| samtools
+        minimap2 -->|cdna,drna| samtools
+        graphmap2 -->|cdna,drna| samtools
     end
 
     subgraph coverage [Coverage tracks]
@@ -87,11 +86,11 @@ graph LR
         bed2bb[bedToBigBed]
         bigbed_out[ ]
 
-        genomecov -->|dna,cdna,drna| bg2bw
-        bg2bw -->|dna,cdna,drna| bigwig_out
-        bamtobed -->|dna,cdna,drna| bedsort
-        bedsort -->|dna,cdna,drna| bed2bb
-        bed2bb -->|dna,cdna,drna| bigbed_out
+        genomecov -->|cdna,drna| bg2bw
+        bg2bw -->|cdna,drna| bigwig_out
+        bamtobed -->|cdna,drna| bedsort
+        bedsort -->|cdna,drna| bed2bb
+        bed2bb -->|cdna,drna| bigbed_out
     end
 
     subgraph fusions [RNA fusions]
@@ -131,7 +130,7 @@ graph LR
         multiqc[MultiQC]
         multiqc_out[ ]
 
-        multiqc -->|dna,cdna,drna| multiqc_out
+        multiqc -->|cdna,drna| multiqc_out
     end
 
     %% Inter-section edges
@@ -140,14 +139,13 @@ graph LR
     featurecounts -->|cdna,drna| deseq2
     featurecounts -->|cdna,drna| dexseq
     dorado -->|modbase| dorado_aligner
-    dorado -->|dna,cdna,drna| qcat
+    dorado -->|cdna,drna| qcat
     fastqc -->|cdna,drna| jaffal
-    nanolyse -->|dna,cdna,drna| minimap2
-    nanolyse -->|dna,cdna,drna| graphmap2
-    samtools -->|dna,cdna,drna| genomecov
-    samtools -->|dna,cdna,drna| bamtobed
+    nanolyse -->|cdna,drna| minimap2
+    nanolyse -->|cdna,drna| graphmap2
+    samtools -->|cdna,drna| genomecov
+    samtools -->|cdna,drna| bamtobed
     samtools -->|cdna,drna| bambu
     samtools -->|cdna,drna| stringtie
     samtools -->|drna| nanopolish
-    samtools -->|dna| multiqc
     featurecounts -->|cdna,drna| multiqc
