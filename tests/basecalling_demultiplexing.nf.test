@@ -8,7 +8,7 @@ nextflow_pipeline {
     // There is no barcoded R10.4.1 FAST5/POD5 test data that current dorado releases can basecall,
     // so this path (FAST5_TO_POD5 -> DORADO_BASECALLER -> QCAT -> sample assignment -> downstream)
     // is tested with stub runs. FAST5_TO_POD5 is also tested with real data in
-    // tests/modules/local/fast5_to_pod5.nf.test, and QCAT with real data by -profile test_nobc_dx.
+    // modules/local/pod5/convert/tests/main.nf.test, and QCAT with real data by -profile test_nobc_dx.
     test("-profile test | fast5 input | basecalling + qcat demultiplexing - stub") {
 
         options "-stub"

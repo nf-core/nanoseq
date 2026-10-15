@@ -7,12 +7,12 @@
 //
 // MODULE: Local modules
 //
-include { GET_TEST_DATA                    } from '../modules/local/get_test_data'
-include { FAST5_TO_POD5                    } from '../modules/local/fast5_to_pod5'
-include { DORADO_BASECALLER                } from '../modules/local/dorado_basecaller'
-include { DORADO_ALIGNER                   } from '../modules/local/dorado_aligner'
-include { BAM_RENAME                       } from '../modules/local/bam_rename'
-include { BAMBU                            } from '../modules/local/bambu'
+include { GET_TEST_DATA                    } from '../modules/local/get_test_data/main'
+include { FAST5_TO_POD5                    } from '../modules/local/pod5/convert/main'
+include { DORADO_BASECALLER                } from '../modules/local/dorado/basecaller/main'
+include { DORADO_ALIGNER                   } from '../modules/local/dorado/aligner/main'
+include { BAM_RENAME                       } from '../modules/local/bam_rename/main'
+include { BAMBU                            } from '../modules/local/bambu/main'
 
 //
 // MODULE: Installed directly from nf-core/modules
@@ -28,16 +28,16 @@ include { MULTIQC                          } from '../modules/nf-core/multiqc/ma
 //
 // SUBWORKFLOW: Local subworkflows
 //
-include { INPUT_CHECK                      } from '../subworkflows/local/input_check'
-include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq_nanoplot_fastqc'
-include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2'
-include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2'
-include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig'
-include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed'
-include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts'
-include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq'
-include { RNA_MODIFICATION_XPORE_M6ANET    } from '../subworkflows/local/rna_modifications_xpore_m6anet'
-include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fusions_jaffal'
+include { INPUT_CHECK                      } from '../subworkflows/local/input_check/main'
+include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq_nanoplot_fastqc/main'
+include { ALIGN_MINIMAP2                   } from '../subworkflows/local/align_minimap2/main'
+include { ALIGN_GRAPHMAP2                  } from '../subworkflows/local/align_graphmap2/main'
+include { BEDTOOLS_UCSC_BIGWIG             } from '../subworkflows/local/bedtools_ucsc_bigwig/main'
+include { BEDTOOLS_UCSC_BIGBED             } from '../subworkflows/local/bedtools_ucsc_bigbed/main'
+include { QUANTIFY_STRINGTIE_FEATURECOUNTS } from '../subworkflows/local/quantify_stringtie_featurecounts/main'
+include { DIFFERENTIAL_DESEQ2_DEXSEQ       } from '../subworkflows/local/differential_deseq2_dexseq/main'
+include { RNA_MODIFICATION_XPORE_M6ANET    } from '../subworkflows/local/rna_modifications_xpore_m6anet/main'
+include { RNA_FUSIONS_JAFFAL               } from '../subworkflows/local/rna_fusions_jaffal/main'
 
 //
 // FUNCTIONS
@@ -69,7 +69,6 @@ workflow NANOSEQ {
     def ch_versions      = channel.empty()
     def ch_multiqc_files = channel.empty()
 
-    def rna_protocol = params.protocol == 'cDNA' || params.protocol == 'directRNA'
     def fasta        = fasta_path ? file(fasta_path, checkIfExists: true) : null
     def gtf          = gtf_path   ? file(gtf_path, checkIfExists: true)   : null
 
@@ -234,7 +233,7 @@ workflow NANOSEQ {
                 ch_fasta_fai,
                 ch_fastq_to_align,
                 // Spliced alignment needs the annotation for RNA data aligned to a genome
-                params.protocol != 'DNA' && gtf ? channel.value(gtf) : channel.value([])
+                gtf ? channel.value(gtf) : channel.value([])
             )
             ch_sorted_bam = ALIGN_GRAPHMAP2.out.bam
             ch_sorted_bai = ALIGN_GRAPHMAP2.out.bai
@@ -271,7 +270,7 @@ workflow NANOSEQ {
     //
     // Transcript quantification and differential analysis
     //
-    if (!params.skip_quantification && rna_protocol) {
+    if (!params.skip_quantification) {
 
         def ch_gene_counts
         def ch_transcript_counts
@@ -323,7 +322,7 @@ workflow NANOSEQ {
     //
     // SUBWORKFLOW: RNA fusion detection with JAFFAL
     //
-    if (!params.skip_fusion_analysis && rna_protocol) {
+    if (!params.skip_fusion_analysis) {
         RNA_FUSIONS_JAFFAL ( ch_fastq, params.jaffal_ref_dir )
     }
 

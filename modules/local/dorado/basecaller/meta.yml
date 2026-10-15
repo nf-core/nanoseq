@@ -1,0 +1,87 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: dorado_basecaller
+description: Basecall ONT POD5 data with dorado, optionally calling modified bases
+keywords:
+  - nanopore
+  - basecalling
+  - pod5
+  - modified bases
+  - dorado
+tools:
+  - dorado:
+      description: Oxford Nanopore Technologies basecaller and read aligner.
+      homepage: https://github.com/nanoporetech/dorado
+      documentation: https://dorado-docs.readthedocs.io/
+      licence:
+        - Oxford Nanopore Technologies PLC. Public License Version 1.0
+      identifier: ''
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - pod5_path:
+        type: file
+        description: POD5 file or directory of POD5 files
+        pattern: '*.pod5'
+        ontologies: []
+  - dorado_device:
+      type: string
+      description: Device to run basecalling on, e.g. 'cpu', 'cuda:all' or 'metal'
+  - dorado_model:
+      type: string
+      description: Dorado basecalling model name or model complex, e.g. 'hac' or 'sup'
+  - dorado_modification:
+      type: string
+      description: Comma-separated modified base models to call; when set, an unaligned BAM is emitted instead of FASTQ
+output:
+  fastq:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - '*.fastq.gz':
+          type: file
+          description: Basecalled reads (emitted when no modified base model is set)
+          pattern: '*.fastq.gz'
+          ontologies:
+            - edam: http://edamontology.org/format_3989
+  bam:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - '*.bam':
+          type: file
+          description: Unaligned BAM with modified base tags (emitted when a modified base model is set)
+          pattern: '*.bam'
+          ontologies:
+            - edam: http://edamontology.org/format_2572
+  versions_dorado:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - dorado:
+          type: string
+          description: The name of the tool
+      - dorado --version 2>/dev/null | sed '1!d;s/[+].*//':
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - dorado:
+          type: string
+          description: The name of the tool
+      - dorado --version 2>/dev/null | sed '1!d;s/[+].*//':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

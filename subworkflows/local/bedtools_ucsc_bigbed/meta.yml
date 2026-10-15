@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: bedtools_ucsc_bigbed
+description: Convert BAM alignments to sorted BED12 with BEDTools and to BigBed with UCSC bedToBigBed
+keywords:
+  - bam
+  - bed
+  - bigbed
+  - genome browser
+  - conversion
+components:
+  - bedtools/bamtobed
+  - bedtools/sort
+  - ucsc/bedtobigbed
+input:
+  - ch_bam:
+      description: |
+        Aligned reads
+        Structure: [ val(meta), path(bam) ]
+  - ch_sizes:
+      description: |
+        Chromosome sizes file
+        Structure: [ val(meta), path(sizes) ]
+output:
+  - bed:
+      description: |
+        Sorted BED12 file
+        Structure: [ val(meta), path(bed) ]
+  - bigbed:
+      description: |
+        BigBed file
+        Structure: [ val(meta), path(bigBed) ]
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

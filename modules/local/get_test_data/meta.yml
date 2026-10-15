@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: get_test_data
+description: Clone the nanoseq branch of nf-core/test-datasets to obtain FAST5 data for RNA modification tests
+keywords:
+  - test data
+  - download
+  - git
+tools:
+  - git:
+      description: Distributed version control system, used to clone the nf-core/test-datasets repository.
+      homepage: https://git-scm.com/
+      documentation: https://git-scm.com/docs
+      licence:
+        - GPL-2.0-only
+      identifier: ''
+input: []
+output:
+  modification_dir:
+    - test-datasets/modification_fast5_fastq/:
+        type: directory
+        description: Directory with FAST5 and FASTQ test data for RNA modification detection
+        pattern: test-datasets/modification_fast5_fastq/
+        ontologies: []
+  versions_git:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - git:
+          type: string
+          description: The name of the tool
+      - git --version | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - git:
+          type: string
+          description: The name of the tool
+      - git --version | sed '1!d;s/.* //':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

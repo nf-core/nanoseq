@@ -1,0 +1,133 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: dexseq
+description: Differential transcript usage analysis with DRIMSeq filtering, DEXSeq and stageR
+keywords:
+  - differential transcript usage
+  - rna-seq
+  - isoform
+  - dexseq
+tools:
+  - dexseq:
+      description: Inference of differential exon (here transcript) usage in RNA-seq data.
+      homepage: https://bioconductor.org/packages/DEXSeq/
+      documentation: https://bioconductor.org/packages/release/bioc/vignettes/DEXSeq/inst/doc/DEXSeq.html
+      doi: 10.1101/gr.133744.111
+      licence:
+        - GPL-3.0-or-later
+      identifier: biotools:dexseq
+  - drimseq:
+      description: Differential transcript usage and tuQTL analyses with Dirichlet-multinomial model in RNA-seq.
+      homepage: https://bioconductor.org/packages/DRIMSeq/
+      documentation: https://bioconductor.org/packages/release/bioc/vignettes/DRIMSeq/inst/doc/DRIMSeq.pdf
+      doi: 10.12688/f1000research.15398.3
+      licence:
+        - GPL-3.0-or-later
+      identifier: biotools:drimseq
+  - stager:
+      description: Stage-wise analysis of high-throughput gene expression data.
+      homepage: https://bioconductor.org/packages/stageR/
+      documentation: https://bioconductor.org/packages/release/bioc/vignettes/stageR/inst/doc/stageRVignette.html
+      doi: 10.1186/s13059-017-1277-0
+      licence:
+        - GPL-3.0-only
+      identifier: biotools:stager
+input:
+  - counts:
+      type: file
+      description: Transcript count matrix from bambu (counts_transcript.txt) or featureCounts
+      pattern: '*.{txt,tsv}'
+      ontologies:
+        - edam: http://edamontology.org/format_3475
+  - quantification_method:
+      type: string
+      description: 'Method used to generate the counts: ''bambu'' or ''stringtie2'''
+output:
+  dexseq_txt:
+    - '*.txt':
+        type: file
+        description: DEXSeq/stageR results table (CSV-formatted)
+        pattern: dexseq.results.txt
+        ontologies:
+          - edam: http://edamontology.org/format_3752
+  versions_r:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - r-base:
+          type: string
+          description: The name of the tool
+      - R --version 2>&1 | sed '1!d;s/^R version //;s/ .*//':
+          type: eval
+          description: The expression to obtain the version of the tool
+  versions_dexseq:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-dexseq:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('DEXSeq')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+  versions_drimseq:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-drimseq:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('DRIMSeq')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+  versions_stager:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-stager:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('stageR')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - r-base:
+          type: string
+          description: The name of the tool
+      - R --version 2>&1 | sed '1!d;s/^R version //;s/ .*//':
+          type: eval
+          description: The expression to obtain the version of the tool
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-dexseq:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('DEXSeq')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-drimseq:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('DRIMSeq')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - bioconductor-stager:
+          type: string
+          description: The name of the tool
+      - Rscript -e "cat(as.character(packageVersion('stageR')))":
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

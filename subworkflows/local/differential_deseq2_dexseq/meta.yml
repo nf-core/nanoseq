@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: differential_deseq2_dexseq
+description: Differential gene expression with DESeq2 and differential transcript usage with DEXSeq
+keywords:
+  - differential expression
+  - differential transcript usage
+  - rna-seq
+  - deseq2
+  - dexseq
+components:
+  - deseq2
+  - dexseq
+input:
+  - ch_gene_counts:
+      description: |
+        Gene count matrix
+        Structure: path(counts)
+  - ch_transcript_counts:
+      description: |
+        Transcript count matrix
+        Structure: path(counts)
+  - quantification_method:
+      description: |
+        Method used to generate the counts: 'bambu' or 'stringtie2'
+        Structure: val(quantification_method)
+output:
+  - deseq2_txt:
+      description: |
+        DESeq2 results table
+        Structure: path(txt)
+  - dexseq_txt:
+      description: |
+        DEXSeq results table
+        Structure: path(txt)
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

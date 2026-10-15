@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: rna_fusions_jaffal
+description: Download the JAFFAL reference if needed and detect fusion transcripts with JAFFAL
+keywords:
+  - fusion
+  - rna-seq
+  - long-read
+  - jaffal
+components:
+  - wget
+  - untar
+  - jaffal
+input:
+  - ch_fastq:
+      description: |
+        Reads
+        Structure: [ val(meta), path(fastq) ]
+  - jaffal_ref_dir:
+      description: |
+        Path to a JAFFAL reference directory, or null to download it
+        Structure: val(path)
+output:
+  - fusions:
+      description: |
+        JAFFAL fusion tables
+        Structure: path(csv)
+  - fasta:
+      description: |
+        Candidate fusion transcript sequences
+        Structure: [ val(meta), path(fasta) ]
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

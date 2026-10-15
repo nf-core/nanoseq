@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: rna_modification_xpore_m6anet
+description: Align signal events with nanopolish and detect RNA modifications with xpore and m6anet
+keywords:
+  - rna modification
+  - m6a
+  - nanopore
+  - nanopolish
+  - xpore
+  - m6anet
+components:
+  - nanopolish/eventalign
+  - xpore/dataprep
+  - xpore/diffmod
+  - m6anet/dataprep
+  - m6anet/inference
+input:
+  - ch_nanopolish_input:
+      description: |
+        Per-sample inputs for nanopolish
+        Structure: [ val(meta), path(genome), path(gtf), path(fastq), path(bam), path(bai), path(fast5_dir) ]
+  - skip_xpore:
+      description: |
+        Skip xpore
+        Structure: val(boolean)
+  - skip_m6anet:
+      description: |
+        Skip m6anet
+        Structure: val(boolean)
+output:
+  - nanopolish_outputs:
+      description: |
+        nanopolish eventalign outputs
+        Structure: [ val(meta), path(genome), path(gtf), path(eventalign), path(summary) ]
+  - xpore_dataprep:
+      description: |
+        xpore dataprep directories
+        Structure: [ val(meta), path(dataprep_dir) ]
+  - xpore_diffmod:
+      description: |
+        xpore diffmod outputs
+        Structure: path(diffmod*)
+  - m6anet_outputs:
+      description: |
+        m6anet inference result directories
+        Structure: path(results_dir)
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'

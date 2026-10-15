@@ -1,0 +1,78 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: jaffal
+description: Detect fusion transcripts from long reads with JAFFAL
+keywords:
+  - fusion
+  - rna-seq
+  - long-read
+  - jaffa
+tools:
+  - jaffa:
+      description: 'JAFFAL: detection of fusion genes from long-read transcriptome sequencing.'
+      homepage: https://github.com/Oshlack/JAFFA
+      documentation: https://github.com/Oshlack/JAFFA/wiki
+      doi: 10.1186/s13073-022-01075-2
+      licence:
+        - GPL-3.0-only
+      identifier: biotools:jaffa
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - fastq:
+        type: file
+        description: Reads in FASTQ format
+        pattern: '*.{fastq,fastq.gz,fq,fq.gz}'
+        ontologies:
+          - edam: http://edamontology.org/format_3989
+  - jaffal_ref_dir:
+      type: directory
+      description: JAFFAL reference directory containing JAFFAL.groovy and the reference files
+      ontologies: []
+output:
+  jaffal_fastq:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - '*.fasta':
+          type: file
+          description: Sequences of the candidate fusion transcripts
+          pattern: '*.fasta'
+          ontologies:
+            - edam: http://edamontology.org/format_1929
+  jaffal_results:
+    - '*.csv':
+        type: file
+        description: Table of detected fusions
+        pattern: '*.csv'
+        ontologies:
+          - edam: http://edamontology.org/format_3752
+  versions_jaffa:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - jaffa:
+          type: string
+          description: The name of the tool
+      - '2.5':
+          type: string
+          description: The version of the tool (hard-coded, the tool has no version option)
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - jaffa:
+          type: string
+          description: The name of the tool
+      - '2.5':
+          type: string
+          description: The version of the tool (hard-coded, the tool has no version option)
+authors:
+  - '@yuukiiwa'
+maintainers:
+  - '@yuukiiwa'
