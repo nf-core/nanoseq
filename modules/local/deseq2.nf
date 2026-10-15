@@ -19,4 +19,9 @@ process DESEQ2 {
     """
     run_deseq2.r $quantification_method $counts
     """
+
+    stub:
+    """
+    touch deseq2.results.txt
+    """
 }

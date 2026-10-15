@@ -144,7 +144,7 @@ workflow NANOSEQ {
             ch_pod5,
             params.dorado_device,
             params.dorado_model,
-            params.bedmethyl_out ? params.dorado_modification : null
+            params.bedmethyl_out && params.dorado_modification ? params.dorado_modification : ''
         )
 
         if (params.bedmethyl_out) {

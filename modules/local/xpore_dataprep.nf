@@ -25,4 +25,14 @@ process XPORE_DATAPREP {
         --gtf_or_gff $gtf \\
         --transcript_fasta $genome
     """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    mkdir -p $prefix
+    touch $prefix/data.json
+    touch $prefix/data.index
+    touch $prefix/data.readcount
+    touch $prefix/data.log
+    """
 }

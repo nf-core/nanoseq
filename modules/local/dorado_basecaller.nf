@@ -32,4 +32,13 @@ process DORADO_BASECALLER {
         --device $dorado_device \\
         $emit_args
     """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def stub_cmd = dorado_modification
+        ? "touch ${prefix}.bam"
+        : "echo '' | gzip > ${prefix}.fastq.gz"
+    """
+    $stub_cmd
+    """
 }

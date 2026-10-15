@@ -22,4 +22,13 @@ process M6ANET_DATAPREP {
         --out_dir $prefix \\
         --n_processes $task.cpus
     """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    mkdir -p $prefix
+    touch $prefix/data.json
+    touch $prefix/data.info
+    touch $prefix/data.log
+    """
 }

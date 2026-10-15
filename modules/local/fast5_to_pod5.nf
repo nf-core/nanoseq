@@ -19,4 +19,11 @@ process FAST5_TO_POD5 {
         $input_path \\
         --output pod5/${prefix}.pod5
     """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    mkdir -p pod5
+    touch pod5/${prefix}.pod5
+    """
 }

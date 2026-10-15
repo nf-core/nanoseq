@@ -22,4 +22,10 @@ process JAFFAL {
     """
     bpipe run -p refBase=$jaffal_ref_dir $jaffal_ref_dir/JAFFAL.groovy $fastq
     """
+
+    stub:
+    """
+    touch jaffa_results.fasta
+    touch jaffa_results.csv
+    """
 }

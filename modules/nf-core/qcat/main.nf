@@ -44,7 +44,7 @@ process QCAT {
     """
     mkdir -p fastq
 
-    echo "" | gzip > fastq/barcode00.fastq.gz
+    echo "" | gzip > fastq/barcode01.fastq.gz
     echo "" | gzip > fastq/none.fastq.gz
     """
 }

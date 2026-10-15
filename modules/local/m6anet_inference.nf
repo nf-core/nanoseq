@@ -26,4 +26,12 @@ process M6ANET_INFERENCE {
         --num_iterations 5 \\
         --device cpu
     """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    mkdir -p ${prefix}_results
+    touch ${prefix}_results/data.site_proba.csv
+    touch ${prefix}_results/data.indiv_proba.csv
+    """
 }

@@ -31,4 +31,13 @@ process NANOPOLISH_INDEX_EVENTALIGN {
         --threads $task.cpus \\
         > $sample_eventalign
     """
+
+    stub:
+    def prefix            = task.ext.prefix ?: "${meta.id}"
+    def sample_summary    = "${prefix}_summary.txt"
+    def sample_eventalign = "${prefix}_eventalign.txt"
+    """
+    touch $sample_summary
+    touch $sample_eventalign
+    """
 }

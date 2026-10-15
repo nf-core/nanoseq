@@ -1,0 +1,34 @@
+{
+    "-profile test | fast5 input | basecalling + qcat demultiplexing - stub": {
+        "content": [
+            [
+                "BEDTOOLS_BAMTOBED",
+                "BEDTOOLS_GENOMECOV",
+                "BEDTOOLS_SORT",
+                "DORADO_BASECALLER",
+                "FAST5_TO_POD5",
+                "FASTQC",
+                "MINIMAP2_ALIGN",
+                "MINIMAP2_INDEX",
+                "MULTIQC",
+                "NANOLYSE",
+                "NANOPLOT",
+                "QCAT",
+                "SAMPLESHEET_CHECK",
+                "SAMTOOLS_FAIDX",
+                "SAMTOOLS_FLAGSTAT",
+                "SAMTOOLS_IDXSTATS",
+                "SAMTOOLS_STATS",
+                "TOULLIGQC",
+                "UCSC_BEDGRAPHTOBIGWIG",
+                "UCSC_BEDTOBIGBED",
+                "WGET_NANOLYSE_FASTA"
+            ]
+        ],
+        "timestamp": "2026-10-15T15:40:30.448994",
+        "meta": {
+            "nf-test": "0.9.4",
+            "nextflow": "26.10.0"
+        }
+    }
+}

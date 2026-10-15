@@ -21,4 +21,12 @@ process XPORE_DIFFMOD {
     create_yml.py diffmod_config.yml $samples
     xpore diffmod --config diffmod_config.yml --n_processes $task.cpus
     """
+
+    stub:
+    """
+    touch diffmod_config.yml
+    mkdir -p diffmod_outputs
+    touch diffmod_outputs/diffmod.table
+    touch diffmod_outputs/diffmod.log
+    """
 }

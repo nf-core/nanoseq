@@ -20,4 +20,9 @@ process DEXSEQ {
     """
     run_dexseq.r $quantification_method $counts
     """
+
+    stub:
+    """
+    touch dexseq.results.txt
+    """
 }

@@ -22,6 +22,15 @@ Changes in 'qcat/main.nf':
  
      ## Zip fastq files
      gzip fastq/*
+@@ -42,7 +44,7 @@
+     """
+     mkdir -p fastq
+ 
+-    echo "" | gzip > fastq/barcode00.fastq.gz
++    echo "" | gzip > fastq/barcode01.fastq.gz
+     echo "" | gzip > fastq/none.fastq.gz
+     """
+ }
 
 'modules/nf-core/qcat/tests/main.nf.test.snap' is unchanged
 'modules/nf-core/qcat/tests/main.nf.test' is unchanged

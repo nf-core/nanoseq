@@ -26,4 +26,11 @@ process BAMBU {
         --annotation=$gtf \\
         --fasta=$fasta $bams
     """
+
+    stub:
+    """
+    touch counts_gene.txt
+    touch counts_transcript.txt
+    touch extended_annotations.gtf
+    """
 }

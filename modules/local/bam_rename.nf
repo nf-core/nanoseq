@@ -21,4 +21,10 @@ process BAM_RENAME {
         ln -s $bam ${prefix}.bam
     fi
     """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.bam
+    """
 }

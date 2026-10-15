@@ -27,4 +27,11 @@ process DORADO_ALIGNER {
 
     samtools index ${prefix}.bam
     """
+
+    stub:
+    prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.bam
+    touch ${prefix}.bam.bai
+    """
 }
