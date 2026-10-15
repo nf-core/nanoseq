@@ -1,66 +1,63 @@
 /*
- * Transcript Discovery and Quantification with StringTie2 and FeatureCounts
+ * Transcript discovery and quantification with StringTie2 and featureCounts
  */
 
-include { STRINGTIE_STRINGTIE } from '../../modules/nf-core/stringtie/stringtie/main'
-include { STRINGTIE_MERGE } from '../../modules/nf-core/stringtie/merge/main'
-include { SUBREAD_FEATURECOUNTS as SUBREAD_FEATURECOUNTS_GENE } from '../../modules/nf-core/subread/featurecounts/main'
+include { STRINGTIE_STRINGTIE                                        } from '../../modules/nf-core/stringtie/stringtie/main'
+include { STRINGTIE_MERGE                                            } from '../../modules/nf-core/stringtie/merge/main'
+include { SUBREAD_FEATURECOUNTS as SUBREAD_FEATURECOUNTS_GENE       } from '../../modules/nf-core/subread/featurecounts/main'
 include { SUBREAD_FEATURECOUNTS as SUBREAD_FEATURECOUNTS_TRANSCRIPT } from '../../modules/nf-core/subread/featurecounts/main'
 
 workflow QUANTIFY_STRINGTIE_FEATURECOUNTS {
     take:
-    ch_sorted_bam
+    ch_bam // channel: [ val(meta), path(bam) ]
+    ch_gtf // channel (value): path(gtf)
 
     main:
-
     /*
-     * Novel isoform detection with StringTie
+     * Novel isoform detection with StringTie (long-read BAMs only, guided by the annotation)
      */
-    ch_annotation_gtf = Channel.from(file(params.gtf))
-    ch_sorted_bam
-        .combine(ch_annotation_gtf)
-        .map { it -> it[2] }
-        .set { ch_annotation_gtf }
-
-    STRINGTIE_STRINGTIE ( ch_sorted_bam, ch_annotation_gtf )
-    ch_stringtie_gtf   = STRINGTIE_STRINGTIE.out.transcript_gtf
-    stringtie2_version = STRINGTIE_STRINGTIE.out.versions
+    STRINGTIE_STRINGTIE(
+        ch_bam.map { meta, bam -> [meta, [], bam] },
+        'long-reads-assembly',
+        ch_gtf,
+    )
 
     /*
      * Merge isoforms across samples called by StringTie
      */
-    STRINGTIE_MERGE ( ch_stringtie_gtf.collect{it[1]}, ch_annotation_gtf.unique() )
-    ch_stringtie_merged_gtf = STRINGTIE_MERGE.out.gtf
+    ch_stringtie_gtfs = STRINGTIE_STRINGTIE.out.transcript_gtf
+        .map { _meta, gtf -> gtf }
+        .collect()
+        .map { gtfs -> [[id: 'stringtie.merged'], gtfs] }
+    STRINGTIE_MERGE(
+        ch_stringtie_gtfs,
+        ch_gtf.map { gtf -> [[id: 'annotation'], gtf] },
+    )
+    ch_merged_gtf = STRINGTIE_MERGE.out.merged_gtf.map { _meta, gtf -> gtf }
 
     /*
-     * Gene and transcript quantification with featureCounts
+     * Gene and transcript quantification with featureCounts across all samples
      */
-    ch_stringtie_merged_gtf
-        .combine( [[id:'gene', single_end:true]] )
-        .combine( [ch_sorted_bam.collect{it[1]}])
-        .map {it -> [it[1], it[2].value, it[0]]}
-        .set { ch_featurecounts_gene_input }
-    ch_stringtie_merged_gtf
-        .combine( [[id:'transcript', single_end:true]] )
-        .combine( [ch_sorted_bam.collect{it[1]}])
-        .map {it -> [it[1], it[2].value, it[0]]}
-        .set { ch_featurecounts_transcript_input }
+    ch_bams = ch_bam
+        .map { _meta, bam -> bam }
+        .collect()
 
-    SUBREAD_FEATURECOUNTS_GENE ( ch_featurecounts_gene_input )
-    SUBREAD_FEATURECOUNTS_TRANSCRIPT ( ch_featurecounts_transcript_input )
-    ch_gene_counts                   = SUBREAD_FEATURECOUNTS_GENE.out.counts.map{it -> it[1]}
-    ch_transcript_counts             = SUBREAD_FEATURECOUNTS_TRANSCRIPT.out.counts.map{it -> it[1]}
-    featurecounts_gene_multiqc       = SUBREAD_FEATURECOUNTS_GENE.out.summary
-    featurecounts_transcript_multiqc = SUBREAD_FEATURECOUNTS_TRANSCRIPT.out.summary
-    featurecounts_version            = SUBREAD_FEATURECOUNTS_GENE.out.versions
+    SUBREAD_FEATURECOUNTS_GENE(
+        ch_bams
+            .map { bams -> [[id: 'gene', single_end: true], bams] }
+            .combine(ch_merged_gtf)
+    )
+    SUBREAD_FEATURECOUNTS_TRANSCRIPT(
+        ch_bams
+            .map { bams -> [[id: 'transcript', single_end: true], bams] }
+            .combine(ch_merged_gtf)
+    )
 
     emit:
-    ch_stringtie_gtf
-    ch_stringtie_merged_gtf
-    stringtie2_version
-    ch_gene_counts
-    ch_transcript_counts
-    featurecounts_gene_multiqc
-    featurecounts_transcript_multiqc
-    featurecounts_version
+    stringtie_gtf                    = STRINGTIE_STRINGTIE.out.transcript_gtf                               // channel: [ val(meta), path(gtf) ]
+    merged_gtf                       = ch_merged_gtf                                                        // channel: path(gtf)
+    gene_counts                      = SUBREAD_FEATURECOUNTS_GENE.out.counts.map { _meta, counts -> counts }        // channel: path(tsv)
+    transcript_counts                = SUBREAD_FEATURECOUNTS_TRANSCRIPT.out.counts.map { _meta, counts -> counts }  // channel: path(tsv)
+    featurecounts_gene_summary       = SUBREAD_FEATURECOUNTS_GENE.out.summary.map { _meta, summary -> summary }       // channel: path(summary)
+    featurecounts_transcript_summary = SUBREAD_FEATURECOUNTS_TRANSCRIPT.out.summary.map { _meta, summary -> summary } // channel: path(summary)
 }

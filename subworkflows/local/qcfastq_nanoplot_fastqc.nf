@@ -1,91 +1,62 @@
 /*
- * FastQ QC with NanoPlot and fastqc
+ * FastQ QC with NanoPlot, ToulligQC and FastQC
  */
 
-include { NANOPLOT     } from '../../modules/nf-core/nanoplot/main'
-include { TOULLIGQC    } from '../../modules/nf-core/toulligqc/main'
-include { FASTQC       } from '../../modules/nf-core/fastqc/main'
+include { NANOPLOT  } from '../../modules/nf-core/nanoplot/main'
+include { TOULLIGQC } from '../../modules/nf-core/toulligqc/main'
+include { FASTQC    } from '../../modules/nf-core/fastqc/main'
 
 workflow QCFASTQ_NANOPLOT_FASTQC {
     take:
-    ch_fastq
-    skip_nanoplot
-    skip_toulligqc
-    skip_fastqc
+    ch_fastq       // channel: [ val(meta), path(fastq) ]
+    skip_nanoplot  // boolean
+    skip_toulligqc // boolean
+    skip_fastqc    // boolean
 
     main:
-    ch_fastq
-        .map { ch -> [ ch[0], ch[1] ] }
-        .set { ch_fastq }
+    ch_multiqc_files = channel.empty()
 
     /*
      * FastQ QC using NanoPlot
      */
-    nanoplot_png     = Channel.empty()
-    nanoplot_html    = Channel.empty()
-    nanoplot_txt     = Channel.empty()
-    nanoplot_log     = Channel.empty()
-    nanoplot_version = Channel.empty()
-    if (!skip_nanoplot){
-        NANOPLOT ( ch_fastq )
-        //nanoplot_png     = NANOPLOT.out.png
-        nanoplot_html    = NANOPLOT.out.html
-        nanoplot_txt     = NANOPLOT.out.txt
-        nanoplot_log     = NANOPLOT.out.log
-        nanoplot_version = NANOPLOT.out.versions
+    ch_nanoplot_html = channel.empty()
+    ch_nanoplot_txt  = channel.empty()
+    if (!skip_nanoplot) {
+        NANOPLOT(ch_fastq)
+        ch_nanoplot_html = NANOPLOT.out.html
+        ch_nanoplot_txt  = NANOPLOT.out.txt
+        ch_multiqc_files = ch_multiqc_files.mix(NANOPLOT.out.txt.map { _meta, txt -> txt })
     }
+
     /*
      * FastQ QC using ToulligQC
      */
-    toulligqc_report_data   = Channel.empty()
-    toulligqc_report_html   = Channel.empty()
-    toulligqc_plots_html    = Channel.empty()
-    toulligqc_plotly_js     = Channel.empty()
-    toulligqc_version       = Channel.empty()
-    if (!skip_toulligqc){
-        TOULLIGQC ( ch_fastq )
-        toulligqc_report_data  = TOULLIGQC.out.report_data
-        toulligqc_report_html  = TOULLIGQC.out.report_html
-        toulligqc_plots_html   = TOULLIGQC.out.plots_html
-        toulligqc_plotly_js    = TOULLIGQC.out.plotly_js
-        toulligqc_version      = TOULLIGQC.out.versions
+    ch_toulligqc_report_html = channel.empty()
+    ch_toulligqc_report_data = channel.empty()
+    if (!skip_toulligqc) {
+        TOULLIGQC(ch_fastq)
+        ch_toulligqc_report_html = TOULLIGQC.out.report_html
+        ch_toulligqc_report_data = TOULLIGQC.out.report_data
     }
+
     /*
-     * FastQ QC using FASTQC
+     * FastQ QC using FastQC
      */
-    fastqc_zip     = Channel.empty()
-    fastqc_html    = Channel.empty()
-    fastqc_multiqc = Channel.empty()
-    fastqc_version = Channel.empty()
-    if (!skip_fastqc){
-        FASTQC ( ch_fastq )
-        fastqc_zip     = FASTQC.out.zip
-        fastqc_html    = FASTQC.out.html
-        fastqc_zip
-            .map { it -> [ it[1] ] }
-            .set { fastqc_zip_only }
-        fastqc_html
-            .map { it -> [ it[1] ] }
-            .set { fastqc_html_only }
-        fastqc_multiqc = fastqc_multiqc.mix( fastqc_zip_only, fastqc_html_only )
-//       fastqc_version = FASTQC.out.versions
+    ch_fastqc_zip  = channel.empty()
+    ch_fastqc_html = channel.empty()
+    if (!skip_fastqc) {
+        FASTQC(ch_fastq)
+        ch_fastqc_zip    = FASTQC.out.zip
+        ch_fastqc_html   = FASTQC.out.html
+        ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map { _meta, zip -> zip })
     }
 
     emit:
-    nanoplot_png
-    nanoplot_html
-    nanoplot_txt
-    nanoplot_log
-    nanoplot_version
-
-    toulligqc_report_data
-    toulligqc_report_html
-    toulligqc_plots_html
-    toulligqc_plotly_js
-    toulligqc_version
-
-    fastqc_zip
-    fastqc_html
-    fastqc_version
-    fastqc_multiqc
+    nanoplot_html         = ch_nanoplot_html          // channel: [ val(meta), path(html) ]
+    nanoplot_txt          = ch_nanoplot_txt           // channel: [ val(meta), path(txt) ]
+    toulligqc_report_html = ch_toulligqc_report_html  // channel: [ val(meta), path(html) ]
+    toulligqc_report_data = ch_toulligqc_report_data  // channel: [ val(meta), path(data) ]
+    fastqc_zip            = ch_fastqc_zip             // channel: [ val(meta), path(zip) ]
+    fastqc_html           = ch_fastqc_html            // channel: [ val(meta), path(html) ]
+    multiqc_files         = ch_multiqc_files          // channel: path(file)
 }

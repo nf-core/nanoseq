@@ -3,34 +3,29 @@
  */
 
 include { BEDTOOLS_BAMTOBED } from '../../modules/nf-core/bedtools/bamtobed/main'
-include { UCSC_BEDTOBIGBED } from '../../modules/nf-core/ucsc/bedtobigbed/main'
+include { UCSC_BEDTOBIGBED  } from '../../modules/nf-core/ucsc/bedtobigbed/main'
 
 workflow BEDTOOLS_UCSC_BIGBED {
     take:
-    ch_sorted_bam
-    ch_chr_sizes
+    ch_bam   // channel: [ val(meta), path(bam) ]
+    ch_sizes // channel (value): [ val(meta), path(sizes) ]
 
     main:
     /*
      * Convert BAM to BED12
      */
-    BEDTOOLS_BAMTOBED ( ch_sorted_bam )
-    ch_bed         = BEDTOOLS_BAMTOBED.out.bed
-    bedtools_version = BEDTOOLS_BAMTOBED.out.versions
+    BEDTOOLS_BAMTOBED(ch_bam)
 
     /*
-     * Convert BED12 to BigBED
+     * Convert BED12 to BigBed
      */
-    ch_bed
-        .combine(ch_chr_sizes)
-        .map { it -> it[3] }
-        .set { ch_sizes }
-    UCSC_BEDTOBIGBED ( ch_bed, ch_sizes, [] )
-    ch_bigbed = UCSC_BEDTOBIGBED.out.bigbed
-    bed12tobigbed_version = UCSC_BEDTOBIGBED.out.versions
+    UCSC_BEDTOBIGBED(
+        BEDTOOLS_BAMTOBED.out.bed,
+        ch_sizes.map { _meta, sizes -> sizes },
+        [], // autosql
+    )
 
     emit:
-    ch_bigbed
-    bedtools_version
-    bed12tobigbed_version
+    bed    = BEDTOOLS_BAMTOBED.out.bed      // channel: [ val(meta), path(bed) ]
+    bigbed = UCSC_BEDTOBIGBED.out.bigbed    // channel: [ val(meta), path(bigBed) ]
 }
