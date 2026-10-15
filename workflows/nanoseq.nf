@@ -75,23 +75,16 @@ workflow NANOSEQ {
     //
     // Resolve raw data directory given with --input_path
     //
-    // Nextflow cannot recursively download directories over HTTPS, so for the test profiles
-    // that need raw FAST5/POD5 directories the nf-core/test-datasets repository is cloned.
+    // Nextflow cannot recursively download directories over HTTPS, so the RNA modification
+    // test profile, which needs directories of FAST5 files, clones nf-core/test-datasets.
     //
-    def profiles        = profile.tokenize(',')
-    def is_test_profile = profiles.any { p -> p.startsWith('test') }
-    def nonbarcoded     = profiles.any { p -> p == 'test_bc_nodx' || p.contains('rnamod') }
+    def is_test_profile = profile.tokenize(',').any { p -> p.startsWith('test') }
+    def clone_test_data = is_test_profile && !params.skip_modification_analysis
 
     def ch_input_path
-    if (is_test_profile && (!params.skip_basecalling || !params.skip_modification_analysis)) {
-        GET_TEST_DATA ( nonbarcoded ? 'nonbarcoded_multi' : 'barcoded_multi' )
-        if (!params.skip_modification_analysis) {
-            ch_input_path = GET_TEST_DATA.out.modification_dir
-        } else if (params.bedmethyl_out) {
-            ch_input_path = GET_TEST_DATA.out.pod5_dir
-        } else {
-            ch_input_path = GET_TEST_DATA.out.fast5_dir
-        }
+    if (clone_test_data) {
+        GET_TEST_DATA ()
+        ch_input_path = GET_TEST_DATA.out.modification_dir
     } else if (params.input_path) {
         ch_input_path = channel.fromPath(params.input_path, checkIfExists: true)
     } else {
@@ -105,7 +98,7 @@ workflow NANOSEQ {
     //
     INPUT_CHECK (
         ch_samplesheet,
-        is_test_profile && nonbarcoded ? ch_input_path : channel.value('not_changed')
+        clone_test_data ? ch_input_path : channel.value('not_changed')
     )
     def ch_sample = INPUT_CHECK.out.sample
 

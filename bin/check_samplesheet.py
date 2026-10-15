@@ -125,6 +125,11 @@ def check_samplesheet(file_in, updated_path, file_out):
                     input_extensions.append("*.fq.gz")
                 elif input_file.endswith(".bam"):
                     input_extensions.append("*.bam")
+                elif input_file.endswith(".pod5"):
+                    input_extensions.append("*.pod5")
+                elif input_file.endswith(".fast5"):
+                    input_extensions.append("*.fast5")
+                    fast5 = input_file
                 else:
                     if updated_path != "not_changed":
                         input_file = "/".join([updated_path, input_file.split("/")[-1]])
@@ -163,7 +168,7 @@ def check_samplesheet(file_in, updated_path, file_out):
                                         )
                         else:
                             print_error(
-                                '{input_file} path does not end with ".fastq.gz", ".fq.gz", or ".bam" and is not an existing directory with correct fast5 and/or fastq inputs.'
+                                '{input_file} path does not end with ".fastq.gz", ".fq.gz", ".bam", ".pod5" or ".fast5" and is not an existing directory with correct fast5 and/or fastq inputs.'
                             )
 
             ## Create sample mapping dictionary = {group: {replicate : [ barcode, input_file, fast5 ]}}

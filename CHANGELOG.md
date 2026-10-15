@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace local `modkit_pileup`, `get_nanolyse_fasta` and `get_jaffal_ref` modules with nf-core `modkit/pileup` and `wget`; replace deprecated nf-core `custom/getchromsizes` with `samtools/faidx`
 - Sort BED12 files with nf-core `bedtools/sort` before creating bigBed files
 - Use `params.pipelines_testdata_base_path` in test configs
+- Basecalling test profiles (`test`, `test_bc_nodx`) now use R10.4.1 (5 kHz) POD5 data from the nf-core/methylong test data, as current dorado releases no longer support R9.4.1 data. `test_bc_nodx` now tests modified base calling with `--bedmethyl_out` ([#337](https://github.com/nf-core/nanoseq/pull/337))
+- Allow `.pod5` and `.fast5` files in the samplesheet `input_file` column
 - Add `manifest.diagram` and restore the metro map images ([#339](https://github.com/nf-core/nanoseq/pull/339))
 - Update `bambu` version from `3.0.8` to `3.4.0`
 

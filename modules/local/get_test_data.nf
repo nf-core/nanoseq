@@ -5,13 +5,8 @@ process GET_TEST_DATA {
     // Debian bookworm image with bash, git (2.39.5) and curl (7.88.1)
     container "docker.io/library/buildpack-deps:bookworm-scm@sha256:8ea58fbc817960cd62d512044956ff00cb94865e549eeec32c12139413262004"
 
-    input:
-    val fast5_subdir // e.g. 'barcoded_multi' or 'nonbarcoded_multi'
-
     output:
-    path "test-datasets/fast5/${fast5_subdir}/"    , emit: fast5_dir
     path "test-datasets/modification_fast5_fastq/", emit: modification_dir
-    path "test-datasets/pod5/"                    , emit: pod5_dir
     tuple val("${task.process}"), val('git'), eval("git --version | sed '1!d;s/.* //'"), emit: versions_git, topic: versions
 
     script:
