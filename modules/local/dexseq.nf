@@ -2,29 +2,22 @@ process DEXSEQ {
     label "process_medium"
 
     conda "conda-forge::r-base=4.0.2 bioconda::bioconductor-dexseq=1.36.0 bioconda::bioconductor-drimseq=1.18.0 bioconda::bioconductor-stager=1.12.0"
+    // TODO: replace with a multi-tool (mulled/Seqera Containers) image for r-base, dexseq, stager and drimseq
     container "docker.io/yuukiiwa/nanoseq:dexseq"
-    // need a multitool container for r-base, dexseq, stager, drimseq and on quay hub
 
     input:
     path counts
+    val quantification_method
 
     output:
-    path "*.txt"        , emit: dexseq_txt
-    path "versions.yml" , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    path "*.txt", emit: dexseq_txt
+    tuple val("${task.process}"), val('r-base'), eval("R --version 2>&1 | sed '1!d;s/^R version //;s/ .*//'"), emit: versions_r, topic: versions
+    tuple val("${task.process}"), val('bioconductor-dexseq'), eval("Rscript -e \"cat(as.character(packageVersion('DEXSeq')))\""), emit: versions_dexseq, topic: versions
+    tuple val("${task.process}"), val('bioconductor-drimseq'), eval("Rscript -e \"cat(as.character(packageVersion('DRIMSeq')))\""), emit: versions_drimseq, topic: versions
+    tuple val("${task.process}"), val('bioconductor-stager'), eval("Rscript -e \"cat(as.character(packageVersion('stageR')))\""), emit: versions_stager, topic: versions
 
     script:
     """
-    run_dexseq.r $params.quantification_method $counts
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-        bioconductor-dexseq:  \$(Rscript -e "library(DEXSeq); cat(as.character(packageVersion('DEXSeq')))")
-        bioconductor-drimseq: \$(Rscript -e "library(DRIMSeq); cat(as.character(packageVersion('DRIMSeq')))")
-        bioconductor-stager:  \$(Rscript -e "library(stageR); cat(as.character(packageVersion('stageR')))")
-    END_VERSIONS
+    run_dexseq.r $quantification_method $counts
     """
 }

@@ -1,6 +1,6 @@
 process BAM_RENAME {
-    label 'process_medium'
     tag "$meta.id"
+    label 'process_medium'
 
     conda "conda-forge::sed=4.7"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -12,18 +12,13 @@ process BAM_RENAME {
 
     output:
     tuple val(meta), path("*.bam"), emit: bam
-    path "versions.yml"           , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    tuple val("${task.process}"), val('sed'), eval("sed --version 2>&1 | sed '1!d;s/.* //'"), emit: versions_sed, topic: versions
 
     script:
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    [ ! -f ${meta.id}.bam ] && ln -s $bam ${meta.id}.bam
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-    sed: \$(sed --version 2>&1 | grep "sed (GNU sed)" | sed 's/^.*) //')
-    END_VERSIONS
+    if [ ! -f ${prefix}.bam ]; then
+        ln -s $bam ${prefix}.bam
+    fi
     """
 }

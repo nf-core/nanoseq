@@ -2,27 +2,34 @@ process DORADO_BASECALLER {
     tag "$meta.id"
     label 'process_medium'
 
-    container "docker.io/ontresearch/dorado"
+    // No conda package available for dorado
+    container "docker.io/ontresearch/dorado:sha9809639e07a927bcc0f584dadd5e59674cf59f3f"
 
     input:
     tuple val(meta), path(pod5_path)
     val dorado_device
     val dorado_model
+    val dorado_modification
 
     output:
-    tuple val(meta), path("basecall*")  , emit: dorado_out
-    path "versions.yml"                  , emit: versions
+    tuple val(meta), path("*.fastq.gz"), optional: true, emit: fastq
+    tuple val(meta), path("*.bam")     , optional: true, emit: bam
+    tuple val("${task.process}"), val('dorado'), eval("dorado --version 2>/dev/null | sed '1!d;s/[+].*//'"), emit: versions_dorado, topic: versions
 
     script:
-    def emit_args = (params.dorado_modification == null) ? " --emit-fastq > basecall.fastq && gzip basecall.fastq" : " --modified-bases $params.dorado_modification > basecall.bam"
+    def args   = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def emit_args = dorado_modification
+        ? "--modified-bases ${dorado_modification} > ${prefix}.bam"
+        : "--emit-fastq | gzip > ${prefix}.fastq.gz"
     """
     dorado download --model $dorado_model
-    dorado basecaller $dorado_model $pod5_path --device $dorado_device $emit_args
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        dorado: \$(echo \$(dorado --version 2>&1) | sed -r 's/.{81}//')
-    END_VERSIONS
+    dorado basecaller \\
+        $args \\
+        $dorado_model \\
+        $pod5_path \\
+        --device $dorado_device \\
+        $emit_args
     """
 }
-

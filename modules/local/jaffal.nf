@@ -1,8 +1,9 @@
 process JAFFAL {
-    debug true
+    tag "$meta.id"
     label 'process_medium'
+    debug true
 
-    conda "bioconda::jaffa=2.5.0"
+    conda "bioconda::jaffa=2.5"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/jaffa:2.5--hdfd78af_0' :
         'quay.io/biocontainers/jaffa:2.5--hdfd78af_0' }"
@@ -14,18 +15,11 @@ process JAFFAL {
     output:
     tuple val(meta), path("*.fasta"), emit: jaffal_fastq
     path "*.csv"                    , emit: jaffal_results
-    path "versions.yml"             , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    // JAFFA has no command-line version option; keep in sync with the container tag
+    tuple val("${task.process}"), val('jaffa'), val('2.5'), emit: versions_jaffa, topic: versions
 
     script:
     """
     bpipe run -p refBase=$jaffal_ref_dir $jaffal_ref_dir/JAFFAL.groovy $fastq
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        jaffa: \$( jaffa --version 2>&1 | head -n1 || echo 'jaffa (unknown)' )
-    END_VERSIONS
     """
 }

@@ -8,22 +8,15 @@ process DESEQ2 {
 
     input:
     path counts
+    val quantification_method
 
     output:
-    path "*.txt"       , emit: deseq2_txt
-    path "versions.yml", emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    path "*.txt", emit: deseq2_txt
+    tuple val("${task.process}"), val('r-base'), eval("R --version 2>&1 | sed '1!d;s/^R version //;s/ .*//'"), emit: versions_r, topic: versions
+    tuple val("${task.process}"), val('bioconductor-deseq2'), eval("Rscript -e \"cat(as.character(packageVersion('DESeq2')))\""), emit: versions_deseq2, topic: versions
 
     script:
     """
-    run_deseq2.r $params.quantification_method $counts
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
-        bioconductor-deseq2: \$(Rscript -e "library(DESeq2); cat(as.character(packageVersion('DESeq2')))")
-    END_VERSIONS
+    run_deseq2.r $quantification_method $counts
     """
 }

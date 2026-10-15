@@ -1,30 +1,24 @@
 process XPORE_DIFFMOD {
     label 'process_medium'
 
-    conda "bioconda::xpore=2.1.0"
+    conda "bioconda::xpore=2.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/xpore:2.1--pyh5e36f6f_0' :
         'quay.io/biocontainers/xpore:2.1--pyh5e36f6f_0' }"
 
     input:
-    val dataprep_dirs
+    // conditions[i] is the condition label for dataprep_dirs[i]
+    tuple val(conditions), path(dataprep_dirs)
 
     output:
-    path "diffmod*"    , emit: diffmod_outputs
-    path "versions.yml", emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    path "diffmod*", emit: diffmod_outputs
+    tuple val("${task.process}"), val('xpore'), eval("xpore --version 2>&1 | sed '1!d;s/.* //'"), emit: versions_xpore, topic: versions
 
     script:
-    diffmod_config = "--config $workflow.workDir/*/*/diffmod_config.yml"
+    def dirs    = dataprep_dirs instanceof List ? dataprep_dirs : [dataprep_dirs]
+    def samples = [dirs, conditions].transpose().collect { pair -> "\$PWD/${pair[0]},${pair[1]}" }.join(' ')
     """
-    create_yml.py diffmod_config.yml $dataprep_dirs
-    xpore diffmod $diffmod_config --n_processes $task.cpus
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        xpore: \$( xpore --version | sed -e 's/xpore version //g' )
-    END_VERSIONS
+    create_yml.py diffmod_config.yml $samples
+    xpore diffmod --config diffmod_config.yml --n_processes $task.cpus
     """
 }

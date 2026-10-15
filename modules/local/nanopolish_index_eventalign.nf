@@ -2,7 +2,7 @@ process NANOPOLISH_INDEX_EVENTALIGN {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bioconda::nanopolish==0.13.2"
+    conda "bioconda::nanopolish=0.13.2"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/nanopolish:0.13.2--he3b7ca5_2' :
         'quay.io/biocontainers/nanopolish:0.13.2--he3b7ca5_2' }"
@@ -12,22 +12,23 @@ process NANOPOLISH_INDEX_EVENTALIGN {
 
     output:
     tuple val(meta), path(genome), path(gtf), path("*eventalign.txt"), path("*summary.txt"), emit: nanopolish_outputs
-    path "versions.yml"                                                                    , emit: versions
-
-    when:
-    task.ext.when == null || task.ext.when
+    tuple val("${task.process}"), val('nanopolish'), eval("nanopolish --version | sed '1!d;s/.* //'"), emit: versions_nanopolish, topic: versions
 
     script:
-    sample_summary = "$meta.id" +"_summary.txt"
-    sample_eventalign = "$meta.id" +"_eventalign.txt"
-    fast5 = "$meta.fast5"
+    def prefix            = task.ext.prefix ?: "${meta.id}"
+    def sample_summary    = "${prefix}_summary.txt"
+    def sample_eventalign = "${prefix}_eventalign.txt"
+    def fast5             = "${meta.fast5}"
     """
     nanopolish index -d $fast5 $fastq
-    nanopolish eventalign  --reads $fastq --bam $bam --genome $genome --scale-events --signal-index --summary $sample_summary --threads $task.cpus > $sample_eventalign
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        nanopolish: \$( nanopolish --version | sed -e 's/nanopolish version //g' )
-    END_VERSIONS
+    nanopolish eventalign \\
+        --reads $fastq \\
+        --bam $bam \\
+        --genome $genome \\
+        --scale-events \\
+        --signal-index \\
+        --summary $sample_summary \\
+        --threads $task.cpus \\
+        > $sample_eventalign
     """
 }

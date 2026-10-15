@@ -8,35 +8,33 @@ include { JAFFAL         } from '../../modules/local/jaffal'
 
 workflow RNA_FUSIONS_JAFFAL {
     take:
-    ch_sample_simple
-    jaffal_ref_dir
+    ch_fastq       // channel: [ val(meta), path(fastq) ]
+    jaffal_ref_dir // val: path to a JAFFAL reference directory, or null to download it
 
     main:
     if (jaffal_ref_dir) {
-        ch_jaffal_ref_dir = file(params.jaffal_ref_dir, checkIfExists: true)
+        ch_jaffal_ref_dir = channel.value(file(jaffal_ref_dir, checkIfExists: true))
     } else {
-
         /*
-         * Get jaffel reference
+         * Download the JAFFAL reference
          */
         GET_JAFFAL_REF()
 
         /*
-         * Untar jaffel reference
+         * Untar the JAFFAL reference
          */
-        UNTAR( GET_JAFFAL_REF.out.ch_jaffal_ref )
-        UNTAR.out.untar
-            .map { it -> [ it[1] ]}
-            .set { ch_jaffal_ref_dir }
-
-    ch_jaffal_ref_dir.view()
-
+        UNTAR( GET_JAFFAL_REF.out.ref )
+        ch_jaffal_ref_dir = UNTAR.out.untar
+            .map { _meta, ref_dir -> ref_dir }
+            .first()
     }
 
-    ch_sample_simple.view()
-
     /*
-    * Align current signals to reference with jaffel
-    */
-    JAFFAL( ch_sample_simple, ch_jaffal_ref_dir )
+     * Detect fusion transcripts with JAFFAL
+     */
+    JAFFAL( ch_fastq, ch_jaffal_ref_dir )
+
+    emit:
+    fusions = JAFFAL.out.jaffal_results // channel: path(csv)
+    fasta   = JAFFAL.out.jaffal_fastq   // channel: [ val(meta), path(fasta) ]
 }

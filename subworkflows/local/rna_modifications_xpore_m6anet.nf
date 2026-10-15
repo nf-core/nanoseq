@@ -2,65 +2,60 @@
  * RNA MODIFICATION DETECTION WITH XPORE AND M6ANET
  */
 
-
-// include { F5C_INDEX_EVENTALIGN } from '../../modules/local/f5c_index_eventalign' // f5c works for my other pipeline, but idk how it got screwed here
-include { NANOPOLISH_INDEX_EVENTALIGN } from '../../modules/local/nanopolish_index_eventalign' // nanopolish does the job
-include { XPORE_DATAPREP        } from '../../modules/local/xpore_dataprep'
-include { XPORE_DIFFMOD         } from '../../modules/local/xpore_diffmod'
-include { M6ANET_DATAPREP        } from '../../modules/local/m6anet_dataprep'
-include { M6ANET_INFERENCE      } from '../../modules/local/m6anet_inference'
+include { NANOPOLISH_INDEX_EVENTALIGN } from '../../modules/local/nanopolish_index_eventalign'
+include { XPORE_DATAPREP              } from '../../modules/local/xpore_dataprep'
+include { XPORE_DIFFMOD               } from '../../modules/local/xpore_diffmod'
+include { M6ANET_DATAPREP             } from '../../modules/local/m6anet_dataprep'
+include { M6ANET_INFERENCE            } from '../../modules/local/m6anet_inference'
 
 workflow RNA_MODIFICATION_XPORE_M6ANET {
     take:
-    ch_bam_fast5
+    ch_nanopolish_input // channel: [ val(meta), path(genome), path(gtf), path(fastq), path(bam), path(bai) ]
+    skip_xpore          // val: boolean
+    skip_m6anet         // val: boolean
 
     main:
-
     /*
      * Align current signals to reference with Nanopolish
      */
-    NANOPOLISH_INDEX_EVENTALIGN { ch_bam_fast5 }
+    NANOPOLISH_INDEX_EVENTALIGN( ch_nanopolish_input )
     ch_nanopolish_outputs = NANOPOLISH_INDEX_EVENTALIGN.out.nanopolish_outputs
-    nanopolish_version    = NANOPOLISH_INDEX_EVENTALIGN.out.versions
 
-    xpore_version = ''
-    ch_xpore_dataprep_dirs = ''
-    if (!params.skip_xpore) {
-
+    ch_xpore_dataprep = channel.empty()
+    ch_xpore_diffmod  = channel.empty()
+    if (!skip_xpore) {
         /*
          * Prepare data with xpore
          */
         XPORE_DATAPREP( ch_nanopolish_outputs )
-        ch_xpore_dataprep_dirs = XPORE_DATAPREP.out.dataprep_outputs
-        ch_xpore_dataprep_dirs
-            .map{ it -> it[1]+','+it[0].id }
-            .set{ ch_xpore_diffmod_inputs }
+        ch_xpore_dataprep = XPORE_DATAPREP.out.dataprep_outputs
 
         /*
          * Differential modification expression with xpore
+         * Input: [ [ condition, ... ], [ dataprep_dir, ... ] ] (one condition per sample)
          */
-        XPORE_DIFFMOD{ ch_xpore_diffmod_inputs.collect() }
-        xpore_version    = XPORE_DIFFMOD.out.versions
+        ch_xpore_diffmod_input = ch_xpore_dataprep
+            .toSortedList { a, b -> a[0].id <=> b[0].id }
+            .map { samples ->
+                [ samples.collect { sample -> sample[0].id }, samples.collect { sample -> sample[1] } ]
+            }
+        XPORE_DIFFMOD( ch_xpore_diffmod_input )
+        ch_xpore_diffmod = XPORE_DIFFMOD.out.diffmod_outputs
     }
 
-    /*
-    * Detect m6A sites with m6anet
-    */
-    m6anet_version = ''
-    if (!params.skip_m6anet) {
+    ch_m6anet_outputs = channel.empty()
+    if (!skip_m6anet) {
         /*
-        * Detect m6A sites with m6anet
-        */
+         * Detect m6A sites with m6anet
+         */
         M6ANET_DATAPREP( ch_nanopolish_outputs )
-        ch_m6anet_dataprep_dirs = M6ANET_DATAPREP.out.dataprep_outputs
-        M6ANET_INFERENCE{ ch_m6anet_dataprep_dirs }
-        m6anet_version   = M6ANET_INFERENCE.out.versions
+        M6ANET_INFERENCE( M6ANET_DATAPREP.out.dataprep_outputs )
+        ch_m6anet_outputs = M6ANET_INFERENCE.out.m6anet_outputs
     }
 
     emit:
-    ch_nanopolish_outputs
-    nanopolish_version
-    ch_xpore_dataprep_dirs
-    xpore_version
-    m6anet_version
+    nanopolish_outputs = ch_nanopolish_outputs // channel: [ val(meta), path(genome), path(gtf), path(eventalign), path(summary) ]
+    xpore_dataprep     = ch_xpore_dataprep     // channel: [ val(meta), path(dataprep_dir) ]
+    xpore_diffmod      = ch_xpore_diffmod      // channel: path(diffmod*)
+    m6anet_outputs     = ch_m6anet_outputs     // channel: path(results_dir)
 }
