@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Samplesheet and parameters are validated with `nf-schema` (`assets/schema_input.json`, `nextflow_schema.json`)
 - Remove top-level code from `workflows/nanoseq.nf` and `params` access from local modules and subworkflows
 - Remove unused `blue-crab`, `gtf2bed`, `get_chrom_sizes` and local `multiqc` modules, and `conf/test_withpull.config`
+- Replace local `modkit_pileup`, `get_nanolyse_fasta` and `get_jaffal_ref` modules with nf-core `modkit/pileup` and `wget`; replace deprecated nf-core `custom/getchromsizes` with `samtools/faidx`
+- Sort BED12 files with nf-core `bedtools/sort` before creating bigBed files
 - Use `params.pipelines_testdata_base_path` in test configs
 - Add `manifest.diagram` and restore the metro map images ([#339](https://github.com/nf-core/nanoseq/pull/339))
 - Update `bambu` version from `3.0.8` to `3.4.0`
