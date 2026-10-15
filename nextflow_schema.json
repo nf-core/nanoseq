@@ -284,8 +284,7 @@
             "properties": {
                 "jaffal_ref_dir": {
                     "type": "string",
-                    "default": "for_jaffal",
-                    "description": "Specifies the reference directory for JAFFAL.",
+                    "description": "Path to a JAFFAL reference directory. If not provided, the reference is downloaded.",
                     "fa_icon": "fas fa-bezier-curve"
                 },
                 "skip_fusion_analysis": {

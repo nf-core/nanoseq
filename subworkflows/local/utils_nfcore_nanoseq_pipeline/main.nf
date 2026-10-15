@@ -234,26 +234,45 @@ def genomeExistsError() {
 // Generate methods description for MultiQC
 //
 def toolCitationText() {
-    // TODO nf-core: Optionally add in-text citation tools to this list.
-    // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "Tool (Foo et al. 2023)" : "",
-    // Uncomment function in methodsDescriptionText to render in MultiQC report
     def citation_text = [
             "Tools used in the workflow included:",
-            "FastQC (Andrews 2010),",
-            "MultiQC (Ewels et al. 2016)",
+            !params.skip_basecalling           ? "dorado," : "",
+            !params.skip_demultiplexing        ? "qcat," : "",
+            params.run_nanolyse                ? "NanoLyse (De Coster et al. 2018)," : "",
+            !params.skip_qc && !params.skip_nanoplot  ? "NanoPlot (De Coster et al. 2018)," : "",
+            !params.skip_qc && !params.skip_toulligqc ? "ToulligQC," : "",
+            !params.skip_qc && !params.skip_fastqc    ? "FastQC (Andrews 2010)," : "",
+            !params.skip_alignment ? (params.aligner == 'minimap2' ? "minimap2 (Li 2018)," : "GraphMap2 (Sović et al. 2016),") : "",
+            "SAMtools (Li et al. 2009),",
+            !params.skip_alignment && !(params.skip_bigwig && params.skip_bigbed) ? "BEDTools (Quinlan and Hall 2010), UCSC tools (Kent et al. 2010)," : "",
+            !params.skip_quantification ? (params.quantification_method == 'bambu' ? "bambu (Chen et al. 2023)," : "StringTie2 (Kovaka et al. 2019), featureCounts (Liao et al. 2014),") : "",
+            !params.skip_quantification && !params.skip_differential_analysis ? "DESeq2 (Love et al. 2014), DEXSeq (Anders et al. 2012)," : "",
+            !params.skip_modification_analysis && !params.skip_xpore  ? "xPore (Pratanwanich et al. 2021)," : "",
+            !params.skip_modification_analysis && !params.skip_m6anet ? "m6anet (Hendra et al. 2022)," : "",
+            !params.skip_fusion_analysis ? "JAFFAL (Davidson et al. 2022)," : "",
+            params.bedmethyl_out ? "modkit," : "",
+            "and MultiQC (Ewels et al. 2016)",
             "."
-        ].join(' ').trim()
+        ].join(' ').trim().replaceAll(/\s+/, ' ')
 
     return citation_text
 }
 
 def toolBibliographyText() {
-    // TODO nf-core: Optionally add bibliographic entries to this list.
-    // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "<li>Author (2023) Pub name, Journal, DOI</li>" : "",
-    // Uncomment function in methodsDescriptionText to render in MultiQC report
     def reference_text = [
-            "<li>Andrews S, (2010) FastQC, URL: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).</li>",
-            "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
+            params.run_nanolyse || (!params.skip_qc && !params.skip_nanoplot) ? "<li>De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149</li>" : "",
+            !params.skip_qc && !params.skip_fastqc ? "<li>Andrews S, (2010) FastQC, URL: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/</li>" : "",
+            !params.skip_alignment && params.aligner == 'minimap2'  ? "<li>Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191</li>" : "",
+            !params.skip_alignment && params.aligner == 'graphmap2' ? "<li>Sović I, Šikić M, Wilm A, Fenlon SN, Chen S, Nagarajan N. Fast and sensitive mapping of nanopore sequencing reads with GraphMap. Nat Commun. 2016;7:11307. doi: 10.1038/ncomms11307</li>" : "",
+            "<li>Li H, Handsaker B, Wysoker A, et al. The Sequence Alignment/Map format and SAMtools. Bioinformatics. 2009;25(16):2078-2079. doi: 10.1093/bioinformatics/btp352</li>",
+            !params.skip_alignment && !(params.skip_bigwig && params.skip_bigbed) ? "<li>Quinlan AR, Hall IM. BEDTools: a flexible suite of utilities for comparing genomic features. Bioinformatics. 2010;26(6):841-842. doi: 10.1093/bioinformatics/btq033</li><li>Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics. 2010;26(17):2204-2207. doi: 10.1093/bioinformatics/btq351</li>" : "",
+            !params.skip_quantification && params.quantification_method == 'bambu' ? "<li>Chen Y, Sim A, Wan YK, et al. Context-aware transcript quantification from long-read RNA-seq data with Bambu. Nat Methods. 2023;20:1187-1195. doi: 10.1038/s41592-023-01908-w</li>" : "",
+            !params.skip_quantification && params.quantification_method == 'stringtie2' ? "<li>Kovaka S, Zimin AV, Pertea GM, Razaghi R, Salzberg SL, Pertea M. Transcriptome assembly from long-read RNA-seq alignments with StringTie2. Genome Biol. 2019;20(1):278. doi: 10.1186/s13059-019-1910-1</li><li>Liao Y, Smyth GK, Shi W. featureCounts: an efficient general purpose program for assigning sequence reads to genomic features. Bioinformatics. 2014;30(7):923-930. doi: 10.1093/bioinformatics/btt656</li>" : "",
+            !params.skip_quantification && !params.skip_differential_analysis ? "<li>Love MI, Huber W, Anders S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol. 2014;15(12):550. doi: 10.1186/s13059-014-0550-8</li><li>Anders S, Reyes A, Huber W. Detecting differential usage of exons from RNA-seq data. Genome Res. 2012;22(10):2008-2017. doi: 10.1101/gr.133744.111</li>" : "",
+            !params.skip_modification_analysis && !params.skip_xpore ? "<li>Pratanwanich PN, Yao F, Chen Y, et al. Identification of differential RNA modifications from nanopore direct RNA sequencing with xPore. Nat Biotechnol. 2021;39(11):1394-1402. doi: 10.1038/s41587-021-00949-w</li>" : "",
+            !params.skip_modification_analysis && !params.skip_m6anet ? "<li>Hendra C, Pratanwanich PN, Wan YK, Goh WSS, Thiery A, Göke J. Detection of m6A from direct RNA sequencing using a multiple instance learning framework. Nat Methods. 2022;19:1590-1598. doi: 10.1038/s41592-022-01666-1</li>" : "",
+            !params.skip_fusion_analysis ? "<li>Davidson NM, Chen Y, Sadras T, et al. JAFFAL: detecting fusion genes with long-read transcriptome sequencing. Genome Biol. 2022;23(1):10. doi: 10.1186/s13059-021-02588-5</li>" : "",
+            "<li>Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016;32(19):3047-3048. doi: 10.1093/bioinformatics/btw354</li>"
         ].join(' ').trim()
 
     return reference_text
@@ -283,9 +302,8 @@ def methodsDescriptionText(mqc_methods_yaml) {
     meta["tool_citations"] = ""
     meta["tool_bibliography"] = ""
 
-    // TODO nf-core: Only uncomment below if logic in toolCitationText/toolBibliographyText has been filled!
-    // meta["tool_citations"] = toolCitationText().replaceAll(", \\.", ".").replaceAll("\\. \\.", ".").replaceAll(", \\.", ".")
-    // meta["tool_bibliography"] = toolBibliographyText()
+    meta["tool_citations"] = toolCitationText().replaceAll(", \\.", ".").replaceAll("\\. \\.", ".").replaceAll(", \\.", ".")
+    meta["tool_bibliography"] = toolBibliographyText()
 
 
     def methods_text = mqc_methods_yaml.text

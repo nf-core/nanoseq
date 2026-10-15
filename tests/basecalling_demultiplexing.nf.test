@@ -34,7 +34,11 @@ nextflow_pipeline {
                 // Demultiplexed reads were assigned to the sample with barcode 1 and processed downstream
                 { assert workflow.trace.succeeded().any { task -> task.name.contains('NANOLYSE (K562_RUN1_R1)') } },
                 { assert workflow.trace.succeeded().any { task -> task.name.contains('MINIMAP2_ALIGN (K562_RUN1_R1)') } },
-                { assert snapshot(succeeded).match() }
+                { assert snapshot(
+                    // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_nanoseq_software_mqc_versions.yml"),
+                    succeeded
+                ).match() }
             )
         }
     }
