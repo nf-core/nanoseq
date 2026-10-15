@@ -16,10 +16,11 @@ process DORADO_ALIGNER {
     tuple val("${task.process}"), val('samtools'), eval("samtools version | sed '1!d;s/.* //'"), emit: versions_samtools, topic: versions
 
     script:
-    def args = task.ext.args ?: '--mm2-preset map-ont'
+    def args = task.ext.args ?: '--mm2-opts "-x map-ont"'
     prefix   = task.ext.prefix ?: "${meta.id}"
     """
     dorado aligner \\
+        --threads $task.cpus \\
         $args \\
         $fasta \\
         $reads \\
