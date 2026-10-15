@@ -10,7 +10,6 @@
 
 include { UTILS_NFSCHEMA_PLUGIN     } from '../../nf-core/utils_nfschema_plugin'
 include { paramsSummaryMap          } from 'plugin/nf-schema'
-include { samplesheetToList         } from 'plugin/nf-schema'
 include { paramsHelp                } from 'plugin/nf-schema'
 include { completionEmail           } from '../../nf-core/utils_nfcore_pipeline'
 include { completionSummary         } from '../../nf-core/utils_nfcore_pipeline'
@@ -105,28 +104,11 @@ workflow PIPELINE_INITIALISATION {
     validateInputParameters()
 
     //
-    // Create channel from input file provided through params.input
+    // Samplesheet contents are validated against assets/schema_input.json by nf-schema
+    // (see the `schema` key of `--input` in nextflow_schema.json). Paths in the samplesheet
+    // are resolved by INPUT_CHECK because raw data directories may only exist at runtime.
     //
-
-    channel
-        .fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
-        .map {
-            meta, fastq_1, fastq_2 ->
-                if (!fastq_2) {
-                    return [ meta.id, meta + [ single_end:true ], [ fastq_1 ] ]
-                } else {
-                    return [ meta.id, meta + [ single_end:false ], [ fastq_1, fastq_2 ] ]
-                }
-        }
-        .groupTuple()
-        .map { samplesheet ->
-            validateInputSamplesheet(samplesheet)
-        }
-        .map {
-            meta, fastqs ->
-                return [ meta, fastqs.flatten() ]
-        }
-        .set { ch_samplesheet }
+    def ch_samplesheet = channel.value(file(input, checkIfExists: true))
 
     emit:
     samplesheet = ch_samplesheet
@@ -188,22 +170,41 @@ workflow PIPELINE_COMPLETION {
 //
 def validateInputParameters() {
     genomeExistsError()
-}
 
-//
-// Validate channels from input samplesheet
-//
-def validateInputSamplesheet(input) {
-    def (metas, fastqs) = input[1..2]
-
-    // Check that multiple runs of the same sample are of the same datatype i.e. single-end / paired-end
-    def endedness_ok = metas.collect{ meta -> meta.single_end }.unique().size == 1
-    if (!endedness_ok) {
-        error("Please check input samplesheet -> Multiple runs of a sample must be of the same datatype i.e. single-end or paired-end: ${metas[0].id}")
+    if (!params.fasta && !params.bedmethyl_out) {
+        error("Reference FASTA not specified! Please provide --fasta or a valid --genome.")
     }
 
-    return [ metas[0], fastqs ]
+    def rna_protocols = ['cDNA', 'directRNA']
+    if (!params.skip_quantification && !rna_protocols.contains(params.protocol)) {
+        error("Invalid protocol option for quantification: ${params.protocol}. Valid options: ${rna_protocols.join(', ')}. Use --skip_quantification for DNA data.")
+    }
+    if (!params.skip_quantification && !params.gtf) {
+        error("A GTF annotation is required for quantification. Please provide --gtf, a --genome with a GTF, or use --skip_quantification.")
+    }
+
+    if (!params.skip_demultiplexing) {
+        def qcat_barcode_kits = [
+            'Auto', 'RBK001', 'RBK004', 'NBD103/NBD104', 'NBD114', 'NBD104/NBD114', 'PBC001',
+            'PBC096', 'RPB004/RLB001', 'PBK004/LWB001', 'RAB204', 'VMK001', 'DUAL'
+        ]
+        if (params.barcode_kit && !qcat_barcode_kits.contains(params.barcode_kit)) {
+            error("Invalid barcode kit for demultiplexing with qcat: ${params.barcode_kit}. Valid options: ${qcat_barcode_kits.join(', ')}")
+        }
+        if (!params.input_path) {
+            error("Please specify --input_path to perform demultiplexing!")
+        }
+    }
+
+    if (!params.skip_basecalling && !params.dorado_model) {
+        error("Please specify --dorado_model to perform basecalling, or use --skip_basecalling.")
+    }
+
+    if (params.run_nanolyse && !params.nanolyse_fasta && env('NXF_OFFLINE') == 'true') {
+        error("Running offline so cannot download the lambda FASTA for NanoLyse! Please specify --nanolyse_fasta.")
+    }
 }
+
 //
 // Get attribute from genome config file e.g. fasta
 //

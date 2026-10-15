@@ -7,27 +7,38 @@
     "items": {
         "type": "object",
         "properties": {
-            "sample": {
+            "group": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
-                "meta": ["id"]
+                "errorMessage": "Group name must be provided and cannot contain spaces",
+                "meta": ["group"]
             },
-            "fastq_1": {
-                "type": "string",
-                "format": "file-path",
-                "exists": true,
-                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+            "replicate": {
+                "type": "integer",
+                "minimum": 1,
+                "errorMessage": "Replicate must be an integer starting from 1",
+                "meta": ["replicate"]
             },
-            "fastq_2": {
+            "barcode": {
+                "anyOf": [
+                    {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    {
+                        "type": "string",
+                        "maxLength": 0
+                    }
+                ],
+                "errorMessage": "Barcode must be a positive integer or left empty",
+                "meta": ["barcode"]
+            },
+            "input_file": {
                 "type": "string",
-                "format": "file-path",
-                "exists": true,
-                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "pattern": "^\\S*$",
+                "errorMessage": "Input file cannot contain spaces. It must be a '.fastq.gz', '.fq.gz' or '.bam' file, or a directory of raw (FAST5/POD5) data. Leave empty when demultiplexing with '--input_path'."
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["group", "replicate"]
     }
 }

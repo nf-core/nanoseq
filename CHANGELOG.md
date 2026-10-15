@@ -3,21 +3,30 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.2.0] - 2025-06-22
+## v3.2.0 - [unreleased]
 
 ### Major enhancements
 
 - Added the `dorado` basecaller for basecalling and DNA/RNA modification calling
 - Added `toulligQC` for nanopore read quality check
 - Removed DNA structural and small variant calling functionalities (prepare for nanoRNAseq)
-- Bump minimum Nextflow version from 21.10.3 -> 24.04.2
-- Update pipeline template to nf-core/tools `3.2.1`
-- Updated all nf-core/modules to their latest
+- Bump minimum Nextflow version from 21.10.3 -> 25.10.4; pipeline code follows Nextflow strict syntax and is tested with Nextflow 26.10.0
+- Update pipeline template to nf-core/tools `4.1.0` ([#338](https://github.com/nf-core/nanoseq/pull/338), supersedes [#323](https://github.com/nf-core/nanoseq/pull/323), [#329](https://github.com/nf-core/nanoseq/pull/329), [#330](https://github.com/nf-core/nanoseq/pull/330), [#333](https://github.com/nf-core/nanoseq/pull/333), [#334](https://github.com/nf-core/nanoseq/pull/334))
+- Updated all nf-core/modules to their latest; software versions are now collected with the `versions` topic channel
+- Restore per-module options and publishing paths in `conf/modules.config`
+- Samplesheet and parameters are validated with `nf-schema` (`assets/schema_input.json`, `nextflow_schema.json`)
+- Remove top-level code from `workflows/nanoseq.nf` and `params` access from local modules and subworkflows
+- Remove unused `blue-crab`, `gtf2bed`, `get_chrom_sizes` and local `multiqc` modules, and `conf/test_withpull.config`
+- Use `params.pipelines_testdata_base_path` in test configs
+- Add `manifest.diagram` and restore the metro map images ([#339](https://github.com/nf-core/nanoseq/pull/339))
 - Update `bambu` version from `3.0.8` to `3.4.0`
 
 ### Bug fixes
 
 - Replace removed `echo` process directive with `debug` in `JAFFAL` and `M6ANET_INFERENCE` modules ([#340](https://github.com/nf-core/nanoseq/issues/340))
+- Fix MultiQC not receiving FastQC, samtools and featureCounts results
+- Pin the `dorado` container instead of using `latest`
+- Fix `qcat` options (`--qcat_min_score`, `--qcat_detect_middle`, `--trim_barcodes`) being ignored
 
 ### Parameters
 
@@ -26,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `--flowcell` as `dorado` is added for basecalling and modification calling
 - Added `--kit` as `dorado` is added for basecalling and modification calling
 - Added `--dorado_model` as `dorado` is added for basecalling and modification calling
-- Added `--doraro_modification` as `dorado` is added for basecalling and modification calling
+- Added `--dorado_modification` as `dorado` is added for basecalling and modification calling
 - Added `--dorado_device` as `dorado` is added for basecalling and modification calling
 - Added `--skip_basecalling` as `dorado` is added for basecalling and modification calling
 - Added `--skip_toulligqc` as `toulligqc` is added for nanopore read quality check
@@ -44,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | Dependency              | Old version | New version |
 | ----------------------- | ----------- | ----------- |
 | `bioconductor-bambu`    | 3.0.8       | 3.4.0       |
+| `jaffa`                 | 2.3         | 2.5         |
 | `bedtools`              | 2.29.2      | 2.31.1      |
 | `fastqc`                | 0.11.9      | 0.12.1      |
 | `minimap2`              | 2.17        | 2.29        |

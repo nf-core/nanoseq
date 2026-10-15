@@ -26,10 +26,8 @@ include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_nano
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// TODO nf-core: Remove this line if you don't need a FASTA file
-//   This is an example of how to use getGenomeAttribute() to fetch parameters
-//   from igenomes.config using `--genome`
 params.fasta = getGenomeAttribute('fasta')
+params.gtf   = getGenomeAttribute('gtf')
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -52,11 +50,13 @@ workflow NFCORE_NANOSEQ {
     //
     NANOSEQ (
         samplesheet,
+        workflow.profile,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
         params.outdir,
     )
+
     emit:
     multiqc_report = NANOSEQ.out.multiqc_report // channel: /path/to/multiqc_report.html
 }

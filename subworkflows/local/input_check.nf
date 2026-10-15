@@ -1,37 +1,33 @@
-/*
- * Check input samplesheet and get read channels
- */
+//
+// Check input samplesheet and get read channels
+//
 
 include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check'
 
 workflow INPUT_CHECK {
     take:
     samplesheet // file: /path/to/samplesheet.csv
-    input_path
+    input_path  // val : directory used to resolve relative 'input_file' entries, or 'not_changed'
 
     main:
-    /*
-     * Check samplesheet is valid
-     */
     SAMPLESHEET_CHECK ( samplesheet, input_path )
-        .csv
-        .splitCsv ( header:true, sep:',' )
-        .map { get_sample_info(it) }
-        .set { ch_sample }
+    def ch_sample = SAMPLESHEET_CHECK.out.csv
+        .splitCsv ( header: true, sep: ',' )
+        .map { row -> getSampleInfo(row) }
 
     emit:
-    ch_sample // [[id:, barcode:, nanopolish_fast5:], [input_file]]
+    sample = ch_sample // channel: [ val(meta), reads ] where meta = [ id, barcode, fast5 ]
 }
 
-// Function to get list of [ meta, fastq ]
-def get_sample_info(LinkedHashMap row) {
-    def meta              = [:]
-    meta.id               = row.sample
-    meta.barcode          = row.barcode
-    meta.fast5            = row.fast5
-    input_file            = row.reads //? file(row.reads, checkIfExists: true) : null
-
-    fastq_meta = [ meta, input_file ]
-
-    return fastq_meta
+//
+// Convert a row of the validated samplesheet into [ meta, reads ]
+//
+def getSampleInfo(row) {
+    def meta = [
+        id     : row.sample,
+        barcode: row.barcode,
+        fast5  : row.fast5
+    ]
+    def reads = row.reads ? file(row.reads) : null
+    return [ meta, reads ]
 }
