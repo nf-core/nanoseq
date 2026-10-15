@@ -171,7 +171,7 @@ workflow PIPELINE_COMPLETION {
 def validateInputParameters() {
     genomeExistsError()
 
-    if (!params.fasta && !params.bedmethyl_out) {
+    if (!params.fasta) {
         error("Reference FASTA not specified! Please provide --fasta or a valid --genome.")
     }
 

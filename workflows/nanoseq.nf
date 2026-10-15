@@ -8,11 +8,9 @@
 // MODULE: Local modules
 //
 include { GET_TEST_DATA                    } from '../modules/local/get_test_data'
-include { GET_NANOLYSE_FASTA               } from '../modules/local/get_nanolyse_fasta'
 include { FAST5_TO_POD5                    } from '../modules/local/fast5_to_pod5'
 include { DORADO_BASECALLER                } from '../modules/local/dorado_basecaller'
 include { DORADO_ALIGNER                   } from '../modules/local/dorado_aligner'
-include { MODKIT_PILEUP                    } from '../modules/local/modkit_pileup'
 include { BAM_RENAME                       } from '../modules/local/bam_rename'
 include { BAMBU                            } from '../modules/local/bambu'
 
@@ -21,7 +19,9 @@ include { BAMBU                            } from '../modules/local/bambu'
 //
 include { QCAT                             } from '../modules/nf-core/qcat/main'
 include { NANOLYSE                         } from '../modules/nf-core/nanolyse/main'
-include { CUSTOM_GETCHROMSIZES             } from '../modules/nf-core/custom/getchromsizes/main'
+include { SAMTOOLS_FAIDX                   } from '../modules/nf-core/samtools/faidx/main'
+include { MODKIT_PILEUP                    } from '../modules/nf-core/modkit/pileup/main'
+include { WGET as WGET_NANOLYSE_FASTA      } from '../modules/nf-core/wget/main'
 include { SAMTOOLS_INDEX                   } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                          } from '../modules/nf-core/multiqc/main'
 
@@ -109,6 +109,21 @@ workflow NANOSEQ {
     )
     def ch_sample = INPUT_CHECK.out.sample
 
+    //
+    // MODULE: Make FASTA index and chromosome sizes
+    //
+    def ch_fasta_fai = channel.empty()
+    def ch_chr_sizes = channel.empty()
+    if (fasta) {
+        def ch_fasta = channel.value([ [ id: 'reference' ], fasta ])
+        SAMTOOLS_FAIDX ( ch_fasta.map { meta, fa -> [ meta, fa, [] ] }, true )
+        ch_chr_sizes = SAMTOOLS_FAIDX.out.sizes
+        ch_fasta_fai = ch_fasta
+            .combine(SAMTOOLS_FAIDX.out.fai)
+            .map { meta, fa, _meta2, fai -> [ meta, fa, fai ] }
+            .first()
+    }
+
     def ch_fastq = channel.empty()
     def barcode_kit = params.barcode_kit ?: 'Auto'
 
@@ -144,7 +159,11 @@ workflow NANOSEQ {
             // MODULE: Align modified base calls and create bedMethyl files with modkit
             //
             DORADO_ALIGNER ( DORADO_BASECALLER.out.bam, fasta )
-            MODKIT_PILEUP ( DORADO_ALIGNER.out.bam.join(DORADO_ALIGNER.out.bai) )
+            MODKIT_PILEUP (
+                DORADO_ALIGNER.out.bam.join(DORADO_ALIGNER.out.bai),
+                ch_fasta_fai,
+                [ [:], [] ]
+            )
         } else if (!params.skip_demultiplexing) {
             //
             // MODULE: Demultiplexing with qcat
@@ -179,8 +198,10 @@ workflow NANOSEQ {
         if (params.nanolyse_fasta) {
             ch_nanolyse_fasta = channel.value(file(params.nanolyse_fasta, checkIfExists: true))
         } else {
-            GET_NANOLYSE_FASTA ()
-            ch_nanolyse_fasta = GET_NANOLYSE_FASTA.out.fasta
+            WGET_NANOLYSE_FASTA (
+                channel.of([ [ id: 'lambda' ], 'https://github.com/wdecoster/nanolyse/raw/master/reference/lambda.fasta.gz', 'fasta.gz' ])
+            )
+            ch_nanolyse_fasta = WGET_NANOLYSE_FASTA.out.outfile.map { _meta, fa -> fa }.first()
         }
         NANOLYSE ( ch_fastq, ch_nanolyse_fasta )
         ch_fastq_to_align = NANOLYSE.out.fastq
@@ -197,21 +218,6 @@ workflow NANOSEQ {
             params.skip_fastqc
         )
         ch_multiqc_files = ch_multiqc_files.mix(QCFASTQ_NANOPLOT_FASTQC.out.multiqc_files)
-    }
-
-    //
-    // MODULE: Make chromosome sizes and FASTA index
-    //
-    def ch_fasta_fai = channel.empty()
-    def ch_chr_sizes = channel.empty()
-    if (!params.bedmethyl_out) {
-        def ch_fasta = channel.value([ [ id: 'reference' ], fasta ])
-        CUSTOM_GETCHROMSIZES ( ch_fasta )
-        ch_chr_sizes = CUSTOM_GETCHROMSIZES.out.sizes
-        ch_fasta_fai = ch_fasta
-            .combine(CUSTOM_GETCHROMSIZES.out.fai)
-            .map { meta, fa, _meta2, fai -> [ meta, fa, fai ] }
-            .first()
     }
 
     def ch_sorted_bam = channel.empty()

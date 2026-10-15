@@ -3,6 +3,7 @@
  */
 
 include { BEDTOOLS_BAMTOBED } from '../../modules/nf-core/bedtools/bamtobed/main'
+include { BEDTOOLS_SORT     } from '../../modules/nf-core/bedtools/sort/main'
 include { UCSC_BEDTOBIGBED  } from '../../modules/nf-core/ucsc/bedtobigbed/main'
 
 workflow BEDTOOLS_UCSC_BIGBED {
@@ -17,15 +18,20 @@ workflow BEDTOOLS_UCSC_BIGBED {
     BEDTOOLS_BAMTOBED(ch_bam)
 
     /*
+     * Sort BED12 by chromosome and start position as required by bedToBigBed
+     */
+    BEDTOOLS_SORT(BEDTOOLS_BAMTOBED.out.bed, [], 'bed')
+
+    /*
      * Convert BED12 to BigBed
      */
     UCSC_BEDTOBIGBED(
-        BEDTOOLS_BAMTOBED.out.bed,
+        BEDTOOLS_SORT.out.sorted,
         ch_sizes.map { _meta, sizes -> sizes },
         [], // autosql
     )
 
     emit:
-    bed    = BEDTOOLS_BAMTOBED.out.bed      // channel: [ val(meta), path(bed) ]
+    bed    = BEDTOOLS_SORT.out.sorted       // channel: [ val(meta), path(bed) ]
     bigbed = UCSC_BEDTOBIGBED.out.bigbed    // channel: [ val(meta), path(bigBed) ]
 }

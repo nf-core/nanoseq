@@ -2,7 +2,7 @@
  * RNA FUSION DETECTION WITH JAFFAL
  */
 
-include { GET_JAFFAL_REF } from '../../modules/local/get_jaffal_ref'
+include { WGET as WGET_JAFFAL_REF } from '../../modules/nf-core/wget/main'
 include { UNTAR          } from '../../modules/nf-core/untar/main'
 include { JAFFAL         } from '../../modules/local/jaffal'
 
@@ -18,12 +18,12 @@ workflow RNA_FUSIONS_JAFFAL {
         /*
          * Download the JAFFAL reference
          */
-        GET_JAFFAL_REF()
+        WGET_JAFFAL_REF( channel.of([ [ id: 'jaffal_ref' ], 'https://ndownloader.figshare.com/files/28168755', 'tar.gz' ]) )
 
         /*
          * Untar the JAFFAL reference
          */
-        UNTAR( GET_JAFFAL_REF.out.ref )
+        UNTAR( WGET_JAFFAL_REF.out.outfile )
         ch_jaffal_ref_dir = UNTAR.out.untar
             .map { _meta, ref_dir -> ref_dir }
             .first()
