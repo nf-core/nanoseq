@@ -11,6 +11,7 @@ workflow ALIGN_GRAPHMAP2 {
     take:
     ch_fasta_fai // channel (value): [ val(meta), path(fasta), path(fai) ]
     ch_fastq     // channel: [ val(meta), path(fastq) ]
+    ch_gtf       // channel (value): path(gtf) for spliced alignment, or [] for unspliced
 
     main:
     ch_fasta = ch_fasta_fai.map { _meta, fasta, _fai -> fasta }
@@ -18,12 +19,12 @@ workflow ALIGN_GRAPHMAP2 {
     /*
      * Create genome/transcriptome index
      */
-    GRAPHMAP2_INDEX(ch_fasta)
+    GRAPHMAP2_INDEX(ch_fasta, ch_gtf)
 
     /*
      * Map reads with GRAPHMAP2 (SAM output)
      */
-    GRAPHMAP2_ALIGN(ch_fastq, ch_fasta, GRAPHMAP2_INDEX.out.index)
+    GRAPHMAP2_ALIGN(ch_fastq, ch_fasta, GRAPHMAP2_INDEX.out.index, ch_gtf)
 
     /*
      * Coordinate-sort SAM into BAM and write the BAI index in the same step

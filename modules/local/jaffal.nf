@@ -1,7 +1,6 @@
 process JAFFAL {
     tag "$meta.id"
     label 'process_medium'
-    debug true
 
     conda "bioconda::jaffa=2.5"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

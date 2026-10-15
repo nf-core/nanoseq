@@ -1,7 +1,6 @@
 process M6ANET_INFERENCE {
     tag "$meta.id"
     label 'process_medium'
-    debug true
 
     conda "bioconda::m6anet=2.0.2"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

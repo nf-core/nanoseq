@@ -12,6 +12,7 @@ process GRAPHMAP2_ALIGN {
     tuple val(meta), path(reads)
     path  fasta
     path  index
+    path  gtf
 
     output:
     tuple val(meta), path("*.sam"), emit: sam
@@ -23,6 +24,7 @@ process GRAPHMAP2_ALIGN {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def gtf_arg = gtf ? "--gtf ${gtf}" : ''
     """
     graphmap2 \\
         align \\
@@ -31,7 +33,8 @@ process GRAPHMAP2_ALIGN {
         -i ${index} \\
         -d ${reads} \\
         -o ${prefix}.sam \\
-        ${args}
+        ${args} \\
+        ${gtf_arg}
     """
 
     stub:

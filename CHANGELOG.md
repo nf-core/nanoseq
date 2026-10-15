@@ -36,8 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `--input_path_file_type` as `dorado` is added for basecalling and modification calling
 - Added `--bedmethyl_out` as `dorado` is added for basecalling and modification calling
-- Added `--flowcell` as `dorado` is added for basecalling and modification calling
-- Added `--kit` as `dorado` is added for basecalling and modification calling
 - Added `--dorado_model` as `dorado` is added for basecalling and modification calling
 - Added `--dorado_modification` as `dorado` is added for basecalling and modification calling
 - Added `--dorado_device` as `dorado` is added for basecalling and modification calling

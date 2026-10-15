@@ -18,7 +18,7 @@ workflow RNA_FUSIONS_JAFFAL {
         /*
          * Download the JAFFAL reference
          */
-        WGET_JAFFAL_REF( channel.of([ [ id: 'jaffal_ref' ], 'https://ndownloader.figshare.com/files/28168755', 'tar.gz' ]) )
+        WGET_JAFFAL_REF( channel.value([ [ id: 'jaffal_ref' ], 'https://ndownloader.figshare.com/files/28168755', 'tar.gz' ]) )
 
         /*
          * Untar the JAFFAL reference
@@ -26,7 +26,6 @@ workflow RNA_FUSIONS_JAFFAL {
         UNTAR( WGET_JAFFAL_REF.out.outfile )
         ch_jaffal_ref_dir = UNTAR.out.untar
             .map { _meta, ref_dir -> ref_dir }
-            .first()
     }
 
     /*

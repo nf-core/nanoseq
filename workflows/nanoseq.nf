@@ -112,10 +112,8 @@ workflow NANOSEQ {
         def ch_fasta = channel.value([ [ id: 'reference' ], fasta ])
         SAMTOOLS_FAIDX ( ch_fasta.map { meta, fa -> [ meta, fa, [] ] }, true )
         ch_chr_sizes = SAMTOOLS_FAIDX.out.sizes
-        ch_fasta_fai = ch_fasta
-            .combine(SAMTOOLS_FAIDX.out.fai)
-            .map { meta, fa, _meta2, fai -> [ meta, fa, fai ] }
-            .first()
+        // Inputs are value channels, so the index outputs are value channels too
+        ch_fasta_fai = SAMTOOLS_FAIDX.out.fai.map { meta, fai -> [ meta, fasta, fai ] }
     }
 
     def ch_fastq = channel.empty()
@@ -193,9 +191,9 @@ workflow NANOSEQ {
             ch_nanolyse_fasta = channel.value(file(params.nanolyse_fasta, checkIfExists: true))
         } else {
             WGET_NANOLYSE_FASTA (
-                channel.of([ [ id: 'lambda' ], 'https://github.com/wdecoster/nanolyse/raw/master/reference/lambda.fasta.gz', 'fasta.gz' ])
+                channel.value([ [ id: 'lambda' ], 'https://github.com/wdecoster/nanolyse/raw/master/reference/lambda.fasta.gz', 'fasta.gz' ])
             )
-            ch_nanolyse_fasta = WGET_NANOLYSE_FASTA.out.outfile.map { _meta, fa -> fa }.first()
+            ch_nanolyse_fasta = WGET_NANOLYSE_FASTA.out.outfile.map { _meta, fa -> fa }
         }
         NANOLYSE ( ch_fastq, ch_nanolyse_fasta )
         ch_fastq_to_align = NANOLYSE.out.fastq
@@ -232,7 +230,12 @@ workflow NANOSEQ {
             //
             // SUBWORKFLOW: Align with GraphMap2
             //
-            ALIGN_GRAPHMAP2 ( ch_fasta_fai, ch_fastq_to_align )
+            ALIGN_GRAPHMAP2 (
+                ch_fasta_fai,
+                ch_fastq_to_align,
+                // Spliced alignment needs the annotation for RNA data aligned to a genome
+                params.protocol != 'DNA' && gtf ? channel.value(gtf) : channel.value([])
+            )
             ch_sorted_bam = ALIGN_GRAPHMAP2.out.bam
             ch_sorted_bai = ALIGN_GRAPHMAP2.out.bai
             ch_multiqc_files = ch_multiqc_files.mix(
@@ -381,7 +384,7 @@ workflow NANOSEQ {
                 ]
             }
         )
-        ch_multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList()
+        ch_multiqc_report = MULTIQC.out.report.map { _meta, report -> report }
     }
 
     emit:

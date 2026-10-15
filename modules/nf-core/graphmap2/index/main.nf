@@ -8,6 +8,7 @@ process GRAPHMAP2_INDEX {
 
     input:
     path fasta
+    path gtf
 
     output:
     path "*.gmidx", emit: index
@@ -18,12 +19,14 @@ process GRAPHMAP2_INDEX {
 
     script:
     def args = task.ext.args ?: ''
+    def gtf_arg = gtf ? "--gtf ${gtf}" : ''
     """
     graphmap2 \\
         align \\
         -t ${task.cpus} \\
         -I \\
         ${args} \\
+        ${gtf_arg} \\
         -r ${fasta}
     """
 

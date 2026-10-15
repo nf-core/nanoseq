@@ -28,12 +28,14 @@
                     "graphmap2/align": {
                         "branch": "master",
                         "git_sha": "035212d906392a6b8d73ccc672318043d6895d40",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/graphmap2/align/graphmap2-align.diff"
                     },
                     "graphmap2/index": {
                         "branch": "master",
                         "git_sha": "035212d906392a6b8d73ccc672318043d6895d40",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/graphmap2/index/graphmap2-index.diff"
                     },
                     "minimap2/align": {
                         "branch": "master",

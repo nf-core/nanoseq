@@ -1,0 +1,33 @@
+Changes in component 'nf-core/graphmap2/index'
+'modules/nf-core/graphmap2/index/environment.yml' is unchanged
+'modules/nf-core/graphmap2/index/meta.yml' is unchanged
+Changes in 'graphmap2/index/main.nf':
+--- modules/nf-core/graphmap2/index/main.nf
++++ modules/nf-core/graphmap2/index/main.nf
+@@ -8,6 +8,7 @@
+ 
+     input:
+     path fasta
++    path gtf
+ 
+     output:
+     path "*.gmidx", emit: index
+@@ -18,12 +19,14 @@
+ 
+     script:
+     def args = task.ext.args ?: ''
++    def gtf_arg = gtf ? "--gtf ${gtf}" : ''
+     """
+     graphmap2 \\
+         align \\
+         -t ${task.cpus} \\
+         -I \\
+         ${args} \\
++        ${gtf_arg} \\
+         -r ${fasta}
+     """
+ 
+
+'modules/nf-core/graphmap2/index/tests/main.nf.test.snap' is unchanged
+'modules/nf-core/graphmap2/index/tests/main.nf.test' is unchanged
+************************************************************

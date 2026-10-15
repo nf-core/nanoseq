@@ -1,0 +1,36 @@
+Changes in component 'nf-core/graphmap2/align'
+'modules/nf-core/graphmap2/align/environment.yml' is unchanged
+'modules/nf-core/graphmap2/align/meta.yml' is unchanged
+Changes in 'graphmap2/align/main.nf':
+--- modules/nf-core/graphmap2/align/main.nf
++++ modules/nf-core/graphmap2/align/main.nf
+@@ -12,6 +12,7 @@
+     tuple val(meta), path(reads)
+     path  fasta
+     path  index
++    path  gtf
+ 
+     output:
+     tuple val(meta), path("*.sam"), emit: sam
+@@ -23,6 +24,7 @@
+     script:
+     def args = task.ext.args ?: ''
+     def prefix = task.ext.prefix ?: "${meta.id}"
++    def gtf_arg = gtf ? "--gtf ${gtf}" : ''
+     """
+     graphmap2 \\
+         align \\
+@@ -31,7 +33,8 @@
+         -i ${index} \\
+         -d ${reads} \\
+         -o ${prefix}.sam \\
+-        ${args}
++        ${args} \\
++        ${gtf_arg}
+     """
+ 
+     stub:
+
+'modules/nf-core/graphmap2/align/tests/main.nf.test.snap' is unchanged
+'modules/nf-core/graphmap2/align/tests/main.nf.test' is unchanged
+************************************************************

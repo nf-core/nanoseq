@@ -136,16 +136,6 @@
                     "description": "Align dorado modified-base BAM output and create bedMethyl files with modkit.",
                     "fa_icon": "fas fa-dna"
                 },
-                "flowcell": {
-                    "type": "string",
-                    "description": "Flowcell used for sequencing (e.g. FLO-MIN106).",
-                    "fa_icon": "fas fa-microchip"
-                },
-                "kit": {
-                    "type": "string",
-                    "description": "Sequencing kit used (e.g. SQK-DCS109).",
-                    "fa_icon": "fas fa-box"
-                },
                 "dorado_model": {
                     "type": "string",
                     "description": "Dorado basecalling model (e.g. dna_r10.4.1_e8.2_400bps_hac@v5.2.0).",
