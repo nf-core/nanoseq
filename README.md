@@ -56,7 +56,7 @@ On release, automated continuous integration tests run the pipeline on a [full-s
 A graphical overview of suggested routes through the pipeline depending on the desired output can be seen below.
 
 <p align="center">
-    <img src="docs/images/nanoseq_subwaymap_v3.1.png" alt="nf-core/nanoseq metro map" width="90%">
+    <img src="docs/images/nanoseq_metro_map_v3.2.png" alt="nf-core/nanoseq v3.2 metro map: basecalling, demultiplexing, read QC, alignment, coverage tracks, RNA quantification, differential analysis, RNA modification and fusion detection, and MultiQC reporting" width="90%">
 </p>
 
 ## Quick Start
