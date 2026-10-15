@@ -21,7 +21,7 @@
 
 ## Introduction
 
-**nfcore/nanoseq** is a bioinformatics analysis pipeline for Nanopore DNA/RNA sequencing data that can be used to perform basecalling, demultiplexing, QC, alignment, and downstream analysis.
+**nf-core/nanoseq** is a bioinformatics analysis pipeline for Nanopore DNA/RNA sequencing data that can be used to perform basecalling, demultiplexing, QC, alignment, and downstream analysis.
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. Where possible, these processes have been submitted to and installed from [nf-core/modules](https://github.com/nf-core/modules) in order to make them available to all nf-core pipelines, and to everyone within the Nextflow community!
 
@@ -29,25 +29,27 @@ On release, automated continuous integration tests run the pipeline on a [full-s
 
 ## Pipeline Summary
 
-1. Basecalling ([`dorado`](https://github.com/nanoporetech/dorado); _optional_)
+1. Basecalling of POD5 or FAST5 data ([`dorado`](https://github.com/nanoporetech/dorado); _optional_)
+   - FAST5 data is converted to POD5 first ([`pod5`](https://github.com/nanoporetech/pod5-file-format))
+   - Modified base calling, alignment with `dorado aligner` and bedMethyl creation ([`modkit`](https://github.com/nanoporetech/modkit)); _optional_
 2. Demultiplexing ([`qcat`](https://github.com/nanoporetech/qcat); _optional_)
-3. Raw read cleaning ([NanoLyse](https://github.com/wdecoster/nanolyse); _optional_)
+3. Raw read cleaning ([`NanoLyse`](https://github.com/wdecoster/nanolyse); _optional_)
 4. Raw read QC ([`NanoPlot`](https://github.com/wdecoster/NanoPlot), [`ToulligQC`](https://github.com/GenomiqueENS/toulligQC), [`FastQC`](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
-5. Alignment ([`GraphMap2`](https://github.com/lbcb-sci/graphmap2) or [`minimap2`](https://github.com/lh3/minimap2))
+5. Alignment ([`minimap2`](https://github.com/lh3/minimap2) or [`GraphMap2`](https://github.com/lbcb-sci/graphmap2))
    - Both aligners are capable of performing unspliced and spliced alignment. Sensible defaults will be applied automatically based on a combination of the input data and user-specified parameters
-   - Each sample can be mapped to its own reference genome if multiplexed in this way
    - Convert SAM to co-ordinate sorted BAM and obtain mapping metrics ([`samtools`](http://www.htslib.org/doc/samtools.html))
 6. Create bigWig ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedGraphToBigWig`](http://hgdownload.soe.ucsc.edu/admin/exe/)) and bigBed ([`BEDTools`](https://github.com/arq5x/bedtools2/), [`bedToBigBed`](http://hgdownload.soe.ucsc.edu/admin/exe/)) coverage tracks for visualisation
 7. RNA-specific downstream analysis:
    - Transcript reconstruction and quantification ([`bambu`](https://bioconductor.org/packages/release/bioc/html/bambu.html) or [`StringTie2`](https://ccb.jhu.edu/software/stringtie/))
      - bambu performs both transcript reconstruction and quantification
-     - When StringTie2 is chosen, each sample can be processed individually and combined. After which, [`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/) will be used for both gene and transcript quantification.
+     - When StringTie2 is chosen, each sample is processed individually and the transcripts are merged. [`featureCounts`](http://bioinf.wehi.edu.au/featureCounts/) is then used for both gene and transcript quantification.
    - Differential expression analysis ([`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) and/or [`DEXSeq`](https://bioconductor.org/packages/release/bioc/html/DEXSeq.html))
-   - RNA modification detection ([`xpore`](https://github.com/GoekeLab/xpore) and/or [`m6anet`](https://github.com/GoekeLab/m6anet))
+   - RNA modification detection ([`nanopolish`](https://github.com/jts/nanopolish), [`xPore`](https://github.com/GoekeLab/xpore) and/or [`m6anet`](https://github.com/GoekeLab/m6anet))
    - RNA fusion detection ([`JAFFAL`](https://github.com/Oshlack/JAFFA))
 8. Present QC for raw read and alignment results ([`MultiQC`](https://multiqc.info/docs/))
 
 ### Functionality Overview
+
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/get_started/environment_setup/overview) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/get_started/run-your-first-pipeline) with `-profile test` before running the workflow on actual data.
 
@@ -59,14 +61,14 @@ A graphical overview of suggested routes through the pipeline depending on the d
 
 ## Quick Start
 
-1. Install [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=24.04.2`)
+1. Install [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=25.10.4`)
 
 2. Install any of [`Docker`](https://docs.docker.com/engine/installation/), [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) (you can follow [this tutorial](https://singularity-tutorial.github.io/01-installation/)), [`Podman`](https://podman.io/), [`Shifter`](https://nersc.gitlab.io/development/shifter/how-to-use/) or [`Charliecloud`](https://hpc.github.io/charliecloud/) for full pipeline reproducibility _(you can use [`Conda`](https://conda.io/miniconda.html) both to install Nextflow itself and also to manage software within pipelines. Please only use it within pipelines as a last resort; see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles))_.
 
 3. Download the pipeline and test it on a minimal dataset with a single command:
 
    ```console
-   nextflow run nf-core/nanoseq -profile test,YOURPROFILE
+   nextflow run nf-core/nanoseq -profile test,YOURPROFILE --outdir <OUTDIR>
    ```
 
    Note that some form of configuration will be needed so that Nextflow knows how to fetch the required software. This is usually done in the form of a config profile (`YOURPROFILE` in the example command above). You can chain multiple config profiles in a comma-separated string.
@@ -86,6 +88,9 @@ The nf-core/nanoseq pipeline comes with documentation about the pipeline [usage]
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol directRNA/cDNA \
+    --fasta /path/to/genome.fa \
+    --gtf /path/to/annotation.gtf \
+    --outdir <OUTDIR> \
     -profile <docker/singularity/podman/institute>
 ```
 

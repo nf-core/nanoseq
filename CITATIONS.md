@@ -22,13 +22,7 @@
 
   > Quinlan AR, Hall IM. BEDTools: a flexible suite of utilities for comparing genomic features. Bioinformatics. 2010 Mar 15;26(6):841-2. doi: 10.1093/bioinformatics/btq033. Epub 2010 Jan 28. PubMed PMID: 20110278; PubMed Central PMCID: PMC2832824.
 
-- [cuteSV](https://pubmed.ncbi.nlm.nih.gov/32746918/)
-
-  > Jiang T, Liu Y, Jiang Y, Li J, Gao Y, Cui Z, Liu Y, Liu B, Wang Y. Long-read-based human genomic structural variation detection with cuteSV. Genome Biol. 2020 Aug 3;21(1):189. doi: 10.1186/s13059-020-02107-y. PMID: 32746918; PMCID: PMC7477834.
-
-- [DeepVariant](https://pubmed.ncbi.nlm.nih.gov/30247488/)
-
-  > Poplin R, Chang PC, Alexander D, Schwartz S, Colthurst T, Ku A, Newburger D, Dijamco J, Nguyen N, Afshar PT, Gross SS, Dorfman L, McLean CY, DePristo MA. A universal SNP and small-indel variant caller using deep neural networks. Nat Biotechnol. 2018 Nov;36(10):983-987. doi: 10.1038/nbt.4235. Epub 2018 Sep 24. PMID: 30247488.
+- [dorado](https://github.com/nanoporetech/dorado)
 
 - [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 
@@ -48,17 +42,13 @@
 
 - [m6anet](https://pubmed.ncbi.nlm.nih.gov/36357692/)
 
-  > Hendra, C., Pratanwanich, P. N., Wan, Y. K., Goh, W. S., Thiery, A., & Göke, J. (2022). Detection of m6A from direct RNA sequencing using a multiple instance learning framework. Nature Methods, 1-9. PMID: 36357692; PMCID: PMC9718678.
-
-- [PEPPER-Margin-DeepVariant](https://pubmed.ncbi.nlm.nih.gov/34725481/)
-
-  > Shafin K, Pesout T, Chang PC, Nattestad M, Kolesnikov A, Goel S, Baid G, Kolmogorov M, Eizenga JM, Miga KH, Carnevali P, Jain M, Carroll A, Paten B. Haplotype-aware variant calling with PEPPER-Margin-DeepVariant enables high accuracy in nanopore long-reads. Nat Methods. 2021 Nov;18(11):1322-1332. doi: 10.1038/s41592-021-01299-w. Epub 2021 Nov 1. PMID: 34725481; PMCID: PMC8571015.
+  > Hendra C, Pratanwanich PN, Wan YK, Goh WSS, Thiery A, Göke J. Detection of m6A from direct RNA sequencing using a multiple instance learning framework. Nat Methods. 2022 Dec;19(12):1590-1598. doi: 10.1038/s41592-022-01666-1. PMID: 36357692; PMCID: PMC9718678.
 
 - [Minimap2](https://pubmed.ncbi.nlm.nih.gov/29750242/)
 
   > Li H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics. 2018 Sep 15;34(18):3094-3100. doi: 10.1093/bioinformatics/bty191. PMID: 29750242; PMCID: PMC6137996.
 
-- [Medaka](https://github.com/nanoporetech/medaka)
+- [modkit](https://github.com/nanoporetech/modkit)
 
 - [MultiQC](https://www.ncbi.nlm.nih.gov/pubmed/27312411/)
 
@@ -72,15 +62,17 @@
 
   > De Coster W, D'Hert S, Schultz DT, Cruts M, Van Broeckhoven C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics. 2018 Aug 1;34(15):2666-2669. doi: 10.1093/bioinformatics/bty149. PubMed PMID: 29547981; PubMed Central PMCID: PMC6061794.
 
+- [nanopolish](https://pubmed.ncbi.nlm.nih.gov/26076426/)
+
+  > Loman NJ, Quick J, Simpson JT. A complete bacterial genome assembled de novo using only nanopore sequencing data. Nat Methods. 2015 Aug;12(8):733-5. doi: 10.1038/nmeth.3444. PMID: 26076426.
+
+- [pod5](https://github.com/nanoporetech/pod5-file-format)
+
 - [qcat](https://github.com/nanoporetech/qcat)
 
 - [SAMtools](https://www.ncbi.nlm.nih.gov/pubmed/19505943/)
 
   > Li H, Handsaker B, Wysoker A, Fennell T, Ruan J, Homer N, Marth G, Abecasis G, Durbin R; 1000 Genome Project Data Processing Subgroup. The Sequence Alignment/Map format and SAMtools. Bioinformatics. 2009 Aug 15;25(16):2078-9. doi: 10.1093/bioinformatics/btp352. Epub 2009 Jun 8. PubMed PMID: 19505943; PubMed Central PMCID: PMC2723002.
-
-- [Sniffles](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5990442/)
-
-  > Sedlazeck FJ, Rescheneder P, Smolka M, Fang H, Nattestad M, von Haeseler A, Schatz MC. Accurate detection of complex structural variations using single-molecule sequencing. Nat Methods. 2018 Jun;15(6):461-468. doi: 10 1038/s41592-018-0001-7. Epub 2018 Apr 30. PMID: 29713083; PMCID: PMC5990442.
 
 - [StringTie2](https://www.ncbi.nlm.nih.gov/pubmed/31842956/)
 
@@ -100,10 +92,6 @@
 - [R](https://www.R-project.org/)
 
   > R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria.
-
-- [bambu](https://bioconductor.org/packages/release/bioc/html/bambu.html)
-
-  > Chen Y, Goeke J, Wan YK (2020). bambu: Reference-guided isoform reconstruction and quantification for long read RNA-Seq data. R package version 1.0.0.
 
 - [BSgenome](https://bioconductor.org/packages/release/bioc/html/BSgenome.html)
 

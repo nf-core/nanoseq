@@ -8,12 +8,97 @@
 
 You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated file with 4 columns and a header row:
 
-| Column       | Description                                                                                                                                                                                                                                                                               |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `group`      | Group identifier for sample. This will be identical for replicate samples from the same experimental group.                                                                                                                                                                               |
-| `replicate`  | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                                                                       |
-| `barcode`    | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                                                                                                                                                                                     |
-| `input_file` | Full path to FastQ file if previously demultiplexed, BAM file if previously aligned, or a path to a directory with subdirectories containing fastq or fast5 files. FastQ file has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam". |
+| Column       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `group`      | Group identifier for sample. This will be identical for replicate samples from the same experimental group.                                                                                                                                                                                                                                                                                                                                                                      |
+| `replicate`  | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                                                                                                                                                                                                                                                              |
+| `barcode`    | Barcode identifier attributed to that sample during multiplexing. Must be an integer. Leave empty if the data is not demultiplexed by the pipeline.                                                                                                                                                                                                                                                                                                                              |
+| `input_file` | Path to the input data for the sample. Accepted inputs are a gzipped FASTQ file (`.fastq.gz` or `.fq.gz`) if previously basecalled and demultiplexed, a BAM file (`.bam`) if previously aligned, a single POD5 (`.pod5`) or FAST5 (`.fast5`) file for basecalling, or a directory of raw data. A directory must contain only POD5 or FAST5 files, or `fast5` and `fastq` subdirectories for RNA modification analysis. Leave empty if the data is demultiplexed by the pipeline. |
+
+The sample name used for output files is `<group>_R<replicate>`, for example `WT_R1`.
+
+### Basecalling with dorado
+
+The pipeline basecalls raw Oxford Nanopore data with [dorado](https://github.com/nanoporetech/dorado) unless `--skip_basecalling` is used. Basecalling uses the following parameters:
+
+- `--input_path_file_type`: the raw data format, `fast5` (default) or `pod5`. FAST5 data is converted to POD5 with [pod5](https://github.com/nanoporetech/pod5-file-format) before basecalling.
+- `--dorado_model`: the dorado basecalling model. This parameter has no default and is required for basecalling. Choose the model that matches the flow cell, kit and sampling rate of your data, for example `dna_r10.4.1_e8.2_400bps_hac@v5.2.0` (high accuracy) or `dna_r10.4.1_e8.2_400bps_sup@v5.2.0` (super accuracy). See the [dorado documentation](https://github.com/nanoporetech/dorado#available-basecalling-models) for the available models.
+- `--dorado_device`: the device used for basecalling, for example `cpu`, `cuda:all` (default) or `metal`. Set `--dorado_device cpu` on machines without an NVIDIA GPU.
+
+> [!WARNING]
+> Current versions of dorado do not support R9.4.1 (4 kHz) data.
+
+To basecall on NVIDIA GPUs inside Docker, Singularity or Apptainer containers, add the `gpu` profile to make the GPUs available to the container, for example `-profile docker,gpu`.
+
+How the raw data is provided depends on whether the data is demultiplexed by the pipeline:
+
+- With `--skip_demultiplexing`, each sample is basecalled separately from the POD5 or FAST5 file, or the directory of raw data, given in the `input_file` column of the samplesheet.
+- Without `--skip_demultiplexing`, the raw data given with `--input_path` is basecalled as a single unit and demultiplexed with [qcat](https://github.com/nanoporetech/qcat). Reads are assigned to samples with the `barcode` column of the samplesheet. Set the barcode kit with `--barcode_kit`.
+
+#### Example `samplesheet.csv` for POD5 basecalling
+
+```csv title="samplesheet.csv"
+group,replicate,barcode,input_file
+HG002,1,,/path/to/HG002_run1.pod5
+HG002,2,,/path/to/HG002_run2/
+```
+
+#### Example command for POD5 basecalling
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --fasta /path/to/genome.fa \
+    --input_path_file_type pod5 \
+    --dorado_model dna_r10.4.1_e8.2_400bps_hac@v5.2.0 \
+    --dorado_device cuda:all \
+    --skip_demultiplexing \
+    --skip_quantification \
+    --skip_fusion_analysis \
+    --skip_modification_analysis \
+    --outdir <OUTDIR> \
+    -profile docker,gpu
+```
+
+#### Example command for basecalling and demultiplexing
+
+Use the samplesheet format shown in [With demultiplexing](#with-demultiplexing) and give the directory of raw data with `--input_path`:
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --fasta /path/to/genome.fa \
+    --input_path /path/to/pod5_dir/ \
+    --input_path_file_type pod5 \
+    --dorado_model dna_r10.4.1_e8.2_400bps_hac@v5.2.0 \
+    --barcode_kit 'NBD103/NBD104' \
+    --skip_quantification \
+    --outdir <OUTDIR> \
+    -profile docker,gpu
+```
+
+#### Modified base calling
+
+Use `--bedmethyl_out` together with `--dorado_modification` to call modified bases, for example `--dorado_modification 5mCG_5hmCG`. dorado writes the modified base calls to an unaligned BAM file. The pipeline then aligns this BAM file to `--fasta` with dorado aligner and creates a bedMethyl file with [modkit](https://github.com/nanoporetech/modkit) `pileup`. Modified base calling requires `--fasta` and `--skip_demultiplexing`. The read QC, NanoLyse, alignment and downstream steps are not run for modified base calling.
+
+```bash
+nextflow run nf-core/nanoseq \
+    --input samplesheet.csv \
+    --protocol DNA \
+    --fasta /path/to/genome.fa \
+    --input_path_file_type pod5 \
+    --dorado_model dna_r10.4.1_e8.2_400bps_hac@v6.0.0 \
+    --bedmethyl_out \
+    --dorado_modification 5mCG_5hmCG \
+    --skip_demultiplexing \
+    --skip_quantification \
+    --skip_fusion_analysis \
+    --skip_modification_analysis \
+    --outdir <OUTDIR> \
+    -profile docker,gpu
+```
 
 ### Skip demultiplexing
 
@@ -147,7 +232,8 @@ The typical command for running the pipeline is as follows:
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol cDNA \
-    --genome GRCh38 \
+    --fasta /path/to/genome.fa \
+    --gtf /path/to/annotation.gtf \
     --skip_basecalling \
     --skip_demultiplexing \
     --outdir <OUTDIR> \
@@ -183,7 +269,9 @@ with:
 ```yaml title="params.yaml"
 input: './samplesheet.csv'
 outdir: './results/'
-genome: 'GRCh37'
+protocol: 'cDNA'
+fasta: '/path/to/genome.fa'
+gtf: '/path/to/annotation.gtf'
 <...>
 ```
 
@@ -248,6 +336,8 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
   - A generic configuration profile to be used with [Apptainer](https://apptainer.org/)
 - `wave`
   - A generic configuration profile to enable [Wave](https://seqera.io/wave/) containers. Use together with one of the above (requires Nextflow `24.03.0-edge` or later).
+- `gpu`
+  - A configuration profile that makes NVIDIA GPUs available to Docker, Singularity and Apptainer containers for basecalling with dorado. Use together with one of the container profiles, for example `-profile docker,gpu`.
 - `conda`
   - A generic configuration profile to be used with [Conda](https://conda.io/docs/). Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker, Singularity, Podman, Shifter or Charliecloud.
 
@@ -269,19 +359,24 @@ Whilst the default requirements set within the pipeline will hopefully work for 
 
 To change the resource requests, please see the [max resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#set-max-resources) and [customise process resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#customize-process-resources) section of the nf-core website.
 
-````console
+```console
 [62/149eb0] NOTE: Process `NFCORE_RNASEQ:RNASEQ:ALIGN_STAR:STAR_ALIGN (WT_REP1)` terminated with an error exit status (137) -- Execution is retried (1)
 Error executing process > 'NFCORE_RNASEQ:RNASEQ:ALIGN_STAR:STAR_ALIGN (WT_REP1)'
-
-In some cases, you may wish to change the container or conda environment used by a pipeline steps for a particular tool. By default, nf-core pipelines use containers and software from the [biocontainers](https://biocontainers.pro/) or [bioconda](https://bioconda.github.io/) projects. However, in some cases the pipeline specified version maybe out of date.
-
-To use a different container from the default container or conda environment specified in a pipeline, please see the [updating tool versions](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#update-tool-versions) section of the nf-core website.
 
 Command exit status:
     137
 
 Command output:
     (empty)
+```
+
+### Custom Containers
+
+In some cases, you may wish to change the container or conda environment used by a pipeline steps for a particular tool. By default, nf-core pipelines use containers and software from the [biocontainers](https://biocontainers.pro/) or [bioconda](https://bioconda.github.io/) projects. However, in some cases the pipeline specified version maybe out of date.
+
+To use a different container from the default container or conda environment specified in a pipeline, please see the [updating tool versions](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#update-tool-versions) section of the nf-core website.
+
+### Custom Tool Arguments
 
 To learn how to provide additional arguments to a particular tool of the pipeline, please see the [customising tool arguments](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#modifying-tool-arguments) section of the nf-core website.
 
@@ -309,4 +404,4 @@ We recommend adding the following line to your environment to limit this (typica
 
 ```bash
 NXF_OPTS='-Xms1g -Xmx4g'
-````
+```
