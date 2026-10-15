@@ -8,7 +8,7 @@ process NANOPOLISH_INDEX_EVENTALIGN {
         'quay.io/biocontainers/nanopolish:0.13.2--he3b7ca5_2' }"
 
     input:
-    tuple val(meta), path(genome), path(gtf), path(fastq), path(bam), path(bai)
+    tuple val(meta), path(genome), path(gtf), path(fastq), path(bam), path(bai), path(fast5, stageAs: 'fast5_dir')
 
     output:
     tuple val(meta), path(genome), path(gtf), path("*eventalign.txt"), path("*summary.txt"), emit: nanopolish_outputs
@@ -18,7 +18,6 @@ process NANOPOLISH_INDEX_EVENTALIGN {
     def prefix            = task.ext.prefix ?: "${meta.id}"
     def sample_summary    = "${prefix}_summary.txt"
     def sample_eventalign = "${prefix}_eventalign.txt"
-    def fast5             = "${meta.fast5}"
     """
     nanopolish index -d $fast5 $fastq
     nanopolish eventalign \\

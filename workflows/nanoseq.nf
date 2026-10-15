@@ -57,7 +57,8 @@ workflow NANOSEQ {
 
     take:
     ch_samplesheet              // channel: path to samplesheet read in from --input
-    profile                     // string : profile(s) the pipeline was launched with
+    fasta_path                  // string : path to reference FASTA
+    gtf_path                    // string : path to annotation GTF
     multiqc_config              // string : path to custom MultiQC config
     multiqc_logo                // string : path to custom MultiQC logo
     multiqc_methods_description // string : path to custom MultiQC methods description
@@ -69,17 +70,17 @@ workflow NANOSEQ {
     def ch_multiqc_files = channel.empty()
 
     def rna_protocol = params.protocol == 'cDNA' || params.protocol == 'directRNA'
-    def fasta        = params.fasta ? file(params.fasta, checkIfExists: true) : null
-    def gtf          = params.gtf   ? file(params.gtf, checkIfExists: true)   : null
+    def fasta        = fasta_path ? file(fasta_path, checkIfExists: true) : null
+    def gtf          = gtf_path   ? file(gtf_path, checkIfExists: true)   : null
 
     //
     // Resolve raw data directory given with --input_path
     //
     // Nextflow cannot recursively download directories over HTTPS, so the RNA modification
-    // test profile, which needs directories of FAST5 files, clones nf-core/test-datasets.
+    // test profile, which needs directories of FAST5 files, clones nf-core/test-datasets
+    // (enabled with the hidden --clone_test_data parameter).
     //
-    def is_test_profile = profile.tokenize(',').any { p -> p.startsWith('test') }
-    def clone_test_data = is_test_profile && !params.skip_modification_analysis
+    def clone_test_data = params.clone_test_data
 
     def ch_input_path
     if (clone_test_data) {
@@ -98,7 +99,7 @@ workflow NANOSEQ {
     //
     INPUT_CHECK (
         ch_samplesheet,
-        clone_test_data ? ch_input_path : channel.value('not_changed')
+        clone_test_data ? ch_input_path : []
     )
     def ch_sample = INPUT_CHECK.out.sample
 
@@ -309,7 +310,8 @@ workflow NANOSEQ {
         def ch_nanopolish_input = ch_sorted_bam
             .join(ch_sorted_bai)
             .join(ch_sample)
-            .map { meta, bam, bai, reads -> [ meta, fasta, gtf, reads, bam, bai ] }
+            .filter { meta, _bam, _bai, _reads -> meta.fast5 }
+            .map { meta, bam, bai, reads -> [ meta, fasta, gtf, reads, bam, bai, file(meta.fast5, checkIfExists: true) ] }
 
         RNA_MODIFICATION_XPORE_M6ANET ( ch_nanopolish_input, params.skip_xpore, params.skip_m6anet )
     }

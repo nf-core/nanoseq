@@ -10,7 +10,7 @@ include { M6ANET_INFERENCE            } from '../../modules/local/m6anet_inferen
 
 workflow RNA_MODIFICATION_XPORE_M6ANET {
     take:
-    ch_nanopolish_input // channel: [ val(meta), path(genome), path(gtf), path(fastq), path(bam), path(bai) ]
+    ch_nanopolish_input // channel: [ val(meta), path(genome), path(gtf), path(fastq), path(bam), path(bai), path(fast5_dir) ]
     skip_xpore          // val: boolean
     skip_m6anet         // val: boolean
 

@@ -34,6 +34,8 @@ workflow PIPELINE_INITIALISATION {
     help              // boolean: Display help message and exit
     help_full         // boolean: Show the full help message
     show_hidden       // boolean: Show hidden parameters in the help message
+    fasta             //  string: Path to reference FASTA (resolved from --fasta or --genome)
+    gtf               //  string: Path to annotation GTF (resolved from --gtf or --genome)
 
     main:
 
@@ -101,7 +103,7 @@ workflow PIPELINE_INITIALISATION {
     //
     // Custom validation for pipeline parameters
     //
-    validateInputParameters()
+    validateInputParameters(fasta, gtf)
 
     //
     // Samplesheet contents are validated against assets/schema_input.json by nf-schema
@@ -168,10 +170,10 @@ workflow PIPELINE_COMPLETION {
 //
 // Check and validate pipeline parameters
 //
-def validateInputParameters() {
+def validateInputParameters(fasta, gtf) {
     genomeExistsError()
 
-    if (!params.fasta) {
+    if (!fasta) {
         error("Reference FASTA not specified! Please provide --fasta or a valid --genome.")
     }
 
@@ -179,7 +181,7 @@ def validateInputParameters() {
     if (!params.skip_quantification && !rna_protocols.contains(params.protocol)) {
         error("Invalid protocol option for quantification: ${params.protocol}. Valid options: ${rna_protocols.join(', ')}. Use --skip_quantification for DNA data.")
     }
-    if (!params.skip_quantification && !params.gtf) {
+    if (!params.skip_quantification && !gtf) {
         error("A GTF annotation is required for quantification. Please provide --gtf, a --genome with a GTF, or use --skip_quantification.")
     }
 

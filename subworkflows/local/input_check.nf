@@ -7,7 +7,7 @@ include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check'
 workflow INPUT_CHECK {
     take:
     samplesheet // file: /path/to/samplesheet.csv
-    input_path  // val : directory used to resolve relative 'input_file' entries, or 'not_changed'
+    input_path  // path: directory used to resolve relative 'input_file' entries, or [] if not needed
 
     main:
     SAMPLESHEET_CHECK ( samplesheet, input_path )

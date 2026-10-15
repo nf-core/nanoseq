@@ -519,6 +519,13 @@
                 "show_hidden": {
                     "type": "boolean",
                     "description": "Display hidden parameters in the help message (only works when --help or --help_full are provided)."
+                },
+                "clone_test_data": {
+                    "type": "boolean",
+                    "description": "Clone nf-core/test-datasets to stage directories of raw test data.",
+                    "help_text": "Only used by test profiles that need directories of raw FAST5 files, which cannot be downloaded over HTTPS.",
+                    "fa_icon": "fas fa-vial",
+                    "hidden": true
                 }
             }
         }

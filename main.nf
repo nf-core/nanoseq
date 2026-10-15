@@ -22,15 +22,6 @@ include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_nano
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    GENOME PARAMETER VALUES
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-params.fasta = getGenomeAttribute('fasta')
-params.gtf   = getGenomeAttribute('gtf')
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOWS FOR PIPELINE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -42,6 +33,8 @@ workflow NFCORE_NANOSEQ {
 
     take:
     samplesheet // channel: samplesheet read in from --input
+    fasta       // string : path to reference FASTA
+    gtf         // string : path to annotation GTF
 
     main:
 
@@ -50,7 +43,8 @@ workflow NFCORE_NANOSEQ {
     //
     NANOSEQ (
         samplesheet,
-        workflow.profile,
+        fasta,
+        gtf,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
@@ -70,6 +64,12 @@ workflow {
 
     main:
     //
+    // Resolve reference files from --fasta/--gtf or the iGenomes --genome config
+    //
+    def fasta = params.fasta ?: getGenomeAttribute('fasta')
+    def gtf   = params.gtf   ?: getGenomeAttribute('gtf')
+
+    //
     // SUBWORKFLOW: Run initialisation tasks
     //
     PIPELINE_INITIALISATION (
@@ -81,14 +81,18 @@ workflow {
         params.input,
         params.help,
         params.help_full,
-        params.show_hidden
+        params.show_hidden,
+        fasta,
+        gtf
     )
 
     //
     // WORKFLOW: Run main workflow
     //
     NFCORE_NANOSEQ (
-        PIPELINE_INITIALISATION.out.samplesheet
+        PIPELINE_INITIALISATION.out.samplesheet,
+        fasta,
+        gtf
     )
     //
     // SUBWORKFLOW: Run completion tasks
