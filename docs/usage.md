@@ -6,7 +6,7 @@
 
 ## Introduction
 
-You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated file with 6 columns and a header row:
+You will need to create a file with information about the samples in your experiment/run before executing the pipeline. Use the `--input` parameter to specify its location. It has to be a comma-separated file with 4 columns and a header row:
 
 | Column       | Description                                                                                                                                                                                                                                                                               |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -14,8 +14,6 @@ You will need to create a file with information about the samples in your experi
 | `replicate`  | Integer representing replicate number. Must start from `1..<number of replicates>`.                                                                                                                                                                                                       |
 | `barcode`    | Barcode identifier attributed to that sample during multiplexing. Must be an integer.                                                                                                                                                                                                     |
 | `input_file` | Full path to FastQ file if previously demultiplexed, BAM file if previously aligned, or a path to a directory with subdirectories containing fastq or fast5 files. FastQ file has to be zipped and have the extension ".fastq.gz" or ".fq.gz". BAM file has to have the extension ".bam". |
-| `fasta`      | Genome fasta file or transcriptome fasta file for alignment. This can either be a local path, or the appropriate key for a genome available in [iGenomes config file](../conf/igenomes.config). Must have the extension ".fasta", ".fasta.gz", ".fa" or ".fa.gz".                         |
-| `gtf`        | Annotation gtf file for transcript discovery and quantification and RNA modification detection. This can either be blank or a local path. Must have the extension ".gtf".                                                                                                                 |
 
 ### Skip demultiplexing
 
@@ -26,13 +24,11 @@ As shown in the examples below, the accepted samplesheet format is different dep
 ##### Example `samplesheet.csv` for non-demultiplexed fastq inputs
 
 ```bash
-group,replicate,barcode,input_file,fasta,gtf
-WT_MOUSE,1,1,,mm10,
-WT_HUMAN,1,2,,hg19,
-WT_POMBE,1,3,,/path/to/local/genome.fa,
-WT_DENOVO,1,4,,,/path/to/local/transcriptome.fa
-WT_LOCAL,2,5,,/path/to/local/genome.fa,/path/to/local/transcriptome.gtf
-WT_UNKNOWN,3,6,,,
+group,replicate,barcode,input_file
+WT,1,1,
+WT,2,2,
+KO,1,3,
+KO,2,4,
 ```
 
 ##### Example command for non-demultiplexed fastq inputs
@@ -41,9 +37,12 @@ WT_UNKNOWN,3,6,,,
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol DNA \
+    --fasta /path/to/genome.fa \
     --input_path ./undemultiplexed.fastq.gz \
     --barcode_kit 'NBD103/NBD104' \
+    --skip_basecalling \
     --skip_quantification \
+    --outdir <OUTDIR> \
     -profile <docker/singularity/institute>
 ```
 
@@ -52,11 +51,11 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for demultiplexed fastq inputs
 
 ```bash
-group,replicate,barcode,input_file,fasta,gtf
-WT,1,,SAM101A1.fastq.gz,hg19,
-WT,2,,SAM101A2.fastq.gz,hg19,
-KO,1,,SAM101A3.fastq.gz,hg19,
-KO,2,,SAM101A4.fastq.gz,hg19,
+group,replicate,barcode,input_file
+WT,1,,SAM101A1.fastq.gz
+WT,2,,SAM101A2.fastq.gz
+KO,1,,SAM101A3.fastq.gz
+KO,2,,SAM101A4.fastq.gz
 ```
 
 ##### Example command for demultiplexed fastq inputs
@@ -65,7 +64,11 @@ KO,2,,SAM101A4.fastq.gz,hg19,
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol cDNA \
+    --fasta /path/to/genome.fa \
+    --gtf /path/to/annotation.gtf \
+    --skip_basecalling \
     --skip_demultiplexing \
+    --outdir <OUTDIR> \
     -profile <docker/singularity/institute>
 ```
 
@@ -74,11 +77,11 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for BAM inputs
 
 ```bash
-group,replicate,barcode,input_file,fasta,gtf
-WT,1,,SAM101A1.bam,hg19,
-WT,2,,SAM101A2.bam,hg19,
-KO,1,,SAM101A3.bam,hg19,
-KO,2,,SAM101A4.bam,hg19,
+group,replicate,barcode,input_file
+WT,1,,SAM101A1.bam
+WT,2,,SAM101A2.bam
+KO,1,,SAM101A3.bam
+KO,2,,SAM101A4.bam
 ```
 
 ##### Example command for BAM inputs
@@ -87,8 +90,12 @@ KO,2,,SAM101A4.bam,hg19,
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol cDNA \
+    --fasta /path/to/genome.fa \
+    --gtf /path/to/annotation.gtf \
+    --skip_basecalling \
     --skip_demultiplexing \
     --skip_alignment \
+    --outdir <OUTDIR> \
     -profile <docker/singularity/institute>
 ```
 
@@ -97,11 +104,11 @@ nextflow run nf-core/nanoseq \
 ##### Example `samplesheet.csv` for FAST5 and FASTQ input directories
 
 ```bash
-group,replicate,barcode,input_file,fasta,gtf
-WT,1,,/full/path/to/SAM101A1/,hg19.fasta,hg19.gtf
-WT,2,,/full/path/to/SAM101A2/,hg19.fasta,hg19.gtf
-KO,1,,/full/path/to/SAM101A3/,hg19.fasta,hg19.gtf
-KO,2,,/full/path/to/SAM101A4/,hg19.fasta,hg19.gtf
+group,replicate,barcode,input_file
+WT,1,,/full/path/to/SAM101A1/
+WT,2,,/full/path/to/SAM101A2/
+KO,1,,/full/path/to/SAM101A3/
+KO,2,,/full/path/to/SAM101A4/
 ```
 
 ##### Each of the FAST5 and FASTQ input directory should have the following structure:
@@ -124,7 +131,11 @@ KO,2,,/full/path/to/SAM101A4/,hg19.fasta,hg19.gtf
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
     --protocol directRNA \
+    --fasta /path/to/transcriptome.fa \
+    --gtf /path/to/annotation.gtf \
+    --skip_basecalling \
     --skip_demultiplexing \
+    --outdir <OUTDIR> \
     -profile <docker/singularity/institute>
 ```
 
@@ -135,8 +146,11 @@ The typical command for running the pipeline is as follows:
 ```console
 nextflow run nf-core/nanoseq \
     --input samplesheet.csv \
-    --protocol DNA \
-    --barcode_kit SQK-PBK004 \
+    --protocol cDNA \
+    --genome GRCh38 \
+    --skip_basecalling \
+    --skip_demultiplexing \
+    --outdir <OUTDIR> \
     -profile docker
 ```
 
@@ -255,7 +269,7 @@ Whilst the default requirements set within the pipeline will hopefully work for 
 
 To change the resource requests, please see the [max resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#set-max-resources) and [customise process resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#customize-process-resources) section of the nf-core website.
 
-```console
+````console
 [62/149eb0] NOTE: Process `NFCORE_RNASEQ:RNASEQ:ALIGN_STAR:STAR_ALIGN (WT_REP1)` terminated with an error exit status (137) -- Execution is retried (1)
 Error executing process > 'NFCORE_RNASEQ:RNASEQ:ALIGN_STAR:STAR_ALIGN (WT_REP1)'
 
@@ -295,4 +309,4 @@ We recommend adding the following line to your environment to limit this (typica
 
 ```bash
 NXF_OPTS='-Xms1g -Xmx4g'
-```
+````
