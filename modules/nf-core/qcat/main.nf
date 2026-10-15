@@ -19,6 +19,7 @@ process QCAT {
     task.ext.when == null || task.ext.when
 
     script:
+    def args = task.ext.args ?: ''
     """
     ## Unzip fastq file
     ## qcat doesn't support zipped files yet
@@ -32,7 +33,8 @@ process QCAT {
     qcat \\
         -f \$FILE \\
         -b ./fastq \\
-        --kit ${barcode_kit}
+        --kit ${barcode_kit} \\
+        ${args}
 
     ## Zip fastq files
     gzip fastq/*

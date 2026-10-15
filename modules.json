@@ -63,7 +63,8 @@
                     "qcat": {
                         "branch": "master",
                         "git_sha": "35ee063520cf7d6fbd68e331d81bafee1a41757c",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/qcat/qcat.diff"
                     },
                     "samtools/faidx": {
                         "branch": "master",
